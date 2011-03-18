@@ -34,8 +34,8 @@ Ext.define('Ext.grid.Feature', {
     eventSelector: null,
     
     /**
-     * @property {Ext.grid.View}
-     * Reference to the grid view.
+     * @property {Ext.view.TableView}
+     * Reference to the TableView.
      */
     view: null,
     

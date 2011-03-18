@@ -1,4 +1,4 @@
-/*
+/**
  * @class Ext.draw.SpriteGroup
  * @extends Ext.util.MixedCollection
  */
@@ -14,18 +14,20 @@ Ext.define('Ext.draw.SpriteGroup', {
     /* End Definitions */
     isSpriteGroup: true,
     constructor: function(config) {
+        var me = this;
+        
         config = config || {};
-        Ext.apply(this, config);
+        Ext.apply(me, config);
 
-        this.addEvents(
+        me.addEvents(
             'mousedown',
             'mouseup',
             'mouseover',
             'mouseout',
             'click'
         );
-        this.id = Ext.id(null, 'ext-sprite-group-');
-        Ext.draw.SpriteGroup.superclass.constructor.call(this);
+        me.id = Ext.id(null, 'ext-sprite-group-');
+        me.callParent();
     },
 
     // private
@@ -54,42 +56,48 @@ Ext.define('Ext.draw.SpriteGroup', {
     },
 
     attachEvents: function(o) {
+        var me = this;
+        
         o.on({
-            scope: this,
-            mousedown: this.onMouseDown,
-            mouseup: this.onMouseUp,
-            mouseover: this.onMouseOver,
-            mouseout: this.onMouseOut,
-            click: this.onClick
+            scope: me,
+            mousedown: me.onMouseDown,
+            mouseup: me.onMouseUp,
+            mouseover: me.onMouseOver,
+            mouseout: me.onMouseOut,
+            click: me.onClick
         });
     },
 
     add: function(key, o) {
-        var ans = Ext.draw.SpriteGroup.superclass.add.apply(this, Array.prototype.slice.call(arguments));
-        this.attachEvents(ans);
-        return ans;
+        var result = this.callParent(arguments);
+        this.attachEvents(result);
+        return result;
     },
 
     insert: function(index, key, o) {
-        return Ext.draw.SpriteGroup.superclass.insert.apply(this, Array.prototype.slice.call(arguments));
+        return this.callParent(arguments);
     },
 
     remove: function(o) {
-        // clean this up for 4.x un syntax
-        // o.un('mousedown', this.onMouseUp);
-        // o.un('mouseup', this.onMouseDown);
-        // o.un('mouseover', this.onMouseOver);
-        // o.un('mouseout', this.onMouseOut);
-        // o.un('click', this.onClick);
-        Ext.draw.SpriteGroup.superclass.remove.apply(this, arguments);
+        var me = this;
+        
+        o.un({
+            scope: me,
+            mousedown: me.onMouseDown,
+            mouseup: me.onMouseUp,
+            mouseover: me.onMouseOver,
+            mouseout: me.onMouseOut,
+            click: me.onClick
+        });
+        me.callParent(arguments);
     },
     // Returns the group bounding box.
     getBBox: function() {
-        var i,
+        var i = 0,
             sprite,
             bb,
             items = this.items,
-            ln = this.length,
+            len = this.length,
             infinity = Infinity,
             minX = infinity,
             maxHeight = -infinity,
@@ -97,7 +105,7 @@ Ext.define('Ext.draw.SpriteGroup', {
             maxWidth = -infinity,
             maxWidthBBox, maxHeightBBox;
         
-        for (i = 0; i < ln; i++) {
+        for (; i < len; i++) {
             sprite = items[i];
             if (sprite.el) {
                 bb = sprite.getBBox();
@@ -117,54 +125,60 @@ Ext.define('Ext.draw.SpriteGroup', {
     },
 
     setAttributes: function(attrs, redraw) {
-        var i,
+        var i = 0,
             items = this.items,
-            ln = this.length;
-        for (i = 0; i < ln; i++) {
+            len = this.length;
+            
+        for (; i < len; i++) {
             items[i].setAttributes(attrs, redraw);
         }
         return this;
     },
 
     hide: function(attrs) {
-        var i,
+        var i = 0,
             items = this.items,
-            ln = this.length;
-        for (i = 0; i < ln; i++) {
+            len = this.length;
+            
+        for (; i < len; i++) {
             items[i].hide();
         }
         return this;
     },
 
     show: function(attrs) {
-        var i,
+        var i = 0,
             items = this.items,
-            ln = this.length;
-        for (i = 0; i < ln; i++) {
+            len = this.length;
+            
+        for (; i < len; i++) {
             items[i].show();
         }
         return this;
     },
 
     redraw: function() {
-        var i,
-            items = this.items,
-            surface = items.length? items[0].surface : false,
-            ln = this.length;
+        var me = this,
+            i = 0,
+            items = me.items,
+            surface = me.getSurface(),
+            len = me.length;
         
         if (surface) {
-            for (i = 0; i < ln; i++) {
+            for (; i < len; i++) {
                 surface.renderItem(items[i]);
             }
         }
-        return this;
+        return me;
     },
 
     setStyle: function(obj) {
-        var items = this.items,
-            ln = this.length,
-            i, item;
-        for (i = 0; i < ln; i++) {
+        var i = 0,
+            items = this.items,
+            len = this.length,
+            item;
+            
+        for (; i < len; i++) {
             item = items[i];
             if (item.el) {
                 el.setStyle(obj);
@@ -173,28 +187,59 @@ Ext.define('Ext.draw.SpriteGroup', {
     },
 
     addCls: function(obj) {
-        var i,
+        var i = 0,
             items = this.items,
-            surface = items.length? items[0].surface : false,
-            ln = this.length;
+            surface = this.getSurface(),
+            len = this.length;
         
         if (surface) {
-            for (i = 0; i < ln; i++) {
+            for (; i < len; i++) {
                 surface.addCls(items[i], obj);
             }
         }
     },
 
     removeCls: function(obj) {
-        var i,
+        var i = 0,
             items = this.items,
-            surface = items.length? items[0].surface : false,
-            ln = this.length;
+            surface = this.getSurface(),
+            len = this.length;
         
         if (surface) {
-            for (i = 0; i < ln; i++) {
+            for (; i < len; i++) {
                 surface.removeCls(items[i], obj);
             }
         }
+    },
+    
+    /**
+     * Grab the surface from the items
+     * @private
+     * @return {Ext.draw.Surface} The surface, null if not found
+     */
+    getSurface: function(){
+        var first = this.first();
+        if (first) {
+            return first.surface;
+        }
+        return null;
+    },
+    
+    /**
+     * Destroys the SpriteGroup
+     */
+    destroy: function(){
+        var me = this,
+            surface = me.getSurface(),
+            item;
+            
+        if (surface) {
+            while (me.getCount() > 0) {
+                item = me.first();
+                me.remove(item);
+                surface.remove(item);
+            }
+        }
+        me.clearListeners();
     }
 });

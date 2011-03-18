@@ -14,72 +14,90 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
     /* End Definitions */
 
     /**
-     * @cfg afterCls
-     * @type String
+     * @cfg {String} afterCtCls
      * CSS class added to the afterCt element. This is the element that holds any special items such as scrollers,
      * which must always be present at the rightmost edge of the Container
      */
-    afterCls: Ext.baseCSSPrefix + 'strip-right',
-    
+
     /**
      * @property noItemsMenuText
      * @type String
      * HTML fragment to render into the toolbar overflow menu if there are no items to display
      */
     noItemsMenuText : '<div class="' + Ext.baseCSSPrefix + 'toolbar-no-items">(None)</div>',
-    
+
     constructor: function(layout) {
-        Ext.layout.container.boxOverflow.Menu.superclass.constructor.apply(this, arguments);
-        
+        var me = this;
+
+        me.callParent(arguments);
+
+        // Before layout, we need to re-show all items which we may have hidden due to a previous overflow.
+        layout.beforeLayout = Ext.Function.createInterceptor(layout.beforeLayout, this.clearOverflow, this);
+
+        me.afterCtCls = me.afterCtCls || Ext.baseCSSPrefix + 'box-menu-' + layout.parallelAfter;
         /**
          * @property menuItems
          * @type Array
          * Array of all items that are currently hidden and should go into the dropdown menu
          */
-        this.menuItems = [];
+        me.menuItems = [];
     },
-    
+
+    handleOverflow: function(calculations, targetSize) {
+        var me = this,
+            layout = me.layout,
+            methodName = 'get' + layout.parallelPrefixCap,
+            newSize = {},
+            posArgs = [null, null];
+
+        me.callParent(arguments);
+        this.createMenu(calculations, targetSize);
+        newSize[layout.perpendicularPrefix] = targetSize[layout.perpendicularPrefix];
+        newSize[layout.parallelPrefix] = targetSize[layout.parallelPrefix] - me.afterCt[methodName]();
+
+        // Center the menuTrigger button.
+        // TODO: Should we emulate align: 'middle' like this, or should we 'stretchmax' the menuTrigger?
+        posArgs[layout.perpendicularSizeIndex] = (calculations.meta.maxSize - me.menuTrigger['get' + layout.perpendicularPrefixCap]()) / 2;
+        me.menuTrigger.setPosition.apply(me.menuTrigger, posArgs);
+
+        return { targetSize: newSize };
+    },
+
     /**
      * @private
-     * Creates the beforeCt, innerCt and afterCt elements if they have not already been created
-     * @param {Ext.container.Container} container The Container attached to this Layout instance
-     * @param {Ext.core.Element} target The target Element
-     */
-    createInnerElements: function() {
-        if (!this.afterCt) {
-            this.afterCt  = this.layout.innerCt.insertSibling({cls: this.afterCls},  'before');
-        }
-    },
-    
-    /**
-     * @private
+     * Called by the layout, when it determines that there is no overflow.
+     * Also called as an interceptor to the layout's onLayout method to reshow
+     * previously hidden overflowing items.
      */
     clearOverflow: function(calculations, targetSize) {
-        var newWidth = targetSize.width + (this.afterCt ? this.afterCt.getWidth() : 0),
-            items    = this.menuItems;
-        
-        this.hideTrigger();
-        
-        for (var index = 0, length = items.length; index < length; index++) {
-            items.pop().component.show();
+        var me = this,
+            newWidth = targetSize ? targetSize.width + (me.afterCt ? me.afterCt.getWidth() : 0) : 0,
+            items = me.menuItems,
+            i = 0,
+            length = items.length,
+            item;
+
+        me.hideTrigger();
+        for (; i < length; i++) {
+            items[i].show();
         }
-        
-        return {
+        items.length = 0;
+
+        return targetSize ? {
             targetSize: {
                 height: targetSize.height,
                 width : newWidth
             }
-        };
+        } : null;
     },
-    
+
     /**
      * @private
      */
     showTrigger: function() {
-        this.createMenu();
         this.menuTrigger.show();
     },
-    
+
     /**
      * @private
      */
@@ -88,38 +106,39 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
             this.menuTrigger.hide();
         }
     },
-    
+
     /**
      * @private
      * Called before the overflow menu is shown. This constructs the menu's items, caching them for as long as it can.
      */
     beforeMenuShow: function(menu) {
-        var items = this.menuItems,
+        var me = this,
+            items = me.menuItems,
+            i = 0,
             len   = items.length,
             item,
             prev;
 
-        var needsSep = function(group, item){
-            return group.isXType('buttongroup') && !(item instanceof Ext.toolbar.Separator);
+        var needsSep = function(group, prev){
+            return group.isXType('buttongroup') && !(prev instanceof Ext.toolbar.Separator);
         };
-        
-        this.clearMenu();
+
+        me.clearMenu();
         menu.removeAll();
-        
-        for (var i = 0; i < len; i++) {
-            item = items[i].component;
-            
+
+        for (; i < len; i++) {
+            item = items[i];
             if (prev && (needsSep(item, prev) || needsSep(prev, item))) {
                 menu.add('-');
             }
-            
-            this.addComponentToMenu(menu, item);
+
+            me.addComponentToMenu(menu, item);
             prev = item;
         }
 
         // put something so the menu isn't empty if no compatible items found
         if (menu.items.length < 1) {
-            menu.add(this.noItemsMenuText);
+            menu.add(me.noItemsMenuText);
         }
     },
     
@@ -158,7 +177,6 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
         delete config.ownerCt;
         delete config.xtype;
         delete config.id;
-
         return config;
     },
 
@@ -186,7 +204,7 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
             }
         }
     },
-    
+
     /**
      * @private
      * Deletes the sub-menu of each item in the expander menu. Submenus are created for items such as
@@ -200,16 +218,26 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
             });
         }
     },
-    
+
     /**
      * @private
      * Creates the overflow trigger and menu used when enableOverflow is set to true and the items
      * in the layout are too wide to fit in the space available
      */
-    createMenu: function() {
-        if (!this.menuTrigger) {
-            this.createInnerElements();
-            
+    createMenu: function(calculations, targetSize) {
+        var me = this,
+            layout = me.layout,
+            startProp = layout.parallelBefore,
+            sizeProp = layout.parallelPrefix,
+            available = targetSize[sizeProp],
+            boxes = calculations.boxes,
+            i = 0,
+            len   = boxes.length,
+            box;
+
+        if (!me.menuTrigger) {
+            me.createInnerElements();
+
             /**
              * @private
              * @property menu
@@ -217,11 +245,12 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
              * The expand menu - holds items for every item that cannot be shown
              * because the container is currently not large enough.
              */
-            this.menu = new Ext.menu.Menu({
-                ownerCt : this.layout.container,
+            me.menu = new Ext.menu.Menu({
+                ownerCt : me.layout.container,
+                hideMode: 'offsets',
                 listeners: {
-                    scope: this,
-                    beforeshow: this.beforeMenuShow
+                    scope: me,
+                    beforeshow: me.beforeMenuShow
                 }
             });
 
@@ -231,15 +260,41 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
              * @type Ext.button.Button
              * The expand button which triggers the overflow menu to be shown
              */
-            this.menuTrigger = new Ext.button.Button({
-                iconCls : Ext.baseCSSPrefix + 'toolbar-more-icon',
-                cls     : Ext.baseCSSPrefix + 'toolbar-more',
-                menu    : this.menu,
-                renderTo: this.afterCt
+            me.menuTrigger = new Ext.button.Button({
+                iconCls : Ext.baseCSSPrefix + layout.owner.getXType() + '-more-icon',
+                ui      : layout.owner instanceof Ext.toolbar.Toolbar ? 'toolbar' : 'default',
+                menu    : me.menu,
+                getSplitCls: function() { return '';},
+                renderTo: me.afterCt
             });
         }
+        me.showTrigger();
+        available -= me.afterCt.getWidth();
+
+        // Hide all items which are off the end, and store them to allow them to be restored
+        // before each layout operation.
+        me.menuItems.length = 0;
+        for (; i < len; i++) {
+            box = boxes[i];
+            if (box[startProp] + box[sizeProp] > available) {
+                me.menuItems.push(box.component);
+                box.component.hide();
+            }
+        }
     },
-    
+
+    /**
+     * @private
+     * Creates the beforeCt, innerCt and afterCt elements if they have not already been created
+     * @param {Ext.container.Container} container The Container attached to this Layout instance
+     * @param {Ext.core.Element} target The target Element
+     */
+    createInnerElements: function() {
+        if (!this.afterCt) {
+            this.afterCt  = this.layout.innerCt.insertSibling({cls: Ext.layout.container.Box.prototype.innerCls + ' ' + this.afterCtCls}, 'before');
+        }
+    },
+
     /**
      * @private
      */

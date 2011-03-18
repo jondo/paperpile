@@ -448,7 +448,7 @@ Ext.tree.TreeNode = Ext.extend(Ext.data.Node, {
         if(deep === true){
             var cs = this.childNodes;
             for(var i = 0, len = cs.length; i < len; i++) {
-            	cs[i].collapse(true, false);
+                cs[i].collapse(true, false);
             }
         }
     },
@@ -503,7 +503,7 @@ Ext.tree.TreeNode = Ext.extend(Ext.data.Node, {
             i,
             len = cs.length;
         for (i = 0; i < len; i++) {
-        	cs[i].expand(deep, anim);
+            cs[i].expand(deep, anim);
         }
     },
 
@@ -514,7 +514,7 @@ Ext.tree.TreeNode = Ext.extend(Ext.data.Node, {
     collapseChildNodes : function(deep){
         var cs = this.childNodes;
         for(var i = 0, len = cs.length; i < len; i++) {
-        	cs[i].collapse(deep);
+            cs[i].collapse(deep);
         }
     },
 

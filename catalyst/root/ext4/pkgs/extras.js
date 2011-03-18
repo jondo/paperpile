@@ -165,10 +165,23 @@ Ext.decode = Ext.JSON.decode;
 
 /**
  * @class Ext
- * Ext core utilities and functions.
- * @singleton
- */
 
+ Ext core utilities and functions. This object contains many aliases for common functions,
+ for example {@link Ext#getCmp Ext.getCmp} aliases {@link Ext.ComponentMgr#get Ext.ComponentMgr.get}.
+
+ Many applications are initiated with {@link Ext#onReady Ext.onReady} which is called once the DOM is ready. 
+ This ensures all scripts have been loaded, preventing dependency issues. For example
+
+     Ext.onReady(function(){
+         new Ext.Container({
+             renderTo: document.body,
+             html: 'DOM ready!'
+         });
+     });
+
+ * @singleton
+ * @markdown
+ */
 Ext.apply(Ext, {
     userAgent: navigator.userAgent.toLowerCase(),
     cache: {},
@@ -544,7 +557,7 @@ Ext.ns("Ext.grid", "Ext.list", "Ext.dd", "Ext.tree", "Ext.form", "Ext.menu",
         document.execCommand("BackgroundImageCache", false, true);
     } catch(e) {}
 
-    Ext.setVersion('extjs', '4.0.0dev');
+    Ext.setVersion('extjs', '4.0.0pr4');
     Ext.apply(Ext, {
         /**
          * URL to a blank file used by Ext when in secure mode for iframe src and onReady src to prevent
@@ -656,7 +669,7 @@ function(el){
         /**
          * Removes a DOM node from the document.
          * <p>Removes this element from the document, removes all DOM event listeners, and deletes the cache reference.
-         * All DOM event listeners are removed from this element. If {@link Ext#enableNestedListenerRemoval} is
+         * All DOM event listeners are removed from this element. If {@link Ext#enableNestedListenerRemoval Ext.enableNestedListenerRemoval} is
          * <code>true</code>, then DOM event listeners are also removed from all child nodes. The body node
          * will be ignored if passed in.</p>
          * @param {HTMLElement} node The node to remove
@@ -1385,6 +1398,7 @@ Ext.zip(
          */
         currency: function(v, currencySign, decimals, end) {
             var negativeSign = '';
+            v = v - 0;
             if (v < 0) {
                 v = -v;
                 negativeSign = '-';

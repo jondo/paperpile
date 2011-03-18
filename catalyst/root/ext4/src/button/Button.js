@@ -1,28 +1,38 @@
 /**
  * @class Ext.button.Button
  * @extends Ext.Component
- * Simple Button class
- * @cfg {String} text The button text to be used as innerHTML (html tags are accepted)
- * @cfg {String} icon The path to an image to display in the button (the image will be set as the background-image
- * CSS property of the button by default, so if you want a mixed icon/text button, set cls:'x-btn-text-icon')
- * @cfg {Function} handler A function called when the button is clicked (can be used instead of click event).
- * The handler is passed the following parameters:<div class="mdetail-params"><ul>
- * <li><code>b</code> : Button<div class="sub-desc">This Button.</div></li>
- * <li><code>e</code> : EventObject<div class="sub-desc">The click event.</div></li>
- * </ul></div>
- * @cfg {Number} minWidth The minimum width for this button (used to give a set of buttons a common width).
- * See also {@link Ext.panel.Panel}.<tt>{@link Ext.panel.Panel#minButtonWidth minButtonWidth}</tt>.
- * @cfg {String/Object} tooltip The tooltip for the button - can be a string to be used as innerHTML (html tags are accepted) or QuickTips config object
- * @cfg {Boolean} hidden True to start hidden (defaults to false)
- * @cfg {Boolean} disabled True to start disabled (defaults to false)
- * @cfg {Boolean} pressed True to start pressed (only if enableToggle = true)
- * @cfg {String} toggleGroup The group this toggle button is a member of (only 1 per group can be pressed)
- * @cfg {Boolean/Object} repeat True to repeat fire the click event while the mouse is down. This can also be
- * a {@link Ext.util.ClickRepeater ClickRepeater} config object (defaults to false).
+
+Create simple buttons with this component. Customisations include {@link #config-iconAlign aligned} 
+{@link #config-iconCls icons}, {@link #config-menu dropdown menus}, {@link #config-tooltip tooltips} 
+and {@link #config-scale sizing options}. Specify a {@link #config-handler handler} to run code when 
+a user clicks the button, or use {@link #config-listeners listeners} for other events such as 
+{@link #events-mouseover mouseover}.
+
+Example usage:
+ 
+    new Ext.Button({
+        renderTo: document.body,
+        text: 'Click me',
+        handler: function() {
+            alert('You clicked the button!')
+        }
+    });
+    
+A button within a container:
+
+    new Ext.Container({
+        renderTo: document.body,
+        items: [{
+            xtype: 'button',
+            text: 'My Button'
+        }]
+    });
+ 
  * @constructor
  * Create a new button
  * @param {Object} config The config object
  * @xtype button
+ * @markdown
  */
 
 Ext.define('Ext.button.Button', {
@@ -37,7 +47,8 @@ Ext.define('Ext.button.Button', {
         'Ext.menu.MenuManager',
         'Ext.util.ClickRepeater',
         'Ext.layout.component.Button',
-        'Ext.util.TextMetrics'
+        'Ext.util.TextMetrics',
+        'Ext.util.KeyMap'
     ],
     
     alternateClassName: 'Ext.Button',
@@ -62,6 +73,53 @@ Ext.define('Ext.button.Button', {
      * @type Boolean
      */
     pressed: false,
+    
+    /**
+     * @cfg {String} text The button text to be used as innerHTML (html tags are accepted)
+     */
+
+    /**
+     * @cfg {String} icon The path to an image to display in the button (the image will be set as the background-image
+     * CSS property of the button by default, so if you want a mixed icon/text button, set cls:'x-btn-text-icon')
+     */
+     
+    /**
+     * @cfg {Function} handler A function called when the button is clicked (can be used instead of click event).
+     * The handler is passed the following parameters:<div class="mdetail-params"><ul>
+     * <li><code>b</code> : Button<div class="sub-desc">This Button.</div></li>
+     * <li><code>e</code> : EventObject<div class="sub-desc">The click event.</div></li>
+     * </ul></div>
+     */
+     
+    /**
+     * @cfg {Number} minWidth The minimum width for this button (used to give a set of buttons a common width).
+     * See also {@link Ext.panel.Panel}.<tt>{@link Ext.panel.Panel#minButtonWidth minButtonWidth}</tt>.
+     */
+
+    /**
+     * @cfg {String/Object} tooltip The tooltip for the button - can be a string to be used as innerHTML (html tags are accepted) or QuickTips config object
+     */
+
+    /**
+     * @cfg {Boolean} hidden True to start hidden (defaults to false)
+     */
+
+    /**
+     * @cfg {Boolean} disabled True to start disabled (defaults to false)
+     */
+
+    /**
+     * @cfg {Boolean} pressed True to start pressed (only if enableToggle = true)
+     */
+
+    /**
+     * @cfg {String} toggleGroup The group this toggle button is a member of (only 1 per group can be pressed)
+     */
+
+    /**
+     * @cfg {Boolean/Object} repeat True to repeat fire the click event while the mouse is down. This can also be
+     * a {@link Ext.util.ClickRepeater ClickRepeater} config object (defaults to false).
+     */    
 
     /**
      * @cfg {Number} tabIndex Set a DOM tabIndex for this button (defaults to undefined)
@@ -120,6 +178,12 @@ Ext.define('Ext.button.Button', {
      * Defaults to <tt>'click'</tt>.
      */
     clickEvent: 'click',
+    
+    /**
+     * @cfg {Boolean} preventDefault
+     * True to prevent the default action when the {@link #clickEvent} is processed. Defaults to true.
+     */
+    preventDefault: true,
 
     /**
      * @cfg {Boolean} handleMouseEvents
@@ -159,9 +223,16 @@ Ext.define('Ext.button.Button', {
     // inherited
     renderTpl:
         '<em class="{splitCls}">' +
-            '<button type="{type}"' +
-                '<tpl if="tabIndex"> tabIndex="{tabIndex}"</tpl> role="button">{text}' +
-            '</button>' +
+            '<tpl if="href">' +
+                '<a href="{href}" target="{target}"' +
+                    '<tpl if="tabIndex"> tabIndex="{tabIndex}"</tpl> role="button">{text}' +
+                '</a>' +
+            '</tpl>' +
+            '<tpl if="!href">' +
+                '<button type="{type}"' +
+                    '<tpl if="tabIndex"> tabIndex="{tabIndex}"</tpl> role="button">{text}' +
+                '</button>' +
+            '</tpl>' +
         '</em>',
 
     /**
@@ -316,6 +387,12 @@ Ext.define('Ext.button.Button', {
 
             // retrieve menu by id or instantiate instance if needed
             me.menu = Ext.menu.MenuManager.get(me.menu);
+            me.menu.ownerCt = me;
+        }
+
+        // Accept url as a synonym for href
+        if (me.url) {
+            me.href = me.url;
         }
 
         if (Ext.isString(me.toggleGroup)) {
@@ -391,7 +468,7 @@ Ext.define('Ext.button.Button', {
 
         // Extract the button and the button wrapping element
         Ext.applyIf(me.renderSelectors, {
-            btnEl: 'button',
+            btnEl: me.href ? 'a' : 'button',
             btnWrap: 'em'
         });
 
@@ -438,6 +515,12 @@ Ext.define('Ext.button.Button', {
                 show: me.onMenuShow,
                 hide: me.onMenuHide
             });
+            
+            me.keyMap = Ext.create('Ext.util.KeyMap', me.el, {
+                key: Ext.EventObject.DOWN,
+                handler: me.onDownKey,
+                scope: me
+            });
         }
 
         if (me.repeat) {
@@ -467,6 +550,8 @@ Ext.define('Ext.button.Button', {
     getTemplateArgs: function() {
         var me = this;
         return {
+            href     : me.getHref(),
+            target   : me.target || '_blank',
             type     : me.type,
             splitCls : me.getSplitCls(),
             cls      : me.cls,
@@ -475,8 +560,29 @@ Ext.define('Ext.button.Button', {
         };
     },
 
+    /**
+     * @private
+     * If there is a configured href for this Button, returns the href with parameters appended.
+     * @returns The href string with parameters appended.
+     */
+    getHref: function() {
+        var me = this;
+        return me.href ? Ext.urlAppend(me.href, Ext.urlEncode(Ext.apply(Ext.apply({}, me.baseParams), me.params))) : false;
+    },
+
+    /**
+     * <p><b>Only valid if the Button was originally configured with a {@link #url}</b></p>
+     * <p>Sets the href of the link dynamically according to the params passed, and any {@link #baseParams} configured.</p>
+     * @param {Object} Parameters to use in the href URL.
+     */
+    setParams: function(p) {
+        this.params = p;
+        this.btnEl.dom.href = this.getHref();
+    },
+
     getSplitCls: function() {
-        return this.split ? (this.baseCls + '-' + this.arrowCls) + ' ' + (this.baseCls + '-' + this.arrowCls + '-' + this.arrowAlign) : '';
+        var me = this;
+        return me.split ? (me.baseCls + '-' + me.arrowCls) + ' ' + (me.baseCls + '-' + me.arrowCls + '-' + me.arrowAlign) : '';
     },
 
     // private
@@ -490,7 +596,7 @@ Ext.define('Ext.button.Button', {
     
     /**
      * Sets the CSS class that provides a background image to use as the button's icon.  This method also changes
-     * the value of the {@link iconCls} config internally.
+     * the value of the {@link #iconCls} config internally.
      * @param {String} cls The CSS class providing the icon image
      * @return {Ext.button.Button} this
      */
@@ -499,7 +605,6 @@ Ext.define('Ext.button.Button', {
         if (me.el) {
             // Remove the previous iconCls from the button
             me.btnEl.removeCls(me.iconCls);
-
             me.btnEl.addCls([me.baseCls + '-text', cls || '']);
             me.setButtonCls();
         }
@@ -577,6 +682,9 @@ Ext.define('Ext.button.Button', {
             delete me.doc;
             delete me.btnEl;
             Ext.ButtonToggleMgr.unregister(me);
+            
+            Ext.destroy(me.keyMap);
+            delete me.keyMap;
         }
         me.callParent();
     },
@@ -612,7 +720,7 @@ Ext.define('Ext.button.Button', {
 
     /**
      * Sets the background image (inline style) of the button.  This method also changes
-     * the value of the {@link icon} config internally.
+     * the value of the {@link #icon} config internally.
      * @param {String} icon The path to an image to display in the button
      * @return {Ext.button.Button} this
      */
@@ -670,11 +778,6 @@ Ext.define('Ext.button.Button', {
                 me.menu.hide();
             }
 
-            // Allow the menu to find a z-index parent on render by examining its ownerCt chain
-            if (!me.menu.ownerCt) {
-                me.menu.ownerCt = me.ownerCt;
-            }
-
             me.menu.showBy(me.el, me.menuAlign);
         }
         return me;
@@ -707,7 +810,7 @@ Ext.define('Ext.button.Button', {
     // private
     onClick: function(e) {
         var me = this;
-        if (e) {
+        if (me.preventDefault && e) {
             e.preventDefault();
         }
         if (e.button !== 0) {
@@ -735,15 +838,31 @@ Ext.define('Ext.button.Button', {
     onMouseOver: function(e) {
         var me = this,
             to = e.getTarget(),
-            from = e.getRelatedTarget();
-
-        if (to === this.el.dom) {
-            if (from !== this.btnEl.dom || from !== this.btnWrap.dom) {
-                this.onMouseEnter(e);
-            }
+            from = e.getRelatedTarget(),
+            splitSize = 18,
+            overlap, height, width;
+            
+        if (me.disabled) {
+            return;
         }
-        else if (to === this.btnWrap.dom) {
-            this.onMenuTriggerOver(e);
+        
+        me.onMouseEnter(e);
+        
+        //check if the user is hovering over the arrow
+        if (me.arrowAlign == 'right') {
+            overlap = e.xy[0] - me.el.getX();
+            width = me.el.getWidth();
+
+            if ((to === me.btnWrap.dom && to != me.btnEl.dom) || overlap > (width - splitSize)) {
+                me.onMenuTriggerOver(e);
+            }
+        } else {
+            overlap = e.xy[1] - me.el.getY();
+            height = me.el.getHeight();
+
+            if ((to === me.btnWrap.dom && to != me.btnEl.dom) || overlap > (height - splitSize)) {
+                me.onMenuTriggerOver(e);
+            }
         }
     },
 
@@ -758,9 +877,9 @@ Ext.define('Ext.button.Button', {
             from = e.getTarget(),
             to = e.getRelatedTarget();
 
-        if (from === this.el.dom) {
-            if (to !== this.btnEl.dom && to !== this.btnWrap.dom) {
-                this.onMouseLeave(e);
+        if (from === me.el.dom) {
+            if (to !== me.btnEl.dom && to !== me.btnWrap.dom) {
+                me.onMouseLeave(e);
             }
         }
         else if (from === me.btnWrap.dom) {
@@ -855,7 +974,9 @@ Ext.define('Ext.button.Button', {
     onMouseUp: function(e) {
         var me = this;
         if (e.button === 0) {
-            me.el.removeCls([me.baseCls + '-pressed', me.pressedCls]);
+            if (!me.pressed) {
+                me.el.removeCls([me.baseCls + '-pressed', me.pressedCls]);
+            }
             me.doc.un('mouseup', me.onMouseUp, me);
         }
     },
@@ -864,6 +985,7 @@ Ext.define('Ext.button.Button', {
         var me = this;
         me.ignoreNextClick = 0;
         me.el.addCls(me.baseCls + '-menu-active');
+        me.el.addCls(me.baseCls + '-' + me.ui + '-menu-active');
         me.fireEvent('menushow', me, me.menu);
     },
 
@@ -871,6 +993,7 @@ Ext.define('Ext.button.Button', {
     onMenuHide: function(e) {
         var me = this;
         me.el.removeCls(me.baseCls + '-menu-active');
+        me.el.removeCls(me.baseCls + '-' + me.ui + '-menu-active');
         me.ignoreNextClick = Ext.defer(me.restoreClick, 250, me);
         me.fireEvent('menuhide', me, me.menu);
     },
@@ -878,6 +1001,17 @@ Ext.define('Ext.button.Button', {
     // private
     restoreClick: function() {
         this.ignoreNextClick = 0;
+    },
+    
+    // private
+    onDownKey: function() {
+        var me = this;
+        
+        if (!me.disabled) {
+            if (me.menu) {
+                me.showMenu();
+            }
+        }
     }
 }, function() {
     var groups = {},

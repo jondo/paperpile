@@ -1,23 +1,3 @@
-Ext.apply(Ext, {
-    /**
-     * Returns the current document body as an {@link Ext.core.Element}.
-     * @ignore
-     * @member Ext
-     * @return Ext.core.Element The document body
-     */
-    getHead : function() {
-        var head;
-        
-        return function() {
-            if (head === undefined) {
-                head = Ext.get(document.getElementsByTagName("head")[0]);
-            }
-            
-            return head;
-        };
-    }()
-});
-
 /**
  * @author Ed Spencer
  * @class Ext.data.ScriptTagProxy
@@ -229,8 +209,7 @@ Ext.define('Ext.data.ScriptTagProxy', {
              */
             'exception'
         );
-        
-        Ext.data.ScriptTagProxy.superclass.constructor.apply(this, arguments);    
+        this.callParent(arguments);    
     },
 
     /**
@@ -243,15 +222,16 @@ Ext.define('Ext.data.ScriptTagProxy', {
      */
     doRequest: function(operation, callback, scope) {
         //generate the unique IDs for this request
-        var format     = Ext.Function.bind(Ext.String.format, Ext.String),
+        var me         = this,
+            format     = Ext.Function.bind(Ext.String.format, Ext.String),
             transId    = ++Ext.data.ScriptTagProxy.TRANS_ID,
-            scriptId   = format("{0}{1}", this.scriptIdPrefix, transId),
-            stCallback = format("{0}{1}", this.callbackPrefix, transId);
-        
-        var writer  = this.getWriter(),
-            request = this.buildRequest(operation),
+            scriptId   = format("{0}{1}", me.scriptIdPrefix, transId),
+            stCallback = format("{0}{1}", me.callbackPrefix, transId),
+            writer     = me.getWriter(),
+            request    = me.buildRequest(operation),
             //FIXME: ideally this would be in buildUrl, but we don't know the stCallback name at that point
-            url     = Ext.urlAppend(request.url, format("{0}={1}", this.callbackParam, stCallback));
+            url        = Ext.urlAppend(request.url, format("{0}={1}", me.callbackParam, stCallback)),
+            script;
             
         if (operation.allowWrite()) {
             request = writer.write(request);
@@ -266,13 +246,13 @@ Ext.define('Ext.data.ScriptTagProxy', {
         });
         
         //if the request takes too long this timeout function will cancel it
-        request.timeoutId = Ext.defer(this.createTimeoutHandler, this.timeout, this, [request, operation]);
+        request.timeoutId = Ext.defer(me.timeoutHandler, me.timeout, me, [request, operation]);
         
         //this is the callback that will be called when the request is completed
-        window[stCallback] = this.createRequestCallback(request, operation, callback, scope);
+        window[stCallback] = me.createRequestCallback(request, operation, callback, scope);
         
         //create the script tag and inject it into the document
-        var script = document.createElement("script");
+        script = document.createElement("script");
         script.setAttribute("src", url);
         script.setAttribute("async", true);
         script.setAttribute("type", "text/javascript");
@@ -281,7 +261,7 @@ Ext.define('Ext.data.ScriptTagProxy', {
         Ext.getHead().appendChild(script);
         operation.setStarted();
         
-        this.lastRequest = request;
+        me.lastRequest = request;
         
         return request;
     },
@@ -305,24 +285,7 @@ Ext.define('Ext.data.ScriptTagProxy', {
         var me = this;
         
         return function(response) {
-            var reader = me.getReader(),
-                result = reader.read(response);
-            
-            //see comment in buildRequest for why we include the response object here
-            Ext.apply(operation, {
-                response : response,
-                resultSet: result
-            });
-            
-            operation.setCompleted();
-            operation.setSuccessful();
-            
-            //this callback is the one that was passed to the 'read' or 'write' function above
-            if (typeof callback == 'function') {
-                callback.call(scope || me, operation);
-            }
-            
-            me.afterRequest(request, true);
+            me.processResponse(true, operation, request, response, callback, scope);
         };
     },
     
@@ -344,7 +307,7 @@ Ext.define('Ext.data.ScriptTagProxy', {
         };
         
         return function(request, isLoaded) {
-            Ext.get(request.scriptId).remove();
+            Ext.fly(request.scriptId).remove();
             clearTimeout(request.timeoutId);
             
             var callbackName = request.stCallback;
@@ -365,14 +328,16 @@ Ext.define('Ext.data.ScriptTagProxy', {
      * @return {String} The url
      */
     buildUrl: function(request) {
-        var url     = Ext.data.ScriptTagProxy.superclass.buildUrl.call(this, request),  
+        var me      = this,
+            url     = me.callParent(arguments),
             params  = Ext.apply({}, request.params),
             filters = params.filters,
+            records,
             filter, i;
             
         delete params.filters;
         
-        if (this.autoAppendParams) {
+        if (me.autoAppendParams) {
             url = Ext.urlAppend(url, Ext.urlEncode(params));
         }
         
@@ -387,10 +352,10 @@ Ext.define('Ext.data.ScriptTagProxy', {
         }
         
         //if there are any records present, append them to the url also
-        var records = request.records;
+        records = request.records;
         
         if (Ext.isArray(records) && records.length > 0) {
-            url = Ext.urlAppend(url, Ext.String.format("{0}={1}", this.recordParam, this.encodeRecords(records)));
+            url = Ext.urlAppend(url, Ext.String.format("{0}={1}", me.recordParam, me.encodeRecords(records)));
         }
         
         return url;
@@ -399,8 +364,7 @@ Ext.define('Ext.data.ScriptTagProxy', {
     //inherit docs
     destroy: function() {
         this.abort();
-        
-        Ext.data.ScriptTagProxy.superclass.destroy.apply(this, arguments);
+        this.callParent();
     },
         
     /**
@@ -429,9 +393,11 @@ Ext.define('Ext.data.ScriptTagProxy', {
      * @return {String} The encoded records string
      */
     encodeRecords: function(records) {
-        var encoded = "";
+        var encoded = "",
+            i = 0,
+            len = records.length;
         
-        for (var i = 0, length = records.length; i < length; i++) {
+        for (; i < len; i++) {
             encoded += Ext.urlEncode(records[i].data);
         }
         
@@ -440,17 +406,13 @@ Ext.define('Ext.data.ScriptTagProxy', {
     
     /**
      * @private
-     * Starts a timer with the value of this.timeout - if this fires it means the request took too long so we
-     * cancel the request. If the request was successful this timer is cancelled by this.afterRequest
+     * If this fires it means the request took too long so we cancel the request. If the request was 
+     * successful this timer is cancelled by this.afterRequest
      * @param {Ext.data.Request} request The Request to handle
      */
-    createTimeoutHandler: function(request, operation) {
+    timeoutHandler: function(request, operation) {
         this.afterRequest(request, false);
-
         this.fireEvent('exception', this, request, operation);
-        
-        if (typeof request.callback == 'function') {
-            request.callback.call(request.scope || window, null, request.options, false);
-        }        
+        Ext.callback(request.callback, request.scope || window, [null, request.options, false]);
     }
 });

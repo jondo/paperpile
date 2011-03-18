@@ -38,8 +38,18 @@ editor.startEdit(el); // The value of the field will be taken as the innerHTML o
  * @xtype editor
  */
 Ext.define('Ext.Editor', {
+    
+    /* Begin Definitions */
+   
     extend: 'Ext.Component',
+    
     alias: 'widget.editor',
+    
+    requires: ['Ext.layout.component.Editor'],
+    
+    /* End Definitions */
+   
+   componentLayout: 'editor',
 
     /**
     * @cfg {Ext.form.Field} field
@@ -54,9 +64,25 @@ Ext.define('Ext.Editor', {
     allowBlur: true,
     
     /**
-     * @cfg {Boolean/String} autoSize
-     * True for the editor to automatically adopt the size of the underlying field, "width" to adopt the width only,
-     * or "height" to adopt the height only, "none" to always use the field dimensions. (defaults to false)
+     * @cfg {Boolean/Object} autoSize
+     * True for the editor to automatically adopt the size of the underlying field. Otherwise, an object
+     * can be passed to indicate where to get each dimension. The available properties are 'boundEl' and
+     * 'field'. If a dimension is not specified, it will use the underlying height/width specified on
+     * the editor object.
+     * Examples:
+     * <pre><code>
+autoSize: true // The editor will be sized to the height/width of the field
+
+height: 21,
+autoSize: {
+    width: 'boundEl' // The width will be determined by the width of the boundEl, the height from the editor (21)
+}
+
+autoSize: {
+    width: 'field', // Width from the field
+    height: 'boundEl' // Height from the boundEl
+}
+     * </pre></code>
      */
     
     /**
@@ -149,7 +175,7 @@ Ext.define('Ext.Editor', {
             specialkey: me.onSpecialKey
         });
         if (field.grow) {
-            me.mon(field, 'autosize', me.doAutoSize,  me, {delay: 1});
+            me.mon(field, 'autosize', me.doComponentLayout,  me, {delay: 1});
         }
         me.floating = {
             constrain: me.constrain
@@ -224,7 +250,6 @@ Ext.define('Ext.Editor', {
         field.render(me.el);
         // Ensure the field doesn't get submitted as part of any form
         field.inputEl.dom.name = '';
-        field.el.setWidth('auto');
         if (me.swallowKeys) {
             field.inputEl.swallowEvent([
                 'keypress', // *** Opera
@@ -262,13 +287,14 @@ Ext.define('Ext.Editor', {
      */
     startEdit : function(el, value) {
         var me = this,
-            field = me.field;
+            field = me.field,
+            rendered = me.rendered;
             
         me.completeEdit();
         me.boundEl = Ext.get(el);
         value = Ext.isDefined(value) ? value : me.boundEl.dom.innerHTML;
         
-        if (!me.rendered) {
+        if (!rendered) {
             me.render(me.parentEl || document.body);
         }
         
@@ -277,37 +303,9 @@ Ext.define('Ext.Editor', {
             field.reset();
             field.setValue(value);
             me.show();
-            me.realign(true);
+            me.realign(rendered); // only force a layout after first time
             field.autoSize();
             me.editing = true;
-        }
-    },
-
-    // private
-    doAutoSize : function() {
-        var me = this,
-            autoSize = me.autoSize,
-            inputEl, boundSize, fieldSizeWidth, fieldSizeHeight;
-            
-        if (autoSize) {
-            boundSize = me.boundEl.getSize();
-            inputEl = me.field.inputEl;
-            fieldSizeWidth = inputEl.getWidth() + inputEl.getBorderWidth('lr');
-            fieldSizeHeight = inputEl.getHeight() + inputEl.getBorderWidth('tb');
-            
-            switch (autoSize) {
-                case 'width':
-                    me.setSize(boundSize.width, fieldSizeHeight);
-                    break;
-                case 'height':
-                    me.setSize(fieldSizeWidth, boundSize.height);
-                    break;
-                case 'none':
-                    me.setSize(fieldSizeWidth, fieldSizeHeight);
-                    break;
-                default:
-                    me.setSize(boundSize.width, boundSize.height);
-            }
         }
     },
 
@@ -318,9 +316,9 @@ Ext.define('Ext.Editor', {
     realign : function(autoSize) {
         var me = this;
         if (autoSize === true) {
-            me.doAutoSize();
+            me.doComponentLayout();
         }
-        me.el.alignTo(me.boundEl, me.alignment, me.offsets);
+        me.alignTo(me.boundEl, me.alignment, me.offsets);
     },
 
     /**
@@ -373,9 +371,6 @@ Ext.define('Ext.Editor', {
         if (me.hideEl !== false) {
             me.boundEl.hide();
         }
-
-        // Floating Components get a toFront method from the Floating mixin
-        me.toFront();
 
         me.field.show().focus(false, true);
         me.fireEvent("startedit", me.boundEl, me.startValue);

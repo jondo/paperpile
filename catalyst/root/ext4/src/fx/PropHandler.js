@@ -150,25 +150,27 @@ Ext.define('Ext.fx.PropHandler', {
                     i, val, parsedString, from, delta;
                 for (i = 0; i < ln; i++) {
                     val = values[i][1];
-                    from = val.from;
-                    delta = val.delta;
-                    //multiple checks to reformat the color if it can't recognized by computeDelta.
-                    val = (typeof val == 'object' && 'red' in val)? 
-                            'rgb(' + val.red + ', ' + val.green + ', ' + val.blue + ')' : val;
-                    val = (typeof val == 'object' && val.length)? val[0] : val;
-                    if (typeof val == 'undefined') {
-                        return [];
+                    if (val) {
+                        from = val.from;
+                        delta = val.delta;
+                        //multiple checks to reformat the color if it can't recognized by computeDelta.
+                        val = (typeof val == 'object' && 'red' in val)? 
+                                'rgb(' + val.red + ', ' + val.green + ', ' + val.blue + ')' : val;
+                        val = (typeof val == 'object' && val.length)? val[0] : val;
+                        if (typeof val == 'undefined') {
+                            return [];
+                        }
+                        parsedString = typeof val == 'string'? val :
+                            'rgb(' + [
+                                  (from.red + Math.round(delta.red * easing)) % 256,
+                                  (from.green + Math.round(delta.green * easing)) % 256,
+                                  (from.blue + Math.round(delta.blue * easing)) % 256
+                              ].join(',') + ')';
+                        out.push([
+                            values[i][0],
+                            parsedString
+                        ]);
                     }
-                    parsedString = typeof val == 'string'? val :
-                        'rgb(' + [
-                              (from.red + Math.round(delta.red * easing)) % 256,
-                              (from.green + Math.round(delta.green * easing)) % 256,
-                              (from.blue + Math.round(delta.blue * easing)) % 256
-                          ].join(',') + ')';
-                    out.push([
-                        values[i][0],
-                        parsedString
-                    ]);
                 }
                 return out;
             }

@@ -49,7 +49,7 @@ Ext.define('Ext.layout.component.form.Text', {
         var me = this,
             owner = me.owner,
             inputEl, value, calcWidth,
-            result = [width, height];
+            result = [width, null]; // Don't set height of single-line text fields
 
         if (owner.grow) {
             inputEl = owner.inputEl;

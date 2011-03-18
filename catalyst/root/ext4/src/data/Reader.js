@@ -187,6 +187,8 @@ Ext.define('Ext.data.Reader', {
      */
     implicitIncludes: true,
     
+    isReader: true,
+    
     constructor: function(config) {
         Ext.apply(this, config || {});
 
@@ -213,7 +215,7 @@ Ext.define('Ext.data.Reader', {
 
     /**
      * Reads the given response object. This method normalizes the different types of response object that may be passed
-     * to it, before handing off the reading of records to the {@link readRecords} function.
+     * to it, before handing off the reading of records to the {@link #readRecords} function.
      * @param {Object} response The response object. This may be either an XMLHttpRequest object or a plain JS object
      * @return {Ext.data.ResultSet} The parsed ResultSet object
      */
@@ -239,39 +241,41 @@ Ext.define('Ext.data.Reader', {
      * @return {Ext.data.ResultSet} A ResultSet object
      */
     readRecords: function(data) {
+        var me  = this;
+        
         /**
          * The raw data object that was last passed to readRecords. Stored for further processing if needed
          * @property rawData
          * @type Mixed
          */
-        this.rawData = data;
+        me.rawData = data;
 
-        data = this.getData(data);
+        data = me.getData(data);
 
-        var root    = this.getRoot(data),
+        var root    = me.getRoot(data),
             total   = root.length,
             success = true,
             value, records, message, recordCount;
 
-        if (this.totalProperty) {
-            value = parseInt(this.getTotal(data), 10);
+        if (me.totalProperty) {
+            value = parseInt(me.getTotal(data), 10);
             if (!isNaN(value)) {
                 total = value;
             }
         }
 
-        if (this.successProperty) {
-            value = this.getSuccess(data);
+        if (me.successProperty) {
+            value = me.getSuccess(data);
             if (value === false || value === 'false') {
                 success = false;
             }
         }
         
-        if (this.messageProperty) {
-            message = this.getMessage(data);
+        if (me.messageProperty) {
+            message = me.getMessage(data);
         }
 
-        records = this.extractData(root, true);
+        records = me.extractData(root);
         recordCount = records.length;
 
         return Ext.create('Ext.data.ResultSet', {
@@ -286,10 +290,9 @@ Ext.define('Ext.data.Reader', {
     /**
      * Returns extracted, type-cast rows of data.  Iterates to call #extractValues for each row
      * @param {Object[]/Object} data-root from server response
-     * @param {Boolean} returnRecords [false] Set true to return instances of {@link Ext.data.Model}
      * @private
      */
-    extractData : function(root, returnRecords) {
+    extractData : function(root) {
         var me = this,
             values  = [],
             records = [],
@@ -309,17 +312,13 @@ Ext.define('Ext.data.Reader', {
             values = me.extractValues(node);
             id     = me.getId(node);
 
-            if (returnRecords === true) {
-                record = new Model(values, id);
-                record.raw = node;
-                records.push(record);
+            
+            record = new Model(values, id);
+            record.raw = node;
+            records.push(record);
                 
-                if (me.implicitIncludes) {
-                    me.readAssociated(record, node);
-                }
-            } else {
-                values[idProp] = id;
-                records.push(values);
+            if (me.implicitIncludes) {
+                me.readAssociated(record, node);
             }
         }
 
@@ -338,48 +337,27 @@ Ext.define('Ext.data.Reader', {
         var associations = record.associations.items,
             i            = 0,
             length       = associations.length,
-            association, associationName, associatedModel, associationData, inverseAssociation, proxy, reader, store;
+            association, associationData, proxy, reader;
         
         for (; i < length; i++) {
             association     = associations[i];
-            associationName = association.name;
-            associationData = this.getAssociatedDataRoot(data, association.associationKey || associationName);
-            associatedModel = association.associatedModel;
+            associationData = this.getAssociatedDataRoot(data, association.associationKey || association.name);
             
             if (associationData) {
-                proxy = associatedModel.proxy;
-                
-                // if the associated model has a Reader already, use that, otherwise attempt to create a sensible one
-                if (proxy) {
-                    reader = proxy.getReader();
-                } else {
-                    reader = new this.constructor({
-                        model: association.associatedName
-                    });
-                }
-                
-                if (association.type == 'hasMany') {
-                    store = record[associationName]();
-                    
-                    store.add.apply(store, reader.read(associationData).records);
-                    
-                    //now that we've added the related records to the hasMany association, set the inverse belongsTo
-                    //association on each of them if it exists
-                    inverseAssociation = associatedModel.prototype.associations.findBy(function(assoc) {
-                        return assoc.type == 'belongsTo' && assoc.associatedName == record.constructor.modelName;
-                    });
-                    
-                    //if the inverse association was found, set it now on each record we've just created
-                    if (inverseAssociation) {
-                        store.data.each(function(associatedRecord) {
-                            associatedRecord[inverseAssociation.instanceName] = record;
-                        });                        
+                reader = association.getReader();
+                if (!reader) {
+                    proxy = association.associatedModel.proxy;
+                    // if the associated model has a Reader already, use that, otherwise attempt to create a sensible one
+                    if (proxy) {
+                        reader = proxy.getReader();
+                    } else {
+                        reader = new this.constructor({
+                            model: association.associatedName
+                        });
                     }
-
-                } else if (association.type == 'belongsTo') {
-                    record[association.instanceName] = reader.read([associationData]).records[0];
                 }
-            }
+                association.read(record, reader, associationData);
+            }  
         }
     },
     
@@ -412,7 +390,7 @@ Ext.define('Ext.data.Reader', {
 
         for (; i < length; i++) {
             field = fields[i];
-            value = this.extractorFunctions[i](data) || field.defaultValue;
+            value = this.extractorFunctions[i](data);
 
             output[field.name] = value;
         }

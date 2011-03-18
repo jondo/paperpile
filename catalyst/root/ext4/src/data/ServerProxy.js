@@ -66,16 +66,16 @@ Ext.define('Ext.data.ServerProxy', {
     filterParam: 'filter',
     
     /**
-     * @cfg {String} dirParam The name of the direction parameter to send in a request. <strong>This is only used when legacySortMode is set to true.</strong>
+     * @cfg {String} dirParam The name of the direction parameter to send in a request. <strong>This is only used when simpleSortMode is set to true.</strong>
      * Defaults to 'dir'.
      */
     dirParam: 'dir',
     
     /**
-     * @cfg {Boolean} legacySortMode Enabling legacySortMode in conjunction with remoteSort will only send one sort property and a direction when a remote sort is requested.
+     * @cfg {Boolean} simpleSortMode Enabling simpleSortMode in conjunction with remoteSort will only send one sort property and a direction when a remote sort is requested.
      * The dirParam and sortParam will be sent with the property name and either 'ASC' or 'DESC'
      */
-    legacySortMode: false,
+    simpleSortMode: false,
     
     /**
      * @cfg {Boolean} noCache (optional) Defaults to true. Disable caching by adding a unique parameter
@@ -94,21 +94,51 @@ Ext.define('Ext.data.ServerProxy', {
     timeout : 30000,
     
     /**
+     * @cfg {Object} api
+     * Specific urls to call on CRUD action methods "read", "create", "update" and "destroy".
+     * Defaults to:<pre><code>
+api: {
+    read    : undefined,
+    create  : undefined,
+    update  : undefined,
+    destroy : undefined
+}
+     * </code></pre>
+     * <p>The url is built based upon the action being executed <tt>[load|create|save|destroy]</tt>
+     * using the commensurate <tt>{@link #api}</tt> property, or if undefined default to the
+     * configured {@link Ext.data.Store}.{@link Ext.data.ServerProxy#url url}.</p><br>
+     * <p>For example:</p>
+     * <pre><code>
+api: {
+    load :    '/controller/load',
+    create :  '/controller/new',
+    save :    '/controller/update',
+    destroy : '/controller/destroy_action'
+}
+     * </code></pre>
+     * <p>If the specific URL for a given CRUD action is undefined, the CRUD action request
+     * will be directed to the configured <tt>{@link Ext.data.ServerProxy#url url}</tt>.</p>
+     */
+    
+    /**
      * @ignore
      */
     constructor: function(config) {
-        config = config || {};
+        var me = this;
         
-        Ext.data.ServerProxy.superclass.constructor.call(this, config);
+        config = config || {};
+        me.callParent([config]);
         
         /**
          * @cfg {Object} extraParams Extra parameters that will be included on every request. Individual requests with params
          * of the same name will override these params when they are in conflict.
          */
-        this.extraParams = config.extraParams || {};
+        me.extraParams = config.extraParams || {};
+        
+        me.api = config.api || {};
         
         //backwards compatibility, will be deprecated in 5.0
-        this.nocache = this.noCache;
+        me.nocache = me.noCache;
     },
     
     //in a ServerProxy all four CRUD operations are executed in the same manner, so we delegate to doRequest in each case
@@ -135,12 +165,13 @@ Ext.define('Ext.data.ServerProxy', {
      * @return {Ext.data.Request} The request object
      */
     buildRequest: function(operation) {
-        var params = Ext.applyIf(operation.params || {}, this.extraParams || {});
+        var params = Ext.applyIf(operation.params || {}, this.extraParams || {}),
+            request;
         
         //copy any sorters, filters etc into the params so they can be sent over the wire
         params = Ext.applyIf(params, this.getParams(params, operation));
         
-        var request = Ext.create('Ext.data.Request', {
+        request = Ext.create('Ext.data.Request', {
             params   : params,
             action   : operation.action,
             records  : operation.records,
@@ -159,6 +190,58 @@ Ext.define('Ext.data.ServerProxy', {
     },
     
     /**
+     * 
+     */
+    processResponse: function(success, operation, request, response, callback, scope){
+        var me = this,
+            reader,
+            result,
+            records,
+            length,
+            mc,
+            record,
+            i;
+            
+        if (success === true) {
+            reader = me.getReader();
+            result = reader.read(response);
+            records = result.records;
+            length = records.length;
+            mc = Ext.create('Ext.util.MixedCollection', true, function(r) {return r.getId();});
+                
+            mc.addAll(operation.records);
+            for (i = 0; i < length; i++) {
+                record = mc.get(records[i].getId());
+                    
+                if (record) {
+                    record.set(record.data);
+                }
+            }
+
+            //see comment in buildRequest for why we include the response object here
+            Ext.apply(operation, {
+                response : response,
+                resultSet: result
+            });
+                
+            operation.setCompleted();
+            operation.setSuccessful();
+        } else {
+            me.fireEvent('exception', this, response, operation);
+                
+            //TODO: extract error message from reader
+            operation.setException();                
+        }
+            
+        //this callback is the one that was passed to the 'read' or 'write' function above
+        if (typeof callback == 'function') {
+            callback.call(scope || me, operation);
+        }
+            
+        me.afterRequest(request, true);
+    },
+    
+    /**
      * Encodes the array of {@link Ext.util.Sorter} objects into a string to be sent in the request url. By default, 
      * this simply JSON-encodes the sorter data
      * @param {Array} sorters The array of {@link Ext.util.Sorter Sorter} objects
@@ -167,9 +250,9 @@ Ext.define('Ext.data.ServerProxy', {
     encodeSorters: function(sorters) {
         var min = [],
             length = sorters.length,
-            i;
+            i = 0;
         
-        for (i = 0; i < length; i++) {
+        for (; i < length; i++) {
             min[i] = {
                 property : sorters[i].property,
                 direction: sorters[i].direction
@@ -188,9 +271,9 @@ Ext.define('Ext.data.ServerProxy', {
     encodeFilters: function(filters) {
         var min = [],
             length = filters.length,
-            i;
+            i = 0;
         
-        for (i = 0; i < length; i++) {
+        for (; i < length; i++) {
             min[i] = {
                 property: filters[i].property,
                 value   : filters[i].value
@@ -217,22 +300,23 @@ Ext.define('Ext.data.ServerProxy', {
     getParams: function(params, operation) {
         params = params || {};
         
-        var group          = operation.group,
+        var me             = this,
+            group          = operation.group,
             sorters        = operation.sorters,
             filters        = operation.filters,
             page           = operation.page,
             start          = operation.start,
             limit          = operation.limit,
             
-            legacySortMode = this.legacySortMode,
+            simpleSortMode = me.simpleSortMode,
             
-            pageParam      = this.pageParam,
-            startParam     = this.startParam,
-            limitParam     = this.limitParam,
-            groupParam     = this.groupParam,
-            sortParam      = this.sortParam,
-            filterParam    = this.filterParam,
-            dirParam       = this.dirParam;
+            pageParam      = me.pageParam,
+            startParam     = me.startParam,
+            limitParam     = me.limitParam,
+            groupParam     = me.groupParam,
+            sortParam      = me.sortParam,
+            filterParam    = me.filterParam,
+            dirParam       = me.dirParam;
         
         if (pageParam && page) {
             params[pageParam] = page;
@@ -247,21 +331,21 @@ Ext.define('Ext.data.ServerProxy', {
         }
         
         if (groupParam && group && group.field) {
-            params[groupParam] = this.encodeGroupers(group);
+            params[groupParam] = me.encodeGroupers(group);
         }
         
         if (sortParam && sorters && sorters.length > 0) {
-            if (legacySortMode) {
+            if (simpleSortMode) {
                 params[sortParam] = sorters[0].property;
                 params[dirParam] = sorters[0].direction;
             } else {
-                params[sortParam] = this.encodeSorters(sorters);
+                params[sortParam] = me.encodeSorters(sorters);
             }
             
         }
         
         if (filterParam && filters && filters.length > 0) {
-            params[filterParam] = this.encodeFilters(filters);
+            params[filterParam] = me.encodeFilters(filters);
         }
         
         return params;
@@ -275,14 +359,15 @@ Ext.define('Ext.data.ServerProxy', {
      * @return {String} The url
      */
     buildUrl: function(request) {
-        var url = request.url || this.url;
+        var me = this,
+            url = request.url || me.api[request.action] || me.url;
         
         if (!url) {
             throw new Error("You are using a ServerProxy but have not supplied it with a url.");
         }
         
-        if (this.noCache) {
-            url = Ext.urlAppend(url, Ext.String.format("{0}={1}", this.cacheString, Ext.Date.now()));
+        if (me.noCache) {
+            url = Ext.urlAppend(url, Ext.String.format("{0}={1}", me.cacheString, Ext.Date.now()));
         }
         
         return url;
@@ -309,7 +394,5 @@ Ext.define('Ext.data.ServerProxy', {
     
     onDestroy: function() {
         Ext.destroy(this.reader, this.writer);
-        
-        Ext.data.ServerProxy.superclass.destroy.apply(this, arguments);
     }
 });

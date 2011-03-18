@@ -90,7 +90,7 @@ var myFormPanel = new Ext.form.FormPanel({
  */
 Ext.define('Ext.form.action.DirectSubmit', {
     extend:'Ext.form.action.Submit',
-    requires: ['Ext.direct.Direct'],
+    requires: ['Ext.direct.Manager'],
     alternateClassName: 'Ext.form.Action.DirectSubmit',
     alias: 'formaction.directsubmit',
 
@@ -111,9 +111,9 @@ Ext.define('Ext.form.action.DirectSubmit', {
     },
 
     onSuccess: function(response, trans) {
-        if (trans.type === Ext.Direct.exceptions.SERVER) {
+        if (trans.type === Ext.direct.Manager.self.exceptions.SERVER) {
             response = {};
         }
-        Ext.form.action.DirectSubmit.superclass.onSuccess.call(this, response);
+        this.callParent([response]);
     }
 });

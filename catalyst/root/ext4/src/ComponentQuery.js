@@ -56,14 +56,14 @@ if (invalidFields.length) {
  * Queries return an array of components.
  * Here are some example queries.
 <pre><code>
-    // retrieve all Ext.Panel's on the document by xtype
-    var panelsArray = Ext.ComponentQuery.query('.panel');
+    // retrieve all Ext.Panels on the document by xtype
+    var panelsArray = Ext.ComponentQuery.query('panel');
 
     // retrieve all Ext.Panels within the container with an id myCt
-    var panelsWithinmyCt = Ext.ComponentQuery.query('#myCt .panel');
+    var panelsWithinmyCt = Ext.ComponentQuery.query('#myCt panel');
 
     // retrieve all direct children which are Ext.Panels within myCt
-    var directChildPanel = Ext.ComponentQuery.query('#myCt > .panel');
+    var directChildPanel = Ext.ComponentQuery.query('#myCt > panel');
 
     // retrieve all gridpanels and listviews
     var gridsAndLists = Ext.ComponentQuery.query('gridpanel, listview');
@@ -72,7 +72,7 @@ if (invalidFields.length) {
  */
 Ext.define('Ext.ComponentQuery', {
     singleton: true,
-    requires: ['Ext.ComponentMgr']
+    uses: ['Ext.ComponentMgr']
 }, function() {
     
     var cq = this,
@@ -82,7 +82,7 @@ Ext.define('Ext.ComponentQuery', {
         filterFnPattern = [
             'var r = [],',
                 'i = 0,',
-                'it = arguments.callee.caller.arguments[0],',
+                'it = items,',
                 'l = it.length,',
                 'c;',
             'for (; i < l; i++) {',
@@ -124,7 +124,7 @@ Ext.define('Ext.ComponentQuery', {
                 candidate;
             for (; i < length; i++) {
                 candidate = items[i];
-                while (!!(candidate = candidate.ownerCt)) {
+                while (!!(candidate = (candidate.ownerCt || candidate.floatParent))) {
                     result.push(candidate);
                 }
             }
@@ -207,8 +207,7 @@ Ext.define('Ext.ComponentQuery', {
         modeRe = /^(\s?([>\^])\s?|\s|$)/,
 
         // Matches a token with possibly (true|false) appended for the "shallow" parameter
-        // or {memberExpression}
-        tokenRe = /^(?:(#)?([\w\-]+|\*)(?:\((true|false)\))?)|(?:\{([^\}]+)\})/,
+        tokenRe = /^(#)?([\w\-]+|\*)(?:\((true|false)\))?/,
 
         matchers = [{
             // Checks for .xtype with possibly (true|false) appended for the "shallow" parameter
@@ -216,15 +215,20 @@ Ext.define('Ext.ComponentQuery', {
             method: filterByXType
         },{
             // checks for [attribute=value]
-            re: /^(?:[\[\{](?:@)?([\w\-]+)\s?(?:(=|.=)\s?['"]?(.*?)["']?)?[\]\}])/,
+            re: /^(?:[\[](?:@)?([\w\-]+)\s?(?:(=|.=)\s?['"]?(.*?)["']?)?[\]])/,
             method: filterByAttribute
         }, {
             // checks for #cmpItemId
             re: /^#([\w\-]+)/,
             method: filterById
         }, {
-            re: /(?:^\:([\w\-]+)(?:\(([^\s>\/]*?)\))?)+/,
+            // checks for :<pseudo_class>(<selector>)
+            re: /^\:([\w\-]+)(?:\(((?:\{[^\}]+\})|(?:(?!\{)[^\s>\/]*?(?!\})))\))?/,
             method: filterByPseudo
+        }, {
+            // checks for {<member_expression>}
+            re: /^(?:\{([^\}]+)\})/,
+            method: filterFnPattern
         }];
 
     /**
@@ -418,13 +422,6 @@ Ext.define('Ext.ComponentQuery', {
                             args: [Ext.String.trim(tokenMatch[2])]
                         });
                     }
-                    // If the token is an expression, eg {isHidden()} we push a generated function operation to our stack
-                    else if (tokenMatch[4]) {
-                        operations.push({
-                            method: Ext.functionFactory(Ext.String.format(filterFnPattern, tokenMatch[4])),
-                            args: []
-                        });
-                    }
                     // If the token is a * or an xtype string, we push a filterByXType
                     // operation to the stack.
                     else {
@@ -447,13 +444,19 @@ Ext.define('Ext.ComponentQuery', {
                     for (i = 0; selector && i < length; i++) {
                         matcher = matchers[i];
                         selectorMatch = selector.match(matcher.re);
+                        method = matcher.method;
 
                         // If we have a match, add an operation with the method
                         // associated with this matcher, and pass the regular
                         // expression matches are arguments to the operation.
                         if (selectorMatch) {
                             operations.push({
-                                method: matcher.method,
+                                method: Ext.isString(matcher.method)
+                                    // Turn a string method into a function by formatting the string with our selector matche expression
+                                    // A new method is created for different match expressions, eg {id=='textfield-1024'}
+                                    // Every expression may be different in different selectors.
+                                    ? Ext.functionFactory('items', Ext.String.format.apply(Ext.String, [method].concat(selectorMatch.slice(1))))
+                                    : matcher.method,
                                 args: selectorMatch.slice(1)
                             });
                             selector = selector.replace(selectorMatch[0], '');

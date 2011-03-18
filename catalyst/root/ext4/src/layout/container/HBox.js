@@ -48,12 +48,15 @@ Ext.define('Ext.layout.container.HBox', {
     parallelLT: 'l',
     parallelRB: 'r',
     parallelBefore: 'left',
+    parallelBeforeCap: 'Left',
     parallelAfter: 'right',
+    parallelPosition: 'x',
 
     perpendicularPrefix: 'height',
     perpendicularPrefixCap: 'Height',
     perpendicularLT: 't',
     perpendicularRB: 'b',
     perpendicularLeftTop: 'top',
-    perpendicularRightBottom: 'bottom'
+    perpendicularRightBottom: 'bottom',
+    perpendicularPosition: 'y'
 });

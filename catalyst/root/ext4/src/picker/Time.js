@@ -43,7 +43,7 @@ Ext.define('Ext.picker.Time', {
     /**
      * @cfg {String} format
      * The default time format string which can be overriden for localization support. The format must be
-     * valid according to {@link Date#parseDate} (defaults to 'g:i A', e.g., '3:15 PM'). For 24-hour time
+     * valid according to {@link Ext.util.Date#parse} (defaults to 'g:i A', e.g., '3:15 PM'). For 24-hour time
      * format try 'H:i' instead.
      */
     format : "g:i A",

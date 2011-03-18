@@ -17,26 +17,26 @@ var myBorderPanel = new Ext.panel.Panel({
     {@link Ext.container.Container#layout layout}: 'border',
     {@link Ext.container.Container#items items}: [{
         {@link Ext.panel.Panel#title title}: 'South Region is resizable',
-        {@link Ext.layout.BorderLayout.Region#BorderLayout.Region region}: 'south',     // position for region
+        region: 'south',     // position for region
         {@link Ext.AbstractComponent#height height}: 100,
-        {@link Ext.layout.BorderLayout.Region#split split}: true,         // enable resizing
-        {@link Ext.layout.BorderLayout.Region#margins margins}: '0 5 5 5'
+        split: true,         // enable resizing
+        margins: '0 5 5 5'
     },{
         // xtype: 'panel' implied by default
         {@link Ext.panel.Panel#title title}: 'West Region is collapsible',
-        {@link Ext.layout.BorderLayout.Region#BorderLayout.Region region}:'west',
-        {@link Ext.layout.BorderLayout.Region#margins margins}: '5 0 0 5',
+        region:'west',
+        margins: '5 0 0 5',
         {@link Ext.AbstractComponent#width width}: 200,
-        {@link Ext.layout.BorderLayout.Region#collapsible collapsible}: true,   // make collapsible
+        collapsible: true,   // make collapsible
         {@link Ext.Component#id id}: 'west-region-container',
         {@link Ext.container.Container#layout layout}: 'fit',
         {@link Ext.panel.Panel#unstyled unstyled}: true
     },{
         {@link Ext.panel.Panel#title title}: 'Center Region',
-        {@link Ext.layout.BorderLayout.Region#BorderLayout.Region region}: 'center',     // center region is required, no width/height specified
+        region: 'center',     // center region is required, no width/height specified
         {@link Ext.Component#xtype xtype}: 'container',
         {@link Ext.container.Container#layout layout}: 'fit',
-        {@link Ext.layout.BorderLayout.Region#margins margins}: '5 5 0 0'
+        margins: '5 5 0 0'
     }]
 });
 </code></pre>
@@ -70,9 +70,7 @@ Ext.define('Ext.layout.container.Border', {
 
     extend: 'Ext.layout.Container',
 
-    requires: ['Ext.resizer.Splitter', 'Ext.container.Container', 'Ext.util.MixedCollection', 'Ext.fx.Anim'],
-
-    uses: ['Ext.fx.Anim'],
+    requires: ['Ext.resizer.Splitter', 'Ext.container.Container', 'Ext.fx.Anim'],
 
     targetCls: Ext.baseCSSPrefix + 'border-layout-ct',
 
@@ -290,10 +288,7 @@ Ext.define('Ext.layout.container.Border', {
                     align: 'stretch'
                 }, me.initialConfig)
             });
-            // Have to inject an items Collection *after* construction.
-            // The child items of the shadow layout must retain their original, user-defined ownerCt
-            me.shadowContainer.items = new Ext.util.MixedCollection();
-            me.shadowContainer.items.addAll(vBoxItems);
+            me.createItems(me.shadowContainer, vBoxItems);
 
             // Allow the Splitters to orientate themselves
             if (me.splitters.north) {
@@ -306,10 +301,7 @@ Ext.define('Ext.layout.container.Border', {
             // Inject items into the HBox Container if there is one - if there was an east or west.
             if (me.embeddedContainer) {
                 me.embeddedContainer.ownerCt = me.shadowContainer;
-
-                // Have to inject an items Collection *after* construction.
-                me.embeddedContainer.items = new Ext.util.MixedCollection();
-                me.embeddedContainer.items.addAll(hBoxItems);
+                me.createItems(me.embeddedContainer, hBoxItems);
 
                 // Allow the Splitters to orientate themselves
                 if (me.splitters.east) {
@@ -345,10 +337,7 @@ Ext.define('Ext.layout.container.Border', {
                     align: 'stretch'
                 }, me.initialConfig)
             });
-            // Have to inject an items Collection *after* construction.
-            // The child items of the shadow layout must retain their original, user-defined ownerCt
-            me.shadowContainer.items = new Ext.util.MixedCollection();
-            me.shadowContainer.items.addAll(hBoxItems);
+            me.createItems(me.shadowContainer, hBoxItems);
 
             // Allow the Splitters to orientate themselves
             if (me.splitters.east) {
@@ -379,6 +368,18 @@ Ext.define('Ext.layout.container.Border', {
 
         me.borderLayoutInitialized = true;
     },
+    
+    /**
+     * Create the items collection for our shadow/embedded containers
+     * @private
+     */
+    createItems: function(container, items){
+        // Have to inject an items Collection *after* construction.
+        // The child items of the shadow layout must retain their original, user-defined ownerCt
+        delete container.items;
+        container.initItems();
+        container.items.addAll(items)
+    },
 
     // Private
     // Create a splitter for a child of the layout.
@@ -386,7 +387,7 @@ Ext.define('Ext.layout.container.Border', {
         var me = this,
             interceptCollapse = (comp.collapseMode != 'header' && comp.collapseMode != 'mini'),
             resizer;
-            
+
         resizer = new Ext.resizer.Splitter({
             hidden: !!comp.hidden,
             collapseTarget: comp,
@@ -398,20 +399,19 @@ Ext.define('Ext.layout.container.Border', {
                 }
             } : null
         });
+
+        // Arrange to hide/show a region's associated splitter when the region is hidden/shown
         comp.on({
-            hide: Ext.Function.bind(me.onComponentHide, me, [resizer], 1),
-            show: Ext.Function.bind(me.onComponentShow, me, [resizer], 1)
+            hide: me.onRegionVisibilityChange,
+            show: me.onRegionVisibilityChange,
+            scope: me
         });
         return resizer;
     },
 
-    onComponentHide: function(comp, resizer){
-        resizer.hide();
-        this.layout();
-    },
-
-    onComponentShow: function(comp, resizer){
-        resizer.show();
+    // Hide/show a region's associated splitter when the region is hidden/shown
+    onRegionVisibilityChange: function(comp){
+        this.splitters[comp.region][comp.hidden ? 'hide' : 'show']();
         this.layout();
     },
 
@@ -462,14 +462,14 @@ Ext.define('Ext.layout.container.Border', {
                 ui: comp.ui,
                 indicateDrag: comp.draggable,
                 cls: Ext.baseCSSPrefix + 'region-collapsed-placeholder ' + Ext.baseCSSPrefix + 'region-collapsed-' + comp.collapseDirection + '-placeholder',
-                listeners: {
+                listeners: comp.floatable ? {
                     click: {
                         fn: function(e) {
                             me.floatCollapsedPanel(e, comp);
                         },
                         element: 'el'
                     }
-                }
+                } : null
             };
             // Hack for IE6/7's inability to display an inline-block
             if ((Ext.isIE6 || Ext.isIE7) && !horiz) {
@@ -485,8 +485,9 @@ Ext.define('Ext.layout.container.Border', {
         }
         placeHolder = me.owner.createComponent(placeHolder);
 
-        // The collapsed Component holds a reference to its placeHolder
+        // The collapsed Component holds a reference to its placeHolder and vice versa
         comp.placeHolder = placeHolder;
+        placeHolder.comp = comp;
 
         return placeHolder;
     },
@@ -515,10 +516,9 @@ Ext.define('Ext.layout.container.Border', {
      * @param comp The Panel being collapsed.
      * @param direction
      * @param animate
-     * @param newSize
      * @returns {Boolean} false to inhibit the Panel from performing its own collapse.
      */
-    onBeforeRegionCollapse: function(comp, direction, animate, newSize) {
+    onBeforeRegionCollapse: function(comp, direction, animate) {
         var me = this,
             compEl = comp.el,
             shadowContainer = comp.shadowOwnerCt,
@@ -622,35 +622,6 @@ Ext.define('Ext.layout.container.Border', {
         return false;
     },
 
-    // Calculate a position just off screen in the collapse direction to prime a slide-in operation
-    getCollapsedPosition: function(comp) {
-        var result = {},
-            shadowContainer = comp.shadowOwnerCt,
-            shadowLayout = shadowContainer.layout,
-            targetSize = shadowLayout.getLayoutTargetSize();
-
-        if (comp.region == 'north') {
-            result.top = -comp.el.getHeight();
-        }
-        else if (comp.region == 'south') {
-            result.top = targetSize.height;
-        }
-        else {
-            result.top = shadowLayout.padding.top;
-        }
-
-        if (comp.region == 'west') {
-            result.left = -comp.el.getWidth();
-        }
-        else if (comp.region == 'east') {
-            result.left = targetSize.width;
-        }
-        else {
-            result.left = shadowLayout.padding.left;
-        }
-        return result;
-    },
-
     // Hijack the expand operation to remove the placeholder and slide the region back in.
     onBeforeRegionExpand: function(comp, animate) {
         this.onPlaceHolderToolClick(null, null, null, {client: comp});
@@ -714,12 +685,17 @@ Ext.define('Ext.layout.container.Border', {
         comp.collapsed = false;
         placeHolder.hidden = true;
         toCompBox = shadowLayout.calculateChildBox(comp);
+
+        // Show the collapse tool in case it was hidden by the slide-in
+        if (comp.collapseTool) {
+            comp.collapseTool.show();
+        }
+
         // If we're going to animate, we need to hide the component before moving it back into position
         if (comp.animCollapse && !isFloating) {
             compEl.setStyle('visibility', 'hidden');
         }
         compEl.setLeftTop(toCompBox.left, toCompBox.top);
-        comp.hidden = true;
 
         // Equalize the size of the expanding Component prior to animation
         // in case the layout area has changed size during the time it was collapsed.
@@ -748,15 +724,12 @@ Ext.define('Ext.layout.container.Border', {
             comp.fireEvent('expand', comp);
         }
 
-        // Show the collapse tool in case it was hidden by the slide-in
-        if (comp.collapseTool) {
-            comp.collapseTool.show();
-        }
+        // Hide the placeholder
+        placeHolder.el.hide();
 
         // Slide the expanding Component to its new position.
         // When that is done, layout the layout.
         if (comp.animCollapse && !isFloating) {
-            placeHolder.el.hide();
             compEl.dom.style.zIndex = 100;
             compEl.slideIn(me.slideDirection[comp.region], {
                 duration: Ext.num(comp.animCollapse, Ext.fx.Anim.prototype.duration),
@@ -770,13 +743,17 @@ Ext.define('Ext.layout.container.Border', {
                 }
             });
         } else {
-            comp.hidden = false;
             shadowLayout.onLayout();
             afterExpand();
         }
     },
 
     floatCollapsedPanel: function(e, comp) {
+
+        if (comp.floatable === false) {
+            return;
+        }
+
         var me = this,
             compEl = comp.el,
             placeHolder = comp.placeHolder,
@@ -822,6 +799,12 @@ Ext.define('Ext.layout.container.Border', {
         // Prevent upward notifications from downstream layouts
         me.layoutBusy = true;
         me.owner.componentLayout.layoutBusy = true;
+
+        // The collapse tool is hidden while slid.
+        // It is re-shown on expand.
+        if (comp.collapseTool) {
+            comp.collapseTool.hide();
+        }
 
         // Set flags so that the layout will calculate the boxes for what we want
         comp.hidden = false;
@@ -874,12 +857,6 @@ Ext.define('Ext.layout.container.Border', {
             },
             duration: 500
         };
-
-        // The collapse tool is hidden while slid.
-        // It is re-shown on expand.
-        if (comp.collapseTool) {
-            comp.collapseTool.hide();
-        }
 
         // Give the element the correct class which places it at a high z-index
         compEl.addCls(Ext.baseCSSPrefix + 'border-region-slide-in');

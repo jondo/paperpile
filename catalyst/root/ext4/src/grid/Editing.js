@@ -13,7 +13,7 @@
  * which uses the same {@link Ext.form.Field#valueField value}-to-{@link Ext.form.Field#displayFieldField description}
  * mapping would be an appropriate editor.</p>
  * If there is a more complex mismatch between the visible data in the grid, and the editable data in
- * the {@link Edt.data.Store Store}, then code to transform the data both before and after editing can be
+ * the {@link Ext.data.Store Store}, then code to transform the data both before and after editing can be
  * injected using the {@link #beforeedit} and {@link #afteredit} events.
  * @constructor
  * @param {Object} config The config object

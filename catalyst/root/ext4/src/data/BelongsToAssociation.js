@@ -238,5 +238,16 @@ Ext.define('Ext.data.BelongsToAssociation', {
                 return instance;
             }
         };
+    },
+    
+    /**
+     * Read associated data
+     * @private
+     * @param {Ext.data.Model} record The record we're writing to
+     * @param {Ext.data.Reader} reader The reader for the associated model
+     * @param {Object} associationData The raw associated data
+     */
+    read: function(record, reader, associationData){
+        record[this.instanceName] = reader.read([associationData]).records[0];
     }
 });

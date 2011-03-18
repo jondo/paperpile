@@ -1,7 +1,7 @@
 /**
  * @class Ext.form.action.DirectLoad
  * @extends Ext.form.action.Load
- * <p>Provides {@link Ext.direct.Direct} support for loading form data.</p>
+ * <p>Provides {@link Ext.direct.Manager} support for loading form data.</p>
  * <p>This example illustrates usage of Ext.direct.Direct to <b>load</b> a form through Ext.Direct.</p>
  * <pre><code>
 var myFormPanel = new Ext.form.FormPanel({
@@ -74,7 +74,7 @@ myFormPanel.getForm().load({
  */
 Ext.define('Ext.form.action.DirectLoad', {
     extend:'Ext.form.action.Load',
-    requires: ['Ext.direct.Direct'],
+    requires: ['Ext.direct.Manager'],
     alternateClassName: 'Ext.form.Action.DirectLoad',
     alias: 'formaction.directload',
 
@@ -121,9 +121,10 @@ Ext.define('Ext.form.action.DirectLoad', {
     },
 
     onSuccess: function(result, trans) {
-        if (trans.type == Ext.direct.Direct.exceptions.SERVER) {
+        if (trans.type == Ext.direct.Manager.self.exceptions.SERVER) {
             result = {};
         }
+        this.callParent([result]);
         Ext.form.action.DirectLoad.superclass.onSuccess.call(this, result);
     }
 });

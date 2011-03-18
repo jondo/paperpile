@@ -1,6 +1,6 @@
 /**
  * @class Ext.grid.RowSelectionModel
- * @extends Ext.AbstractStoreSelectionModel
+ * @extends Ext.selection.Model
  * 
  * Implement row based navigation via keyboard.
  *
@@ -55,8 +55,8 @@ Ext.define('Ext.grid.RowSelectionModel', {
         me.bind(view.getStore(), true);
 
         view.on({
-            click: this.onRowMouseDown,
-            scope: this
+            mousedown: this.onRowMouseDown,
+            scope: me
         });
 
         if (me.enableKeyNav) {
@@ -79,14 +79,14 @@ Ext.define('Ext.grid.RowSelectionModel', {
         // view.el has tabIndex -1 to allow for
         // keyboard events to be passed to it.
         me.keyNav = new Ext.util.KeyNav(view.el, {
-            "up": me.onKeyUp,
-            "down": me.onKeyDown,
-            "right": me.onKeyRight,
-            "left": me.onKeyLeft,
-            "pageDown": me.onKeyPageDown,
-            "pageUp": me.onKeyPageUp,
-            "home": me.onKeyHome,
-            "end": me.onKeyEnd,
+            up: me.onKeyUp,
+            down: me.onKeyDown,
+            right: me.onKeyRight,
+            left: me.onKeyLeft,
+            pageDown: me.onKeyPageDown,
+            pageUp: me.onKeyPageUp,
+            home: me.onKeyHome,
+            end: me.onKeyEnd,
             scope: me
         });
         view.el.on(Ext.EventManager.getKeyEvent(), me.onKeyPress, me);
@@ -104,7 +104,7 @@ Ext.define('Ext.grid.RowSelectionModel', {
         if (row) {
             rowHeight = Ext.fly(row).getHeight();
             gridViewHeight = view.el.getHeight();
-            rowsVisible = Math.floor(gridViewHeight/rowHeight);
+            rowsVisible = Math.floor(gridViewHeight / rowHeight);
         }
 
         return rowsVisible;
@@ -252,9 +252,6 @@ Ext.define('Ext.grid.RowSelectionModel', {
                 me.doSelect(record);
                 //view.focusRow(idx - 1);
             }
-        } else if (me.selected.getCount() == 0) {
-            me.doSelect(record);
-            //view.focusRow(idx - 1);
         }
         // There was no lastFocused record, and the user has pressed up
         // Ignore??
@@ -270,8 +267,8 @@ Ext.define('Ext.grid.RowSelectionModel', {
     // selection. Provides bounds checking.
     onKeyDown: function(e, t) {
         var me = this,
-            view = this.views[0],
-            idx  = this.store.indexOf(this.lastFocused),
+            view = me.views[0],
+            idx  = me.store.indexOf(me.lastFocused),
             record;
             
         // needs to be the filtered count as thats what
@@ -302,7 +299,7 @@ Ext.define('Ext.grid.RowSelectionModel', {
     
     scrollByDeltaX: function(delta) {
         var view    = this.views[0],
-            section = view.up('gridsection'),
+            section = view.up(),
             hScroll = section.horizontalScroller;
             
         if (hScroll) {
@@ -338,12 +335,12 @@ Ext.define('Ext.grid.RowSelectionModel', {
             
         for (; i < viewsLn; i++) {
             if (isSelected) {
-                views[i].onRowSelect(rowIdx);
+                views[i].onRowSelect(rowIdx, suppressEvent);
                 if (!suppressEvent) {
                     me.fireEvent('select', me, record, rowIdx);
                 }
             } else {
-                views[i].onRowDeselect(rowIdx);
+                views[i].onRowDeselect(rowIdx, suppressEvent);
                 if (!suppressEvent) {
                     me.fireEvent('deselect', me, record, rowIdx);
                 }
@@ -369,11 +366,12 @@ Ext.define('Ext.grid.RowSelectionModel', {
             }
         }
 
-
-        rowIdx = store.indexOf(newFocused);
-        if (rowIdx != -1) {
-            for (i = 0; i < viewsLn; i++) {
-                views[i].onRowFocus(rowIdx, true);
+        if (newFocused) {
+            rowIdx = store.indexOf(newFocused);
+            if (rowIdx != -1) {
+                for (i = 0; i < viewsLn; i++) {
+                    views[i].onRowFocus(rowIdx, true);
+                }
             }
         }
     }

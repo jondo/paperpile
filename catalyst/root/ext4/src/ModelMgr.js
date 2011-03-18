@@ -10,7 +10,7 @@ Ext.define('Ext.ModelMgr', {
     extend: 'Ext.AbstractManager',
     requires: [
         'Ext.PluginMgr', 'Ext.util.MixedCollection', 'Ext.data.Field', 'Ext.data.BelongsToAssociation', 
-        'Ext.data.HasManyAssociation', 'Ext.data.PolymorphicAssociation', 'Ext.data.Model'
+        'Ext.data.HasManyAssociation', 'Ext.data.PolymorphicAssociation', 'Ext.data.Model', 'Ext.data.AjaxProxy'
     ],
     
     singleton: true,

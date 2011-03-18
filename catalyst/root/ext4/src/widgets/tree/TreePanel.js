@@ -95,9 +95,9 @@ new Ext.container.Viewport({
  * @cfg {Boolean} ddAppendOnly <tt>true</tt> if the tree should only allow append drops (use for trees which are sorted)
  * @cfg {Boolean} ddScroll <tt>true</tt> to enable body scrolling
  * @cfg {Boolean} containerScroll <tt>true</tt> to register this container with ScrollManager
- * @cfg {Boolean} hlDrop <tt>false</tt> to disable node highlight on drop (defaults to the value of {@link Ext#enableFx})
+ * @cfg {Boolean} hlDrop <tt>false</tt> to disable node highlight on drop (defaults to the value of {@link Ext#enableFx Ext.enableFx})
  * @cfg {String} hlColor The color of the node highlight (defaults to <tt>'C3DAF9'</tt>)
- * @cfg {Boolean} animate <tt>true</tt> to enable animated expand/collapse (defaults to the value of {@link Ext#enableFx})
+ * @cfg {Boolean} animate <tt>true</tt> to enable animated expand/collapse (defaults to the value of {@link Ext#enableFx Ext.enableFx})
  * @cfg {Boolean} singleExpand <tt>true</tt> if only 1 node per branch may be expanded
  * @cfg {Object} selModel A tree selection model to use with this TreePanel (defaults to an {@link Ext.tree.DefaultSelectionModel})
  * @cfg {Boolean} trackMouseOver <tt>false</tt> to disable mouse over highlighting

@@ -29,20 +29,19 @@ Ext.define('Ext.layout.component.form.Field', {
             owner = me.owner,
             labelStrategy = me.getLabelStrategy(),
             errorStrategy = me.getErrorStrategy(),
-            insets, totalWidth, totalHeight;
+            info;
 
-        me.setTargetSize(width, height);
+        info = {
+            width: width,
+            height: height,
 
-        // we always need some sort of pixel width, so use the natural width of the outer div if not fixed
-        totalWidth = me.totalWidth = Ext.isNumber(width) ? width : owner.el.getWidth();
-        totalHeight = me.totalHeight = height;
-
-        // insets for the bodyEl from each side of the component layout area
-        insets = me.insets = {
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0
+            // insets for the bodyEl from each side of the component layout area
+            insets: {
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0
+            }
         };
 
         // NOTE the order of calculating insets and setting styles here is very important; we must first
@@ -50,27 +49,30 @@ Ext.define('Ext.layout.component.form.Field', {
         // on the vertical sizes due to wrapping, then calculate and set the vertical layout.
 
         // perform preparation on the label and error (setting css classes, qtips, etc.)
-        labelStrategy.prepare(owner);
-        errorStrategy.prepare(owner);
+        labelStrategy.prepare(owner, info);
+        errorStrategy.prepare(owner, info);
+
+        // preparation may have adjusted the target dimensions
+        me.setTargetSize(info.width, info.height);
 
         // calculate the horizontal insets for the label and error
-        labelStrategy.adjustHorizInsets(owner, insets);
-        errorStrategy.adjustHorizInsets(owner, insets);
+        labelStrategy.adjustHorizInsets(owner, info);
+        errorStrategy.adjustHorizInsets(owner, info);
 
         // set horizontal styles for label and error based on the current insets
-        labelStrategy.layoutHoriz(owner, insets, totalWidth);
-        errorStrategy.layoutHoriz(owner, insets, totalWidth);
+        labelStrategy.layoutHoriz(owner, info);
+        errorStrategy.layoutHoriz(owner, info);
 
         // calculate the vertical insets for the label and error
-        labelStrategy.adjustVertInsets(owner, insets);
-        errorStrategy.adjustVertInsets(owner, insets);
+        labelStrategy.adjustVertInsets(owner, info);
+        errorStrategy.adjustVertInsets(owner, info);
 
         // set vertical styles for label and error based on the current insets
-        labelStrategy.layoutVert(owner, insets, totalHeight);
-        errorStrategy.layoutVert(owner, insets, totalHeight);
+        labelStrategy.layoutVert(owner, info);
+        errorStrategy.layoutVert(owner, info);
 
         // perform sizing of the bodyEl, inputEl, etc. based on the final insets
-        me.sizeBody();
+        me.sizeBody(info);
 
         me.activeError = owner.getActiveError();
     },
@@ -79,12 +81,12 @@ Ext.define('Ext.layout.component.form.Field', {
     /**
      * Perform sizing and alignment of the bodyEl (and children) to match the calculated insets.
      */
-    sizeBody: function() {
+    sizeBody: function(info) {
         var me = this,
             owner = me.owner,
-            insets = me.insets,
-            totalHeight = me.totalHeight,
-            width = me.totalWidth - insets.left - insets.right,
+            insets = info.insets,
+            totalHeight = info.height,
+            width = info.width - insets.left - insets.right,
             height = Ext.isNumber(totalHeight) ? totalHeight - insets.top - insets.bottom : totalHeight;
 
         // size the bodyEl
@@ -138,11 +140,11 @@ Ext.define('Ext.layout.component.form.Field', {
         var applyIf = Ext.applyIf,
             emptyFn = Ext.emptyFn,
             base = {
-                prepare: function(owner) {
-                    var cls = Ext.baseCSSPrefix + 'form-label-' + owner.labelAlign,
-                        el = owner.el;
-                    if (!el.hasCls(cls)) {
-                        el.addCls(cls);
+                prepare: function(owner, info) {
+                    var cls = owner.labelCls + '-' + owner.labelAlign,
+                        labelEl = owner.labelEl;
+                    if (labelEl && !labelEl.hasCls(cls)) {
+                        labelEl.addCls(cls);
                     }
                 },
                 adjustHorizInsets: emptyFn,
@@ -151,12 +153,21 @@ Ext.define('Ext.layout.component.form.Field', {
                 layoutVert: emptyFn
             },
             left = applyIf({
-                adjustHorizInsets: function(owner, insets) {
-                    if (!owner.hideLabel) {
-                        insets.left += owner.labelWidth + owner.labelPad;
+                prepare: function(owner, info) {
+                    base.prepare(owner, info);
+                    // For auto-width, set the target width to the label size plus the body size; we can't just
+                    // use the outer el width because the body may be wrapping to below the label at this point;
+                    // also we want the shrink-wrapped size and not the full width of the container.
+                    if (!Ext.isNumber(info.width)) {
+                        info.width = (owner.hideLabel ? 0 : owner.labelWidth + owner.labelPad) + owner.getBodyNaturalWidth();
                     }
                 },
-                layoutHoriz: function(owner, insets, totalWidth) {
+                adjustHorizInsets: function(owner, info) {
+                    if (!owner.hideLabel) {
+                        info.insets.left += owner.labelWidth + owner.labelPad;
+                    }
+                },
+                layoutHoriz: function(owner, info) {
                     if (!owner.hideLabel) {
                         var labelEl = owner.labelEl;
                         labelEl.setWidth(owner.labelWidth);
@@ -173,17 +184,29 @@ Ext.define('Ext.layout.component.form.Field', {
              * Label displayed above the bodyEl
              */
             top: applyIf({
-                adjustVertInsets: function(owner, insets) {
-                    if (!owner.hideLabel) {
-                        insets.top += owner.labelEl.getHeight() + owner.labelPad;
+                prepare: function(owner, info) {
+                    base.prepare(owner, info);
+                    if (!Ext.isNumber(info.width)) {
+                        var width = owner.getBodyNaturalWidth(),
+                            labelEl = owner.labelEl;
+                        if (labelEl) {
+                            // Use unwrapped label width if greater than body width
+                            width = Math.max(width, labelEl.getTextWidth());
+                        }
+                        info.width = width;
                     }
                 },
-                layoutHoriz: function(owner, insets, totalWidth) {
+                adjustVertInsets: function(owner, info) {
                     if (!owner.hideLabel) {
-                        owner.labelEl.setWidth(totalWidth);
+                        info.insets.top += owner.labelEl.getHeight() + owner.labelPad;
                     }
                 },
-                layoutVert: function(owner, insets, totalHeight) {
+                layoutHoriz: function(owner, info) {
+                    if (!owner.hideLabel) {
+                        owner.labelEl.setWidth(info.width);
+                    }
+                },
+                layoutVert: function(owner, info) {
                     if (!owner.hideLabel) {
                         owner.labelEl.setStyle('marginBottom', owner.labelPad + 'px');
                     }
@@ -234,16 +257,16 @@ Ext.define('Ext.layout.component.form.Field', {
                     Ext.tip.QuickTips.init();
                     errorEl.setDisplayed(owner.hasActiveError());
                 },
-                adjustHorizInsets: function(owner, insets) {
-                    if (owner.autoFitErrors) {
-                        insets.right += owner.errorEl.getWidth();
+                adjustHorizInsets: function(owner, info) {
+                    if (owner.autoFitErrors && owner.hasActiveError()) {
+                        info.insets.right += owner.errorEl.getWidth();
                     }
                 },
-                layoutHoriz: function(owner, insets, totalWidth) {
-                    owner.errorEl.setLeft(totalWidth - insets.right);
+                layoutHoriz: function(owner, info) {
+                    owner.errorEl.setLeft(info.width - info.insets.right);
                 },
-                layoutVert: function(owner, insets, totalHeight) {
-                    owner.errorEl.setTop(insets.top);
+                layoutVert: function(owner, info) {
+                    owner.errorEl.setTop(info.insets.top);
                 }
             }, base),
 
@@ -259,14 +282,15 @@ Ext.define('Ext.layout.component.form.Field', {
                     }
                     errorEl.setDisplayed(owner.hasActiveError());
                 },
-                adjustVertInsets: function(owner, insets) {
+                adjustVertInsets: function(owner, info) {
                     if (owner.autoFitErrors) {
-                        insets.bottom += owner.errorEl.getHeight();
+                        info.insets.bottom += owner.errorEl.getHeight();
                     }
                 },
-                layoutHoriz: function(owner, insets, totalWidth) {
-                    var errorEl = owner.errorEl;
-                    errorEl.setWidth(totalWidth - insets.right - insets.left);
+                layoutHoriz: function(owner, info) {
+                    var errorEl = owner.errorEl,
+                        insets = info.insets;
+                    errorEl.setWidth(info.width - insets.right - insets.left);
                     errorEl.setStyle('marginLeft', insets.left + 'px');
                 }
             }, base),

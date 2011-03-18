@@ -72,7 +72,7 @@ Ext.define('Ext.button.Split', {
     },
 
     // private
-    onClick : function(e, t){
+    onClick : function(e, t) {
         var me = this;
         
         e.preventDefault();

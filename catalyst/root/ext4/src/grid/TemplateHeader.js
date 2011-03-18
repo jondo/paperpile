@@ -14,7 +14,7 @@ Ext.define('Ext.grid.TemplateHeader', {
     /**
      * @cfg {String/XTemplate} tpl
      * An {@link Ext.XTemplate XTemplate}, or an XTemplate <i>definition string</i> to use to process a
-     * {@link Ext.data.Model Model}'s {@link Ext.data.Record#data data} to produce a column's rendered value.
+     * {@link Ext.data.Model Model}'s {@link Ext.data.Model#data data} to produce a column's rendered value.
      */
     constructor: function(cfg){
         Ext.grid.TemplateHeader.superclass.constructor.call(this, cfg);

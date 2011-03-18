@@ -128,7 +128,7 @@ Ext.define('Ext.draw.engine.VML', {
             x: 0,
             y: 0,
             "text-anchor": "start",
-            font: "10px Helvetica, Arial, sans-serif",
+            font: '10px "Arial"',
             fill: "#000",
             stroke: null,
             "stroke-width": null,
@@ -209,8 +209,8 @@ Ext.define('Ext.draw.engine.VML', {
         sprite.skew = skew;
         sprite.matrix = new Ext.draw.Matrix;
         sprite.bbox = {
-            plain: 0,
-            transform: 0
+            plain: null,
+            transform: null
         };
         sprite.fireEvent("render", sprite);
         return sprite.el;
@@ -349,6 +349,9 @@ Ext.define('Ext.draw.engine.VML', {
     // Normalize all virtualized types into paths.
     setPaths: function(sprite, params) {
         var spriteAttr = sprite.attr;
+        // Clear bbox cache
+        sprite.bbox.plain = null;
+        sprite.bbox.transform = null;
         if (sprite.type == 'circle') {
             spriteAttr.rx = spriteAttr.ry = params.r;
             return Ext.draw.Draw.ellipsePath(sprite);
@@ -386,15 +389,18 @@ Ext.define('Ext.draw.engine.VML', {
         if (Ext.isArray(params.fill)) {
             params.fill = params.fill[0];
         }
-        if (typeof params["fill-opacity"] == "number" || typeof params.opacity == "number") {
-            fillEl.opacity = params["fill-opacity"] || params.opacity;
-        }
         if (params.fill == "none") {
             fillEl.on = false;
         }
         else {
+            if (typeof params.opacity == "number") {
+                fillEl.opacity = params.opacity;
+            }
+            if (typeof params["fill-opacity"] == "number") {
+                fillEl.opacity = params["fill-opacity"];
+            }
             fillEl.on = true;
-            if (fillEl.on && typeof params.fill == "string") {
+            if (typeof params.fill == "string") {
                 fillUrl = params.fill.match(me.fillUrlRe);
                 if (fillUrl) {
                     fillUrl = fillUrl[1];
@@ -462,7 +468,7 @@ Ext.define('Ext.draw.engine.VML', {
                 strokeEl.opacity = opacity * width;
             }
             else {
-                strokeEl.weight = 1;
+                strokeEl.weight = width;
                 strokeEl.opacity = opacity;
             }
         }
@@ -499,7 +505,6 @@ Ext.define('Ext.draw.engine.VML', {
             zoom = me.zoom,
             round = Math.round,
             fontObj = {
-                font: "font",
                 fontSize: "font-size",
                 fontWeight: "font-weight",
                 fontStyle: "font-style"
@@ -507,6 +512,9 @@ Ext.define('Ext.draw.engine.VML', {
             fontProp,
             paramProp;
         if (sprite.dirtyFont) {
+            if (params.font) {
+                textStyle.font = spanCacheStyle.font = params.font;
+            }
             if (params["font-family"]) {
                 textStyle.fontFamily = '"' + params["font-family"].split(",")[0].replace(me.fontFamilyRe, "") + '"';
                 spanCacheStyle.fontFamily = params["font-family"];
@@ -523,27 +531,28 @@ Ext.define('Ext.draw.engine.VML', {
             if (vml.textpath.string) {
                 me.span.innerHTML = String(vml.textpath.string).replace(/</g, "&#60;").replace(/&/g, "&#38;").replace(/\n/g, "<br>");
             }
-            vml.W = params.w = me.span.offsetWidth;
-            vml.H = params.h = me.span.offsetHeight;
+            vml.W = me.span.offsetWidth;
+            vml.H = me.span.offsetHeight + 2; // TODO handle baseline differences and offset in VML Textpath
 
             // text-anchor emulation
             if (params["text-anchor"] == "middle") {
-                vml.textpath.style["v-text-align"] = "center";
+                textStyle["v-text-align"] = "center";
             }
             else if (params["text-anchor"] == "end") {
-                vml.textpath.style["v-text-align"] = "right";
+                textStyle["v-text-align"] = "right";
                 vml.bbx = -Math.round(vml.W / 2);
             }
             else {
-                vml.textpath.style["v-text-align"] = "left";
+                textStyle["v-text-align"] = "left";
                 vml.bbx = Math.round(vml.W / 2);
             }
         }
         vml.X = params.x;
         vml.Y = params.y;
         vml.path.v = Ext.String.format("m{0},{1}l{2},{1}", Math.round(vml.X * zoom), Math.round(vml.Y * zoom), Math.round(vml.X * zoom) + 1);
-        sprite.bbox.plain = 0;
-        sprite.bbox.transform = 0;
+        // Clear bbox cache
+        sprite.bbox.plain = null;
+        sprite.bbox.transform = null;
         sprite.dirtyFont = false;
     },
 
@@ -566,7 +575,7 @@ Ext.define('Ext.draw.engine.VML', {
     setSize: function(width, height) {
         var me = this,
             viewBox = me.viewBox,
-            scaleX, scaleY;
+            scaleX, scaleY, items, i, len;
         width = width || me.width;
         height = height || me.height;
         me.width = width;
@@ -606,8 +615,8 @@ Ext.define('Ext.draw.engine.VML', {
                 dy: -viewBoxY,
                 scale: size
             };
-            var items = me.items.items;
-            for (var i = 0, len = items.length; i < len; i++) {
+            items = me.items.items;
+            for (i = 0, len = items.length; i < len; i++) {
                 me.transform(items[i]);
             }
         }

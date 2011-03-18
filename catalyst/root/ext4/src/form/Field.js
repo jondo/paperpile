@@ -112,9 +112,10 @@ Ext.define('Ext.form.Field', {
          */
         me.originalValue = me.lastValue = me.value;
 
-        // Set the initial value and perform conversion/validation
+        // Set the initial value - prevent validation on initial set
+        me.suspendCheckChange++;
         me.setValue(me.value);
-        me.clearInvalid();
+        me.suspendCheckChange--;
     },
 
     /**
@@ -175,7 +176,7 @@ Ext.define('Ext.form.Field', {
             data = {};
             data[me.getName()] = '' + me.getValue();
         }
-        return data
+        return data;
     },
 
     /**

@@ -35,6 +35,8 @@ Ext.define('Ext.menu.Separator', {
      * @cfg {Boolean} disabledCls @hide
      */
      
+    focusable: false,
+     
     /**
      * @cfg {String} href @hide
      */

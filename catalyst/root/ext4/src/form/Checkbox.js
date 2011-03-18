@@ -201,7 +201,6 @@ Ext.define('Ext.form.Checkbox', {
     },
 
     /**
-     * @method setValue
      * Sets the checked state of the checkbox, and invokes change detection.
      * @param {Boolean/String} checked The following values will check the checkbox:
      * <code>true, 'true', '1', or 'on'</code>, as well as a String that matches the {@link #inputValue}.
@@ -247,6 +246,29 @@ Ext.define('Ext.form.Checkbox', {
 
     getManager: function() {
         return Ext.form.CheckboxManager;
+    },
+
+    /**
+     * @private When calculating body width, temporarily set it to nowrap
+     */
+    getBodyNaturalWidth: function() {
+        var bodyEl = this.bodyEl,
+            whitespace = 'white-space',
+            width, rect;
+        bodyEl.setStyle(whitespace, 'nowrap');
+        // Gecko will in some cases report an offsetWidth that is actually less than the width of the
+        // text contents, because it measures fonts with sub-pixel precision but rounds the calculated
+        // value down. Using getBoundingClientRect instead of offsetWidth allows us to get the precise
+        // subpixel measurements so we can force them to always be rounded up. See
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=458617
+        if (Ext.supports.BoundingClientRect) {
+            rect = bodyEl.dom.getBoundingClientRect();
+            width = Math.ceil(rect.right - rect.left);
+        } else {
+            width = bodyEl.getWidth();
+        }
+        bodyEl.setStyle(whitespace, '');
+        return width;
     }
 },
 

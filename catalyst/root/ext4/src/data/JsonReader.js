@@ -194,8 +194,7 @@ Ext.define('Ext.data.JsonReader', {
          * @type Mixed
          */
         this.jsonData = data;
-
-        return Ext.data.JsonReader.superclass.readRecords.call(this, data);
+        return this.callParent([data]);
     },
 
     //inherit docs
@@ -216,12 +215,14 @@ Ext.define('Ext.data.JsonReader', {
 
     //inherit docs
     buildExtractors : function() {
-        Ext.data.JsonReader.superclass.buildExtractors.apply(this, arguments);
+        var me = this;
+        
+        me.callParent();
 
-        if (this.root) {
-            this.getRoot = this.createAccessor(this.root);
+        if (me.root) {
+            me.getRoot = me.createAccessor(me.root);
         } else {
-            this.getRoot = function(root) {
+            me.getRoot = function(root) {
                 return root;
             };
         }
@@ -234,7 +235,7 @@ Ext.define('Ext.data.JsonReader', {
      * @param {Object} root The JSON root node
      * @return {Array} The records
      */
-    extractData: function(root, returnRecords) {
+    extractData: function(root) {
         var recordName = this.record,
             data = [],
             length, i;
@@ -248,8 +249,7 @@ Ext.define('Ext.data.JsonReader', {
         } else {
             data = root;
         }
-        
-        return Ext.data.JsonReader.superclass.extractData.call(this, data, returnRecords);
+        return this.callParent([data]);
     },
 
     /**

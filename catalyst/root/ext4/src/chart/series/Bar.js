@@ -156,11 +156,9 @@ Ext.define('Ext.chart.series.Bar', {
         var me = this,
             chart = me.chart,
             store = chart.substore || chart.store,
-            bbox = chart.chartBBox,
             bars = [].concat(me.yField),
             barsLen = bars.length,
             groupBarsLen = barsLen,
-            groupBarWidth,
             groupGutter = me.groupGutter / 100,
             column = me.column,
             xpadding = me.xpadding,
@@ -169,10 +167,11 @@ Ext.define('Ext.chart.series.Bar', {
             barWidth = me.getBarGirth(),
             math = Math,
             mmax = math.max,
-            mmin = math.min,
             mabs = math.abs,
-            axes = [].concat(me.axis),
-            ends, minY, maxY, axis, scale, zero, total, rec, j, plus, minus;
+            groupBarWidth, bbox, minY, maxY, axis, scale, zero, total, rec, j, plus, minus;
+
+        me.setBBox(true);
+        bbox = me.bbox;
 
         //Skip excluded series
         if (me.__excludes) {
@@ -275,9 +274,9 @@ Ext.define('Ext.chart.series.Bar', {
             mmin = math.min,
             mabs = math.abs,
             j, yValue, height, totalDim, totalNegDim, bottom, top, hasShadow, barAttr, attrs, counter,
-            shadowIndex, shadow, sprite;
+            shadowIndex, shadow, sprite, offset;
 
-        store.each(function(record, i) {
+        store.each(function(record, i, total) {
             bottom = bounds.zero;
             top = bounds.zero;
             totalDim = 0;
@@ -302,11 +301,13 @@ Ext.define('Ext.chart.series.Bar', {
                     });
                 }
                 else {
+                    // draw in reverse order
+                    offset = (total - 1) - i;
                     Ext.apply(barAttr, {
                         height: mmax(bounds.groupBarWidth, 0),
                         width: height + (bottom == bounds.zero),
                         x: bottom + (bottom != bounds.zero),
-                        y: (bbox.y + ypadding + i * bounds.barWidth * (1 + gutter) + counter * bounds.groupBarWidth * (1 + groupGutter) * !stacked + 1)
+                        y: (bbox.y + ypadding + offset * bounds.barWidth * (1 + gutter) + counter * bounds.groupBarWidth * (1 + groupGutter) * !stacked + 1)
                     });
                 }
                 if (height < 0) {
@@ -329,10 +330,10 @@ Ext.define('Ext.chart.series.Bar', {
                         totalNegDim += mabs(height);
                     }
                 }
-                barAttr.x = Math.round(barAttr.x);
+                barAttr.x = Math.round(barAttr.x) + 1;
                 barAttr.y = Math.round(barAttr.y);
-                barAttr.width = Math.round(barAttr.width);
-                barAttr.height = Math.round(barAttr.height);
+                barAttr.width = Math.floor(barAttr.width);
+                barAttr.height = Math.floor(barAttr.height);
                 items.push({
                     series: me,
                     storeItem: record,
@@ -704,34 +705,12 @@ Ext.define('Ext.chart.series.Bar', {
         sprite.show();
         return this.callParent(arguments);
     },
-
-    /**
-     * For a given x/y point relative to the Surface, find a corresponding item from this
-     * series, if any.
-     *
-     * For Bar/Column series, this is the bar directly under the point.
-     *
-     * @param {Number} x
-     * @param {Number} y
-     * @return {Object}
-     */
-    getItemForPoint: function(x, y) {
-        if (!this.items) {
-            return null;
-        }
-        
-        var items = this.items,
-            ln = items.length,
-            bbox, item, i;
-
-        for (i = 0; i < ln; i++) {
-            item = items[i];
-            bbox = item.sprite.getBBox();
-            if (bbox.x <= x && bbox.y <= y && (bbox.x + bbox.width) >= x && (bbox.y + bbox.height) >= y) {
-                return item;
-            }
-        }
-        return null;
+    
+    isItemInPoint: function(x, y, item) {
+        var bbox = item.sprite.getBBox();
+        return bbox.x <= x && bbox.y <= y
+            && (bbox.x + bbox.width) >= x
+            && (bbox.y + bbox.height) >= y;
     },
     
     // @private hide all markers

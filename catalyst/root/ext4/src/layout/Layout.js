@@ -19,9 +19,7 @@ Ext.define('Ext.layout.Layout', {
             if (config instanceof Ext.layout.Layout) {
                 return config;
             }
-            
             var type, options = {};
-            
             if (Ext.isString(config)) {
                 type = config;
             }
@@ -29,7 +27,6 @@ Ext.define('Ext.layout.Layout', {
                 type = config.type || defaultType;
                 options = config;
             }
-            
             return Ext.create('layout.' + type, options);
         }
     },
@@ -51,8 +48,8 @@ Ext.define('Ext.layout.Layout', {
             me.onLayout.apply(me, arguments);
             me.owner.needsLayout = false;
         }
-        me.afterLayout();
         me.layoutBusy = false;
+        me.afterLayout();
     },
 
     beforeLayout : function() {

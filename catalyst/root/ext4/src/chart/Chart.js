@@ -257,7 +257,7 @@ Ext.define('Ext.chart.Chart', {
     // @private wrap the mouse down position to delegate the event to the series.
     onClick: function(e) {
         var me = this,
-            position = me.getEventXY(e);
+            position = me.getEventXY(e),
             item;
 
         // Ask each series if it has an item corresponding to (not necessarily exactly
@@ -597,10 +597,11 @@ Ext.define('Ext.chart.Chart', {
         if (!series.chart) {
             Ext.applyIf(config, series);
             series = me.series.replace(Ext.create('Ext.chart.series.' + Ext.String.capitalize(series.type), config));
-            series.initialize && series.initialize();
         } else {
             Ext.apply(series, config);
-            series.initialize && series.initialize();
+        }
+        if (series.initialize) {
+            series.initialize();
         }
     },
 

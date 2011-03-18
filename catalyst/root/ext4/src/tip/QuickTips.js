@@ -3,7 +3,7 @@
  * <p>Provides attractive and customizable tooltips for any element. The QuickTips
  * singleton is used to configure and manage tooltips globally for multiple elements
  * in a generic manner.  To create individual tooltips with maximum customizability,
- * you should consider either {@link Ext.Tip} or {@link Ext.tip.ToolTip}.</p>
+ * you should consider either {@link Ext.tip.Tip} or {@link Ext.tip.ToolTip}.</p>
  * <p>Quicktips can be configured via tag attributes directly in markup, or by
  * registering quick tips programmatically via the {@link #register} method.</p>
  * <p>The singleton's instance of {@link Ext.tip.QuickTip} is available via

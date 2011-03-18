@@ -1,7 +1,7 @@
 /**
  * @author Ed Spencer
  * @class Ext.Router
- * @extends Ext.util.Observable
+ * @extends Ext.util.Router
  * <p>The Router is used to map urls to controller/action pairs. It can be used whenever an 
  * application wishes to provide history and deep linking support. Every {@link Ext.Application} can set up Routes
  * using the default {@link Ext.Router} instance, supplying application-specific routes like this:</p>

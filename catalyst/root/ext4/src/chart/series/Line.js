@@ -845,23 +845,7 @@ Ext.define('Ext.chart.series.Line', {
         }
     },
     
-    /**
-     * For a given x/y point relative to the Surface, find a corresponding item from this
-     * series, if any.
-     *
-     * For Line series, this snaps to the nearest vertex if the target point is within a
-     * certain vertical distance from the line.
-     *
-     * @param {Number} x
-     * @param {Number} y
-     * @return {Object}
-     */
-    getItemForPoint: function(x, y) {
-        //if the graph/store is empty then no items will be found.
-        if (!this.items) {
-            return null;
-        }
-        
+    isItemInPoint: function(x, y, item, i) {
         var me = this,
             items = me.items,
             tolerance = me.selectionTolerance,
@@ -870,7 +854,6 @@ Ext.define('Ext.chart.series.Line', {
             nextItem,
             prevPoint,
             nextPoint,
-            i,
             ln,
             x1,
             y1,
@@ -880,46 +863,27 @@ Ext.define('Ext.chart.series.Line', {
             yIntersect,
             dist1, dist2, dist, midx, midy,
             sqrt = Math.sqrt, abs = Math.abs;
-
-        if (items && items.length) {
-            // Find coordinates for the vertices before and after the target point
-            for (i = 0, ln = items.length; i < ln; i++) {
-                if (items[i].point[0] >= x) {
-                    nextItem = items[i];
-                    prevItem = i && items[i - 1];
-                    break;
-                }
-            }
-            if (i >= ln) {
-                prevItem = items[ln - 1];
-            }
-            prevPoint = prevItem && prevItem.point;
-            nextPoint = nextItem && nextItem.point;
-            x1 = prevItem ? prevPoint[0] : nextPoint[0] - tolerance;
-            y1 = prevItem ? prevPoint[1] : nextPoint[1];
-            x2 = nextItem ? nextPoint[0] : prevPoint[0] + tolerance;
-            y2 = nextItem ? nextPoint[1] : prevPoint[1];
-            dist1 = sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1));
-            dist2 = sqrt((x - x2) * (x - x2) + (y - y2) * (y - y2));
-            dist = Math.min(dist1, dist2);
-            
-            if (dist <= tolerance) {
-                return dist == dist1? prevItem : nextItem;
-            }
-            
-            /*Doesn't work properly. Fix for later.
-            // Determine whether the point is within the vertical tolerance distance from a straight
-            // line between the two vertices (TODO make this accurate for curved lines)
-            if (x >= x1 && x <= x2) {
-                yIntersect = (y2 - y1) / (x2 - x1) * (x - x1) + y1;
-                console.log('x', x, 'y', y, 'yIntersect', yIntersect, 'y1', y1, 'y2', y2, 'x1', x1, 'x2', x2);
-                if (Math.abs(yIntersect - y) <= tolerance) {
-                    result = (x2 - x < x - x1) ? nextItem : prevItem;
-                }
-            }
-            */
+        
+        nextItem = items[i];
+        prevItem = i && items[i - 1];
+        
+        if (i >= ln) {
+            prevItem = items[ln - 1];
         }
-        return result;
+        prevPoint = prevItem && prevItem.point;
+        nextPoint = nextItem && nextItem.point;
+        x1 = prevItem ? prevPoint[0] : nextPoint[0] - tolerance;
+        y1 = prevItem ? prevPoint[1] : nextPoint[1];
+        x2 = nextItem ? nextPoint[0] : prevPoint[0] + tolerance;
+        y2 = nextItem ? nextPoint[1] : prevPoint[1];
+        dist1 = sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1));
+        dist2 = sqrt((x - x2) * (x - x2) + (y - y2) * (y - y2));
+        dist = Math.min(dist1, dist2);
+        
+        if (dist <= tolerance) {
+            return dist == dist1? prevItem : nextItem;
+        }
+        return false;
     },
     
     // @private toggle visibility of all series elements (markers, sprites).

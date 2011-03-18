@@ -16,8 +16,8 @@ Ext.define('Ext.draw.Color', {
     hexRe: /\s*#([0-9a-fA-F][0-9a-fA-F]?)([0-9a-fA-F][0-9a-fA-F]?)([0-9a-fA-F][0-9a-fA-F]?)\s*/,
 
     /**
-     * @cfg {Number} lightnessFactor 
-     * 
+     * @cfg {Number} lightnessFactor
+     *
      * The default factor to compute the lighter or darker color. Defaults to 0.2.
      */
     lightnessFactor: 0.2,
@@ -146,7 +146,7 @@ Ext.define('Ext.draw.Color', {
     /**
      * Convert a color to hexadecimal format.
      *
-     * @param {String|Array} color The color value (i.e 'rgb(255, 255, 255)', 'color: #ffffff'). 
+     * @param {String|Array} color The color value (i.e 'rgb(255, 255, 255)', 'color: #ffffff').
      * Can also be an Array, in this case the function handles the first member.
      * @returns {String} The color in hexadecimal format.
      */
@@ -161,7 +161,7 @@ Ext.define('Ext.draw.Color', {
             return color;
         }
         var digits = this.colorToHexRe.exec(color);
-    
+
         if (Ext.isArray(digits)) {
             var red = parseInt(digits[2], 10),
                 green = parseInt(digits[3], 10),
@@ -277,9 +277,9 @@ Ext.define('Ext.draw.Color', {
     }
 }, function() {
     var prototype = this.prototype;
-    
+
     //These functions are both static and instance. TODO: find a more elegant way of copying them
-    this.extend({
+    this.addStatics({
         fromHSL: function() {
             return prototype.fromHSL.apply(prototype, arguments);
         },

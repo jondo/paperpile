@@ -56,6 +56,7 @@ Ext.define('Ext.tip.Tip', {
         shim: true,
         constrain: false
     },
+    focusOnToFront: false,
     componentLayout: 'tip',
 
     closeAction: 'hide',
@@ -101,16 +102,6 @@ tip.showBy('my-el', 'tl-tr');
         this.showAt(this.el.getAlignToXY(el, pos || this.defaultAlign));
     },
     
-    // override the superclass method, don't want to focus the tip
-    afterShow: function() {
-        var me = this;
-        
-        if (me.floating) {
-            me.toFront(true);
-        }
-        me.fireEvent('show', me);
-    },
-
     /**
      * @private
      * @override

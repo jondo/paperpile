@@ -45,7 +45,7 @@ Ext.define('Ext.form.Date', {
     /**
      * @cfg {String} format
      * The default date format string which can be overriden for localization support.  The format must be
-     * valid according to {@link Date#parseDate} (defaults to <tt>'m/d/Y'</tt>).
+     * valid according to {@link Ext.util.Date#parse} (defaults to <tt>'m/d/Y'</tt>).
      */
     format : "m/d/Y",
     /**
@@ -137,7 +137,7 @@ disabledDates: ["^03"]
     
     /**
      * @cfg {String} submitFormat The date format string which will be submitted to the server.  
-     * The format must be valid according to {@link Ext.util.Date#parseDate} (defaults to <tt>{@link #format}</tt>).
+     * The format must be valid according to {@link Ext.util.Date#parse} (defaults to <tt>{@link #format}</tt>).
      */
 
     // in the absence of a time value, a default value of 12 noon will be used
@@ -322,7 +322,7 @@ disabledDates: ["^03"]
     /**
      * Sets the value of the date field.  You can pass a date object or any string that can be
      * parsed into a valid date, using <tt>{@link #format}</tt> as the date format, according
-     * to the same rules as {@link Date#parseDate} (the default format used is <tt>"m/d/Y"</tt>).
+     * to the same rules as {@link Ext.util.Date#parse} (the default format used is <tt>"m/d/Y"</tt>).
      * <br />Usage:
      * <pre><code>
 //All of these calls set the same date value (May 4, 2006)
@@ -344,24 +344,23 @@ dateField.setValue('2006-05-04');
      */
 
     /**
-     * Attempts to parse a given string value using a given {@link Date#parseDate date format}.
+     * Attempts to parse a given string value using a given {@link Ext.util.Date#parse date format}.
      * @param {String} value The value to attempt to parse
-     * @param {String} format A valid date format (see {@link Date#parseDate})
+     * @param {String} format A valid date format (see {@link Ext.util.Date#parse})
      * @return {Date} The parsed Date object, or null if the value could not be successfully parsed.
      */
     safeParse : function(value, format) {
         var me = this,
             utilDate = Ext.Date,
-            parseDate = utilDate.parseDate,
             parsedDate,
             result = null;
             
         if (utilDate.formatContainsHourInfo(format)) {
             // if parse format contains hour information, no DST adjustment is necessary
-            result = parseDate(value, format);
+            result = utilDate.parse(value, format);
         } else {
             // set time to 12 noon, then clear the time
-            parsedDate = parseDate(value + ' ' + me.initTime, format + ' ' + me.initTimeFormat);
+            parsedDate = utilDate.parse(value + ' ' + me.initTime, format + ' ' + me.initTimeFormat);
             if (parsedDate) {
                 result = utilDate.clearTime(parsedDate);
             }

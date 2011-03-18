@@ -170,7 +170,7 @@ Ext.define('Ext.chart.series.Area', {
             xValues = sumValues.x;
             yValues = sumValues.y;
         }
-        
+
         return {
             bbox: bbox,
             minX: minX,
@@ -506,61 +506,32 @@ Ext.define('Ext.chart.series.Area', {
             callout[p].show(true);
         }
     },
-
-    /**
-     * For a given x/y point relative to the Surface, find a corresponding item from this
-     * series, if any.
-     *
-     * @param x {Number} The left pointer coordinate.
-     * @param y {Number} The top pointer coordinate.
-     * @return {Object} An object with the item found or null instead.
-     */
-    getItemForPoint: function(x, y) {
-        //if there are no items to query just return null.
-        if (!this.items) {
-            return null;
-        }
+    
+    isItemInPoint: function(x, y, item, i) {
         var me = this,
-            items = me.items,
-            tolerance = 20,
+            pointsUp = item.pointsUp,
+            pointsDown = item.pointsDown,
             abs = Math.abs,
-            bbox = me.bbox,
-            p, pln, pointsUp, pointsDown, point, dist, item, i, ln;
-
-        // Check bounds
-        if (!Ext.draw.Draw.withinBox(x, y, bbox)) {
-            return null;
-        }
-        if (items && items.length) {
-            //Find closest point
-            for (i = 0, ln = items.length; i < ln; i++) {
-                item = items[i];
-                if (item) {
-                    pointsUp = item.pointsUp;
-                    pointsDown = item.pointsDown;
-                    dist = Infinity;
-                    for (p = 0, pln = pointsUp.length; p < pln; p++) {
-                        point = [pointsUp[p][0], pointsUp[p][1]];
-                        if (dist > abs(x - point[0])) {
-                            dist = abs(x - point[0]);
-                        } else {
-                            point = pointsUp[p -1];
-                            if (y >= point[1] && (!pointsDown.length || y <= (pointsDown[p -1][1]))) {
-                                item.storeIndex = p -1;
-                                item.storeField = me.yField[i];
-                                item.storeItem = me.chart.store.getAt(p -1);
-                                item._points = pointsDown.length? [point, pointsDown[p -1]] : [point];
-                                return item;
-                            } else {
-                                break;
-                            }
-                        }
-                    }
+            dist = Infinity, p, pln, point;
+        
+        for (p = 0, pln = pointsUp.length; p < pln; p++) {
+            point = [pointsUp[p][0], pointsUp[p][1]];
+            if (dist > abs(x - point[0])) {
+                dist = abs(x - point[0]);
+            } else {
+                point = pointsUp[p -1];
+                if (y >= point[1] && (!pointsDown.length || y <= (pointsDown[p -1][1]))) {
+                    item.storeIndex = p -1;
+                    item.storeField = me.yField[i];
+                    item.storeItem = me.chart.store.getAt(p -1);
+                    item._points = pointsDown.length? [point, pointsDown[p -1]] : [point];
+                    return true;
+                } else {
+                    break;
                 }
             }
         }
-        
-        return null;
+        return false;
     },
 
     /**

@@ -7,6 +7,9 @@ Ext.toolbar.Toolbar.SplitButton = Ext.extend(Ext.button.Split, {});
 Ext.reg('tbbutton', Ext.toolbar.Toolbar.Button);
 Ext.reg('tbsplit', Ext.toolbar.Toolbar.SplitButton);
 
+/**
+ * @ignore
+ */
 Ext.toolbar.Toolbar.override({
     /**
      * Adds text to the toolbar
@@ -40,7 +43,7 @@ Ext.toolbar.Toolbar.override({
     },
 
     /**
-     * Inserts any {@link Ext.Toolbar.Item}/{@link Ext.button.Button} at the specified index.
+     * Inserts any {@link Ext.toolbar.Item}/{@link Ext.button.Button} at the specified index.
      * <br><p><b>Note</b>: See the notes within {@link Ext.container.Container#add}.</p>
      * @param {Number} index The index where the item is to be inserted
      * @param {Object/Ext.Toolbar.Item/Ext.button.Button/Array} item The button, or button config object to be
@@ -61,7 +64,7 @@ Ext.toolbar.Toolbar.override({
     /**
      * Adds a separator
      * <br><p><b>Note</b>: See the notes within {@link Ext.container.Container#add}.</p>
-     * @return {Ext.Toolbar.Item} The separator {@link Ext.Toolbar.Item item}
+     * @return {Ext.toolbar.Item} The separator {@link Ext.toolbar.Item item}
      */
     addSeparator : function(){
         return this.add(new Ext.toolbar.Separator());

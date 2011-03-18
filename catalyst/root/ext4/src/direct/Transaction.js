@@ -1,18 +1,32 @@
 /**
  * @class Ext.direct.Transaction
  * @extends Object
- * <p>Supporting Class for Ext.direct.Direct (not intended to be used directly).</p>
+ * <p>Supporting Class for Ext.Direct (not intended to be used directly).</p>
  * @constructor
  * @param {Object} config
  */
 Ext.define('Ext.direct.Transaction', {
-    constructor: function(config){
-        Ext.apply(this, config);
-        this.tid = ++Ext.direct.Direct.TID;
-        this.retryCount = 0;
+    
+    /* Begin Definitions */
+   
+    alias: 'direct.transaction',
+   
+    statics: {
+        TRANSACTION_ID: 0
     },
+   
+    /* End Definitions */
+   
+    constructor: function(config){
+        var me = this;
+        
+        Ext.apply(me, config);
+        me.id = ++me.self.TRANSACTION_ID;
+        me.retryCount = 0;
+    },
+   
     send: function(){
-        this.provider.queueTransaction(this);
+         this.provider.queueTransaction(this);
     },
 
     retry: function(){

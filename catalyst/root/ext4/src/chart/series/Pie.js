@@ -21,7 +21,7 @@
             field: 'name',
             display: 'rotate',
             contrast: true,
-            font: '18px "Lucida Grande"'
+            font: '18px Arial'
         }
     }]
    </code></pre>
@@ -312,26 +312,12 @@ Ext.define('Ext.chart.series.Pie', {
             sliceLength,
             path,
             p,
-            spriteOptions, clipBox, bbox;
+            spriteOptions, bbox;
         
         Ext.apply(seriesStyle, me.style || {});
-        
-        //get box dimensions
-        clipBox = {
-            x: chartBBox.x,
-            y: chartBBox.y,
-            width: chartBBox.width,
-            height: chartBBox.height
-        };
-        me.clipBox = clipBox;
 
-        bbox = {
-            x: (clipBox.x + gutterX) - (chart.zoom.x * chart.zoom.width),
-            y: (clipBox.y + gutterY) - (chart.zoom.y * chart.zoom.height),
-            width: (clipBox.width - (gutterX * 2)) * chart.zoom.width,
-            height: (clipBox.height - (gutterY * 2)) * chart.zoom.height
-        };
-        me.bbox = bbox;
+        me.setBBox();
+        bbox = me.bbox;
 
         //override theme colors
         if (me.colorSet) {
@@ -587,6 +573,7 @@ Ext.define('Ext.chart.series.Pie', {
             },
             x = middle.x - centerX,
             y = middle.y - centerY,
+            from = {},
             rho = 1,
             theta = Math.atan2(y, x || 1),
             dg = theta * 180 / Math.PI,
@@ -635,6 +622,10 @@ Ext.define('Ext.chart.series.Pie', {
         default:
             break;
         }
+        //ensure the object has zero translation
+        opt.translate = {
+            x: 0, y: 0    
+        };
         if (animate && !resizing && (display != 'rotate' || prevDg != null)) {
             me.onAnimate(label, {
                 to: opt
@@ -642,6 +633,7 @@ Ext.define('Ext.chart.series.Pie', {
         } else {
             label.setAttributes(opt, true);
         }
+        label._from = from;
     },
 
     // @private callback for when placing a callout sprite.
@@ -733,52 +725,24 @@ Ext.define('Ext.chart.series.Pie', {
         return this.callParent(arguments);
     },
 
-    /**
-     * For a given x/y point relative to the Surface, find a corresponding item from this
-     * series, if any.
-     *
-     * @param x {Number} The left pointer coordinate.
-     * @param y {Number} The top pointer coordinate.
-     * @return {Object} An object with the item found or null instead.
-     */
-    getItemForPoint: function(x, y) {
-        if (!this.items) {
-            return null;
-        }
-        
+    isItemInPoint: function(x, y, item, i) {
         var me = this,
             cx = me.centerX,
             cy = me.centerY,
             abs = Math.abs,
             dx = abs(x - cx),
             dy = abs(y - cy),
-            items = me.items,
-            item,
-            i = items && items.length,
-            angle,
-            startAngle,
-            endAngle,
-            rho = Math.sqrt(dx * dx + dy * dy);
-
-        // Make sure we're within the pie circle area
-        if (i && rho <= me.radius) {
+            startAngle = item.startAngle,
+            endAngle = item.endAngle,
+            rho = Math.sqrt(dx * dx + dy * dy),
             angle = Math.atan2(y - cy, x - cx) / me.rad + 360;
-            // normalize to the same range of angles created by drawSeries
-            if (angle > me.firstAngle) {
-                angle -= 360;
-            }
-            while (i--) {
-                item = items[i];
-                if (item) {
-                    startAngle = item.startAngle;
-                    endAngle = item.endAngle;
-                    if (angle <= startAngle && angle > endAngle && rho >= item.startRho && rho <= item.endRho) {
-                        return item;
-                    }
-                }
-            }
+        
+        // normalize to the same range of angles created by drawSeries
+        if (angle > me.firstAngle) {
+            angle -= 360;
         }
-        return null;
+        return (angle <= startAngle && angle > endAngle
+                && rho >= item.startRho && rho <= item.endRho);
     },
     
     // @private hides all elements in the series.
@@ -929,30 +893,28 @@ Ext.define('Ext.chart.series.Pie', {
                     //animate labels
                     if (group) {
                         label = group.getAt(item.index);
-                        attrs = {
-                            to: Ext.apply({
-                                translate: {
-                                    x: 0,
-                                    y: 0
-                                }
-                            },
-                            display == 'rotate' ? {
-                                rotate: {
-                                    x: label.attr.x,
-                                    y: label.attr.y,
-                                    degrees: label.attr.rotation.degrees
-                                }
-                            }: {})
-                        };
+                        attrs = Ext.apply({
+                            translate: {
+                                x: 0,
+                                y: 0
+                            }
+                        },
+                        display == 'rotate' ? {
+                            rotate: {
+                                x: label.attr.x,
+                                y: label.attr.y,
+                                degrees: label.attr.rotation.degrees
+                            }
+                        }: {});
                         if (animate) {
                             label.stopFx();
                             label.animate({
-                                to: attrs.to,
+                                to: attrs,
                                 duration: me.highlightDuration
                             });
                         }
                         else {
-                            label.setAttributes(attrs.to, true);
+                            label.setAttributes(attrs, true);
                         }
                     }
                     if (shadowsEnabled) {

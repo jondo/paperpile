@@ -2,10 +2,10 @@
  * @class Ext.grid.HeaderContainer
  * @extends Ext.container.Container
  *
- * Container which holds healders and is docked at the top or bottom of a grid
- * section. The HeaderContainer drives resizing/moving/hiding of columns within
- * the gridview. As headers are hidden, moved or resized the headercontainer is
- * responsible for triggering changes within the view.
+ * Container which holds headers and is docked at the top or bottom of a TablePanel.
+ * The HeaderContainer drives resizing/moving/hiding of columns within the TableView.
+ * As headers are hidden, moved or resized the headercontainer is responsible for
+ * triggering changes within the view.
  *
  * @xtype headercontainer
  */
@@ -26,6 +26,13 @@ Ext.define('Ext.grid.HeaderContainer', {
     cls: Ext.baseCSSPrefix + 'grid-header-ct',
     dock: 'top',
     height: 23,
+    
+    /**
+     * @cfg {Number} weight
+     * HeaderContainer overrides the default weight of 0 for all docked items to 100.
+     * This is so that it has more priority over things like toolbars.
+     */
+    weight: 100,
     defaultType: 'gridheader',
     /**
      * @cfg {Number} defaultWidth
@@ -53,6 +60,15 @@ Ext.define('Ext.grid.HeaderContainer', {
     
     dragging: false,
     
+    /**
+     * @cfg {Boolean} sortable
+     * Provides the default sortable state for all Headers within this HeaderContainer.
+     * Also turns on or off the menus in the HeaderContainer. Note that the menu is
+     * shared across every header and therefore turning it off will remove the menu
+     * items for every header.
+     */
+    sortable: true,
+    
     initComponent: function() {
         this.plugins  = this.plugins || [];
         // TODO: Pass in configurations to turn on/off dynamic
@@ -69,7 +85,8 @@ Ext.define('Ext.grid.HeaderContainer', {
         this.defaults = this.defaults || {};
         Ext.applyIf(this.defaults, {
             width: this.defaultWidth,
-            triStateSort: this.triStateSort
+            triStateSort: this.triStateSort,
+            sortable: this.sortable
         });
         Ext.grid.HeaderContainer.superclass.initComponent.call(this);
         this.addEvents(
@@ -109,18 +126,20 @@ Ext.define('Ext.grid.HeaderContainer', {
             'headermove'
         );
     },
-    
-    
+
     afterRender: function() {
         Ext.grid.HeaderContainer.superclass.afterRender.apply(this, arguments);
-        var store   = this.up('gridpanel').store,
+        var store   = this.up('[store]').store,
             sorters = store.sorters,
             first   = sorters.first(),
             hd;
             
         if (first) {
             hd = this.down('gridheader[dataIndex=' + first.property  +']');
-            hd.setSortState(first.direction);
+            if (hd) {
+                hd.setSortState(first.direction);
+            }
+            
         }
     },
     
@@ -128,7 +147,8 @@ Ext.define('Ext.grid.HeaderContainer', {
         Ext.grid.HeaderContainer.superclass.afterLayout.apply(this, arguments);
         var headers = this.query('gridheader:not(gridheader[hidden])'),
             viewEl;
-
+    if (headers.length) {
+        
         headers[0].el.radioCls(this.firstHeaderCls);
         headers[headers.length - 1].el.radioCls(this.lastHeaderCls);
         
@@ -140,6 +160,8 @@ Ext.define('Ext.grid.HeaderContainer', {
             viewEl.select(headers[0].getCellSelector()).addCls(this.firstCellCls);
             viewEl.select(headers[headers.length - 1].getCellSelector()).addCls(this.lastCellCls);
         }
+        
+    }
     },
     
     onHeaderShow: function(header) {
@@ -249,15 +271,22 @@ Ext.define('Ext.grid.HeaderContainer', {
     
     showMenuBy: function(t, header) {
         var menu = this.getMenu(),
+            ascItem  = menu.down('#ascItem'),
+            descItem = menu.down('#descItem'),
             sortableMth;
             
-        menu.activeHeader = header;
+        menu.activeHeader = menu.ownerCt = header;
         header.addCls(this.headerOpenCls);
         
         // enable or disable asc & desc menu items based on header being sortable
         sortableMth = header.sortable ? 'enable' : 'disable';
-        menu.down('#ascItem')[sortableMth]();
-        menu.down('#descItem')[sortableMth]();
+        if (ascItem) {
+            ascItem[sortableMth]();
+        }
+        if (descItem) {
+            descItem[sortableMth]();
+        }
+        
         menu.showBy(t);
     },
     
@@ -300,24 +329,30 @@ Ext.define('Ext.grid.HeaderContainer', {
      * @returns {Array} menuItems
      */
     getMenuItems: function() {
-        return [{
-            itemId: 'ascItem',
-            text: this.sortAscText,
-            cls: 'xg-hmenu-sort-asc',
-            handler: this.onSortAscClick,
-            scope: this
-        },{
-            itemId: 'descItem',
-            text: this.sortDescText,
-            cls: 'xg-hmenu-sort-desc',
-            handler: this.onSortDescClick,
-            scope: this
-        },'-',{
-            itemId: 'columnItem',
-            text: this.columnsText,
-            cls: 'x-cols-icon',
-            menu: this.getColumnsMenu()
-        }];
+        var me = this,
+            menuItems = [{
+                itemId: 'columnItem',
+                text: me.columnsText,
+                cls: Ext.baseCSSPrefix + 'cols-icon',
+                menu: me.getColumnsMenu()
+            }];
+            
+        if (me.sortable) {
+            menuItems.unshift({
+                itemId: 'ascItem',
+                text: me.sortAscText,
+                cls: 'xg-hmenu-sort-asc',
+                handler: me.onSortAscClick,
+                scope: me
+            },{
+                itemId: 'descItem',
+                text: me.sortDescText,
+                cls: 'xg-hmenu-sort-desc',
+                handler: me.onSortDescClick,
+                scope: me
+            },'-');
+        }
+        return menuItems;
     },
     
     // sort asc when clicking on item in menu
@@ -452,15 +487,16 @@ Ext.define('Ext.grid.HeaderContainer', {
      * This correlates to the markup/template generated by
      * TableChunker.
      */
-    prepareData: function(data, rowIdx, record) {
+    prepareData: function(data, rowIdx, record, view) {
         var obj     = {},
             items   = this.items.items,
             itemsLn = items.length,
             colIdx  = 0,
             item, value,
             metaData,
-            store = this.up('gridpanel').store;
-            
+            g = this.up('tablepanel'),
+            store = g.store;
+        
         for (; colIdx < itemsLn; colIdx++) {
             metaData = {
                 tdCls: '',
@@ -485,7 +521,8 @@ Ext.define('Ext.grid.HeaderContainer', {
                     record,
                     rowIdx,
                     colIdx,
-                    store
+                    store,
+                    view
                 );
             }
             

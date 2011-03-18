@@ -141,6 +141,13 @@ Ext.define('Ext.chart.LegendItem', {
             series._index = index;
             series.unHighlightItem();
         }, me);
+        
+        if (!series.visibleInLegend(index)) {
+            toggle = true;
+            label.setAttributes({
+               opacity: 0.5
+            }, true);
+        }
 
         me.on('mousedown', function() {
             if (!toggle) {

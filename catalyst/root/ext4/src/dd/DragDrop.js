@@ -846,10 +846,8 @@ Ext.define('Ext.dd.DragDrop', {
         if (!this.hasOuterHandles && !this.DDMInstance.isOverTarget(pt, this) )  {
         } else {
             if (this.clickValidator(e)) {
-
                 // set the initial element position
                 this.setStartPosition();
-
                 this.b4MouseDown(e);
                 this.onMouseDown(e);
 

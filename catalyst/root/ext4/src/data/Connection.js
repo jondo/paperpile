@@ -333,7 +333,7 @@ failure: function(response, opts) {
                 value: value,
                 name: name
             });
-            form.appendChild(hd);
+            form.appendChild(hiddenItem);
             hiddens.push(hiddenItem);
         });
 

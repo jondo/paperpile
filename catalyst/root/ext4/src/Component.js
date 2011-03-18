@@ -7,7 +7,7 @@
  * or they may be added dynamically via the {@link Ext.container.Container#add add} method.</p>
  * <p>The Component base class has built-in support for basic hide/show and enable/disable behavior.</p>
  * <p>All Components are registered with the {@link Ext.ComponentMgr} on construction so that they can be referenced at any time via
- * {@link Ext#getCmp}, passing the {@link #id}.</p>
+ * {@link Ext#getCmp Ext.getCmp}, passing the {@link #id}.</p>
  * <p>All user-developed visual widgets that are required to participate in automated lifecycle and size management should subclass Component (or
  * {@link Ext.AbstractComponent} if managed box model handling is required, ie height and width management).</p>
  * <p>See the <a href="http://extjs.com/learn/Tutorial:Creating_new_UI_controls">Creating new UI controls</a> tutorial for details on how
@@ -36,7 +36,7 @@ spacer           {@link Ext.toolbar.Spacer}
 splitbutton      {@link Ext.button.Split}
 tabpanel         {@link Ext.tab.TabPanel}
 treepanel        {@link Ext.tree.TreePanel}
-viewport         {@link Ext.container.ViewPort}
+viewport         {@link Ext.container.Viewport}
 window           {@link Ext.window.Window}
 
 Toolbar components
@@ -63,7 +63,6 @@ form             {@link Ext.form.FormPanel}
 checkbox         {@link Ext.form.Checkbox}
 checkboxgroup    {@link Ext.form.CheckboxGroup}
 combo            {@link Ext.form.ComboBox}
-compositefield   {@link Ext.form.CompositeField}
 datefield        {@link Ext.form.Date}
 displayfield     {@link Ext.form.Display}
 field            {@link Ext.form.Field}
@@ -160,8 +159,50 @@ Ext.define('Ext.Component', {
      * <p>Specify as true to float the Component outside of the document flow using CSS absolute positioning.</p>
      * <p>Components such as {@link Ext.window.Window Window}s and {@link Ext.menu.Menu Menu}s are floating
      * by default.</p>
+     * <p>Floating Components that are programatically {@link Ext.Component#render rendered} will register themselves with the global
+     * {@link Ext.WindowMgr ZIndexManager}</p>
+     * <h3 class="pa">Floating Components as child items of a Container</h3>
+     * <p>A floating Component may be used as a child item of a Container. This just allows the floating Component to seek a ZIndexManager by
+     * examining the ownerCt chain.</p>
+     * <p>When configured as floating, Components acquire, at render time, a {@link Ext.ZIndexManager ZIndexManager} which manages a stack
+     * of related floating Components. The ZIndexManager brings a single floating Component to the top of its stack when
+     * the Component's {@link #toFront} method is called.</p>
+     * <p>The ZIndexManager is found by traversing up the {@link #ownerCt} chain to find an ancestor which itself is floating. This is so that
+     * descendant floating Components of floating <i>Containers</i> (Such as a ComboBox dropdown within a Window) can have its zIndex managed relative
+     * to any siblings, but always <b>above</b> that floating ancestor Container.</p>
+     * <p>If no floating ancestor is found, a floating Component registers itself with the default {@link Ext.WindowMgr ZIndexManager}.</p>
+     * <p>Floating components <i>do not participate in the Container's layout</i>. Because of this, they are not rendered until you explicitly
+     * {@link #show} them.</p>
+     * <p>After rendering, the ownerCt reference is deleted, and the {@link #floatParent} property is set to the found floating ancestor Container.
+     * If no floating ancestor Container was found the {@link #floatParent} property will not be set.</p>
      */
     floating: false,
+
+    /**
+     * @property {Ext.ZIndexManager} zIndexManager
+     * <p>Optional. Only present for {@link #floating} Components after they have been rendered.</p>
+     * <p>A reference to the ZIndexManager which is manging this Component's z-index.</p>
+     * <p>The {@link Ext.ZIndexManager ZIndexManager} maintains a stack of floating Component z-indices, and also provides a single modal
+     * mask which is insert just beneath the topmost visible modal floating Component.</p>
+     * <p>Floating Components may be {@link #toFront brought to the front} or {@link #toBack sent to the back} of the z-index stack.</p>
+     * <p>This defaults to the global {@link Ext.WindowMgr ZIndexManager} for floating Components that are programatically
+     * {@link Ext.Component#render rendered}.</p>
+     * <p>For {@link #floating} Components which are added to a Container, the ZIndexManager is acquired from the first ancestor Container found
+     * which is floating, or if not found the global {@link Ext.WindowMgr ZIndexManager} is used.</p>
+     * <p>See {@link #floating} and {@link #floatParent}</p>
+     */
+
+    /**
+     * @property {Ext.Container} floatParent
+     * <p>Optional. Only present for {@link #floating} Components which were inserted as descendant items of floating Containers.</p>
+     * <p>Floating Components that are programatically {@link Ext.Component#render rendered} will not have a <code>floatParent</code> property.</p>
+     * <p>For {@link #floating} Components which are child items of a Container, the floatParent will be the floating ancestor Container which is
+     * responsible for the base z-index value of all its floating descendants. It provides a {@link Ext.ZIndexManager ZIndexManager} which provides
+     * z-indexing services for all its descendant floating Components.</p>
+     * <p>For example, the dropdown {@link Ext.view.BoundList BoundList} of a ComboBox which is in a Window will have the Window as its
+     * <code>floatParent</code></p>
+     * <p>See {@link #floating} and {@link #zIndexManager}</p>
+     */
 
     /**
      * @cfg {Boolean} maintainFlex
@@ -169,13 +210,6 @@ Ext.define('Ext.Component', {
      * {@link Ext.layout.container.HBox HBox} layout.</b></p>
      * <p>Specifies that if an immediate sibling Splitter is moved, the Component on the <i>other</i> side is resized, and this
      * Component maintains its configured {@link Ext.layout.container.Box#flex flex} value.</p>
-     */
-
-    /**
-     * @property {Ext.ZIndexManager} zIndexManager
-     * <p>Optional. Only valid for {@link #floating} Components. A reference to the ZIndexManager that should manage this Component.</p>
-     * <p>This defaults to the global {@link Ext.WindowMgr} for floating Components that are programatically {@link Ext.Component#render rendered}.</p>
-     * <p>For {@link #floating} Components which are added at a Container, the Container assigns a ZIndexManager.</p>
      */
 
     hideMode: 'display',
@@ -317,7 +351,7 @@ Ext.define('Ext.Component', {
         var me = this,
             ddConfig = Ext.applyIf({
                 el: this.getDragEl(),
-                constrainTo: me.constrainTo || me.el.dom.parentNode
+                constrainTo: me.constrainTo || me.floatParent ? me.floatParent.getTargetEl() : me.el.dom.parentNode
             }, this.draggable);
 
         // Add extra configs if Component is specified to be constrained
@@ -564,7 +598,7 @@ Ext.define('Ext.Component', {
      * <p>For a {@link Ext.window.Window Window}, it activates it and brings it to front if hidden.</p>
      * @param {String/Element} animateTarget (optional) The target element or id from which the Component should
      * animate while opening (defaults to null with no animation)
-     * @param {Function} callback (optional) A callback function to call after the window is displayed. <b>Only necessary is animation was specified.</b>
+     * @param {Function} callback (optional) A callback function to call after the window is displayed. <b>Only necessary if animation was specified.</b>
      * @param {Object} scope (optional) The scope (<code>this</code> reference) in which the callback is executed. Defaults to this Component.
      * @return {Component} this
      */
@@ -582,7 +616,7 @@ Ext.define('Ext.Component', {
 
                 // Notify any owning Container unless it's suspended.
                 // Floating Components do not participate in layouts.
-                if (this.ownerCt && !this.ownerCt.suspendLayout && !this.floating) {
+                if (this.ownerCt && !this.floating && !(this.ownerCt.suspendLayout || this.ownerCt.layout.layoutBusy)) {
                     this.ownerCt.doLayout();
                 }
             }
@@ -608,7 +642,7 @@ Ext.define('Ext.Component', {
 
                 // Notify any owning Container unless it's suspended.
                 // Floating Components do not participate in layouts.
-                if (this.ownerCt && !this.ownerCt.suspendLayout && !this.floating) {
+                if (this.ownerCt && !this.floating && !(this.ownerCt.suspendLayout || this.ownerCt.layout.layoutBusy)) {
                     this.ownerCt.doLayout();
                 }
             }

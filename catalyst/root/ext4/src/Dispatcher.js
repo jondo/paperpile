@@ -3,7 +3,7 @@
  * @extends Ext.util.Dispatcher
  * 
  * <p>The Dispatcher is responsible for sending requests through to a specific controller
- * action. It is usually invoked either by a UI event handler calling {@link Ext#dispatch}, or by the 
+ * action. It is usually invoked either by a UI event handler calling {@link Ext#dispatch Ext.dispatch}, or by the 
  * {@link Ext.Router Router} recognizing a change in the page url.</p>
  * 
  * <p>Ext.Dispatcher is the default instance of {@link Ext.util.Dispatcher} that is automatically created for every
@@ -62,7 +62,7 @@ Ext.regController('contacts', {
 </code></pre>
  * 
  * <p>We can pass anything in to Ext.dispatch and have it come through to our controller action. Internally, all of the
- * options that we pass to dispatch are rolled into an {@link Ext.Interaction}. Interaction is a very simple class that
+ * options that we pass to dispatch are rolled into an Ext.Interaction. Interaction is a very simple class that
  * represents a single request into the application - typically the controller and action names plus any additional 
  * information like the Model instance that a particular action is concerned with.</p>
  * 

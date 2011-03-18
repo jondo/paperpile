@@ -51,6 +51,12 @@ Ext.define('Ext.data.Association', {
      */
     primaryKey: 'id',
     
+    /**
+     * @cfg {Ext.data.Reader} reader A special reader to read associated data
+     */
+    
+    defaultReaderType: 'json',
+    
     constructor: function(config) {
         Ext.apply(this, config);
         
@@ -88,5 +94,33 @@ Ext.define('Ext.data.Association', {
             ownerName : ownerName,
             associatedName: associatedName
         });
+    },
+    
+    /**
+     * Get a specialized reader for reading associated data
+     * @return {Ext.data.Reader} The reader, null if not supplied
+     */
+    getReader: function(){
+        var me = this,
+            reader = me.reader,
+            model = me.associatedModel;
+            
+        if (reader) {
+            if (Ext.isString(reader)) {
+                reader = {
+                    type: reader
+                };
+            }
+            if (reader.isReader) {
+                reader.setModel(model);
+            } else {
+                Ext.applyIf(reader, {
+                    model: model,
+                    type : me.defaultReaderType
+                });
+            }
+            me.reader = Ext.createByAlias('reader.' + reader.type, reader);
+        }
+        return me.reader || null;
     }
 });

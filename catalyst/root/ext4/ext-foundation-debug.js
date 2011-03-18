@@ -136,12 +136,12 @@
     Ext.apply(Ext, {
 
         /**
-         * Since Core version 4 this method is meant to be used internally only. Use {@link Ext.define Ext.define} instead.
+         * Since Core version 4 this method is meant to be used internally only. Use {@link Ext#define Ext.define} instead.
          * @function
          * @param {Function} superclass
          * @param {Object} overrides
          * @return {Function} The subclass constructor from the <tt>overrides</tt> parameter, or a generated one if not provided.
-         * @deprecated Use {@link Ext.define Ext.define} instead
+         * @deprecated Use {@link Ext#define Ext.define} instead
          */
         extend: function() {
             // inline overrides
@@ -225,10 +225,6 @@
      * @ignore
      */
     Ext.apply(Ext, {
-        
-        deprecate: function() {
-            
-        },
 
         /**
          * Returns true if the passed value is empty. The value is deemed to be empty if it is:
@@ -448,7 +444,8 @@
             var args = Array.prototype.slice.call(arguments);
 
             if (args.length > 0) {
-                args[args.length - 1] = 'return (function(Ext){' +  args[args.length - 1] + '}).call(this, window.'+this.getUniqueGlobalNamespace()+');';
+                args[args.length - 1] = 'var Ext=window.' + this.getUniqueGlobalNamespace() + ';' +
+                    args[args.length - 1];
             }
 
             return Function.prototype.constructor.apply(Function.prototype, args);
@@ -463,7 +460,7 @@
 (function() {
 
 // Current core version
-var version = '4.0.0dev',
+var version = '4.0.0pr4',
     Version = Ext.Version = Ext.extend(Object, {
 
         /**
@@ -1297,7 +1294,7 @@ Ext.num = function(v, defaultValue) {
         },
 
         /**
-         * Filter through an array and remove empty item as defined in {@link Ext#isEmpty}
+         * Filter through an array and remove empty item as defined in {@link Ext#isEmpty Ext.isEmpty}
          * @see Ext.Array.filter
          * @param {Array} array
          * @return {Array} results
@@ -2176,14 +2173,10 @@ Ext.merge = function() {
 
 /**
  * @class Ext.Date
- *
  * A set of useful static methods to deal with date
- * @singleton
- */
-
-/*
  * Note that if Ext.util.Date is required and loaded, it will copy all methods / properties to
- * this object, for convenience
+ * this object for convenience
+ * @singleton
  */
 Ext.Date = {
     /**
@@ -2209,7 +2202,7 @@ Ext.Date = {
  * @author Jacky Nguyen
  * @class Ext.Base
  *
- * The root of all classes created with {@link Ext#define}
+ * The root of all classes created with {@link Ext#define Ext.define}
  * All prototype and static properties of this class are inherited by any other class
  *
  */
@@ -2228,11 +2221,11 @@ var Base = Ext.Base = function() {};
 
     Ext.define('My.Cat', {
         statics: {
-            speciciesName: 'Cat' // My.Cat.speciciesName = 'Cat'
+            speciesName: 'Cat' // My.Cat.speciesName = 'Cat'
         },
 
         constructor: function() {
-            alert(this.self.speciciesName); / dependent on 'this'
+            alert(this.self.speciesName); / dependent on 'this'
 
             return this;
         },
@@ -2246,7 +2239,7 @@ var Base = Ext.Base = function() {};
     Ext.define('My.SnowLeopard', {
         extend: 'My.Cat',
         statics: {
-            speciciesName: 'Snow Leopard' // My.SnowLeopard.speciciesName = 'Snow Leopard'
+            speciesName: 'Snow Leopard' // My.SnowLeopard.speciesName = 'Snow Leopard'
         }
     });
 
@@ -2404,14 +2397,14 @@ var Base = Ext.Base = function() {};
 
     Ext.define('My.Cat', {
         statics: {
-            speciciesName: 'Cat' // My.Cat.speciciesName = 'Cat'
+            speciesName: 'Cat' // My.Cat.speciesName = 'Cat'
         },
 
         constructor: function() {
-            alert(this.statics().speciciesName); // always equals to 'Cat' no matter what 'this' refers to
-                                                 // equivalent to: My.Cat.speciciesName
+            alert(this.statics().speciesName); // always equals to 'Cat' no matter what 'this' refers to
+                                                 // equivalent to: My.Cat.speciesName
 
-            alert(this.self.speciciesName);      // dependent on 'this'
+            alert(this.self.speciesName);      // dependent on 'this'
 
             return this;
         },
@@ -2419,7 +2412,7 @@ var Base = Ext.Base = function() {};
         clone: function() {
             var cloned = new this.self;                      // dependent on 'this'
 
-            cloned.groupName = this.statics().speciciesName; // equivalent to: My.Cat.speciciesName
+            cloned.groupName = this.statics().speciesName; // equivalent to: My.Cat.speciesName
 
             return cloned;
         }
@@ -2428,7 +2421,7 @@ var Base = Ext.Base = function() {};
 
     Ext.define('My.SnowLeopard', {
         statics: {
-            speciciesName: 'Snow Leopard' // My.SnowLeopard.speciciesName = 'Snow Leopard'
+            speciesName: 'Snow Leopard' // My.SnowLeopard.speciesName = 'Snow Leopard'
         },
 
         constructor: function() {
@@ -2562,13 +2555,13 @@ var Base = Ext.Base = function() {};
         ...
     });
 
-    My.cool.Class.extend({
+    My.cool.Class.addStatics({
         someProperty: 'someValue',      // My.cool.Class.someProperty = 'someValue'
         method1: function() { ... },    // My.cool.Class.method1 = function() { ... };
         method2: function() { ... }     // My.cool.Class.method2 = function() { ... };
     });
 
-    My.cool.Class.extend('method3', function(){ ... }); // My.cool.Class.method3 = function() { ... };
+    My.cool.Class.addStatics('method3', function(){ ... }); // My.cool.Class.method3 = function() { ... };
 
          * @property extend
          * @static
@@ -2577,7 +2570,7 @@ var Base = Ext.Base = function() {};
          * @param {Mixed} value See {@link Ext.Function#flexSetter flexSetter}
          * @markdown
          */
-        extend: flexSetter(function(name, value) {
+        addStatics: flexSetter(function(name, value) {
             this[name] = value;
         }),
 
@@ -2590,7 +2583,7 @@ var Base = Ext.Base = function() {};
     });
 
     // Object with key - value pairs
-    My.cool.Class.implement({
+    My.cool.Class.extend({
         someProperty: 'someValue',
         method1: function() { ... },
         method2: function() { ... }
@@ -2602,7 +2595,7 @@ var Base = Ext.Base = function() {};
     cool.method2();
 
     // name - value arguments
-    My.cool.Class.implement('method3', function(){ ... });
+    My.cool.Class.extend('method3', function(){ ... });
     cool.method3();
 
          * @property implement
@@ -2611,7 +2604,7 @@ var Base = Ext.Base = function() {};
          * @param {String/Object} name See {@link Ext.Function#flexSetter flexSetter}
          * @param {Mixed} value See {@link Ext.Function#flexSetter flexSetter}
          */
-        implement: flexSetter(function(name, value) {
+        extend: flexSetter(function(name, value) {
             if (Ext.isObject(this.prototype[name]) && Ext.isObject(value)) {
                 Ext.Object.merge(this.prototype[name], value);
             }
@@ -2622,6 +2615,16 @@ var Base = Ext.Base = function() {};
                 this.prototype[name] = value;
             }
         }),
+
+        /**
+         * This method is deprecated, please use {@link Ext.Base#extend} instead
+         */
+        implement: function() {
+            if (Ext.isDefined(window.console)) {
+                console.warn("Class.implement is deprecated, please use Class.extend instead");
+                return this.extend.apply(this, arguments);
+            }
+        },
 
         /**
          * Add / override prototype properties of this class. This method is similar to {@link Ext.Base#implement implement},
@@ -2637,11 +2640,15 @@ var Base = Ext.Base = function() {};
             if (Ext.isObject(this.prototype[name]) && Ext.isObject(value)) {
                 Ext.Object.merge(this.prototype[name], value);
             }
-            else if (Ext.isFunction(this.prototype[name]) && Ext.isFunction(value)) {
-                var previous = this.prototype[name];
-
-                this.ownMethod(name, value);
-                this.prototype[name].$previous = previous;
+            else if (Ext.isFunction(value)) {
+                if (Ext.isFunction(this.prototype[name])) {
+                    var previous = this.prototype[name];
+                    this.ownMethod(name, value);
+                    this.prototype[name].$previous = previous;
+                }
+                else {
+                    this.ownMethod(name, value);
+                }
             }
             else {
                 this.prototype[name] = value;
@@ -2721,7 +2728,7 @@ var Base = Ext.Base = function() {};
  * @markdown
  * @class Ext.Class
 
-Handles class creation throughout the whole framework. Note that most of the time {@link Ext#define} should
+Handles class creation throughout the whole framework. Note that most of the time {@link Ext#define Ext.define} should
 be used instead, since it's a higher level wrapper that aliases to {@link Ext.ClassManager#create}
 to enable namespacing and dynamic dependency resolution.
 
@@ -2946,7 +2953,7 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
             var name = preprocessors.shift();
 
             if (!name) {
-                cls.implement(data);
+                cls.extend(data);
 
                 if (Ext.isFunction(createdFn)) {
                     createdFn.call(cls);
@@ -3086,7 +3093,7 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
             var extend = data.extend,
                 base = Ext.Base,
                 temp = function() {},
-                parent, i;
+                parent, i, k, ln, staticName, parentStatics;
 
             if (typeof extend === 'function' && extend !== Object) {
                 parent = extend;
@@ -3119,10 +3126,21 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
 
             delete data.extend;
 
+            // Statics inheritance
+            parentStatics = parent.$inheritableStatics;
+
+            if (parentStatics) {
+                for (k = 0, ln = parentStatics.length; k < ln; k++) {
+                    staticName = parentStatics[k];
+
+                    if (!cls[staticName]) {
+                        cls[staticName] = parent[staticName];
+                    }
+                }
+            }
 
             // Merge the parent class' config object without referencing it
             Ext.merge(cls.prototype.config, parent.prototype.config || {});
-
 
             if (fn) {
                 fn.call(this, cls, data);
@@ -3202,17 +3220,35 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
         },
 
         statics: function(cls, data, fn) {
-            if (Ext.isObject(data.statics)) {
-                var name, statics = data.statics;
+            var statics = data.statics,
+                inheritableStatics = data.inheritableStatics,
+                name;
 
-                for (name in statics) {
-                    if (statics.hasOwnProperty(name)) {
-                        cls[name] = statics[name];
+            if (Ext.isObject(statics) || Ext.isObject(inheritableStatics)) {
+
+                if (statics) {
+                    for (name in statics) {
+                        if (statics.hasOwnProperty(name)) {
+                            cls[name] = statics[name];
+                        }
                     }
+
+                    delete data.statics;
+                }
+
+                if (inheritableStatics) {
+                    cls.$inheritableStatics = [];
+
+                    for (name in inheritableStatics) {
+                        if (inheritableStatics.hasOwnProperty(name)) {
+                            cls[name] = inheritableStatics[name];
+                            cls.$inheritableStatics.push(name);
+                        }
+                    }
+
+                    delete data.inheritableStatics;
                 }
             }
-
-            delete data.statics;
 
             if (fn) {
                 fn.call(this, cls, data);
@@ -3222,6 +3258,7 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
 
     Ext.Class.setDefaultPreprocessors(['extend', 'mixins', 'config', 'statics']);
 
+    //TODO: Move this to compat file
     Ext.extend = function(subclass, superclass, members) {
         if (arguments.length === 2 && Ext.isObject(superclass)) {
             members = superclass;
@@ -3266,11 +3303,11 @@ Ext.ClassManager manages all classes and handles mapping from string class name 
 actual class objects throughout the whole framework. It is not generally accessed directly, rather through
 these convenient shorthands:
 
-- {@link Ext#define}
-- {@link Ext#create}
-- {@link Ext#widget}
-- {@link Ext#getClass}
-- {@link Ext#getClassName}
+- {@link Ext#define Ext.define}
+- {@link Ext#create Ext.create}
+- {@link Ext#widget Ext.widget}
+- {@link Ext#getClass Ext.getClass}
+- {@link Ext#getClassName Ext.getClassName}
 
  * @singleton
  * @markdown
@@ -3600,7 +3637,7 @@ these convenient shorthands:
 
         /**
          * Get the name of the class by its reference or its instance;
-         * usually invoked by the shorthand {@link Ext#getClassName}
+         * usually invoked by the shorthand {@link Ext#getClassName Ext.getClassName}
 
     Ext.ClassManager.getName(Ext.Action); // returns "Ext.Action"
 
@@ -3614,7 +3651,7 @@ these convenient shorthands:
 
         /**
          * Get the class of the provided object; returns null if it's not an instance
-         * of any class created with Ext.define. This is usually invoked by the shorthand {@link Ext#getClass}
+         * of any class created with Ext.define. This is usually invoked by the shorthand {@link Ext#getClass Ext.getClass}
          *
     var component = new Ext.Component();
 
@@ -3629,7 +3666,7 @@ these convenient shorthands:
         },
 
         /**
-         * Defines a class. This is usually invoked via the alias {@link Ext#define}
+         * Defines a class. This is usually invoked via the alias {@link Ext#define Ext.define}
 
     Ext.ClassManager.create('My.awesome.Class', {
         someProperty: 'something',
@@ -3698,7 +3735,7 @@ these convenient shorthands:
         },
 
         /**
-         * Instantiate a class by its alias; usually invoked by the convenient shorthand {@link Ext#createByAlias}
+         * Instantiate a class by its alias; usually invoked by the convenient shorthand {@link Ext#createByAlias Ext.createByAlias}
          * If {@link Ext.Loader} is {@link Ext.Loader#setConfig enabled} and the class has not been defined yet, it will
          * attempt to load the class via synchronous loading.
 
@@ -3741,7 +3778,7 @@ these convenient shorthands:
 
         /**
          * Instantiate a class by either full name, alias or alternate name; usually invoked by the convenient
-         * shorthand {@link Ext#create}
+         * shorthand {@link Ext#create Ext.create}
          *
          * If {@link Ext.Loader} is {@link Ext.Loader#setConfig enabled} and the class has not been defined yet, it will
          * attempt to load the class via synchronous loading.
@@ -4202,7 +4239,7 @@ these convenient shorthands:
     Ext.createWidget = Ext.widget;
 
     /**
-     * Convenient alias for {@link Ext#namespace}
+     * Convenient alias for {@link Ext#namespace Ext.namespace}
      * @member Ext
      * @method ns
      */
@@ -4227,7 +4264,7 @@ these convenient shorthands:
  * @class Ext.Loader
  *
  * Ext.Loader is the heart of the new dynamic dependency loading capability in Ext JS 4+. It is most commonly used
- * via the {@link Ext#require} shorthand
+ * via the {@link Ext#require Ext.require} shorthand
  *
  * <pre><code>
 Ext.require([
@@ -4341,29 +4378,29 @@ Ext.onReady(function() {
          */
         config: {
             /**
+             * @cfg {Boolean} enabled
              * Whether or not to enable the dynamic dependency loading feature
              * Defaults to false
-             * @cfg {Boolean} enabled
              */
             enabled: false,
 
             /**
+             * @cfg {Boolean} enableDeadlockDetection
              * Whether or not to enable automatic deadlock detection, very useful
              * during development
              * Defaults to true
-             * @cfg {Boolean} enableDeadlockDetection
              */
             enableDeadlockDetection: true,
 
             /**
-             * Whether or not to enable automatic deadlock detection, very useful
-             * during development
-             * Defaults to true
              * @cfg {Boolean} enableCacheBuster
+             * Appends current date in integer format to script files to prevent caching
+             * Defaults to true
              */
             enableCacheBuster: true,
 
             /**
+             * @cfg {Object} paths
              * The mapping from namespaces to file paths
              * <pre><code>
              * {
@@ -4374,7 +4411,6 @@ Ext.onReady(function() {
              *
              * If not being specified, for example, <code>Other.awesome.Class</code>
              * will simply refer to <code>./Other/awesome/Class.js</code>
-             * @cfg {Object} paths
              */
             paths: {
                 'Ext': '.'
@@ -4385,22 +4421,22 @@ Ext.onReady(function() {
          * Set the configuration for the loader. This should be called right after ext-core.js
          * (or ext-core-debug.js) is included in the page, i.e:
          * <pre><code>
-         * &lt;script type="text/javascript" src="ext-core-debug.js">&lt;/script>
-         * &lt;script type="text/javascript">
+         * <script type="text/javascript" src="ext-core-debug.js"></script>
+         * <script type="text/javascript">
          *      Ext.Loader.setConfig({
          *          enabled: true,
          *          paths: {
          *              'My': 'my_own_path'
          *          }
          *      });
-         * &lt;/script>
-         * &lt;script type="text/javascript">
+         * <script>
+         * <script type="text/javascript">
          *      Ext.require(...);
          *
          *      Ext.onReady(function() {
          *          // application code here
          *      });
-         * &lt;/script>
+         * </script>
          * </code></pre>
          * Refer to {@link Ext.Loader#config} for the list of possible properties
          *
@@ -4638,7 +4674,12 @@ Ext.onReady(function() {
         },
 
         /**
-         * Explicitly exclude
+Explicitly exclude files from being loaded. Useful when used in conjunction with a broad incude expression.
+Can be chained with more `require` and `exclude` methods, eg:
+
+Ext.exclude('Ext.data.*').require('*');
+
+         * @markdown
          */
         exclude: function(excludes) {
             var me = this;
@@ -4652,7 +4693,7 @@ Ext.onReady(function() {
 
         /**
          * Loads all classes by the given names and all their direct dependencies; optionally executes the given callback function when
-         * finishes, within the optional scope. This method is aliased by {@link Ext#require} for convenience
+         * finishes, within the optional scope. This method is aliased by {@link Ext#require Ext.require} for convenience
          * @param {String/Array} expressions Can either be a string or an array of string
          * @param {Function} fn (Optional) The callback function
          * @param {Object} scope (Optional) The execution scope (<code>this</code>) of the callback function

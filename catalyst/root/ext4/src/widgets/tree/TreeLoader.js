@@ -192,7 +192,9 @@ paramOrder: 'param1|param2|param|node'
             np = this.nodeParameter,
             po = this.paramOrder;
 
-        np && (bp[ np ] = node.id);
+        if (np) {
+            bp[ np ] = node.id;
+        }
 
         if(this.directFn){
             var buf = [node.id];

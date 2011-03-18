@@ -74,7 +74,7 @@ Ext.define('Ext.layout.container.Card', {
 
     /* End Definitions */
 
-    setActiveItem: function(newCard, animation) {
+    setActiveItem: function(newCard) {
         var me = this,
             owner = me.owner,
             oldCard = me.activeItem,
@@ -82,8 +82,6 @@ Ext.define('Ext.layout.container.Card', {
 
         // Block upward layouts until we are done.
         me.layoutBusy = true;
-
-        animation = (animation == undefined) ? this.getAnimation(newCard, owner) : animation;
 
         newCard = me.parseActiveItem(newCard);
         newIndex = owner.items.indexOf(newCard);
@@ -131,11 +129,16 @@ Ext.define('Ext.layout.container.Card', {
             }
 
             // onLayout calls setItemBox which sizes the active item via setCalculatedSize.
-            this.onLayout();
+            me.onLayout();
 
             newCard.fireEvent('activate', newCard, oldCard);
 
             me.layoutBusy = false;
+
+            // A card activation is a layout operation.
+            // Client code may hook into afterlayout to ascertain when sizing has been completed.
+            me.owner.afterLayout();
+
             return newCard;
         }
 

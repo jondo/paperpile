@@ -8,17 +8,22 @@
  */
 Ext.define('Ext.layout.container.boxOverflow.None', {
 
-    /* Begin Definitions */
-
-    /* End Definitions */
-
     constructor: function(layout, config) {
         this.layout = layout;
-
         Ext.apply(this, config || {});
     },
 
     handleOverflow: Ext.emptyFn,
 
-    clearOverflow: Ext.emptyFn
+    clearOverflow: Ext.emptyFn,
+
+    /**
+     * @private
+     * Normalizes an item reference, string id or numerical index into a reference to the item
+     * @param {Ext.Component|String|Number} item The item reference, id or index
+     * @return {Ext.Component} The item
+     */
+    getItem: function(item) {
+        return this.layout.owner.getComponent(item);
+    }
 });

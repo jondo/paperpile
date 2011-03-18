@@ -99,61 +99,16 @@ Ext.define('Ext.chart.series.Scatter', {
         }
     },
 
-    /**
-     * Draws the series for the current chart.
-     */
-    drawSeries: function() {
+    // @private Get chart and data boundaries
+    getBounds: function() {
         var me = this,
             chart = me.chart,
             store = chart.substore || chart.store,
-            chartBBox = chart.chartBBox,
-            group = me.group,
-            gutterX = chart.maxGutter[0],
-            gutterY = chart.maxGutter[1],
-            enableShadows = chart.shadow,
-            shadowGroups = me.shadowGroups,
-            shadowAttributes = me.shadowAttributes,
-            lnsh = shadowGroups.length,
-            markerStyle = me.markerStyle,
-            seriesStyle = me.seriesStyle,
             axes = [].concat(me.axis),
-            bbox,
-            shadowAttribute,
-            shadows,
-            shadow,
-            shindex,
-            rendererAttributes,
-            attrs = [],
-            attr,
-            sprite,
-            i,
-            axis,
-            ends,
-            xScale,
-            yScale,
-            minX,
-            minY,
-            maxX,
-            maxY,
-            endMarkerStyle, endSeriesStyle, type, xValue, yValue, x, y;
-
-        endMarkerStyle = Ext.apply(markerStyle, me.markerCfg);
-        endSeriesStyle = Ext.apply(seriesStyle, me.style);
-        type = endMarkerStyle.type;
-        delete endMarkerStyle.type;
-        
-        //if the store is empty then there's nothing to be rendered
-        if (!store || !store.getCount()) {
-            return;
-        }
-        
-        me.unHighlightItem();
-        me.cleanHighlights();
+            bbox, xScale, yScale, ln, minX, minY, maxX, maxY, i, axis;
 
         me.setBBox();
         bbox = me.bbox;
-
-        me.clipRect = [bbox.x, bbox.y, bbox.width, bbox.height];
 
         for (i = 0, ln = axes.length; i < ln; i++) { 
             axis = chart.axes.get(axes[i]);
@@ -202,7 +157,34 @@ Ext.define('Ext.chart.series.Scatter', {
             yScale = bbox.height / (maxY - minY);
         }
 
-        me.items = [];
+        return {
+            bbox: bbox,
+            minX: minX,
+            minY: minY,
+            xScale: xScale,
+            yScale: yScale
+        };
+    },
+
+    // @private Build an array of paths for the chart
+    getPaths: function() {
+        var me = this,
+            chart = me.chart,
+            enableShadows = chart.shadow,
+            store = chart.substore || chart.store,
+            group = me.group,
+            bounds = me.bounds = me.getBounds(),
+            bbox = me.bbox,
+            xScale = bounds.xScale,
+            yScale = bounds.yScale,
+            minX = bounds.minX,
+            minY = bounds.minY,
+            boxX = bbox.x,
+            boxY = bbox.y,
+            boxHeight = bbox.height,
+            items = me.items = [],
+            attrs = [],
+            x, y, xValue, yValue, sprite;
 
         store.each(function(record, i) {
             xValue = record.get(me.xField);
@@ -211,16 +193,12 @@ Ext.define('Ext.chart.series.Scatter', {
             // Ensure a value
             if (typeof xValue == 'string') {
                 xValue = i;
-                // minX = 0;
-                // xScale = bbox.width / (store.getCount() - 1);
             }
             if (typeof yValue == 'string') {
                 yValue = i;
-                // minY = 0;
-                // yScale = bbox.height / (store.getCount() - 1);
             }
-            x = bbox.x + (xValue - minX) * xScale;
-            y = bbox.y + bbox.height - (yValue - minY) * yScale;
+            x = boxX + (xValue - minX) * xScale;
+            y = boxY + boxHeight - (yValue - minY) * yScale;
             attrs.push({
                 x: x,
                 y: y
@@ -237,83 +215,155 @@ Ext.define('Ext.chart.series.Scatter', {
             if (chart.animate && chart.resizing) {
                 sprite = group.getAt(i);
                 if (sprite) {
-                    sprite.setAttributes({
-                        translate: {
-                            x: (bbox.x + bbox.width) / 2,
-                            y: (bbox.y + bbox.height) / 2
-                        }
-                    }, true);
+                    me.resetPoint(sprite);
                     if (enableShadows) {
-                        shadows = sprite.shadows;
-                        for (shindex = 0; shindex < lnsh; shindex++) {
-                            shadowAttribute = Ext.apply({}, shadowAttributes[shindex]);
-                            if (shadowAttribute.translate) {
-                                shadowAttribute.translate = Ext.apply({}, shadowAttribute.translate || {});
-                                shadowAttribute.translate.x += (bbox.x + bbox.width) / 2;
-                                shadowAttribute.translate.y += (bbox.y + bbox.height) / 2;
-                            } else {
-                                Ext.apply(shadowAttribute, {
-                                    translate: {
-                                        x: (bbox.x + bbox.width) / 2,
-                                        y: (bbox.y + bbox.height) / 2
-                                    }
-                                });
-                            }
-                            shadows[shindex].setAttributes(shadowAttribute, true);
-                        }
+                        me.resetShadow(sprite);
                     }
                 }
             }
-        }, me);
+        });
+        return attrs;
+    },
 
-        // Create new or reuse bar sprites and animate/display
+    // @private translate point to the center
+    resetPoint: function(sprite) {
+        var bbox = this.bbox;
+        sprite.setAttributes({
+            translate: {
+                x: (bbox.x + bbox.width) / 2,
+                y: (bbox.y + bbox.height) / 2
+            }
+        }, true);
+    },
+
+    // @private translate shadows of a sprite to the center
+    resetShadow: function(sprite) {
+        var me = this,
+            shadows = sprite.shadows,
+            shadowAttributes = me.shadowAttributes,
+            ln = me.shadowGroups.length,
+            bbox = me.bbox,
+            i, attr;
+        for (i = 0; i < ln; i++) {
+            attr = Ext.apply({}, shadowAttributes[i]);
+            if (attr.translate) {
+                attr.translate.x += (bbox.x + bbox.width) / 2;
+                attr.translate.y += (bbox.y + bbox.height) / 2;
+            }
+            else {
+                attr.translate = {
+                    x: (bbox.x + bbox.width) / 2,
+                    y: (bbox.y + bbox.height) / 2
+                };
+            }
+            shadows[i].setAttributes(attr, true);
+        }
+    },
+
+    // @private create a new point
+    createPoint: function(attr, type) {
+        var me = this,
+            chart = me.chart,
+            group = me.group,
+            bbox = me.bbox;
+
+        return Ext.chart.Shapes[type](chart.surface, Ext.apply({}, {
+            x: 0,
+            y: 0,
+            group: group,
+            translate: {
+                x: (bbox.x + bbox.width) / 2,
+                y: (bbox.y + bbox.height) / 2
+            }
+        }, attr));
+    },
+
+    // @private create a new set of shadows for a sprite
+    createShadow: function(sprite) {
+        var me = this,
+            chart = me.chart,
+            shadowGroups = me.shadowGroups,
+            shadowAttributes = me.shadowAttributes,
+            lnsh = shadowGroups.length,
+            i, shadow, shadows, attr, endMarkerStyle, type;
+
+        endMarkerStyle = Ext.apply(me.markerStyle, me.markerCfg);
+        type = endMarkerStyle.type;
+        delete endMarkerStyle.type;
+
+        sprite.shadows = shadows = [];
+
+        for (i = 0; i < lnsh; i++) {
+            attr = Ext.apply({}, shadowAttributes[i]);
+            if (attr.translate) {
+                attr.translate.x += (bbox.x + bbox.width) / 2;
+                attr.translate.y += (bbox.y + bbox.height) / 2;
+            }
+            else {
+                Ext.apply(attr, {
+                    translate: {
+                        x: (bbox.x + bbox.width) / 2,
+                        y: (bbox.y + bbox.height) / 2
+                    }
+                });
+            }
+            Ext.apply(attr, endMarkerStyle);
+            shadow = Ext.chart.Shapes[type](chart.surface, Ext.apply({}, {
+                x: 0,
+                y: 0,
+                group: shadowGroups[i]
+            }, attr));
+            shadows.push(shadow);
+        }
+    },
+
+    /**
+     * Draws the series for the current chart.
+     */
+    drawSeries: function() {
+        var me = this,
+            chart = me.chart,
+            store = chart.substore || chart.store,
+            group = me.group,
+            enableShadows = chart.shadow,
+            shadowGroups = me.shadowGroups,
+            shadowAttributes = me.shadowAttributes,
+            lnsh = shadowGroups.length,
+            sprite, attrs, attr, ln, i, endMarkerStyle, shindex, type, shadows,
+            rendererAttributes, shadowAttribute;
+
+        endMarkerStyle = Ext.apply(me.markerStyle, me.markerCfg);
+        type = endMarkerStyle.type;
+        delete endMarkerStyle.type;
+
+        //if the store is empty then there's nothing to be rendered
+        if (!store || !store.getCount()) {
+            return;
+        }
+
+        me.unHighlightItem();
+        me.cleanHighlights();
+
+        attrs = me.getPaths();
         ln = attrs.length;
         for (i = 0; i < ln; i++) {
             attr = attrs[i];
             sprite = group.getAt(i);
             Ext.apply(attr, endMarkerStyle);
+
             // Create a new sprite if needed (no height)
             if (!sprite) {
-                sprite = Ext.chart.Shapes[type](chart.surface, Ext.apply({}, {
-                    x: 0, y: 0,
-                    group: group,
-                    translate: {
-                        x: (bbox.x + bbox.width) / 2,
-                        y: (bbox.y + bbox.height) / 2
-                    }
-                }, attr));
-                
+                sprite = me.createPoint(attr, type);
                 if (enableShadows) {
-                    sprite.shadows = shadows = [];
-                    for (shindex = 0; shindex < lnsh; shindex++) {
-                        shadowAttribute = Ext.apply({}, shadowAttributes[shindex]);
-                        if (shadowAttribute.translate) {
-                            shadowAttribute.translate = Ext.apply({}, shadowAttribute.translate);
-                            shadowAttribute.translate.x += (bbox.x + bbox.width) / 2;
-                            shadowAttribute.translate.y += (bbox.y + bbox.height) / 2;
-                        } else {
-                            Ext.apply(shadowAttribute, {
-                                translate: {
-                                    x: (bbox.x + bbox.width) / 2,
-                                    y: (bbox.y + bbox.height) / 2
-                                }
-                            });
-                        }
-                        Ext.apply(shadowAttribute, endMarkerStyle);
-                        shadow = Ext.chart.Shapes[type](chart.surface, Ext.apply({}, {
-                            x: 0, y: 0,
-                            group: shadowGroups[shindex]
-                        }, shadowAttribute));
-                        shadows.push(shadow);
-                    }
+                    me.createShadow(sprite);
                 }
             }
+
             shadows = sprite.shadows;
             if (chart.animate) {
-                rendererAttributes = me.renderer(sprite, store.getAt(i), 
-                                            { translate: attr }, i, store);
+                rendererAttributes = me.renderer(sprite, store.getAt(i), { translate: attr }, i, store);
                 sprite._to = rendererAttributes;
-                me.animation = me.onAnimate(sprite, {
+                me.onAnimate(sprite, {
                     to: rendererAttributes
                 });
                 //animate shadows
@@ -325,11 +375,11 @@ Ext.define('Ext.chart.series.Scatter', {
                             y: attr.y + (shadowAttribute.translate? shadowAttribute.translate.y : 0)
                         } 
                     }, shadowAttribute), i, store);
-                    this.onAnimate(shadows[shindex], { to: rendererAttributes });
+                    me.onAnimate(shadows[shindex], { to: rendererAttributes });
                 }
-            } else {
-                rendererAttributes = me.renderer(sprite, store.getAt(i), 
-                            Ext.apply({ translate: attr }, { hidden: false }), i, store);
+            }
+            else {
+                rendererAttributes = me.renderer(sprite, store.getAt(i), Ext.apply({ translate: attr }, { hidden: false }), i, store);
                 sprite.setAttributes(rendererAttributes, true);
                 //update shadows
                 for (shindex = 0; shindex < lnsh; shindex++) {
@@ -343,6 +393,7 @@ Ext.define('Ext.chart.series.Scatter', {
             }
             me.items[i].sprite = sprite;
         }
+
         // Hide unused sprites
         ln = group.getCount();
         for (i = attrs.length; i < ln; i++) {
@@ -361,10 +412,10 @@ Ext.define('Ext.chart.series.Scatter', {
             bbox = me.bbox;
         
         return me.chart.surface.add(Ext.apply({
-            'type': 'text',
-            'group': group,
-            'x': item.point[0],
-            'y': bbox.y + bbox.height / 2
+            type: 'text',
+            group: group,
+            x: item.point[0],
+            y: bbox.y + bbox.height / 2
         }, endLabelStyle));
     },
     
@@ -380,7 +431,7 @@ Ext.define('Ext.chart.series.Scatter', {
             x = item.point[0],
             y = item.point[1],
             radius = item.sprite.attr.radius,
-            bb, width, height;
+            bb, width, height, anim;
         
         label.setAttributes({
             text: format(storeItem.get(field)),
@@ -419,31 +470,37 @@ Ext.define('Ext.chart.series.Scatter', {
             y = y - height < bbox.y? bbox.y + height : y;
             y = (y + height > bbox.y + bbox.height) ? (y - (y + height - bbox.y - bbox.height)) : y;
         }
-        
-        if (me.chart.animate && !me.chart.resizing) {
-            label.show(true);
-            me.onAnimate(label, {
-                to: {
-                    x: x,
-                    y: y
-                }
-            });
-        }
-        else {
+
+        if (!chart.animate) {
             label.setAttributes({
                 x: x,
                 y: y
             }, true);
+            label.show(true);
+        }
+        else {
             if (resizing) {
-                if (me.animation) {
-                    me.animation.on('afteranimate', function() {
+                anim = item.sprite.hasActiveFx();
+                if (anim) {
+                    anim.on('afteranimate', function() {
+                        label.setAttributes({
+                            x: x,
+                            y: y
+                        }, true);
                         label.show(true);
                     });   
-                } else {
+                }
+                else {
                     label.show(true);
                 }
-            } else {
-                label.show(true);
+            }
+            else {
+                me.onAnimate(label, {
+                    to: {
+                        x: x,
+                        y: y
+                    }
+                });
             }
         }
     },
@@ -463,7 +520,7 @@ Ext.define('Ext.chart.series.Scatter', {
             offsetToSide = 10,
             offsetBox = 3,
             boxx, boxy, boxw, boxh,
-            p, clipRect = me.clipRect,
+            p, clipRect = me.bbox,
             x, y;
     
         //position
@@ -548,49 +605,19 @@ Ext.define('Ext.chart.series.Scatter', {
         return this.callParent(arguments);
     },
 
-    /**
-     * For a given x/y point relative to the Surface, find a corresponding item from this
-     * series, if any.
-     *
-     * @param x {Number} The left pointer coordinate.
-     * @param y {Number} The top pointer coordinate.
-     * @return {Object} An object with the item found or null instead.
-     */
-    getItemForPoint: function(x, y) {
-        //if there are no elements then just return null
-        if (!this.items) {
-            return null;
-        }
-        
-        var items = this.items,
-            point,
-            closestItem = null,
+    isItemInPoint: function(x, y, item) {
+        var point,
             tolerance = 10,
-            i = items && items.length;
+            abs = Math.abs;
 
         function dist(point) {
-            var abs = Math.abs,
-                dx = abs(point[0] - x),
+            var dx = abs(point[0] - x),
                 dy = abs(point[1] - y);
             return Math.sqrt(dx * dx + dy * dy);
         }
-
-        while (i--) {
-            point = items[i].point;
-            if (point[0] - tolerance <= x && point[0] + tolerance >= x &&
-                point[1] - tolerance <= y && point[1] + tolerance >= y) {
-                if (!closestItem || (dist(point) < dist(closestItem.point))) {
-                    closestItem = items[i];
-                }
-            }
-            // If we already found a match but no longer match, assume we're moving further
-            // away and exit the loop
-            else if (closestItem) {
-                break;
-            }
-        }
-
-        return closestItem;
+        point = item.point;
+        return (point[0] - tolerance <= x && point[0] + tolerance >= x &&
+            point[1] - tolerance <= y && point[1] + tolerance >= y);
     }
 });
 

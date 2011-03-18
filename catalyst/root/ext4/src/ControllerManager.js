@@ -32,8 +32,8 @@ Ext.define('Ext.ControllerManager', {
     }
 }, function() {
     /**
-     * Shorthand for {@link Ext.ControllerManager#register}
-     * Creates a new Controller class from the specified config object. See {@link Ext.Controller} for full examples.
+     * Shorthand for Ext.ControllerManager.register
+     * Creates a new Controller class from the specified config object. See Ext.Controller for full examples.
      * 
      * @param {Object} config A configuration object for the Controller you wish to create.
      * @return {Ext.Controller} The newly registered Controller

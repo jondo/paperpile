@@ -88,8 +88,6 @@ Ext.define('Ext.form.Trigger', {
     // private
     monitorTab: true,
     // private
-    deferHeight: true,
-    // private
     mimicing: false,
     // private
     triggerIndexRe: /trigger-index-(\d+)/,

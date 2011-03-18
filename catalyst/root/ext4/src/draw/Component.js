@@ -1,6 +1,6 @@
 /**
  * @class Ext.draw.Component
- * @extends Ext.component
+ * @extends Ext.Component
  */
 Ext.define('Ext.draw.Component', {
 
@@ -62,7 +62,7 @@ Ext.define('Ext.draw.Component', {
             viewBox = me.viewBox,
             autoSize = me.autoSize,
             bbox, items, width, height, x, y;
-        this.callParent(arguments);
+        me.callParent(arguments);
 
         me.createSurface();
 
@@ -78,16 +78,31 @@ Ext.define('Ext.draw.Component', {
                 me.surface.setViewBox(x, y, width, height);
             }
             else {
-                items.setAttributes({
-                    translate: {
-                        x: -x,
-                        y: -y
-                    }
-                }, true);
-                me.surface.setSize(width, height);
-                me.el.setSize(width, height);
+                // AutoSized
+                me.autoSizeSurface();
             }
         }
+    },
+
+    autoSizeSurface: function() {
+        var me = this,
+            items = me.surface.items,
+            bbox = items.getBBox(),
+            width = bbox.width,
+            height = bbox.height;
+        items.setAttributes({
+            translate: {
+                x: -bbox.x,
+                y: -bbox.y
+            }
+        }, true);
+        if (me.rendered) {
+            me.setSize(width, height);
+        }
+        else {
+            me.surface.setSize(width, height);
+        }
+        me.el.setSize(width, height);
     },
 
     /**

@@ -37,6 +37,15 @@ Ext.define('Ext.selection.Model', {
      * records.
      */
     selected: null,
+    
+    
+    /**
+     * Prune records when they are removed from the store from the selection.
+     * This is a private flag. For an example of its usage, take a look at
+     * Ext.tree.SelectionModel.
+     * @private
+     */
+    pruneRemoved: true,
 
     constructor: function(cfg) {
         var me = this;
@@ -454,7 +463,7 @@ Ext.define('Ext.selection.Model', {
         // them from what is to be selected if so
         for (; i < len; i++) {
             selection = oldSelections[i];
-            if (me.store.indexOf(selection) !== -1) {
+            if (!this.pruneRemoved || me.store.indexOf(selection) !== -1) {
                 toBeSelected.push(selection);
             }
         }
@@ -468,7 +477,7 @@ Ext.define('Ext.selection.Model', {
         me.clearSelections();
         
         if (me.store.indexOf(lastFocused) !== -1) {
-            this.onLastFocusChanged(null, lastFocused);
+            this.setLastFocused(lastFocused);
         }
 
         if (toBeSelected.length) {
@@ -513,10 +522,10 @@ Ext.define('Ext.selection.Model', {
         var me = this,
             selected = me.selected;
             
-        if (me.locked) {
+        if (me.locked || !me.pruneRemoved) {
             return;
         }
-        
+
         if (selected.remove(record)) {
             if (me.lastSelected == record) {
                 me.lastSelected = null;

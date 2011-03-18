@@ -49,6 +49,11 @@ Ext.define('Ext.form.Hidden', {
     // private
     inputType : 'hidden',
     hideLabel: true,
+    
+    initComponent: function(){
+        this.formItemCls += '-hidden';
+        this.callParent();    
+    },
 
     // These are all private overrides
     initEvents: Ext.emptyFn,

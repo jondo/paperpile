@@ -27,7 +27,7 @@ new Ext.slider.Slider({
  */
 Ext.define('Ext.slider.Tip', {
     extend: 'Ext.tip.Tip',
-    minWidth: 35,
+    minWidth: 10,
     alias: 'widget.slidertip',
     offsets : [0, -10],
 
@@ -49,13 +49,11 @@ Ext.define('Ext.slider.Tip', {
      * @param {Ext.slider.Thumb} thumb The thumb that the Tip is attached to
      */
     onSlide : function(slider, e, thumb) {
-        var text = this.getText(thumb),
-            width;
-        this.update(text);
-        this.show();
-        width = this.body.getTextWidth(text) + this.el.getFrameWidth('lr') + this.body.getPadding('lr') + this.body.getBorderWidth('lr');
-        this.setWidth(width);
-        this.el.alignTo(thumb.el, 'b-t?', this.offsets);
+        var me = this;
+        me.show();
+        me.update(me.getText(thumb));
+        me.doComponentLayout();
+        me.el.alignTo(thumb.el, 'b-t?', this.offsets);
     },
 
     /**

@@ -115,7 +115,7 @@ p2 = p1.{@link #ownerCt}.{@link Ext.container.Container#getComponent getComponen
 
     /**
      * @cfg {Mixed} autoEl
-     * <p>A tag name or {@link Ext.DomHelper DomHelper} spec used to create the {@link #getEl Element} which will
+     * <p>A tag name or {@link Ext.core.DomHelper DomHelper} spec used to create the {@link #getEl Element} which will
      * encapsulate this Component.</p>
      * <p>You do not normally need to specify this. For the base classes {@link Ext.Component} and {@link Ext.container.Container},
      * this defaults to <b><tt>'div'</tt></b>. The more complex Sencha classes use a more complex
@@ -168,7 +168,7 @@ p2 = p1.{@link #ownerCt}.{@link Ext.container.Container#getComponent getComponen
 An object containing properties specifying {@link Ext.DomQuery DomQuery} selectors which identify child elements
 created by the render process.
 
-After the Component's internal structure is rendered according to the {@link renderTpl}, this object is iterated through,
+After the Component's internal structure is rendered according to the {@link #renderTpl}, this object is iterated through,
 and the found Elements are added as properties to the Component using the `renderSelector` property name.
 
 For example, a Component which rendered an image, and description into its element might use the following properties
@@ -232,7 +232,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
      * <p>Generally, developers will not use this configuration as all provided Components which need their internal
      * elements sizing (Such as {@link Ext.form.Field input fields}) come with their own componentLayout managers.</p>
      * <p>The {@link Ext.layout.container.Auto default layout manager} will be used on instances of the base Ext.Component class
-     * which simply sizes the Component's encapsulating element to the height and width specified in the {@link setSize} method.</p>
+     * which simply sizes the Component's encapsulating element to the height and width specified in the {@link #setSize} method.</p>
      */
 
     /**
@@ -759,6 +759,21 @@ and a property `descEl` referencing the `div` Element which contains the descrip
         return me.mixins.animate.animate.apply(me, arguments);
     },
 
+    /**
+     * <p>This method finds the topmost active layout who's processing will eventually determine the size and position of this
+     * Component.<p>
+     * <p>This method is useful when dynamically adding Components into Containers, and some processing must take place after the
+     * final sizing and positioning of the Component has been performed.</p>
+     * @returns
+     */
+    findLayoutController: function() {
+        return this.findParentBy(function(c) {
+            // Return true if we are at the root of the Container tree
+            // or this Container's layout is busy but the next one up is not.
+            return !c.ownerCt || (c.layout.layoutBusy && !c.ownerCt.layout.layoutBusy);
+        });
+    },
+
     onShow : function() {
         // Layout if needed
         var needsLayout = this.needsLayout;
@@ -806,7 +821,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
     /**
      * @private
      * <p>Finds the ancestor Container responsible for allocating zIndexes for the passed Component.</p>
-     * <p>That will be the outermost Container (a Container which has no ownerCt).</p>
+     * <p>That will be the outermost floating Container (a Container which has no ownerCt and has floating:true).</p>
      * <p>If we have no ancestors, or we walk all the way up to the document body, there's no zIndexParent,
      * and the global Ext.WindowMgr will be used.</p>
      */
@@ -819,7 +834,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
                 c = p;
                 p = p.ownerCt;
             }
-            if (c.el.dom !== document.body) {
+            if (c.floating) {
                 return c;
             }
         }
@@ -987,7 +1002,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
             me.y = me.y === undefined ? pos.top: me.y;
         }
 
-        if (me.x || me.y) {
+        if (Ext.isDefined(me.x) || Ext.isDefined(me.y)) {
             me.setPosition(me.x, me.y);
         }
 
@@ -1021,25 +1036,27 @@ and a property `descEl` referencing the `div` Element which contains the descrip
     ],
 
     frameTableTpl: [
-        '<tpl if="top">',
+        '<table><tbody>',
+            '<tpl if="top">',
+                '<tr>',
+                    '<tpl if="left"><td class="{frameCls}-tl {baseCls}-tl" style="background-position: 0 -{tl}px; width: {frameWidth}px" role="presentation"></td></tpl>',
+                    '<td class="{frameCls}-tc {baseCls}-tc" style="background-position: 0 0; height: {frameWidth}px" role="presentation"></td>',
+                    '<tpl if="right"><td class="{frameCls}-tr {baseCls}-tr" style="background-position: right -{tr}px; width: {frameWidth}px" role="presentation"></td></tpl>',
+                '</tr>',
+            '</tpl>',
             '<tr>',
-                '<tpl if="left"><td class="{frameCls}-tl {baseCls}-tl" style="background-position: 0 -{tl}px; width: {frameWidth}px" role="presentation"></td></tpl>',
-                '<td class="{frameCls}-tc {baseCls}-tc" style="background-position: 0 0; height: {frameWidth}px" role="presentation"></td>',
-                '<tpl if="right"><td class="{frameCls}-tr {baseCls}-tr" style="background-position: right -{tr}px; width: {frameWidth}px" role="presentation"></td></tpl>',
+                '<tpl if="left"><td class="{frameCls}-ml {baseCls}-ml" style="background-position: 0 -{ml}px; width: {frameWidth}px" role="presentation"></td></tpl>',
+                '<td class="{frameCls}-mc {baseCls}-mc" style="background-position: 0 0;" role="presentation"></td>',
+                '<tpl if="right"><td class="{frameCls}-mr {baseCls}-mr" style="background-position: right 0; width: {frameWidth}px" role="presentation"></td></tpl>',
             '</tr>',
-        '</tpl>',
-        '<tr>',
-            '<tpl if="left"><td class="{frameCls}-ml {baseCls}-ml" style="background-position: 0 -{ml}px; width: {frameWidth}px" role="presentation"></td></tpl>',
-            '<td class="{frameCls}-mc {baseCls}-mc" style="background-position: 0 0;" role="presentation"></td>',
-            '<tpl if="right"><td class="{frameCls}-mr {baseCls}-mr" style="background-position: right 0; width: {frameWidth}px" role="presentation"></td></tpl>',
-        '</tr>',
-        '<tpl if="bottom">',
-            '<tr>',
-                '<tpl if="left"><td class="{frameCls}-bl {baseCls}-bl" style="background-position: 0 -{bl}px; width: {frameWidth}px" role="presentation"></td></tpl>',
-                '<td class="{frameCls}-bc {baseCls}-bc" style="background-position: 0 -{frameWidth}px; height: {frameWidth}px" role="presentation"></td>',
-                '<tpl if="right"><td class="{frameCls}-br {baseCls}-br" style="background-position: right -{br}px; width: {frameWidth}px" role="presentation"></td></tpl>',
-            '</tr>',
-        '</tpl>'
+            '<tpl if="bottom">',
+                '<tr>',
+                    '<tpl if="left"><td class="{frameCls}-bl {baseCls}-bl" style="background-position: 0 -{bl}px; width: {frameWidth}px" role="presentation"></td></tpl>',
+                    '<td class="{frameCls}-bc {baseCls}-bc" style="background-position: 0 -{frameWidth}px; height: {frameWidth}px" role="presentation"></td>',
+                    '<tpl if="right"><td class="{frameCls}-br {baseCls}-br" style="background-position: right -{br}px; width: {frameWidth}px" role="presentation"></td></tpl>',
+                '</tr>',
+            '</tpl>',
+        '</tbody></table>'
     ],
 
     initFrame : function(cls, styles) {
@@ -1048,8 +1065,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
             left = me.el.getStyle('background-position-x'),
             top = me.el.getStyle('background-position-y'),
             frameWidth = 0, frameSize,
-            frameRenderTarget, frameTpl,
-            isTable, radius, info;
+            frameTpl, info, max;
 
         // Some browsers dont support background-position-x and y, so for those
         // browsers let's split background-position into two parts.
@@ -1063,37 +1079,18 @@ and a property `descEl` referencing the `div` Element which contains the descrip
         // the background position of this.el from the css to indicate to IE that this component needs
         // framing. We parse it here and change the markup accordingly.
         if (parseInt(left, 10) >= 1000000 && parseInt(top, 10) >= 1000000) {
-            // Table markup starts with 100, div markup with 110.
-            if (left.substr(0, 3) == '110') {
-                // If we are going to be using a table for framing, we are going to replace
-                // this.el with a table.
-                me.el.replaceWith({
-                    tag: 'table',
-                    id: me.el.id,
-                    html: '<tbody></tbody>'
-                });
-        
-                // We have to reapply the classes and styling to the table
-                me.el.addCls(cls);
-                me.el.setStyle(styles);
-        
-                // The true makes sure we get the table framing
-                frameTpl = me.getFrameTpl(true);
-        
-                // The render target for the frame now becomes the tbody instead of this.getTargetEl
-                frameRenderTarget = me.el.down('tbody');
-            } else {
-                frameTpl = me.getFrameTpl();
-                frameRenderTarget = me.getTargetEl();
-            }
+            // Table markup starts with 110, div markup with 100.
+            frameTpl = me.getFrameTpl(left.substr(0, 3) == '110');
+
             // Get and parse the different border radius sizes
+            max = Math.max;
             frameSize  = {
-                top:    Math.max(left.substr(3, 2), left.substr(5, 2)),
-                right:  Math.max(left.substr(5, 2), top.substr(3, 2)),
-                bottom: Math.max(top.substr(3, 2), top.substr(5, 2)),
-                left:   Math.max(top.substr(5, 2), left.substr(3, 2))
+                top:    max(left.substr(3, 2), left.substr(5, 2)),
+                right:  max(left.substr(5, 2), top.substr(3, 2)),
+                bottom: max(top.substr(3, 2), top.substr(5, 2)),
+                left:   max(top.substr(5, 2), left.substr(3, 2))
             };
-            frameWidth = Math.max(frameSize.top, frameSize.right, frameSize.bottom, frameSize.left);
+            frameWidth = max(frameSize.top, frameSize.right, frameSize.bottom, frameSize.left);
         
             // Just to be sure we set the background image of the el to none.
             me.el.setStyle('background-image', 'none');
@@ -1104,7 +1101,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
         if (me.frame === true && !frameSize) {
             //<debug error>
             throw new Error("[" + Ext.getClassName(me) + "#initFrame] You have set frame: true explicity on this component " +
-                            "while it doesnt have any framing in sass. This way IE can't figure out what sizes to use and thus framing" +
+                            "while it doesnt have any framing in sass. This way IE can't figure out what sizes to use and thus framing " +
                             "on this component will be disabled");
             //</debug>
         }
@@ -1121,7 +1118,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
             //</debug>
         
             // Here we render the frameTpl to this component. This inserts the 9point div or the table framing.
-            frameTpl.append(frameRenderTarget, {
+            frameTpl.append(me.el, {
                 frameCls:   me.frameCls,
                 baseCls:    frameBaseCls,
                 frameWidth: frameWidth,

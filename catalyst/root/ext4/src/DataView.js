@@ -64,6 +64,7 @@ var panel = new Ext.panel.Panel({
 Ext.define('Ext.DataView', {
     extend: 'Ext.AbstractDataView',
     alias: 'widget.dataview',
+        
     addCmpEvents: function() {
         this.addEvents(
             /**
@@ -166,6 +167,8 @@ Ext.define('Ext.DataView', {
             listeners = {
                 scope: me,
                 click: me.onClick,
+                mousedown: me.onMouseDown,
+                mouseup: me.onMouseUp,
                 dblclick: me.onDblClick,
                 contextmenu: me.onContextMenu
             };
@@ -188,7 +191,7 @@ Ext.define('Ext.DataView', {
     // private
     onClick: function(e){
         var me = this,
-            item = e.getTarget(me.itemSelector, me.getTargetEl()),
+            item = e.getTarget(me.getItemSelector(), me.getTargetEl()),
             index;
 
         if (item) {
@@ -203,13 +206,69 @@ Ext.define('Ext.DataView', {
         }
     },
     
+    onMouseDown: function(e) {
+        var me = this,
+            item = e.getTarget(me.itemSelector, me.getTargetEl()),
+            index;
+
+        if (item) {
+            index = me.indexOf(item);
+            if (me.onItemMouseDown(item, index, e) !== false) {
+                me.fireEvent('mousedown', me, index, item, e);
+            }
+        } else {
+            if(me.fireEvent('containermousedown', me, e) !== false) {
+                me.onContainerMouseDown(e);
+            }
+        }        
+    },
+    
+    onMouseUp: function(e) {
+        var me = this,
+            item = e.getTarget(me.itemSelector, me.getTargetEl()),
+            index;
+
+        if (item) {
+            index = me.indexOf(item);
+            if (me.onItemMouseUp(item, index, e) !== false) {
+                me.fireEvent('mouseup', me, index, item, e);
+            }
+        } else {
+            if(me.fireEvent('containermouseup', me, e) !== false) {
+                me.onContainerMouseUp(e);
+            }
+        }        
+    },
+    
+    // @private, template method
+    onItemMouseDown: function(item, index, e) {
+        if (this.fireEvent('beforemousedown', this, index, item, e) === false) {
+            return false;
+        }
+        return true;
+    },
+    
+    // @private, template method
+    onItemMouseUp: function(item, index, e){
+        if (this.fireEvent('beforemouseup', this, index, item, e) === false) {
+            return false;
+        }
+        return true;
+    },
+    
+    // @private, template method
+    onContainerMouseDown: Ext.emptyFn,
+    
+    // @private, template method
+    onContainerMouseUp: Ext.emptyFn,
+      
     // @private, template method
     onContainerClick: Ext.emptyFn,
 
     // private
-    onContextMenu : function(e){
+    onContextMenu: function(e){
         var me = this,
-            item = e.getTarget(me.itemSelector, me.getTargetEl());
+            item = e.getTarget(me.getItemSelector(), me.getTargetEl());
             
         if (item) {
             me.fireEvent('contextmenu', me, me.indexOf(item), item, e);
@@ -221,7 +280,7 @@ Ext.define('Ext.DataView', {
     // private
     onDblClick: function(e){
         var me = this,
-            item = e.getTarget(me.itemSelector, me.getTargetEl());
+            item = e.getTarget(me.getItemSelector(), me.getTargetEl());
             
         if (item) {
             me.fireEvent('dblclick', me, me.indexOf(item), item, e);
@@ -231,7 +290,7 @@ Ext.define('Ext.DataView', {
     // private
     onMouseOver: function(e){
         var me = this,
-            item = e.getTarget(me.itemSelector, me.getTargetEl());
+            item = e.getTarget(me.getItemSelector(), me.getTargetEl());
             
         if (item && item !== me.highlightedItem) {
             me.highlightItem(item);

@@ -65,8 +65,10 @@ Ext.define('Ext.data.Batch', {
      */
     pauseOnException: true,
     
-    constructor: function(config) {                
-        this.addEvents(
+    constructor: function(config) {   
+        var me = this;
+                     
+        me.addEvents(
           /**
            * @event complete
            * Fired when all operations of this batch have been completed
@@ -89,20 +91,17 @@ Ext.define('Ext.data.Batch', {
            * @param {Ext.data.Batch} batch The batch object
            * @param {Object} operation The operation that just completed
            */
-          'operationcomplete',
-          
-          //TODO: Remove this once we deprecate this function in 1.0. See below for further details
-          'operation-complete'
+          'operationcomplete'
         );
         
-        this.mixins.observable.constructor.call(this, config);
+        me.mixins.observable.constructor.call(me, config);
         
         /**
          * Ordered array of operations that will be executed by this batch
          * @property operations
          * @type Array
          */
-        this.operations = [];
+        me.operations = [];
     },
     
     /**
@@ -148,42 +147,39 @@ Ext.define('Ext.data.Batch', {
      * @param {Number} index The operation index to run
      */
     runOperation: function(index) {
-        var operations = this.operations,
-            operation  = operations[index];
+        var me = this,
+            operations = me.operations,
+            operation  = operations[index],
+            onProxyReturn;
         
         if (operation === undefined) {
-            this.isRunning  = false;
-            this.isComplete = true;
-            this.fireEvent('complete', this, operations[operations.length - 1]);
+            me.isRunning  = false;
+            me.isComplete = true;
+            me.fireEvent('complete', me, operations[operations.length - 1]);
         } else {
-            this.current = index;
+            me.current = index;
             
-            var onProxyReturn = function(operation) {
+            onProxyReturn = function(operation) {
                 var hasException = operation.hasException();
                 
                 if (hasException) {
-                    this.hasException = true;
-                    this.fireEvent('exception', this, operation);
+                    me.hasException = true;
+                    me.fireEvent('exception', me, operation);
                 } else {
-                    //TODO: deprecate the dashed version of this event name 'operation-complete' as it breaks convention
-                    //to be removed in 1.0
-                    this.fireEvent('operation-complete', this, operation);
-                    
-                    this.fireEvent('operationcomplete', this, operation);
+                    me.fireEvent('operationcomplete', me, operation);
                 }
 
-                if (hasException && this.pauseOnException) {
-                    this.pause();
+                if (hasException && me.pauseOnException) {
+                    me.pause();
                 } else {
                     operation.setCompleted();
-                    
-                    this.runNextOperation();
+                    me.runNextOperation();
                 }
             };
             
             operation.setStarted();
             
-            this.proxy[operation.action](operation, onProxyReturn, this);
+            me.proxy[operation.action](operation, onProxyReturn, me);
         }
     }
 });

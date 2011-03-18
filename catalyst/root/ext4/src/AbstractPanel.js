@@ -254,7 +254,16 @@ var panel = new Ext.panel.Panel({
      */
     getDockedItems : function() {
         if (this.dockedItems && this.dockedItems.items.length) {
-            return this.dockedItems.items.slice();
+            var dockedItems = this.dockedItems.items.slice();
+            dockedItems.sort(function(a, b) {
+                var aw = a.weight || 0,
+                    bw = b.weight || 0;
+                if (Ext.isNumber(aw) && Ext.isNumber(bw)) {
+                    return aw - bw;
+                }
+                return 0;
+            });
+            return dockedItems;
         }
         return [];
     },

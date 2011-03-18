@@ -39,8 +39,7 @@ Ext.define('Ext.data.RecordNode', {
     },
 
 
-    getSubStore: function() {
-
+    getSubStore: function(callback, scope) {
         // <debug>
         if (this.isLeaf()) {
             throw "Attempted to get a substore of a leaf node.";
@@ -49,9 +48,10 @@ Ext.define('Ext.data.RecordNode', {
 
         var treeStore = this.getOwnerTree().treeStore;
         if (!this.subStore) {
-            this.subStore = Ext.create('Ext.data.Store', {
+            var subStore = {
                 model: treeStore.model
-            });
+            };
+            this.subStore = Ext.create('Ext.data.Store', subStore);
             // if records have already been preLoaded, apply them
             // to the subStore, if not they will be loaded by the
             // read within the TreeStore itself.
@@ -59,10 +59,16 @@ Ext.define('Ext.data.RecordNode', {
             this.subStore.add.apply(this.subStore, children);
         }
 
-        if (!this.loaded) {
+        if (!this.loaded && !this.loading) {
+            this.loading = true;
             treeStore.load({
-                node: this
+                node: this,
+                callback: callback,
+                scope: scope
             });
+        }
+        if (this.loaded) {
+            callback.call(scope || window, this.subStore.getRange());
         }
         return this.subStore;
     },

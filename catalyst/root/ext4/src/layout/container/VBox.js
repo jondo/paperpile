@@ -48,12 +48,15 @@ Ext.define('Ext.layout.container.VBox', {
     parallelLT: 't',
     parallelRB: 'b',
     parallelBefore: 'top',
+    parallelBeforeCap: 'Top',
     parallelAfter: 'bottom',
+    parallelPosition: 'y',
 
     perpendicularPrefix: 'width',
     perpendicularPrefixCap: 'Width',
     perpendicularLT: 'l',
     perpendicularRB: 'r',
     perpendicularLeftTop: 'left',
-    perpendicularRightBottom: 'right'
+    perpendicularRightBottom: 'right',
+    perpendicularPosition: 'x'
 });

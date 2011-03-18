@@ -245,19 +245,20 @@ Ext.define('Ext.data.Model', {
         },
         
         /**
-         * Sets the Proxy to use for this model. Accepts any options that can be accepted by {@link Ext#createByAlias}
+         * Sets the Proxy to use for this model. Accepts any options that can be accepted by {@link Ext#createByAlias Ext.createByAlias}
          * @param {String/Object/Ext.data.Proxy} proxy The proxy
          * @static
          */
         setProxy: function(proxy) {
             //make sure we have an Ext.data.Proxy object
-            if (typeof proxy == "string") {
-                proxy = {
-                    type: proxy
-                };
+            if (!proxy.isProxy) {
+                if (typeof proxy == "string") {
+                    proxy = {
+                        type: proxy
+                    };
+                }
+                proxy = Ext.createByAlias("proxy." + proxy.type, proxy);
             }
-            
-            proxy = Ext.createByAlias("proxy." + proxy.type, proxy);
             proxy.setModel(this);
             this.proxy = this.prototype.proxy = proxy;
 
@@ -294,34 +295,25 @@ Ext.define('Ext.data.Model', {
          * @static
          */
         load: function(id, config) {
-            config = Ext.applyIf(config || {}, {
+            config = Ext.apply({}, config);
+            config = Ext.applyIf(config, {
                 action: 'read',
                 id    : id
             });
 
             var operation  = Ext.create('Ext.data.Operation', config),
-                callbackFn = config.callback,
-                successFn  = config.success,
-                failureFn  = config.failure,
-                scope      = config.scope,
-                record, callback;
+                scope      = config.scope || this,
+                record     = null, 
+                callback;
 
             callback = function(operation) {
-                record = operation.getRecords()[0];
-
                 if (operation.wasSuccessful()) {
-                    if (typeof successFn == 'function') {
-                        successFn.call(scope, record, operation);
-                    }
+                    record = operation.getRecords()[0];
+                    Ext.callback(config.success, scope, [record, operation]);
                 } else {
-                    if (typeof failureFn == 'function') {
-                        failureFn.call(scope, record, operation);
-                    }
+                    Ext.callback(config.failure, scope, [record, operation]);
                 }
-
-                if (typeof callbackFn == 'function') {
-                    callbackFn.call(scope, record, operation);
-                }
+                Ext.callback(config.callback, scope, [record, operation]);
             };
 
             this.proxy.read(operation, callback, this);
@@ -373,7 +365,9 @@ Ext.define('Ext.data.Model', {
         }
         
         this.set(data);
+        // clear any dirty/modified since we're initializing
         this.dirty = false;
+        this.modified = {};
         
         if (this.getId()) {
             this.phantom = false;
@@ -430,48 +424,73 @@ Ext.define('Ext.data.Model', {
      * @return {Ext.data.Model} The Model instance
      */
     save: function(options) {
-        var me     = this,
-            action = me.phantom ? 'create' : 'update';
+        options = Ext.apply({}, options);
         
-        options = options || {};
+        var me     = this,
+            action = me.phantom ? 'create' : 'update',
+            record = null,
+            scope  = options.scope || me,
+            operation,
+            callback;
         
         Ext.apply(options, {
             records: [me],
             action : action
         });
         
-        var operation  = Ext.create('Ext.data.Operation', options),
-            successFn  = options.success,
-            failureFn  = options.failure,
-            callbackFn = options.callback,
-            scope      = options.scope,
-            record;
+        operation = Ext.create('Ext.data.Operation', options);
         
-        var callback = function(operation) {
-            record = operation.getRecords()[0];
-            
+        callback = function(operation) {
             if (operation.wasSuccessful()) {
+                record = operation.getRecords()[0];
                 //we need to make sure we've set the updated data here. Ideally this will be redundant once the
                 //ModelCache is in place
                 me.set(record.data);
                 record.dirty = false;
 
-                if (typeof successFn == 'function') {
-                    successFn.call(scope, record, operation);
-                }
+                Ext.callback(options.success, scope, [record, operation]);
             } else {
-                if (typeof failureFn == 'function') {
-                    failureFn.call(scope, record, operation);
-                }
+                Ext.callback(options.failure, scope, [record, operation]);
             }
             
-            if (typeof callbackFn == 'function') {
-                callbackFn.call(scope, record, operation);
-            }
+            Ext.callback(options.callback, scope, [record, operation]);
         };
         
         me.getProxy()[action](operation, callback, me);
         
+        return me;
+    },
+    
+    /**
+     * Destroys the model using the configured proxy
+     * @param {Object} options Options to pass to the proxy
+     * @return {Ext.data.Model} The Model instance
+     */
+    destroy: function(options){
+        options = Ext.apply({}, options);
+        
+        var me     = this,
+            record = null,
+            scope  = options.scope || me,
+            operation,
+            callback;
+            
+        Ext.apply(options, {
+            records: [me],
+            action : 'destroy'
+        });
+        
+        operation = Ext.create('Ext.data.Operation', options);
+        callback = function(operation) {
+            if (operation.wasSuccessful()) {
+                Ext.callback(options.success, scope, [record, operation]);
+            } else {
+                Ext.callback(options.failure, scope, [record, operation]);
+            }
+            Ext.callback(options.callback, scope, [record, operation]);
+        };
+        
+        me.getProxy().destroy(operation, callback, me);
         return me;
     },
     

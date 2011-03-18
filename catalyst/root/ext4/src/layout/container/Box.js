@@ -13,12 +13,9 @@ Ext.define('Ext.layout.container.Box', {
     extend: 'Ext.layout.Container',
 
     requires: [
-        'Ext.layout.container.boxOverflow.HorizontalMenu',
-        'Ext.layout.container.boxOverflow.HorizontalScroller',
-        'Ext.layout.container.boxOverflow.Menu',
         'Ext.layout.container.boxOverflow.None',
+        'Ext.layout.container.boxOverflow.Menu',
         'Ext.layout.container.boxOverflow.Scroller',
-        'Ext.layout.container.boxOverflow.VerticalScroller',
         'Ext.util.Format',
         'Ext.dd.DragDropMgr'
     ],
@@ -140,17 +137,20 @@ Ext.define('Ext.layout.container.Box', {
         return a - b;
     },
 
+    // Sort into *descending* order.
     minSizeSortFn: function(a, b) {
-        return a.available > b.available ? 1 : -1;
+        return b.available - a.available;
     },
 
     constructor: function(config) {
-        Ext.layout.container.Box.superclass.constructor.call(this, config);
+        var me = this;
+
+        me.callParent(arguments);
 
         // The sort function needs access to properties in this, so must be bound.
-        this.flexSortFn = Ext.Function.bind(this.flexSortFn, this);
+        me.flexSortFn = Ext.Function.bind(me.flexSortFn, me);
 
-        this.initOverflowHandler();
+        me.initOverflowHandler();
     },
 
     /**
@@ -239,7 +239,6 @@ Ext.define('Ext.layout.container.Box', {
             boxes = [],
             minSizes = [],
 
-
             i, child, childParallel, childPerpendicular, childMargins, childSize, minParallel, tmpObj, shortfall, 
             tooNarrow, availableSpace, minSize, item, length, itemIndex, box, oldSize, newSize, reduction, diff, 
             flexedBoxes, remainingSpace, remainingFlex, flexedSize, parallelMargins, calcs, offset, 
@@ -255,8 +254,8 @@ Ext.define('Ext.layout.container.Box', {
             if (child.flex) {
                 totalFlex += child.flex;
                 childParallel = undefinedValue;
-            // Not flexed or 'auto' width or undefined width
             }
+            // Not flexed or 'auto' width or undefined width
             else {
                 if (!(child[parallelPrefix] && childPerpendicular)) {
                     childSize = child.getSize();
@@ -293,11 +292,13 @@ Ext.define('Ext.layout.container.Box', {
         tooNarrow = minimumSize > parallelSize;
 
         //the space available to the flexed items
-        availableSpace = mmax(0, parallelSize - nonFlexSize - paddingParallel - this.availableSpaceOffset);
+        availableSpace = mmax(0, parallelSize - nonFlexSize - paddingParallel - me.availableSpaceOffset);
 
         if (tooNarrow) {
             for (i = 0; i < visibleCount; i++) {
-                boxes[i][parallelPrefix] = visibleItems[i][parallelMinString] || visibleItems[i][parallelPrefix] || boxes[i][parallelPrefix];
+                box = boxes[i];
+                box.dirtySize = box.dirtySize || box[parallelPrefix] != minSize;
+                box[parallelPrefix] = visibleItems[i][parallelMinString] || visibleItems[i][parallelPrefix] || box[parallelPrefix];
             }
         }
         else {
@@ -316,7 +317,9 @@ Ext.define('Ext.layout.container.Box', {
                     //shrink each non-flex tab by an equal amount to make them all fit. Flexed items are all
                     //shrunk to their minSize because they're flexible and should be the first to lose size
                     if (item.flex) {
-                        boxes[i][parallelPrefix] = minSize;
+                        box = boxes[i];
+                        box.dirtySize = box.dirtySize || box[parallelPrefix] != minSize;
+                        box[parallelPrefix] = minSize;
                     }
                     else {
                         minSizes.push({
@@ -343,14 +346,15 @@ Ext.define('Ext.layout.container.Box', {
                         continue;
                     }
                     item = visibleItems[itemIndex];
-                    minSize = item.minSize;
+                    minSize = minSizes[i].minSize;
 
                     box = boxes[itemIndex];
                     oldSize = box[parallelPrefix];
                     newSize = mmax(minSize, oldSize - math.ceil(shortfall / (length - i)));
                     reduction = oldSize - newSize;
 
-                    boxes[itemIndex][parallelPrefix] = newSize;
+                    box.dirtySize = box.dirtySize || box[parallelPrefix] != newSize;
+                    box[parallelPrefix] = newSize;
                     shortfall -= reduction;
                 }
             }
@@ -377,17 +381,14 @@ Ext.define('Ext.layout.container.Box', {
                     child = calcs.component;
                     childMargins = calcs.margins;
 
-                    parallelMargins = childMargins[me.parallelBefore] + childMargins[me.parallelAfter];
-
                     flexedSize = math.ceil((child.flex / remainingFlex) * remainingSpace);
                     // Implement maxSize check
                     flexedSize = math.min(child['max' + parallelPrefixCap] || infiniteValue, flexedSize);
-                    remainingSpace -= flexedSize;
-                    remainingSpace -= parallelMargins;
+                    remainingSpace -= (flexedSize + childMargins[me.parallelBefore]);
                     remainingFlex -= child.flex;
 
+                    calcs.dirtySize = calcs.dirtySize || calcs[parallelPrefix] != flexedSize;
                     calcs[parallelPrefix] = flexedSize;
-                    calcs.dirtySize = true;
                 }
             }
         }
@@ -415,19 +416,22 @@ Ext.define('Ext.layout.container.Box', {
             calcs[me.perpendicularLeftTop] = perpendicularOffset + childMargins[me.perpendicularLeftTop];
 
             if (me.align == 'stretch') {
-                stretchSize = availPerpendicularSize - perpendicularMargins;
-                calcs[perpendicularPrefix] = constrain(stretchSize, child[perpendicularMinString] || 0, child[perpendicularMaxString] || infiniteValue);
-                calcs.dirtySize = true;
+                stretchSize = constrain(availPerpendicularSize - perpendicularMargins, child[perpendicularMinString] || 0, child[perpendicularMaxString] || infiniteValue);
+                calcs.dirtySize = calcs.dirtySize || calcs[perpendicularPrefix] != stretchSize;
+                calcs[perpendicularPrefix] = stretchSize;
             }
             else if (me.align == 'stretchmax') {
-                stretchSize = maxSize - perpendicularMargins;
-                calcs[perpendicularPrefix] = constrain(stretchSize, child[perpendicularMinString] || 0, child[perpendicularMaxString] || infiniteValue);
-                calcs.dirtySize = true;
+                stretchSize = constrain(maxSize - perpendicularMargins, child[perpendicularMinString] || 0, child[perpendicularMaxString] || infiniteValue);
+                calcs.dirtySize = calcs.dirtySize || calcs[perpendicularPrefix] != stretchSize;
+                calcs[perpendicularPrefix] = stretchSize;
             }
             else if (me.align == me.alignCenteringString) {
-                diff = mmax(availPerpendicularSize, maxSize) - calcs[perpendicularPrefix] - perpendicularMargins;
+                // When calculating a centered position within the content box of the innerCt, the width of the borders must be subtracted from
+                // the size to yield the space available to center within.
+                // The updateInnerCtSize method explicitly adds the border widths to the set size of the innerCt.
+                diff = mmax(availPerpendicularSize, maxSize) - me.innerCt.getBorderWidth(me.perpendicularLT + me.perpendicularRB) - calcs[perpendicularPrefix];
                 if (diff > 0) {
-                    calcs[me.perpendicularLeftTop] = perpendicularOffset + perpendicularMargins + (diff / 2);
+                    calcs[me.perpendicularLeftTop] = perpendicularOffset + (diff / 2);
                 }
             }
 
@@ -442,7 +446,7 @@ Ext.define('Ext.layout.container.Box', {
                 nonFlexSize: nonFlexSize,
                 desiredSize: desiredSize,
                 minimumSize: minimumSize,
-                shortfall: desiredSize - parallelSize,
+                shortfall: shortfall,
                 tooNarrow: tooNarrow
             }
         };
@@ -470,7 +474,7 @@ Ext.define('Ext.layout.container.Box', {
             constructor = constructor[this.type];
         }
 
-        this.overflowHandler = new constructor(this, handler);
+        this.overflowHandler = Ext.create('Ext.layout.container.boxOverflow.' + handlerType, this, handler);
     },
 
     /**
@@ -491,9 +495,7 @@ Ext.define('Ext.layout.container.Box', {
             calcs = me.calculateChildBoxes(items, targetSize),
             boxes = calcs.boxes,
             meta = calcs.meta,
-            handler,
-            method,
-            results;
+            handler, method, results;
 
         if (me.autoSize && calcs.meta.desiredSize) {
             targetSize[me.parallelPrefix] = calcs.meta.desiredSize;
@@ -517,6 +519,8 @@ Ext.define('Ext.layout.container.Box', {
                     boxes = calcs.boxes;
                 }
             }
+        } else {
+            me.overflowHandler.clearOverflow();
         }
 
         /**
@@ -684,12 +688,13 @@ Ext.define('Ext.layout.container.Box', {
             padding = me.padding,
             width = tSize.width,
             height = tSize.height,
+            meta = calcs.meta,
             innerCtWidth,
             innerCtHeight;
 
         if (me.direction == 'horizontal') {
             innerCtWidth = width;
-            innerCtHeight = calcs.meta.maxSize + padding.top + padding.bottom;
+            innerCtHeight = meta.maxSize + padding.top + padding.bottom + me.innerCt.getBorderWidth('tb');
 
             if (align == 'stretch') {
                 innerCtHeight = height;
@@ -699,7 +704,7 @@ Ext.define('Ext.layout.container.Box', {
             }
         } else {
             innerCtHeight = height;
-            innerCtWidth = calcs.meta.maxSize + padding.left + padding.right;
+            innerCtWidth = meta.maxSize + padding.left + padding.right + me.innerCt.getBorderWidth('lr');
 
             if (align == 'stretch') {
                 innerCtWidth = width;
@@ -772,16 +777,18 @@ Ext.define('Ext.layout.container.Box', {
         if (margins) {
             if (Ext.isString(margins) || Ext.isNumber(margins)) {
                 margins = Ext.util.Format.parseBox(margins);
+            } else {
+                Ext.applyIf(margins, {top: 0, right: 0, bottom: 0, left: 0});
             }
         } else {
             margins = Ext.apply({}, me.defaultMargins);
         }
 
         // Add any before/after CSS margins to the configured margins, and zero the CSS margins
-        margins.top += itemEl.getMargin('t');
-        margins.right += itemEl.getMargin('r');
+        margins.top    += itemEl.getMargin('t');
+        margins.right  += itemEl.getMargin('r');
         margins.bottom += itemEl.getMargin('b');
-        margins.left += itemEl.getMargin('l');
+        margins.left   += itemEl.getMargin('l');
         style.marginTop = style.marginRight = style.marginBottom = style.marginLeft = '0';
 
         // Item must reference calculated margins.

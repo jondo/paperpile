@@ -202,7 +202,7 @@ Ext.define('Ext.form.Text', {
     componentLayout: 'textfield',
 
     initComponent : function(){
-        Ext.form.Text.superclass.initComponent.call(this);
+        this.callParent();
         this.addEvents(
             /**
              * @event autosize
@@ -247,7 +247,7 @@ Ext.define('Ext.form.Text', {
         var me = this,
             el = me.inputEl;
         
-        Ext.form.Text.superclass.initEvents.call(me);
+        me.callParent();
         if(me.selectOnFocus || me.emptyText){
             me.mon(el, 'mousedown', me.onMouseDown, me);
         }
@@ -288,7 +288,7 @@ Ext.define('Ext.form.Text', {
         }
         me.applyEmptyText();
         me.autoSize();
-        Ext.form.Text.superclass.afterRender.call(me);
+        me.callParent();
     },
 
     onMouseDown: function(e){
@@ -322,7 +322,7 @@ Ext.define('Ext.form.Text', {
 
     //private
     onDisable: function(){
-        Ext.form.Text.superclass.onDisable.call(this);
+        this.callParent();
         if (Ext.isIE) {
             this.inputEl.dom.unselectable = 'on';
         }
@@ -330,7 +330,7 @@ Ext.define('Ext.form.Text', {
 
     //private
     onEnable: function(){
-        Ext.form.Text.superclass.onEnable.call(this);
+        this.callParent();
         if (Ext.isIE) {
             this.inputEl.dom.unselectable = '';
         }
@@ -354,7 +354,7 @@ Ext.define('Ext.form.Text', {
      * original value was blank.
      */
     reset : function(){
-        Ext.form.Text.superclass.reset.call(this);
+        this.callParent();
         this.applyEmptyText();
     },
 
@@ -517,7 +517,7 @@ for any failing validations. Validation rules are processed in the following ord
      */
     getErrors: function(value) {
         var me = this,
-            errors = Ext.form.Text.superclass.getErrors.apply(me, arguments),
+            errors = me.callParent(arguments),
             validator = me.validator,
             emptyText = me.emptyText,
             allowBlank = me.allowBlank,
@@ -621,7 +621,7 @@ for any failing validations. Validation rules are processed in the following ord
     },
 
     initAria: function() {
-        Ext.form.Text.superclass.initAria.call(this);
+        this.callParent();
         this.getActionEl().dom.setAttribute('aria-required', this.allowBlank === false);
     }
 });

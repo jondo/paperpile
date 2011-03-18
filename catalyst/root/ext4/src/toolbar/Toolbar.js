@@ -95,7 +95,9 @@ Ext.define('Ext.toolbar.Toolbar', {
     requires: [
         'Ext.toolbar.Fill',
         'Ext.layout.container.HBox',
-        'Ext.layout.container.VBox'
+        'Ext.layout.container.VBox',
+        'Ext.FocusManager',
+        'Ext.util.KeyNav'
     ],
     alias: 'widget.toolbar',
     alternateClassName: 'Ext.Toolbar',
@@ -218,6 +220,32 @@ Ext.define('Ext.toolbar.Toolbar', {
     // private
     constructButton: function(item) {
         return item.events ? item : this.createComponent(item, item.split ? 'splitbutton' : this.defaultType);
+    },
+    
+    // private
+    onRender: function() {
+        var me = this;
+        me.callParent(arguments);
+        
+        me.keyNav = Ext.create('Ext.util.KeyNav', me.el, {
+            left: me.onNavKey,
+            right: me.onNavKey,
+            scope: me
+        });
+    },
+    
+    // @private
+    onNavKey: function(e) {
+        var me = this;
+        me.focusedCmp = Ext.FocusManager.navigateSiblings(e, me, me);
+    },
+    
+    // private
+    onDestroy: function() {
+        var me = this;
+        Ext.destroy(me.keyNav);
+        delete me.keyNav;
+        me.callParent(arguments);
     },
 
     // private

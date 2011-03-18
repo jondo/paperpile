@@ -19,5 +19,7 @@ new Ext.panel.Panel({
 Ext.define('Ext.toolbar.Separator', {
     extend: 'Ext.toolbar.Item',
     alias: 'widget.tbseparator',
-    cls: Ext.baseCSSPrefix + 'toolbar-separator'
+    cls: Ext.baseCSSPrefix + 'toolbar-separator',
+    
+    focusable: false
 });

@@ -12,6 +12,8 @@
 Ext.define('Ext.tab.Tab', {
     extend: 'Ext.button.Button',
     alias: 'widget.tab',
+    
+    requires: ['Ext.util.KeyNav'],
 
     isTab: true,
 
@@ -114,6 +116,22 @@ Ext.define('Ext.tab.Tab', {
             me.activate(true);
         }
         me.callParent(arguments);
+        
+        me.keyNav = Ext.create('Ext.util.KeyNav', me.el, {
+            enter: me.onEnterKey,
+            del: me.onDeleteKey,
+            scope: me
+        });
+    },
+    
+    /**
+     * @ignore
+     */
+    onDestroy: function() {
+        var me = this;
+        Ext.destroy(me.keyNav);
+        delete me.keyNav;
+        me.callParent(arguments);
     },
 
     /**
@@ -136,7 +154,9 @@ Ext.define('Ext.tab.Tab', {
         }
  
         // Tab will change width to accommodate close icon
-        me.ownerCt && me.ownerCt.doLayout();
+        if (me.ownerCt) {
+            me.ownerCt.doLayout();
+        }
     },
 
     /**
@@ -167,7 +187,29 @@ Ext.define('Ext.tab.Tab', {
             me.fireEvent('close', me);
         }
     },
-
+    
+    /**
+     * @private
+     */
+    onEnterKey: function(e) {
+        var me = this;
+        
+        if (me.tabBar) {
+            me.tabBar.onClick(e, me.el);
+        }
+    },
+    
+   /**
+     * @private
+     */
+    onDeleteKey: function(e) {
+        var me = this;
+        
+        if (me.closable) {
+            me.onCloseClick();
+        }
+    },
+    
     // @private
     activate : function(supressEvent) {
         var me = this;

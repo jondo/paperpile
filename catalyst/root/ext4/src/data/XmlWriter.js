@@ -6,13 +6,27 @@
  * <p>Writer that outputs model data in XML format</p>
  */
 Ext.define('Ext.data.XmlWriter', {
+    
+    /* Begin Definitions */
+    
     extend: 'Ext.data.Writer',
+    
     alias: 'writer.xml',
+    
+    /* End Definitions */
     
     /**
      * @cfg {String} documentRoot The name of the root element of the document. Defaults to <tt>'xmlData'</tt>.
+     * If there is more than 1 record and the root is not specified, the default document root will still be used
+     * to ensure a valid XML document is created.
      */
     documentRoot: 'xmlData',
+    
+    /**
+     * @cfg {String} defaultDocumentRoot The root to be used if {@link #documentRoot} is empty and a root is required
+     * to form a valid XML document.
+     */
+    defaultDocumentRoot: 'xmlData',
 
     /**
      * @cfg {String} header A header to use in the XML document (such as setting the encoding or version).
@@ -27,40 +41,43 @@ Ext.define('Ext.data.XmlWriter', {
 
     //inherit docs
     writeRecords: function(request, data) {
-        var tpl = this.buildTpl(request, data);
-
-        request.xmlData = tpl.apply(data);
-
-        return request;
-    },
-
-    buildTpl: function(request, data) {
-        if (this.tpl) {
-            return this.tpl;
-        }
-
-        var tpl = [],
-            root = this.documentRoot,
-            record = this.record,
-            first,
+        var me = this,
+            xml = [],
+            i = 0,
+            len = data.length,
+            root = me.documentRoot,
+            record = me.record,
+            needsRoot = data.length !== 1,
+            item,
             key;
-
-        if (this.header) {
-            tpl.push(this.header);
+            
+        // may not exist
+        xml.push(me.header || '');
+        
+        if (!root && needsRoot) {
+            root = me.defaultDocumentRoot;
         }
-        tpl.push('<', root, '>');
-        if (data.length > 0) {
-            tpl.push('<tpl for="."><', record, '>');
-            first = data[0];
-            for (key in first) {
-                if (first.hasOwnProperty(key)) {
-                    tpl.push('<', key, '>{', key, '}</', key, '>');
+        
+        if (root) {
+            xml.push('<', root, '>');
+        }
+            
+        for (; i < len; ++i) {
+            item = data[i];
+            xml.push('<', record, '>');
+            for (key in item) {
+                if (item.hasOwnProperty(key)) {
+                    xml.push('<', key, '>', item[key], '</', key, '>');
                 }
             }
-            tpl.push('</', record, '></tpl>');
+            xml.push('</', record, '>');
         }
-        tpl.push('</', root, '>');
-        this.tpl = new Ext.XTemplate(tpl.join(''));
-        return this.tpl;
+        
+        if (root) {
+            xml.push('</', root, '>');
+        }
+            
+        request.xmlData = xml.join('');
+        return request;
     }
 });

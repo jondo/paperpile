@@ -1,7 +1,7 @@
 /**
  * @class Ext.scaffold.Form
  * @extends Ext.form.FormPanel
- * 
+ * @private
  */
 Ext.scaffold.Form = Ext.extend(Ext.form.FormPanel, {
     /**

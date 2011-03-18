@@ -48,9 +48,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
             target = me.getTarget(),
             autoWidth = false,
             autoHeight = false,
-            padding,
-            border,
-            frameSize;
+            padding, border, frameSize;
 
         // We start of by resetting all the layouts info
         var info = me.info = {
@@ -415,7 +413,6 @@ Ext.define('Ext.layout.component.AbstractDock', {
                 box.x -= (frameSize.left + padding.left + border.left);
             }
         }
-        
         return box;
     },
 
@@ -428,11 +425,12 @@ Ext.define('Ext.layout.component.AbstractDock', {
      * @return {Object} The initial box containing width and height and other useful information
      */
     initBox : function(item) {
-        var bodyBox = this.info.bodyBox,
+        var me = this,
+            bodyBox = me.info.bodyBox,
             horizontal = (item.dock == 'top' || item.dock == 'bottom'),
-            owner = this.owner,
-            frameSize = this.frameSize,
-            info = this.info,
+            owner = me.owner,
+            frameSize = me.frameSize,
+            info = me.info,
             padding = info.padding,
             border = info.border,
             box = {
@@ -455,7 +453,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
             }
             else {
                 box.y = bodyBox.y + box.offsets.top;
-                box.height = bodyBox.height- (box.offsets.bottom + box.offsets.top);
+                box.height = bodyBox.height - (box.offsets.bottom + box.offsets.top);
                 if (box.ignoreFrame) {
                     box.height += (frameSize.top + frameSize.bottom + border.top + border.bottom + padding.top + padding.bottom);
                 }

@@ -141,7 +141,11 @@ Ext.define('Ext.chart.axis.Axis', {
         if (!isFinite(min)) {
             min = me.prevMin || 0;
         }
-        out = Ext.draw.Draw.snapEnds(min, max >> 0, me.steps);
+        //normalize min max for snapEnds.
+        if (min != max) {
+            max = (max >> 0) + 1;
+        }
+        out = Ext.draw.Draw.snapEnds(min, max, me.steps);
         if (!isNaN(me.maximum)) {
             out.to = mmax(out.to, me.maximum);
         }
@@ -188,10 +192,10 @@ Ext.define('Ext.chart.axis.Axis', {
         //If no steps are specified
         //then don't draw the axis. This generally happens
         //when an empty store.
-        if (isNaN(step) || (from == to)) {
+        if (me.hidden || isNaN(step) || (from == to)) {
             return;
         }
-        
+
         me.from = stepCalcs.from;
         me.to = stepCalcs.to;
         if (position == 'left' || position == 'right') {
@@ -220,6 +224,9 @@ Ext.define('Ext.chart.axis.Axis', {
                 if (calcLabels) {
                     me.labels.push(me.labels[me.labels.length -1] + step);
                 }
+                if (delta === 0) {
+                    break;
+                }
             }
             if (Math.round(currentY + delta - (y - gutterY - trueLength))) {
                 path = path.concat(["M", currentX, Math.floor(y - length + gutterY) + 0.5, "l", dashSize * 2 + 1, 0]);
@@ -237,6 +244,9 @@ Ext.define('Ext.chart.axis.Axis', {
                 currentX += delta;
                 if (calcLabels) {
                     me.labels.push(me.labels[me.labels.length -1] + step);
+                }
+                if (delta === 0) {
+                    break;
                 }
             }
             if (Math.round(currentX - delta - (x + gutterX + trueLength))) {
@@ -453,6 +463,11 @@ Ext.define('Ext.chart.axis.Axis', {
                         y: y
                     }, me.label), true);
                 }
+                // Skip label if there isn't available minimum space
+                if (i != 0 && (i != last) && (y + bbox.height > prevY) && !(labelAttr.rotation && labelAttr.rotation.degrees)) {
+                    textLabel.hide(true);
+                }
+                prevY = y;
             }
         }
         else {

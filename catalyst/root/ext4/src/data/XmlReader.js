@@ -254,48 +254,13 @@ Ext.define('Ext.data.XmlReader', {
         }
     },
 
-
-    //EVERYTHING BELOW THIS LINE WILL BE DEPRECATED IN EXT JS 5.0
-
-
-    /**
-     * @cfg {String} idPath DEPRECATED - this will be removed in Ext JS 5.0. Please use idProperty instead
-     */
-
-    /**
-     * @cfg {String} id DEPRECATED - this will be removed in Ext JS 5.0. Please use idProperty instead
-     */
-
-    /**
-     * @cfg {String} success DEPRECATED - this will be removed in Ext JS 5.0. Please use successProperty instead
-     */
-
-    /**
-     * @constructor
-     * @ignore
-     * TODO: This can be removed in 5.0 as all it does is support some deprecated config
-     */
-    constructor: function(config) {
-        config = config || {};
-
-        // backwards compat, convert idPath or id / success
-        // DEPRECATED - remove this in 5.0
-
-        Ext.applyIf(config, {
-            idProperty     : config.idPath || config.id || this.idProperty,
-            successProperty: config.success || this.successProperty
-        });
-        
-        Ext.data.XmlReader.superclass.constructor.call(this, config);
-    },
-    
     /**
      * @private
      * We're just preparing the data for the superclass by pulling out the record nodes we want
      * @param {Element} root The XML root node
      * @return {Array} The records
      */
-    extractData: function(root, returnRecords) {
+    extractData: function(root) {
         var recordName = this.record;
         
         if (recordName != root.nodeName) {
@@ -303,8 +268,7 @@ Ext.define('Ext.data.XmlReader', {
         } else {
             root = [root];
         }
-        
-        return Ext.data.XmlReader.superclass.extractData.call(this, root, returnRecords);
+        return this.callParent([root]);
     },
     
     /**
@@ -335,7 +299,6 @@ Ext.define('Ext.data.XmlReader', {
          * @type Object
          */
         this.xmlData = doc;
-        
-        return Ext.data.XmlReader.superclass.readRecords.call(this, doc);
+        return this.callParent([doc]);
     }
 });

@@ -187,7 +187,7 @@ Ext.define('Ext.form.Picker', {
      */
     collapseIf: function(e) {
         var me = this;
-        if (!me.isDestroyed && !e.within(me.bodyEl) && !e.within(me.picker.el)) {
+        if (!me.isDestroyed && !e.within(me.bodyEl, false, true) && !e.within(me.picker.el, false, true)) {
             me.collapse();
         }
     },
@@ -229,7 +229,7 @@ Ext.define('Ext.form.Picker', {
         var me = this,
             picker = me.picker;
         // ignore mousedown events within the picker element
-        if (!picker || !picker.el.contains(e.target)) {
+        if (!picker || !e.within(picker.el, false, true)) {
             me.callParent(arguments);
         }
     },

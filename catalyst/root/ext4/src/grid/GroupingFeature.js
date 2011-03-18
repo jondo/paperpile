@@ -21,7 +21,7 @@ Ext.define('Ext.grid.GroupingFeature', {
     
     /**
      * @event groupclick
-     * @param {Ext.grid.View} view
+     * @param {Ext.view.TableView} view
      * @param {HTMLElement} node
      * @param {Number} unused
      * @param {Number} unused
@@ -30,7 +30,7 @@ Ext.define('Ext.grid.GroupingFeature', {
     
     /**
      * @event groupdblclick
-     * @param {Ext.grid.View} view
+     * @param {Ext.view.TableView} view
      * @param {HTMLElement} node
      * @param {Number} unused
      * @param {Number} unused
@@ -39,7 +39,7 @@ Ext.define('Ext.grid.GroupingFeature', {
     
     /**
      * @event groupcontextmenu
-     * @param {Ext.grid.View} view
+     * @param {Ext.view.TableView} view
      * @param {HTMLElement} node
      * @param {Number} unused
      * @param {Number} unused
@@ -48,7 +48,7 @@ Ext.define('Ext.grid.GroupingFeature', {
     
     /**
      * @event groupcollapse
-     * @param {Ext.grid.View} view
+     * @param {Ext.view.TableView} view
      * @param {HTMLElement} node
      * @param {Number} unused
      * @param {Number} unused
@@ -57,7 +57,7 @@ Ext.define('Ext.grid.GroupingFeature', {
     
     /**
      * @event groupexpand
-     * @param {Ext.grid.View} view
+     * @param {Ext.view.TableView} view
      * @param {HTMLElement} node
      * @param {Number} unused
      * @param {Number} unused
@@ -125,7 +125,7 @@ Ext.define('Ext.grid.GroupingFeature', {
         return [
             '<tpl if="typeof rows !== \'undefined\'">',
                 // group row tpl
-                '<tr class="' + Ext.baseCSSPrefix + 'grid-group-hd ' + (this.startCollapsed ? this.hdCollapsedCls : '') + '"><td class="' + Ext.baseCSSPrefix + 'grid-cell" colspan="' + parent.columns.length + '" {[this.indentByDepth(values)]}"><div class="' + Ext.baseCSSPrefix + 'grid-group-title">' + this.groupHdTpl + '</div></td></tr>',
+                '<tr class="' + Ext.baseCSSPrefix + 'grid-group-hd ' + (this.startCollapsed ? this.hdCollapsedCls : '') + '"><td class="' + Ext.baseCSSPrefix + 'grid-cell" colspan="' + parent.columns.length + '" {[this.indentByDepth(values)]}><div class="' + Ext.baseCSSPrefix + 'grid-group-title">' + this.groupHdTpl + '</div></td></tr>',
                 // this is the rowbody
                 '<tr class="' + Ext.baseCSSPrefix + 'grid-group-body ' + (this.startCollapsed ? this.collapsedCls : '') + '"><td colspan="' + parent.columns.length + '">{[this.recurse(values)]}</td></tr>',
             '</tpl>'
@@ -347,7 +347,7 @@ Ext.define('Ext.grid.GroupingFeature', {
             groups[i].fullWidth = fullWidth;
             // need additional check to determine if this is a group or not
             // that way we can invoke GridView directly.
-            groups[i].rows = Ext.grid.View.superclass.collectData.call(this.view, groups[i].children, 0);
+            groups[i].rows = Ext.view.TableView.superclass.collectData.call(this.view, groups[i].children, 0);
             for (j = 0, jln = groups[i].rows.length; j < jln; j++) {
                 groups[i].rows[j].depth = 1;
             }

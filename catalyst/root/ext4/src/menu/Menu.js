@@ -67,6 +67,8 @@ Ext.define('Ext.menu.Menu', {
      */
     floating: true,
 
+    constrain: true,
+
     /**
      * @cfg {Boolean} hidden
      * True to initially render the Menu as hidden, requiring to be shown manually.
@@ -84,7 +86,7 @@ Ext.define('Ext.menu.Menu', {
     ignoreParentClicks: false,
 
     isMenu: true,
-    
+
     /**
      * @cfg {String/Object} layout @hide
      */
@@ -102,110 +104,11 @@ Ext.define('Ext.menu.Menu', {
      * indent general Component items. Defaults to `false`.
      * @markdown
      */
-     
-    afterLayout: function() {
-        var me = this;
-        me.callParent(arguments);
-        
-        // For IE6 & IE quirks, we have to resize the el and body since position: absolute
-        // floating elements inherit their parent's width, making them the width of
-        // document.body instead of the width of their contents.
-        //
-        // For IE7, the width is sometimes collapsed, needing the same treatment.
-        //
-        // This includes left/right dock items.
-        if ((!Ext.iStrict && Ext.isIE) || Ext.isIE6 || Ext.isIE7) {
-            var newWidth = me.layout.innerCt.getWidth() + me.body.getBorderWidth('lr') + me.body.getPadding('lr'),
-                dis = me.dockedItems,
-                l = dis.length,
-                i = 0,
-                di;
-            
-            // First set the body to the new width
-            me.body.setWidth(newWidth);
-             
-            // Now we calculate additional width (docked items) and set the el's width
-            for (; i < l, di = dis.getAt(i); i++) {
-                if (di.dock == 'left' || di.dock == 'right') {
-                    newWidth += di.getWidth();
-                }
-            }
-            me.el.setWidth(newWidth);
-        }
-    },
-
-    afterRender: function(ct) {
-        var me = this,
-            prefix = Ext.baseCSSPrefix,
-            space = '&#160;';
-        
-        me.callParent(arguments);
-        
-        me.iconSepEl = me.body.insertFirst({
-            cls: prefix + 'menu-icon-separator',
-            html: space
-        });
-        me.focusEl = me.el.createChild({
-            tag: 'a',
-            cls: prefix + 'menu-focus',
-            href: '#',
-            html: space
-        });
-        
-        me.mon(me.el, {
-            click: me.onClick,
-            mouseleave: me.onMouseLeave,
-            mouseover: me.onMouseOver,
-            scope: me
-        });
-        
-        if ((!Ext.isStrict && Ext.isIE) || Ext.isIE6) {
-            me.iconSepEl.setHeight(me.el.getHeight());
-        }
-        
-        me.keyNav = new Ext.menu.KeyNav(me);
-    },
-    
-    canActivateItem: function(item) {
-        return item && !item.isDisabled() && item.isVisible() && (item.canActivate || item.getXTypes().indexOf('menuitem') < 0);
-    },
-
-    deactivateActiveItem: function() {
-        var me = this;
-        
-        if (me.activeItem) {
-            me.activeItem.deactivate();
-            if (!me.activeItem.activated) {
-                delete me.activeItem;
-            }
-        }
-        if (me.focusedItem) {
-            me.focusedItem.blur();
-            if (!me.focusedItem.$focused) {
-                delete me.focusedItem;
-            }
-        }
-    },
-    
-    deferDeactivateActiveItem: function() {
-        var me = this;
-        clearTimeout(me.deactivateActiveItemTimer);
-        me.deactivateActiveItemTimer = Ext.defer(me.deactivateActiveItem, 50, me);
-    },
-    
-    getFocusEl: function() {
-        return this.focusEl;
-    },
-
-    hide: function() {
-        this.deactivateActiveItem();
-        this.callParent(arguments);
-    },
 
     initComponent: function() {
         var me = this,
             prefix = Ext.baseCSSPrefix;
-        
+
         me.addEvents(
             /**
              * @event click
@@ -216,7 +119,7 @@ Ext.define('Ext.menu.Menu', {
              * @markdown
              */
             'click',
-            
+
             /**
              * @event mouseleave
              * Fires when the mouse leaves this menu
@@ -225,7 +128,7 @@ Ext.define('Ext.menu.Menu', {
              * @markdown
              */
             'mouseleave',
-            
+
             /**
              * @event mouseover
              * Fires when the mouse is hovering over this menu
@@ -244,7 +147,7 @@ Ext.define('Ext.menu.Menu', {
             cls.push(prefix + 'menu-plain');
         }
         me.cls = cls.join(' ');
-        
+
         // Menu body classes
         var bodyCls = me.bodyCls ? [me.bodyCls] : [];
         bodyCls.unshift(prefix + 'menu-body');
@@ -258,18 +161,129 @@ Ext.define('Ext.menu.Menu', {
             type: 'vbox',
             align: 'stretchmax',
             autoSize: true,
-            clearInnerCtOnLayout: true/*,
-            overflowHandler: {
-                type: 'VerticalScroller'
-            }*/
+            clearInnerCtOnLayout: true,
+            overflowHandler: 'Scroller'
         };
-        
+
         // hidden defaults to false if floating is configured as false
         if (me.floating === false && me.initialConfig.hidden !== true) {
             me.hidden = false;
         }
 
         me.callParent(arguments);
+    },
+
+    afterRender: function(ct) {
+        var me = this,
+            prefix = Ext.baseCSSPrefix,
+            space = '&#160;';
+
+        me.callParent(arguments);
+
+        // TODO: Move this to a subTemplate When we support them in the future
+
+        me.iconSepEl = me.layout.getRenderTarget().insertFirst({
+            cls: prefix + 'menu-icon-separator',
+            html: space
+        });
+        me.focusEl = me.el.createChild({
+            cls: prefix + 'menu-focus',
+            tabIndex: '-1',
+            html: space
+        });
+
+        me.mon(me.el, {
+            click: me.onClick,
+            mouseover: me.onMouseOver,
+            scope: me
+        });
+        me.mouseMonitor = me.el.monitorMouseLeave(100, me.onMouseLeave, me);
+
+        if ((!Ext.isStrict && Ext.isIE) || Ext.isIE6) {
+            me.iconSepEl.setHeight(me.el.getHeight());
+        }
+
+        me.keyNav = new Ext.menu.KeyNav(me);
+    },
+
+    afterLayout: function() {
+        var me = this;
+        me.callParent(arguments);
+
+        // For IE6 & IE quirks, we have to resize the el and body since position: absolute
+        // floating elements inherit their parent's width, making them the width of
+        // document.body instead of the width of their contents.
+        //
+        // In Opera, the width is sometimes collapsed, needing the same resize treatment.
+        //
+        // This includes left/right dock items.
+        if ((!Ext.iStrict && Ext.isIE) || Ext.isIE6 || Ext.isOpera) {
+            var innerCt = me.layout.getRenderTarget(),
+                innerCtWidth = 0,
+                dis = me.dockedItems,
+                l = dis.length,
+                i = 0,
+                di, clone, newWidth;
+            
+            // FIXME: Opera 10.5 gives no width information if it's not in a render box
+            // So we have to do a quick measurement by cloning our menu into a render box
+            if (Ext.isOpera) {
+                clone = innerCt.dom.cloneNode(true);
+                clone.id = Ext.id();
+                clone = Ext.get(clone);
+                
+                clone.setStyle('visibility', 'hidden');
+                
+                Ext.getBody().appendChild(clone);
+                innerCtWidth = clone.getWidth();
+                clone.remove();
+            } else {
+                innerCtWidth = innerCt.getWidth();
+            }
+            
+            newWidth = innerCtWidth + me.body.getBorderWidth('lr') + me.body.getPadding('lr');
+
+            // First set the body to the new width
+            me.body.setWidth(newWidth);
+
+            // Now we calculate additional width (docked items) and set the el's width
+            for (; i < l, di = dis.getAt(i); i++) {
+                if (di.dock == 'left' || di.dock == 'right') {
+                    newWidth += di.getWidth();
+                }
+            }
+            me.el.setWidth(newWidth);
+        }
+    },
+
+    canActivateItem: function(item) {
+        return item && !item.isDisabled() && item.isVisible() && (item.canActivate || item.getXTypes().indexOf('menuitem') < 0);
+    },
+
+    deactivateActiveItem: function() {
+        var me = this;
+
+        if (me.activeItem) {
+            me.activeItem.deactivate();
+            if (!me.activeItem.activated) {
+                delete me.activeItem;
+            }
+        }
+        if (me.focusedItem) {
+            me.focusedItem.blur();
+            if (!me.focusedItem.$focused) {
+                delete me.focusedItem;
+            }
+        }
+    },
+
+    getFocusEl: function() {
+        return this.focusEl;
+    },
+
+    hide: function() {
+        this.deactivateActiveItem();
+        this.callParent(arguments);
     },
 
     itemFromEvent: function(e) {
@@ -279,19 +293,19 @@ Ext.define('Ext.menu.Menu', {
     itemFromObject: function(cmp) {
         var me = this,
             prefix = Ext.baseCSSPrefix;
-        
+
         if (!cmp.isComponent) {
             if (!cmp.xtype) {
-                cmp = new Ext.menu[(Ext.isBoolean(cmp.checked) ? 'Check': '') + 'Item'](cmp);
+                cmp = Ext.create('Ext.menu.' + (Ext.isBoolean(cmp.checked) ? 'Check': '') + 'Item', cmp);
             } else {
                 cmp = Ext.ComponentMgr.create(cmp, cmp.xtype);
             }
         }
-        
+
         if (cmp.isMenuItem) {
             cmp.parentMenu = me;
         }
-        
+
         // For IE6 & IE quirks, we have to give a bogus size to child components
         // so they don't inherit the bogus width of this menu. Since the menu is
         // position: absolute, it inherits the width of document.body.
@@ -309,7 +323,7 @@ Ext.define('Ext.menu.Menu', {
                     prefix + 'menu-item-cmp'
                 ],
                 intercept = Ext.Function.createInterceptor;
-            
+
             // Wrap focus/blur to control component focus
             cmp.focus = intercept(cmp.focus, function() {
                 this.$focused = true;
@@ -317,7 +331,7 @@ Ext.define('Ext.menu.Menu', {
             cmp.blur = intercept(cmp.blur, function() {
                 this.$focused = false;
             }, cmp);
-            
+
             if (!me.plain && (cmp.indent === true || cmp.iconCls === 'no-icon')) {
                 cls.push(prefix + 'menu-item-indent');
             }
@@ -329,7 +343,6 @@ Ext.define('Ext.menu.Menu', {
             }
             cmp.isMenuItem = true;
         }
-
         return cmp;
     },
 
@@ -350,46 +363,47 @@ Ext.define('Ext.menu.Menu', {
         } else if (Ext.isObject(cmp)) {
             cmp = this.itemFromObject(cmp);
         }
-        
         return cmp;
     },
 
     onClick: function(e) {
         var me = this,
-            item = me.activeItem || me.itemFromEvent(e);
+            item;
 
-        if (item) {
-            if (item.getXTypes().indexOf('menuitem') >= 0) {
-                if (!item.menu || !me.ignoreParentClicks) {
-                    item.onClick(e);
-                } else {
-                    e.stopEvent();
+        if ((e.getTarget() == me.focusEl.dom) || e.within(me.layout.getRenderTarget())) {
+            item = me.itemFromEvent(e) || me.activeItem;
+
+            // Regain focus
+            me.focus();
+            if (item) {
+                if (item.getXTypes().indexOf('menuitem') >= 0) {
+                    if (!item.menu || !me.ignoreParentClicks) {
+                        item.onClick(e);
+                    } else {
+                        e.stopEvent();
+                    }
                 }
             }
+            me.fireEvent('click', me, item, e);
         }
-
-        me.fireEvent('click', me, item, e);
     },
 
     onDestroy: function() {
         var me = this;
-        
-        clearTimeout(me.deactivateActiveItemTimer);
-        
+
         Ext.menu.MenuManager.unregister(me);
-        
-        if (me.keyNav) {
+        if (me.rendered) {
+            me.el.un(me.mouseMonitor);
             me.keyNav.destroy();
             delete me.keyNav;
         }
-        
         me.callParent(arguments);
     },
 
     onMouseLeave: function(e) {
         var me = this;
-        me.deferDeactivateActiveItem();
 
+        me.deactivateActiveItem();
         me.fireEvent('mouseleave', me, e);
     },
 
@@ -399,26 +413,20 @@ Ext.define('Ext.menu.Menu', {
 
         if (me.parentMenu) {
             me.parentMenu.setActiveItem(me.parentItem);
+            me.parentMenu.mouseMonitor.mouseenter();
         }
-
         if (item) {
             me.setActiveItem(item);
             if (item.activated && item.expandMenu) {
                 item.expandMenu();
             }
         }
-
         me.fireEvent('mouseover', me, item, e);
     },
 
     setActiveItem: function(item) {
         var me = this;
-        
-        // Enforce focus on this menu for key navigation
-        me.focus();
-        
-        clearTimeout(me.deactivateActiveItemTimer);
-        
+
         if (item && (item != me.activeItem && item != me.focusedItem)) {
             me.deactivateActiveItem();
             if (item.activate) {
@@ -431,6 +439,7 @@ Ext.define('Ext.menu.Menu', {
                 item.focus();
                 me.focusedItem = item;
             }
+            item.el.scrollIntoView(me.layout.getRenderTarget());
         }
     },
 
@@ -443,9 +452,12 @@ Ext.define('Ext.menu.Menu', {
      */
     showBy: function(cmp, pos, off) {
         var me = this;
-        
+
         if (me.floating && cmp) {
+            me.layout.autoSize = true;
             me.show();
+            delete me.height;
+            me.setSize();
 
             // Component or Element
             cmp = cmp.el || cmp;
@@ -458,6 +470,47 @@ Ext.define('Ext.menu.Menu', {
                 xy[1] -= r.y;
             }
             me.showAt(xy);
+            me.doConstrain();
         }
+    },
+
+    doConstrain : function() {
+        var me = this,
+            y = this.el.getY(),
+            max, full,
+            returnY = y, normalY, parentEl, scrollTop, viewHeight;
+
+        delete me.height;
+        me.setSize();
+        full = me.getHeight();
+        if (me.floating) {
+            parentEl = Ext.fly(me.el.dom.parentNode);
+            scrollTop = parentEl.getScroll().top;
+            viewHeight = parentEl.getViewSize().height;
+            //Normalize y by the scroll position for the parent element.  Need to move it into the coordinate space
+            //of the view.
+            normalY = y - scrollTop;
+            max = me.maxHeight ? me.maxHeight : viewHeight - normalY;
+            if (full > viewHeight) {
+                max = viewHeight;
+                //Set returnY equal to (0,0) in view space by reducing y by the value of normalY
+                returnY = y - normalY;
+            } else if (max < full) {
+                returnY = y - (full - max);
+                max = full;
+            }
+        }else{
+            max = me.getHeight();
+        }
+        // Always respect maxHeight 
+        if (me.maxHeight){
+            max = Math.min(me.maxHeight, max);
+        }
+        if (full > max && max > 0){
+            me.layout.autoSize = false;
+            me.setHeight(max);
+            me.iconSepEl.setHeight(me.layout.getRenderTarget().dom.scrollHeight);
+        }
+        me.el.setY(returnY);
     }
 });

@@ -25,7 +25,7 @@ Ext.define('Ext.ApplicationManager', {
     }
 }, function() {
     /**
-     * Shorthand for {@link Ext.ApplicationManager#register}
+     * Shorthand for Ext.ApplicationManager.register
      * Creates a new Application class from the specified config object. See {@link Ext.Application} for full examples.
      * 
      * @param {Object} config A configuration object for the Model you wish to create.

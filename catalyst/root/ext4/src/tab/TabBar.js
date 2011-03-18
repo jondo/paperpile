@@ -11,7 +11,11 @@ Ext.define('Ext.tab.TabBar', {
     alias: 'widget.tabbar',
     baseCls: Ext.baseCSSPrefix + 'tab-bar',
 
-    requires: ['Ext.tab.Tab'],
+    requires: [
+        'Ext.tab.Tab',
+        'Ext.FocusManager',
+        'Ext.util.KeyNav'
+    ],
 
     // @private
     defaultType: 'tab',
@@ -64,6 +68,9 @@ Ext.define('Ext.tab.TabBar', {
 
         // TabBar must override the Header's align setting.
         me.layout.align = (me.orientation == 'vertical') ? 'left' : 'top';
+        me.layout.overflowHandler = Ext.create('Ext.layout.container.boxOverflow.Scroller', me.layout);
+        me.items.removeAt(me.items.getCount() - 1);
+        me.items.removeAt(me.items.getCount() - 1);
     },
 
     // @private
@@ -71,49 +78,74 @@ Ext.define('Ext.tab.TabBar', {
         var me = this,
             tabPanel = me.tabPanel,
             hasOwner = !!tabPanel;
-            
+
         me.callParent(arguments);
-        
         tab.position = me.dock;
-        tab.minWidth = me.minTabWidth || (hasOwner ? tabPanel.minTabWidth : undefined);
+        if (hasOwner) {
+            tab.minWidth = tabPanel.minTabWidth;
+        }
+        else {
+            tab.minWidth = me.minTabWidth + (tab.iconCls ? 25 : 0);
+        }
         tab.maxWidth = me.maxTabWidth || (hasOwner ? tabPanel.maxTabWidth : undefined);
+    },
+    
+    // @private
+    onDestroy: function() {
+        var me = this;
+        Ext.destroy(me.keyNav);
+        delete me.keyNav;
+        me.callParent(arguments);
     },
 
     // @private
     afterRender: function() {
         var me = this;
-        
+
         me.mon(me.el, {
             scope: me,
             click: me.onClick,
             delegate: '.' + Ext.baseCSSPrefix + 'tab'
         });
-        
         me.callParent(arguments);
+        
+        me.keyNav = Ext.create('Ext.util.KeyNav', me.el, {
+            left: me.onNavKey,
+            right: me.onNavKey,
+            scope: me
+        });
     },
 
     afterComponentLayout : function() {
         var me = this;
-        
+
         me.callParent(arguments);
-        me.strip.appendTo(me.layout.getRenderTarget());
         me.strip.setWidth(me.el.getWidth());
+    },
+    
+    // @private
+    onNavKey: function(e) {
+        var me = this;
+        me.focusedCmp = Ext.FocusManager.navigateSiblings(e, me, me);
     },
 
     // @private
     onClick: function(e, target) {
-        // target is a valid tab el since the click event is filtered in the event handler
+        // The target might not be a valid tab el.
         var tab = Ext.getCmp(target.id),
             tabPanel = this.tabPanel;
 
-        if (!tab.isDisabled()) {
-            if (tab.overMenuTrigger) {
+        target = e.getTarget();
+
+        if (tab && tab.isDisabled && !tab.isDisabled()) {
+            if (target === tab.btnWrap.dom && target != tab.btnEl.dom) {
                 tab.onCloseClick();
             } else {
                 this.setActiveTab(tab);
                 if (tabPanel) {
                     tabPanel.setActiveTab(tab.card);
                 }
+                tab.focus();
             }
         }
     },
@@ -140,6 +172,10 @@ Ext.define('Ext.tab.TabBar', {
         if (tabPanel && card) {
             tabPanel.remove(card);
         }
+        
+        if (nextTab) {
+            nextTab.focus();
+        }
     },
 
     /**
@@ -159,6 +195,7 @@ Ext.define('Ext.tab.TabBar', {
             }
             tab.activate();
             me.doLayout();
+            tab.el.scrollIntoView(me.layout.getRenderTarget());
         }
         me.activeTab = tab;
         me.fireEvent('change', me, tab, tab.card);

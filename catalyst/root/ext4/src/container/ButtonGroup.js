@@ -72,36 +72,61 @@ Ext.define('Ext.container.ButtonGroup', {
      * @cfg {Boolean} frame  Defaults to <tt>true</tt>.  See {@link Ext.panel.Panel#frame}.
      */
     frame: true,
+    
+    frameHeader: false,
+    
     internalDefaults: {removeMode: 'container', hideParent: true},
 
     initComponent : function(){
         // Copy the component's columns config to the layout if specified
         var me = this,
             cols = me.columns;
+        
         me.noTitleCls = me.baseCls + '-notitle';
         if (cols) {
             me.layout = Ext.apply({}, {columns: cols}, me.layout);
         }
 
-        if(!me.title){
+        if (!me.title) {
             me.addCls(me.noTitleCls);
+        }
+        
+        me.callParent(arguments);
+    },
+    
+    afterRender: function() {
+        //we need to add an addition item in here so the ButtonGroup title is centered
+        if (this.header) {
+            this.header.insert(0, {
+                xtype: 'component',
+                html : '&nbsp;',
+                flex : 1
+            });
+        }
+        
+        this.callParent(arguments);
+    },
+    
+    // private
+    onBeforeAdd: function(component) {
+        if (component.is('button')) {
+            component.ui = 'toolbar';
         }
         this.callParent(arguments);
     },
 
-    applyDefaults : function(c){
-        c = Ext.container.ButtonGroup.superclass.applyDefaults.call(this, c);
-        var d = this.internalDefaults;
-        if(c.events){
-            Ext.applyIf(c.initialConfig, d);
-            Ext.apply(c, d);
-        }else{
-            Ext.applyIf(c, d);
+    //private
+    applyDefaults: function(c) {
+        if (!Ext.isString(c)) {
+            c = this.callParent(arguments);
+            var d = this.internalDefaults;
+            if (c.events) {
+                Ext.applyIf(c.initialConfig, d);
+                Ext.apply(c, d);
+            } else {
+                Ext.applyIf(c, d);
+            }
         }
         return c;
     }
-
-    /**
-     * @cfg {Array} tools  @hide
-     */
 });

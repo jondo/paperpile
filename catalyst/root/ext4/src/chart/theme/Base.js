@@ -20,38 +20,38 @@ Ext.define('Ext.chart.theme.Base', {
             },
             axisLabelTop: {
                 fill: '#444',
-                font: '12px "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif',
+                font: '12px Arial, Helvetica, sans-serif',
                 spacing: 2,
                 padding: 5,
                 renderer: function(v) { return v; }
             },
             axisLabelRight: {
                 fill: '#444',
-                font: '12px "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif',
+                font: '12px Arial, Helvetica, sans-serif',
                 spacing: 2,
                 padding: 5,
                 renderer: function(v) { return v; }
             },
             axisLabelBottom: {
                 fill: '#444',
-                font: '12px "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif',
+                font: '12px Arial, Helvetica, sans-serif',
                 spacing: 2,
                 padding: 5,
                 renderer: function(v) { return v; }
             },
             axisLabelLeft: {
                 fill: '#444',
-                font: '12px "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif',
+                font: '12px Arial, Helvetica, sans-serif',
                 spacing: 2,
                 padding: 5,
                 renderer: function(v) { return v; }
             },
             axisTitleTop: {
-                font: 'bold 18px Lucida Grande',
+                font: 'bold 18px Arial',
                 fill: '#444'
             },
             axisTitleRight: {
-                font: 'bold 18px Lucida Grande',
+                font: 'bold 18px Arial',
                 fill: '#444',
                 rotate: {
                     x:0, y:0,
@@ -59,11 +59,11 @@ Ext.define('Ext.chart.theme.Base', {
                 }
             },
             axisTitleBottom: {
-                font: 'bold 18px Lucida Grande',
+                font: 'bold 18px Arial',
                 fill: '#444'
             },
             axisTitleLeft: {
-                font: 'bold 18px Lucida Grande',
+                font: 'bold 18px Arial',
                 fill: '#444',
                 rotate: {
                     x:0, y:0,

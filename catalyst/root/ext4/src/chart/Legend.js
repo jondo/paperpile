@@ -114,6 +114,10 @@ Ext.define('Ext.chart.Legend', {
          * @type {Boolean}
          */
         me.isVertical = ("left|right|float".indexOf(me.position) !== -1);
+        
+        // cache these here since they may get modified later on
+        me.origX = me.x;
+        me.origY = me.y;
     },
 
     /**
@@ -146,6 +150,7 @@ Ext.define('Ext.chart.Legend', {
             items = me.items,
             padding = me.padding,
             itemSpacing = me.itemSpacing,
+            spacingOffset = 2,
             maxWidth = 0,
             maxHeight = 0,
             totalWidth = 0,
@@ -154,24 +159,19 @@ Ext.define('Ext.chart.Legend', {
             math = Math,
             mfloor = math.floor,
             mmax = math.max,
-            index = 0, i, j, l, lelem,
+            index = 0, 
+            i = 0, 
+            len = items ? items.length : 0,
             x, y, spacing, item, bbox, height, width;
 
         //remove all legend items
-        if (items && items.length) {
-            for (i = 0, l = items.length; i < l; i++) {
-                item = items[i];
-                item.setAttributes({
-                    hidden: true
-                }, true);
-                
-                for (j = 0, lelem = item.items.length; j < lelem; j++) {
-                    surface.remove(item.items[j]);
-                }
+        if (len) {
+            for (; i < len; i++) {
+                items[i].destroy();
             }
         }
         //empty array
-        items.length = 0;
+        items.length = [];
         // Create all the item labels, collecting their dimensions and positioning each one
         // properly in relation to the previous item
         chart.series.each(function(series, i) {
@@ -212,7 +212,10 @@ Ext.define('Ext.chart.Legend', {
 
         // Store the collected dimensions for later
         me.width = mfloor((vertical ? maxWidth : totalWidth) + padding * 2);
-        me.height = mfloor((vertical ? totalHeight - 2 * spacing : maxHeight) + (padding * 2));
+        if (vertical && items.length === 1) {
+            spacingOffset = 1;
+        }
+        me.height = mfloor((vertical ? totalHeight - spacingOffset * spacing : maxHeight) + (padding * 2));
         me.itemHeight = maxHeight;
     },
 
@@ -283,8 +286,8 @@ Ext.define('Ext.chart.Legend', {
                     y = mfloor(surface.height - legendHeight) - insets;
                     break;
                 default:
-                    x = mfloor(me.x) + insets;
-                    y = mfloor(me.y) + insets;
+                    x = mfloor(me.origX) + insets;
+                    y = mfloor(me.origY) + insets;
             }
             me.x = x;
             me.y = y;

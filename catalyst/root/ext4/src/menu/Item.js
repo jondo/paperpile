@@ -206,7 +206,11 @@ Ext.define('Ext.menu.Item', {
         
         if (me.menu) {
             clearTimeout(me.hideMenuTimer);
-            me.expandMenuTimer = Ext.defer(me.deferExpandMenu, Ext.isNumber(delay) ? delay : me.menuExpandDelay, me);
+            if (delay === 0) {
+                me.deferExpandMenu();
+            } else {
+                me.expandMenuTimer = Ext.defer(me.deferExpandMenu, Ext.isNumber(delay) ? delay : me.menuExpandDelay, me);
+            }
         }
     },
     
@@ -295,6 +299,10 @@ Ext.define('Ext.menu.Item', {
         
         Ext.callback(me.handler, me.scope || me, [me, e]);
         me.fireEvent('click', me, e);
+        
+        if (!me.hideOnClick) {
+            me.focus();
+        }
     },
     
     onDestroy: function() {

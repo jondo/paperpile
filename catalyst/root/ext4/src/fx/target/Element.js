@@ -1,9 +1,7 @@
 /**
  * @class Ext.fx.target.Element
  * @private
- * @extends Objects
  */
-
 Ext.define('Ext.fx.target.Element', {
 
     /* Begin Definitions */

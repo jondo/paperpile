@@ -60,9 +60,11 @@ Ext.define('Ext.util.Stateful', {
      * @param {Mixed} value The value to set
      */
     set: function(fieldName, value) {
-        var fields = this.fields,
+        var me = this,
+            fields = me.fields,
+            modified = me.modified,
             convertFields = [],
-            field, key, i;
+            field, key, i, currentValue;
 
         /*
          * If we're passed an object, iterate over that object. NOTE: we pull out fields with a convert function and
@@ -82,12 +84,12 @@ Ext.define('Ext.util.Stateful', {
                     continue;
                 }
 
-                this.set(key, fieldName[key]);
+                me.set(key, fieldName[key]);
             }
 
             for (i = 0; i < convertFields.length; i++) {
                 field = convertFields[i];
-                this.set(field, fieldName[field]);
+                me.set(field, fieldName[field]);
             }
 
         } else {
@@ -95,16 +97,18 @@ Ext.define('Ext.util.Stateful', {
                 field = fields.get(fieldName);
 
                 if (field && field.convert) {
-                    value = field.convert(value, this);
+                    value = field.convert(value, me);
                 }
             }
+            currentValue = me.get(fieldName);
+            me[me.persistanceProperty][fieldName] = value;
+            if (currentValue !== value) {
+                me.dirty = true;
+                me.modified[fieldName] = currentValue;
+            }
 
-            this[this.persistanceProperty][fieldName] = value;
-
-            this.setDirty();
-
-            if (!this.editing) {
-                this.afterEdit();
+            if (!me.editing) {
+                me.afterEdit();
             }
         }
     },
@@ -120,7 +124,7 @@ Ext.define('Ext.util.Stateful', {
 
         for (field in modified) {
             if (modified.hasOwnProperty(field)){
-                changes[field] = this[this.persistanceProperty][field];
+                changes[field] = this.get(field);
             }
         }
 
@@ -134,7 +138,7 @@ Ext.define('Ext.util.Stateful', {
      * @return {Boolean}
      */
     isModified : function(fieldName) {
-        return !!(this.modified && this.modified.hasOwnProperty(fieldName));
+        return this.modified.hasOwnProperty(fieldName);
     },
 
     /**
@@ -147,15 +151,14 @@ Ext.define('Ext.util.Stateful', {
      * operations.</p>
      */
     setDirty : function() {
-        this.dirty = true;
+        var me = this,
+            name;
+        
+        me.dirty = true;
 
-        if (!this.modified) {
-            this.modified = {};
-        }
-
-        this.fields.each(function(field) {
-            this.modified[field.name] = this[this.persistanceProperty][field.name];
-        }, this);
+        me.fields.each(function(field) {
+            me.modified[name] = me.get(name);
+        }, me);
     },
 
     //<debug>
@@ -174,24 +177,24 @@ Ext.define('Ext.util.Stateful', {
      * store of the change (defaults to false)
      */
     reject : function(silent) {
-        var modified = this.modified,
+        var me = this,
+            modified = me.modified,
             field;
 
         for (field in modified) {
-            if (!modified.hasOwnProperty(field)) {
-                continue;
-            }
-            if (typeof modified[field] != "function") {
-                this[this.persistanceProperty][field] = modified[field];
+            if (modified.hasOwnProperty(field)) {
+                if (typeof modified[field] != "function") {
+                    me[me.persistanceProperty][field] = modified[field];
+                }
             }
         }
 
-        this.dirty = false;
-        this.editing = false;
-        delete this.modified;
+        me.dirty = false;
+        me.editing = false;
+        me.modified = {};
 
         if (silent !== true) {
-            this.afterReject();
+            me.afterReject();
         }
     },
 
@@ -204,13 +207,15 @@ Ext.define('Ext.util.Stateful', {
      * store of the change (defaults to false)
      */
     commit : function(silent) {
-        this.dirty = false;
-        this.editing = false;
+        var me = this;
+        
+        me.dirty = false;
+        me.editing = false;
 
-        delete this.modified;
+        me.modified = {};
 
         if (silent !== true) {
-            this.afterCommit();
+            me.afterCommit();
         }
     },
 
@@ -225,6 +230,8 @@ Ext.data.Model.id(rec); // automatically generate a unique sequential id
      * @return {Record}
      */
     copy : function(newId) {
-        return new this.self(Ext.apply({}, this[this.persistanceProperty]), newId || this.internalId);
+        var me = this;
+        
+        return new me.self(Ext.apply({}, me[me.persistanceProperty]), newId || me.internalId);
     }
 });

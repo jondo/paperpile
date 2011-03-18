@@ -35,8 +35,9 @@ Ext.define('Ext.util.Offset', {
     },
 
     equals: function(offset) {
-        if(!(offset instanceof this.statics()))
+        if(!(offset instanceof this.statics())) {
             throw new Error('offset must be an instance of Ext.util.Offset');
+        }
 
         return (this.x == offset.x && this.y == offset.y);
     },

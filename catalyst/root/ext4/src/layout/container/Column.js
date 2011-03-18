@@ -1,9 +1,9 @@
 /**
  * @class Ext.layout.container.Column
- * @extends Ext.layout.container.HBox
+ * @extends Ext.layout.container.Auto
  * <p>This is the layout style of choice for creating structural layouts in a multi-column format where the width of
  * each column can be specified as a percentage or fixed width, but the height is allowed to vary based on the content.
- * This class is intended to be extended or created via the layout:'column' {@link Ext.container.Container#layout} config,
+ * This class is intended to be extended or created via the layout:'column' {@link Ext.Container#layout} config,
  * and should generally not need to be created directly via the new keyword.</p>
  * <p>ColumnLayout does not have any direct config options (other than inherited ones), but it does support a
  * specific config property of <b><tt>columnWidth</tt></b> that can be included in the config of any panel added to it.  The
@@ -22,7 +22,7 @@
  * layout may not render as expected.  Example usage:</p>
  * <pre><code>
 // All columns are percentages -- they must add up to 1
-var p = new Ext.panel.Panel({
+var p = new Ext.Panel({
     title: 'Column Layout - Percentage Only',
     layout:'column',
     items: [{
@@ -40,7 +40,7 @@ var p = new Ext.panel.Panel({
 // Mix of width and columnWidth -- all columnWidth values must add up
 // to 1. The first column will take up exactly 120px, and the last two
 // columns will fill the remaining container width.
-var p = new Ext.panel.Panel({
+var p = new Ext.Panel({
     title: 'Column Layout - Mixed',
     layout:'column',
     items: [{
@@ -56,28 +56,89 @@ var p = new Ext.panel.Panel({
 });
 </code></pre>
  */
-
 Ext.define('Ext.layout.container.Column', {
 
-    /* Begin Definitions */
+    extend: 'Ext.layout.container.Auto',
 
     alias: ['layout.column'],
 
-    extend: 'Ext.layout.container.HBox',
+    type: 'column',
 
-    /* End Definitions */
+    itemCls: Ext.baseCSSPrefix + 'column',
 
-    type : 'column',
-    onLayout: function() {
-        var items = this.getLayoutItems(),
-            ln = items.length,
-            i = 0,
-            item;
+    scrollOffset : 0,
 
-        for (; i < ln; i++) {
-            item = items[i];
-            item.flex = item.columnWidth;
+    targetCls: Ext.baseCSSPrefix + 'column-layout-ct',
+
+    getRenderTarget : function() {
+        if(!this.innerCt){
+            // the innerCt prevents wrapping and shuffling while
+            // the container is resizing
+            this.innerCt = this.getTarget().createChild({
+                cls: Ext.baseCSSPrefix + 'column-inner'
+            });
+            this.innerCt.createChild({
+                cls: Ext.baseCSSPrefix + 'clear'
+            });
         }
-        Ext.layout.container.Column.superclass.onLayout.call(this);
+        return this.innerCt;
+    },
+
+    // private
+    onLayout : function() {
+        var target = this.getTarget(),
+            cs = this.getLayoutItems(),
+            len = cs.length,
+            c,
+            i,
+            m,
+            margins = [],
+            size = this.getLayoutTargetSize();
+
+        if(size.width < 1 && size.height < 1){ // display none?
+            return;
+        }
+
+        var w = size.width - this.scrollOffset,
+            h = size.height,
+            pw = w;
+
+        this.innerCt.setWidth(w);
+
+        // some columns can be percentages while others are fixed
+        // so we need to make 2 passes
+
+        for(i = 0; i < len; i++){
+            c = cs[i];
+            m = c.getEl().getMargin('lr');
+            margins[i] = m;
+            if(!c.columnWidth){
+                pw -= (c.getWidth() + m);
+            }
+        }
+
+        pw = pw < 0 ? 0 : pw;
+
+        for(i = 0; i < len; i++){
+            c = cs[i];
+            m = margins[i];
+            if(c.columnWidth){
+                c.setSize(Math.floor(c.columnWidth * pw) - m);
+            }
+        }
+
+        // Browsers differ as to when they account for scrollbars.  We need to re-measure to see if the scrollbar
+        // spaces were accounted for properly.  If not, re-layout.
+        if (Ext.isIE) {
+            i = target.getStyle('overflow');
+            if (i && i != 'hidden' && !this.adjustmentPass) {
+                var ts = this.getLayoutTargetSize();
+                if (ts.width != size.width){
+                    this.adjustmentPass = true;
+                    this.onLayout();
+                }
+            }
+        }
+        delete this.adjustmentPass;
     }
 });

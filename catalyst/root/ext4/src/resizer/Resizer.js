@@ -193,10 +193,18 @@ Ext.define('Ext.resizer.Resizer', {
         if (target) {
             if (target.isComponent) {
                 me.el = target.getEl();
-                target.minWidth && (me.minWidth = target.minWidth);
-                target.minHeight && (me.minHeight = target.minHeight);
-                target.maxWidth && (me.maxWidth = target.maxWidth);
-                target.maxHeight && (me.maxHeight = target.maxHeight);
+                if (target.minWidth) {
+                    me.minWidth = target.minWidth;
+                }
+                if (target.minHeight) {
+                    me.minHeight = target.minHeight;
+                }
+                if (target.maxWidth) {
+                    me.maxWidth = target.maxWidth;
+                }
+                if (target.maxHeight) {
+                    me.maxHeight = target.maxHeight;
+                }
                 if (target.floating) {
                     if (!this.hasOwnProperty('handles')) {
                         this.handles = 'n ne e se s sw w nw';

@@ -202,7 +202,7 @@ Ext.define('Ext.dd.DropZone', {
      */
     notifyOver : function(dd, e, data){
         var n = this.getTargetFromEvent(e);
-        if(!n){ // not over valid drop target
+        if(!n) { // not over valid drop target
             if(this.lastOverNode){
                 this.onNodeOut(this.lastOverNode, dd, e, data);
                 this.lastOverNode = null;
@@ -256,7 +256,7 @@ Ext.define('Ext.dd.DropZone', {
     },
 
     // private
-    triggerCacheRefresh : function(){
+    triggerCacheRefresh : function() {
         Ext.dd.DDM.refreshCache(this.groups);
     }
 });

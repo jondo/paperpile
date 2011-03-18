@@ -188,5 +188,32 @@ Ext.define('Ext.data.HasManyAssociation', {
             
             return me[storeName];
         };
+    },
+    
+    /**
+     * Read associated data
+     * @private
+     * @param {Ext.data.Model} record The record we're writing to
+     * @param {Ext.data.Reader} reader The reader for the associated model
+     * @param {Object} associationData The raw associated data
+     */
+    read: function(record, reader, associationData){
+        var store = record[this.name](),
+            inverse;
+    
+        store.add(reader.read(associationData).records);
+    
+        //now that we've added the related records to the hasMany association, set the inverse belongsTo
+        //association on each of them if it exists
+        inverse = this.associatedModel.prototype.associations.findBy(function(assoc){
+            return assoc.type === 'belongsTo' && assoc.associatedName === record.$className;
+        });
+    
+        //if the inverse association was found, set it now on each record we've just created
+        if (inverse) {
+            store.data.each(function(associatedRecord){
+                associatedRecord[inverse.instanceName] = record;
+            });
+        }
     }
 });

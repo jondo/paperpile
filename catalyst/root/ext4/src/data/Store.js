@@ -945,10 +945,12 @@ store.sort('myField', 'DESC');
         
         me.filters.clear();
         
-        if (me.isFiltered()) {
+        if (me.remoteFilter) {
+            me.load();
+        } else if (me.isFiltered()) {
             me.data = me.snapshot.clone();
             delete me.snapshot;
-
+                
             if (suppressEvent !== true) {
                 me.fireEvent('datachanged', me);
             }

@@ -147,8 +147,11 @@ Ext.define('Ext.form.FormPanel', {
 
     initItems: function() {
         // Create the BasicForm
-        this.form = this.createForm();
-        this.callParent();
+        var me = this;
+        
+        me.form = me.createForm();
+        me.callParent();
+        me.form.initialize();
     },
 
     /**

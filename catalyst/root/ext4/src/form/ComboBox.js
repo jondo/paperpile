@@ -318,33 +318,34 @@ var combo = new Ext.form.ComboBox({
 
 
     //<debug>
-    deprecatedProperties: [
-        // slated to be removed/yet to be implemented
-        'autoCreate',
-        'clearFilterOnReset',
-        'handleHeight',
-        'hiddenId',
-        'hiddenName',
-        'itemSelector', // could be passed to BoundList config
-        'lazyInit',
-        'lazyRender',
-        'listAlign', // -> pickerAlign
-        'listClass', // could be passed to BoundList config's cls
-        'loadingText', // -> listLoadingText
-        'maxHeight', // -> listMaxHeight
-        'minHeight', // -> ???
-        'minListWidth', // -> ???
-        'mode', // -> queryMode
-        'pageSize',
-        'resizable', // could be passed to BoundList config
-        'selectedClass', // could be passed to BoundList config's selectedItemCls
-        'shadow', // could be passed to BoundList config's floating.shadow
-        'title',
-        'tpl', // -> getInnerTpl
-        'transform',
-        'triggerClass', // -> triggerCls,
-        'valueNotFoundText' // -> ???
-    ],
+    // Moved to ext3-compat.js
+//    deprecatedProperties: [
+//        // slated to be removed/yet to be implemented
+//        'autoCreate',
+//        'clearFilterOnReset',
+//        'handleHeight',
+//        'hiddenId',
+//        'hiddenName',
+//        'itemSelector', // could be passed to BoundList config
+//        'lazyInit',
+//        'lazyRender',
+//        'listAlign', // -> pickerAlign
+//        'listClass', // could be passed to BoundList config's cls
+//        'loadingText', // -> listLoadingText
+//        'maxHeight', // -> listMaxHeight
+//        'minHeight', // -> ???
+//        'minListWidth', // -> ???
+//        'mode', // -> queryMode
+//        'pageSize',
+//        'resizable', // could be passed to BoundList config
+//        'selectedClass', // could be passed to BoundList config's selectedItemCls
+//        'shadow', // could be passed to BoundList config's floating.shadow
+//        'title',
+//        'tpl', // -> getInnerTpl
+//        'transform',
+//        'triggerClass', // -> triggerCls,
+//        'valueNotFoundText' // -> ???
+//    ],
     //</debug>
     
     
@@ -360,26 +361,26 @@ var combo = new Ext.form.ComboBox({
 
         //<debug>
         if (!me.store) {
-            throw "Ext.form.ComboBox: No store defined on ComboBox.";
+            throw "Ext.form.ComboBox: A valid store instance must be configured on the ComboBox.";
         }
         if (me.typeAhead && me.multiSelect) {
-            throw "Ext.form.ComboBox: typeAhead and multiSelect are mutually exclusive options.";
+            throw "Ext.form.ComboBox: typeAhead and multiSelect are mutually exclusive options -- please remove one of them.";
         }
         if (me.typeAhead && !me.editable) {
-            throw "Ext.form.ComboBox: typeAhead must be used in conjunction with editable.";
+            throw "Ext.form.ComboBox: If typeAhead is enabled the combo must be editable: true.";
         }
         if (me.selectOnFocus && !me.editable) {
-            throw "Ext.form.ComboBox: selectOnFocus must be used in conjunction with editable.";
+            throw "Ext.form.ComboBox: If selectOnFocus is enabled the combo must be editable: true.";
         }
 
-        var dp = me.deprecatedProperties,
-            ln = dp.length,
-            i  = 0;
-        for (; i < ln; i++) {
-            if (isDefined(me[dp[i]])) {
-                throw dp[i] + " is no longer supported.";
-            }
-        }
+//        var dp = me.deprecatedProperties,
+//            ln = dp.length,
+//            i  = 0;
+//        for (; i < ln; i++) {
+//            if (isDefined(me[dp[i]])) {
+//                throw dp[i] + " is no longer supported.";
+//            }
+//        }
         //</debug>
 
         this.addEvents(
@@ -688,6 +689,7 @@ var combo = new Ext.form.ComboBox({
 
     createPicker: function() {
         var me = this,
+            value = me.value,
             picker,
             opts = {
                 selModel: {
@@ -702,7 +704,8 @@ var combo = new Ext.form.ComboBox({
                 width: me.listWidth,
                 maxHeight: me.listMaxHeight,
                 loadingText: me.listLoadingText,
-                emptyText: me.listEmptyText
+                emptyText: me.listEmptyText,
+                focusOnToFront: false
             };
 
         if (me.getInnerTpl) {
@@ -712,8 +715,11 @@ var combo = new Ext.form.ComboBox({
         picker = new Ext.view.BoundList(opts);
 
         // Ensure the selected Models display as selected.
-        if (me.value) {
-            me.select(me.value.split(me.delimiter));
+        if (Ext.isDefined(value)) {
+            if (Ext.isString(value)) {
+                value = value.split(me.delimiter);
+            }
+            me.select(value);
         }
 
         me.mon(picker.getSelectionModel(), {

@@ -32,7 +32,7 @@ Ext.define('Ext.menu.CheckItem', {
      * @cfg {String} groupCls
      * The CSS class applied to this item's icon image to denote being a part of a radio group.
      * Defaults to `Ext.baseCSSClass + 'menu-group-icon'`.
-     * Any specified {@link iconCls} overrides this.
+     * Any specified {@link #iconCls} overrides this.
      * @markdown
      */
     groupCls: Ext.baseCSSPrefix + 'menu-group-icon',
@@ -96,7 +96,7 @@ Ext.define('Ext.menu.CheckItem', {
 
     onDestroy: function() {
         Ext.menu.MenuManager.unregisterCheckable(this);
-        Ext.menu.CheckItem.superclass.onDestroy.call(this);
+        this.callParent(arguments);
     },
 
     /**

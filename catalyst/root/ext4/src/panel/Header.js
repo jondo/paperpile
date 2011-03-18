@@ -95,6 +95,7 @@ Ext.define('Ext.panel.Header', {
             me.titleCmp = new Ext.Component({
                 xtype     : 'component',
                 ariaRole  : 'heading',
+                focusable: false,
                 renderTpl : ['<span class="{cls}-text">{title}</span>'],
                 renderData: {
                     title: me.title,
@@ -111,7 +112,8 @@ Ext.define('Ext.panel.Header', {
         me.items.push({
             xtype: 'component',
             html : '&nbsp;',
-            flex : 1
+            flex : 1,
+            focusable: false
         });
 
         // Add Tools
@@ -136,11 +138,23 @@ Ext.define('Ext.panel.Header', {
     },
 
     afterRender: function() {
-        this.el.unselectable();
-        if (this.indicateDrag) {
-            this.el.addCls(this.indicateDragCls);
+        var me = this;
+
+        me.el.unselectable();
+        if (me.indicateDrag) {
+            me.el.addCls(me.indicateDragCls);
         }
-        this.callParent();
+        me.mon(me.el, {
+            click: me.onClick,
+            scope: me
+        });
+        me.callParent();
+    },
+
+    onClick: function(e) {
+        if (!e.getTarget(Ext.baseCSSPrefix + 'tool')) {
+            this.fireEvent('click', e);
+        }
     },
 
     getTargetEl: function() {

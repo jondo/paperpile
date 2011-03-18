@@ -74,7 +74,7 @@ Ext.define('Ext.layout.AbstractContainer', {
 
     /**
     * Set the size of an item within the Container.  We should always use setCalculatedSize.
-    * @private.
+    * @private
     */
     setItemSize: function(item, width, height) {
         if (Ext.isObject(width)) {

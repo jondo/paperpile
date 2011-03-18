@@ -18,29 +18,31 @@ Ext.define('Ext.form.Basic', {
     requires: ['Ext.util.MixedCollection', 'Ext.form.action.Load', 'Ext.form.action.Submit', 'Ext.window.MessageBoxWindow'],
 
     constructor: function(owner, config) {
+        var me = this,
+            onItemAddOrRemove = me.onItemAddOrRemove;
+            
         /**
          * @property owner
          * @type Ext.container.Container
          * The container component to which this BasicForm is attached.
          */
-        this.owner = owner;
+        me.owner = owner;
 
         // Listen for addition/removal of fields in the owner container
-        var onItemAddOrRemove = this.onItemAddOrRemove;
-        this.mon(owner, {
+        me.mon(owner, {
             add: onItemAddOrRemove,
             remove: onItemAddOrRemove,
-            scope: this
+            scope: me
         });
 
-        Ext.apply(this, config);
+        Ext.apply(me, config);
 
         // Normalize the paramOrder to an Array
-        if (Ext.isString(this.paramOrder)) {
-            this.paramOrder = this.paramOrder.split(/[\s,|]/);
+        if (Ext.isString(me.paramOrder)) {
+            me.paramOrder = me.paramOrder.split(/[\s,|]/);
         }
 
-        this.addEvents(
+        me.addEvents(
             /**
              * @event beforeaction
              * Fires before any action is performed. Return false to cancel the action.
@@ -77,8 +79,16 @@ Ext.define('Ext.form.Basic', {
              */
             'dirtychange'
         );
-
-        Ext.form.Basic.superclass.constructor.call(this);
+        me.callParent();
+    },
+    
+    /**
+     * Do any post constructor initialization
+     * @private
+     */
+    initialize: function(){
+        this.initialized = true;
+        this.onValidityChange(!this.hasInvalidField());
     },
 
     /**
@@ -118,7 +128,7 @@ Ext.define('Ext.form.Basic', {
     /**
      * @cfg {Object} baseParams
      * <p>Parameters to pass with all requests. e.g. baseParams: {id: '123', foo: 'bar'}.</p>
-     * <p>Parameters are encoded as standard HTTP parameters using {@link Ext#urlEncode}.</p>
+     * <p>Parameters are encoded as standard HTTP parameters using {@link Ext#urlEncode Ext.urlEncode}.</p>
      */
 
     /**
@@ -129,7 +139,7 @@ Ext.define('Ext.form.Basic', {
     /**
      * @cfg {Object} api (Optional) If specified, load and submit actions will be handled
      * with {@link Ext.form.action.DirectLoad} and {@link Ext.form.action.DirectLoad}.
-     * Methods which have been imported by {@link Ext.direct.Direct} can be specified here to load and submit
+     * Methods which have been imported by {@link Ext.direct.Manager} can be specified here to load and submit
      * forms.
      * Such as the following:<pre><code>
 api: {
@@ -140,7 +150,7 @@ api: {
      * <p>Load actions can use <code>{@link #paramOrder}</code> or <code>{@link #paramsAsHash}</code>
      * to customize how the load method is invoked.
      * Submit actions will always use a standard form submit. The <tt>formHandler</tt> configuration must
-     * be set on the associated server-side method which has been imported by {@link Ext.direct.Direct}.</p>
+     * be set on the associated server-side method which has been imported by {@link Ext.direct.Manager}.</p>
      */
 
     /**
@@ -238,6 +248,11 @@ paramOrder: 'param1|param2|param'
 
         // Flush the cached list of formBind components
         delete this._boundItems;
+        
+        // Check form bind, but only after initial add
+        if (me.initialized) {
+            me.onValidityChange(!me.hasInvalidField());
+        }
     },
 
     /**
@@ -396,7 +411,7 @@ paramOrder: 'param1|param2|param'
      *
      * <li><b>params</b> : String/Object<div class="sub-desc"><p>The params to pass
      * (defaults to the form's baseParams, or none if not defined)</p>
-     * <p>Parameters are encoded as standard HTTP parameters using {@link Ext#urlEncode}.</p></div></li>
+     * <p>Parameters are encoded as standard HTTP parameters using {@link Ext#urlEncode Ext.urlEncode}.</p></div></li>
      *
      * <li><b>headers</b> : Object<div class="sub-desc">Request headers to set for the action.</div></li>
      *
@@ -746,7 +761,7 @@ myFormPanel.getForm().submit({
     },
 
     /**
-     * Calls {@link Ext#apply} for all fields in this form with the passed object.
+     * Calls {@link Ext#apply Ext.apply} for all fields in this form with the passed object.
      * @param {Object} obj The object to be applied
      * @return {Ext.form.Basic} this
      */
@@ -758,7 +773,7 @@ myFormPanel.getForm().submit({
     },
 
     /**
-     * Calls {@link Ext#applyIf} for all field in this form with the passed object.
+     * Calls {@link Ext#applyIf Ext.applyIf} for all field in this form with the passed object.
      * @param {Object} obj The object to be applied
      * @return {Ext.form.Basic} this
      */

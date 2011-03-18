@@ -12,7 +12,7 @@ Ext.define('Ext.grid.DateHeader', {
     
     /**
      * @cfg {String} format
-     * A formatting string as used by {@link Date#format} to format a Date for this Column
+     * A formatting string as used by {@link Date#format Date.format} to format a Date for this Column
      * (defaults to <tt>'m/d/Y'</tt>).
      */
     format : 'm/d/Y',

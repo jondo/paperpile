@@ -99,7 +99,7 @@ Ext.define('Ext.dd.DD', {
             fly.setXY(aCoord);
             var newLeft = fly.getLeft(true);
             var newTop  = fly.getTop(true);
-            this.deltaSetXY = [ newLeft - oCoord.x, newTop - oCoord.y ];
+            this.deltaSetXY = [newLeft - oCoord.x, newTop - oCoord.y];
         } else {
             fly.setLeftTop(oCoord.x + this.deltaSetXY[0], oCoord.y + this.deltaSetXY[1]);
         }

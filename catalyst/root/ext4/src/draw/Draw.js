@@ -656,8 +656,12 @@ Ext.define('Ext.draw.Draw', {
             y = [p1y, p2y],
             x = [p1x, p2x],
             dot;
-        Math.abs(t1) > 1e12 && (t1 = 0.5);
-        Math.abs(t2) > 1e12 && (t2 = 0.5);
+        if (Math.abs(t1) > 1e12) {
+            t1 = 0.5;
+        }
+        if (Math.abs(t2) > 1e12) {
+            t2 = 0.5;
+        }
         if (t1 > 0 && t1 < 1) {
             dot = this.findDotAtSegment(p1x, p1y, c1x, c1y, c2x, c2y, p2x, p2y, t1);
             x.push(dot.x);
@@ -673,8 +677,12 @@ Ext.define('Ext.draw.Draw', {
         c = p1y - c1y;
         t1 = (-b + Math.sqrt(b * b - 4 * a * c)) / 2 / a;
         t2 = (-b - Math.sqrt(b * b - 4 * a * c)) / 2 / a;
-        Math.abs(t1) > 1e12 && (t1 = 0.5);
-        Math.abs(t2) > 1e12 && (t2 = 0.5);
+        if (Math.abs(t1) > 1e12) {
+            t1 = 0.5;
+        }
+        if (Math.abs(t2) > 1e12) {
+            t2 = 0.5;
+        }
         if (t1 > 0 && t1 < 1) {
             dot = this.findDotAtSegment(p1x, p1y, c1x, c1y, c2x, c2y, p2x, p2y, t1);
             x.push(dot.x);

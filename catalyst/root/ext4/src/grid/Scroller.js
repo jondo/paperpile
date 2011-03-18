@@ -10,8 +10,9 @@
 Ext.define('Ext.grid.Scroller', {
     extend: 'Ext.Component',
     alias: 'widget.gridscroller',
-    
+    weight: 110,
     cls: Ext.baseCSSPrefix + 'scroller',
+    focusable: false,
     
     renderTpl: ['<div class="' + Ext.baseCSSPrefix + 'stretcher"></div>'],
     
@@ -24,7 +25,8 @@ Ext.define('Ext.grid.Scroller', {
             // BrowserBug: IE8 dictates that there must be at least 1px of viewable
             // area before it will allow you to scroll when clicking on the open
             // area. This adds a 1px visual artificat in IE8.
-            scrollbarWidth = Ext.getScrollBarWidth() - (Ext.isIE ? 1 : 2);
+            scrollbarWidth = Ext.getScrollBarWidth() - (Ext.isIE ? 0 : 1);
+
         me.offsets = {bottom: 0};
 
         if (dock === 'top' || dock === 'bottom') {
@@ -63,7 +65,7 @@ Ext.define('Ext.grid.Scroller', {
         if (dock === 'top' || dock === 'bottom') {
             // TODO: Must gravitate to a single region..
             // Horizontal scrolling only scrolls virtualized region
-            var items  = owner.query('gridview'),
+            var items  = owner.query('tableview'),
                 center = items[1] || items[0];
             
             if (!center) {
@@ -175,7 +177,7 @@ Ext.define('Ext.grid.Scroller', {
     onElScroll: function(event, target) {
         var dock = this.dock,
             owner = this.ownerCt,
-            items = owner.query('gridview'),
+            items = owner.query('tableview'),
             i = 0,
             len = items.length,
             center,

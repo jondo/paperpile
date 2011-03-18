@@ -42,7 +42,7 @@ Ext.define('Ext.data.TreeStore', {
         me.tree = Ext.create('Ext.data.Tree', rootNode);
         me.tree.treeStore = me;
 
-        Ext.data.TreeStore.superclass.constructor.call(me, config);
+        me.callParent([config]);
         
         //<deprecated since=0.99>
         if (Ext.isDefined(me.nodeParameter)) {
@@ -102,11 +102,10 @@ Ext.define('Ext.data.TreeStore', {
             });
             record = node.getRecord();
             options.params[me.nodeParam] = record ? record.getId() : 'root';
-
-            return Ext.data.TreeStore.superclass.load.call(me, options);
+            return me.callParent([options]);
         } else {
             root = reader.getRoot(node.isRoot ? node.attributes : node.getRecord().raw);
-            records = reader.extractData(root, true);
+            records = reader.extractData(root);
             me.fillNode(node, records);
             return true;
         }
@@ -146,6 +145,9 @@ Ext.define('Ext.data.TreeStore', {
                 subStore.removeAll();
             }
             subStore.add.apply(subStore, records);
+            if (subStore.sortOnLoad && !subStore.remoteSort) {
+                subStore.sort();
+            }
         }
     },
 
@@ -170,12 +172,12 @@ Ext.define('Ext.data.TreeStore', {
      * @param {Ext.data.RecordNode/Ext.data.Record} record
      * @returns Ext.data.Store
      */
-    getSubStore: function(node) {
+    getSubStore: function(node, callback, scope) {
         // Remap Record to RecordNode
         if (node && node.node) {
             node = node.node;
         }
-        return node.getSubStore();
+        return node.getSubStore(callback, scope);
     },
 
 

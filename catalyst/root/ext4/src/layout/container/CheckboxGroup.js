@@ -69,7 +69,7 @@ Ext.define('Ext.layout.container.CheckboxGroup', {
 
         if (!shadowCt) {
             // Create the column containers based on the owner's 'columns' config
-            owner = me.owner,
+            owner = me.owner;
             columns = owner.columns;
             columnsIsArray = Ext.isArray(columns);
             numCols = me.getColCount();
@@ -77,11 +77,7 @@ Ext.define('Ext.layout.container.CheckboxGroup', {
             for(i = 0; i < numCols; i++) {
                 item = {
                     xtype: 'container',
-                    layout: 'anchor',
-                    cls: owner.groupCls,
-                    defaults: {
-                        anchor: '100%'
-                    }
+                    cls: owner.groupCls
                 };
                 if (columnsIsArray) {
                     // Array can contain mixture of whole numbers, used as fixed pixel widths, and fractional

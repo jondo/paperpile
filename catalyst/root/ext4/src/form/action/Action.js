@@ -42,7 +42,7 @@ Ext.define('Ext.form.action.Action', {
      * @cfg {Object/String} params <p>Extra parameter values to pass. These are added to the Form's
      * {@link Ext.form.Basic#baseParams} and passed to the specified URL along with the Form's
      * input fields.</p>
-     * <p>Parameters are encoded as standard HTTP parameters using {@link Ext#urlEncode}.</p>
+     * <p>Parameters are encoded as standard HTTP parameters using {@link Ext#urlEncode Ext.urlEncode}.</p>
      */
 
     /**
@@ -83,12 +83,12 @@ Ext.define('Ext.form.action.Action', {
      */
 
     /**
-     * @cfg {String} waitMsg The message to be displayed by a call to {@link Ext.window.MessageBox#wait}
+     * @cfg {String} waitMsg The message to be displayed by a call to {@link Ext.window.MessageBoxWindow#wait}
      * during the time the action is being processed.
      */
 
     /**
-     * @cfg {String} waitTitle The title to be displayed by a call to {@link Ext.window.MessageBox#wait}
+     * @cfg {String} waitTitle The title to be displayed by a call to {@link Ext.window.MessageBoxWindow#wait}
      * during the time the action is being processed.
      */
 

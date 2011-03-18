@@ -10,7 +10,7 @@ Ext.define('Ext.menu.MenuManager', {
         'Ext.util.KeyMap'
     ],
     alternateClassName: 'Ext.menu.MenuMgr',
-    
+
     uses: ['Ext.menu.Menu'],
 
     menus: {},
@@ -55,7 +55,7 @@ Ext.define('Ext.menu.MenuManager', {
             me.attached = false;
         }
     },
-    
+
     onShow: function(m) {
         var me = this,
             active   = me.active,
@@ -101,7 +101,7 @@ Ext.define('Ext.menu.MenuManager', {
         var me = this,
             active = me.active,
             lastShow = me.lastShow;
-            
+
         if (Ext.Date.getElapsed(lastShow) > 50 && active.length > 0 && !e.getTarget('.' + Ext.baseCSSPrefix + 'menu')) {
             me.hideAll();
         }
@@ -153,7 +153,7 @@ Ext.define('Ext.menu.MenuManager', {
         var me = this,
             menus = me.menus,
             active = me.active;
-            
+
         delete menus[menu.id];
         active.remove(menu);
         menu.un('beforehide', me.onBeforeHide, me);
@@ -166,12 +166,12 @@ Ext.define('Ext.menu.MenuManager', {
     registerCheckable: function(menuItem) {
         var groups  = this.groups,
             groupId = menuItem.group;
-            
+
         if (groupId) {
             if (!groups[groupId]) {
                 groups[groupId] = [];
             }
-            
+
             groups[groupId].push(menuItem);
         }
     },
@@ -182,7 +182,7 @@ Ext.define('Ext.menu.MenuManager', {
             groupId = menuItem.group;
 
         if (groupId) {
-            groups[groupId].remove(menuItem);
+            Ext.Array.remove(groups[groupId], menuItem);
         }
     },
 
@@ -191,7 +191,7 @@ Ext.define('Ext.menu.MenuManager', {
             groupId = menuItem.group,
             i       = 0,
             group, ln, curr;
-            
+
         if (groupId && state) {
             group = groups[groupId];
             ln = group.length;

@@ -4,7 +4,7 @@
  * navigation keys to function calls that will get called when the keys are pressed, providing an easy
  * way to implement custom navigation schemes for any UI component.</p>
  * <p>The following are all of the possible keys that can be implemented: enter, space, left, right, up, down, tab, esc,
- * pageUp, pageDown, del, home, end.  Usage:</p>
+ * pageUp, pageDown, del, backspace, home, end.  Usage:</p>
  <pre><code>
 var nav = new Ext.util.KeyNav("my-element", {
     "left" : function(e){
@@ -39,6 +39,7 @@ Ext.define('Ext.util.KeyNav', {
             pageUp: 33,
             pageDown: 34,
             del: 46,
+            backspace: 8,
             home: 36,
             end: 35,
             enter: 13,
@@ -81,8 +82,8 @@ Ext.define('Ext.util.KeyNav', {
             }
         }
         
+        map.disable();
         if (!config.disabled) {
-            map.disable();
             map.enable();
         }
     },
@@ -155,7 +156,7 @@ Ext.define('Ext.util.KeyNav', {
     },
     
     /**
-     * Determines the event to bind to listen for keys. Depends on the {@link forceKeyDown} setting,
+     * Determines the event to bind to listen for keys. Depends on the {@link #forceKeyDown} setting,
      * as well as the useKeyDown option on the EventManager.
      * @return {String} The type of event to listen for.
      */

@@ -52,6 +52,7 @@ Ext.define('Ext.layout.Component', {
         * Do not layout calculatedSized components for fixedLayouts unless the ownerCt == layoutOwner
         */
         if (!isSetSize && ownerCt && ownerCt.layout && ownerCt.layout.fixedLayout && ownerCt != layoutOwner) {
+            // JCA - We are flagging here to get a layout, but the flag is never cleared.  This needs to be cleaned up
             ownerCt.layout.bindToOwnerCtComponent = true;
             return false;
         }
@@ -203,14 +204,19 @@ Ext.define('Ext.layout.Component', {
         if (ownerCt && ownerCt.componentLayout && ownerCt.componentLayout.monitorChildren && !ownerCt.componentLayout.layoutBusy) {
             ownerCt.componentLayout.childrenChanged = true;
 
+            // JCA - This area needs optimization!
+            // JCA - bindToOwnerCtComponent is for special needs for dock layout only if it is autosized
+            // JCA - Check all other places so we can tighten this up!
             if (ownerCt.componentLayout.bindToOwnerCtComponent === true) {
                 ownerCt.doComponentLayout();
             }
             else if (!ownerCt.suspendLayout && ownerCt.layout && !ownerCt.layout.layoutBusy) {
                 if (ownerCt.layout.bindToOwnerCtComponent === true) {
+                    // JCA - This is for special needs for auto container layout (we need to change this flag name)
                     ownerCt.doComponentLayout();
                 }
                 else if (ownerCt.componentLayout.bindToOwnerCtContainer === true || ownerCt.layout.bindToOwnerCtContainer === true) {
+                    // JCA - This is for special needs for box container layout (we need to change this flag name)
                     ownerCt.layout.layout();
                 }
             }

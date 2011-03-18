@@ -49,7 +49,7 @@ Ext.define('Ext.chart.Callouts', {
                 display = config.filter(storeItem);
                 
                 if (!display && !label) {
-                    count++
+                    count++;
                     continue;               
                 }
                 

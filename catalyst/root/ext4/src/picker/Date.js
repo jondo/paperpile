@@ -85,7 +85,7 @@ Ext.define('Ext.picker.Date', {
     /**
      * @cfg {String} format
      * The default date format string which can be overriden for localization support.  The format must be
-     * valid according to {@link Date#parseDate} (defaults to {@link Ext.Date#defaultFormat}).
+     * valid according to {@link Ext.util.Date#parse} (defaults to {@link Ext.util.Date#defaultFormat}).
      */
     /**
      * @cfg {String} disabledDaysText

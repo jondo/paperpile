@@ -54,7 +54,7 @@ Ext.define('Ext.window.Window', {
      * Allows override of the built-in processing for the escape key. Default action
      * is to close the Window (performing whatever action is specified in {@link #closeAction}.
      * To prevent the Window closing when the escape key is pressed, specify this as
-     * Ext.emptyFn (See {@link Ext#emptyFn}).
+     * Ext.emptyFn (See {@link Ext#emptyFn Ext.emptyFn}).
      */
     /**
      * @cfg {Boolean} collapsed
@@ -190,8 +190,9 @@ Ext.define('Ext.window.Window', {
     
     // private
     initComponent: function() {
-        Ext.window.Window.superclass.initComponent.call(this);
-        this.addEvents(
+        var me = this;
+        me.callParent();
+        me.addEvents(
             /**
              * @event activate
              * Fires after the window has been visually activated via {@link #setActive}.
@@ -231,59 +232,65 @@ Ext.define('Ext.window.Window', {
         );
 
         // Initialize as visible.
-        if (this.hidden === false) {
-            this.hidden = true;
-            this.show();
+        if (me.hidden === false) {
+            me.hidden = true;
+            me.show();
         }
-        if (this.modal) {
-            this.ariaRole = 'dialog';
+        
+        if (me.modal) {
+            me.ariaRole = 'dialog';
         }
     },
 
     // State Management
     // private
     getState: function() {
-        var state = Ext.window.Window.superclass.getState.call(this) || {};
+        var state = this.callParent() || {};
         return Ext.apply(state, this.getBox(true));
     },
 
     // private
     onRender: function(ct, position) {
-        Ext.applyIf(this.renderData, {
-            plain: this.plain ? this.baseCls + '-plain' : undefined
+        var me = this;
+        
+        Ext.applyIf(me.renderData, {
+            plain: me.plain ? me.baseCls + '-plain' : undefined
         });
 
-        Ext.window.Window.superclass.onRender.call(this, ct, position);
+        me.callParent(arguments);
 
-        this.focusEl = this.el;
+        me.focusEl = me.el;
 
         // Double clicking a header will toggleMaximize
-        if (this.maximizable) {
-            this.mon(this.header, 'domdblclick', this.toggleMaximize, this);
+        if (me.maximizable) {
+            me.mon(me.header, 'domdblclick', me.toggleMaximize, me);
         }
     },
 
     // private
     afterRender: function() {
+        var me = this,
+            keyMap;
+            
         // Component's afterRender sizes and positions the Component
-        Ext.window.Window.superclass.afterRender.call(this);
+        me.callParent();
 
         // Create the proxy after the size has been applied in Component.afterRender
-        this.proxy = this.getProxy();
+        me.proxy = me.getProxy();
 
         // clickToRaise
-        this.mon(this.el, 'mousedown', this.toFront, this);
+        me.mon(me.el, 'mousedown', me.toFront, me);
 
         // Initialize maximized
-        if (this.maximized) {
-            this.maximized = false;
-            this.maximize();
+        if (me.maximized) {
+            me.maximized = false;
+            me.maximize();
         }
 
-        if (this.closable) {
-            var km = this.getKeyMap();
-            km.on(27, this.onEsc, this);
-            km.disable();
+        if (me.closable) {
+            keyMap = me.getKeyMap();
+            keyMap.on(27, me.onEsc, me);
+            keyMap.disable();
         }
     },
 
@@ -295,10 +302,16 @@ Ext.define('Ext.window.Window', {
      */
     initDraggable: function() {
         var me = this,
-            ddConfig = Ext.applyIf({
-                el: me.el,
-                delegate: '#' + me.header.id
-            }, me.draggable);
+            ddConfig;
+            
+        if (!me.header) {
+            me.updateHeader(true);
+        }
+            
+        ddConfig = Ext.applyIf({
+            el: me.el,
+            delegate: '#' + me.header.id
+        }, me.draggable);
 
         // Add extra configs if Window is specified to be constrained
         if (me.constrain || me.constrainHeader) {
@@ -330,13 +343,15 @@ Ext.define('Ext.window.Window', {
 
     // private
     beforeDestroy: function() {
-        if (this.rendered) {
-            this.hide();
+        var me = this;
+        
+        if (me.rendered) {
+            me.hide();
             Ext.destroy(
-                this.focusEl
+                me.focusEl
             );
         }
-        Ext.window.Window.superclass.beforeDestroy.call(this);
+        me.callParent();
     },
 
     /**
@@ -346,23 +361,25 @@ Ext.define('Ext.window.Window', {
      * Called by Panel's initTools.
      */
     addTools: function() {
+        var me = this;
+        
         // Call Panel's initTools
-        this.callParent();
+        me.callParent();
 
-        if (this.minimizable) {
-            this.addTool({
+        if (me.minimizable) {
+            me.addTool({
                 type: 'minimize',
-                handler: Ext.Function.bind(this.minimize, this, [])
+                handler: Ext.Function.bind(me.minimize, me, [])
             });
         }
-        if (this.maximizable) {
-            this.addTool({
+        if (me.maximizable) {
+            me.addTool({
                 type: 'maximize',
-                handler: Ext.Function.bind(this.maximize, this, [])
+                handler: Ext.Function.bind(me.maximize, me, [])
             });
-            this.addTool({
+            me.addTool({
                 type: 'restore',
-                handler: Ext.Function.bind(this.restore, this, []),
+                handler: Ext.Function.bind(me.restore, me, []),
                 hidden: true
             });
         }
@@ -373,22 +390,23 @@ Ext.define('Ext.window.Window', {
      * Container itself will receive focus.
      */
     getFocusEl: function() {
-        var f = this.focusEl,
-            defaultComp = this.defaultButton || this.defaultFocus,
+        var me = this,
+            f = me.focusEl,
+            defaultComp = me.defaultButton || me.defaultFocus,
             t = typeof db,
             el,
             ct;
 
         if (Ext.isDefined(defaultComp)) {
             if (Ext.isNumber(defaultComp)) {
-                f = this.query('button')[defaultComp];
+                f = me.query('button')[defaultComp];
             } else if (Ext.isString(defaultComp)) {
-                f = this.down('#' + defaultComp);
+                f = me.down('#' + defaultComp);
             } else {
                 f = defaultComp;
             }
         }
-        return f || this.focusEl;
+        return f || me.focusEl;
     },
 
     // private
@@ -402,43 +420,47 @@ Ext.define('Ext.window.Window', {
 
     // private
     afterShow: function(isAnim) {
-        if (this.isDestroyed) {
+        var me = this,
+            size;
+        
+        if (me.isDestroyed) {
             return false;
         }
-        this.proxy.hide();
+        me.proxy.hide();
 
-        if (this.maximized) {
-            this.fitContainer();
+        if (me.maximized) {
+            me.fitContainer();
         }
 
-        if (this.monitorResize || this.constrain || this.constrainHeader) {
-            Ext.EventManager.onWindowResize(this.onWindowResize, this);
+        if (me.monitorResize || me.constrain || me.constrainHeader) {
+            Ext.EventManager.onWindowResize(me.onWindowResize, me);
         }
-        this.doConstrain();
-        if (this.keyMap) {
-            this.keyMap.enable();
+        me.doConstrain();
+        if (me.keyMap) {
+            me.keyMap.enable();
         }
 
         // BrowserBug. Explain the browser bug in the comment.
         if (isAnim && (Ext.isIE || Ext.isWebKit)) {
-            var sz = this.getSize();
-            this.onResize(sz.width, sz.height);
+            size = me.getSize();
+            me.onResize(size.width, size.height);
         }
 
         // Call superclass's afterShow
-        this.callParent();
+        me.callParent();
     },
 
     // private
     doClose: function() {
+        var me = this;
+        
         // immediate close
-        if (this.hidden) {
-            this.fireEvent('close', this);
-            this[this.closeAction]();
-        }
-        // close after hiding
-        else {
-            this.hide(this.animTarget, this.doClose, this);
+        if (me.hidden) {
+            me.fireEvent('close', me);
+            me[me.closeAction]();
+        } else {
+            // close after hiding
+            me.hide(me.animTarget, me.doClose, me);
         }
     },
 
@@ -451,40 +473,44 @@ Ext.define('Ext.window.Window', {
      * @return {Ext.window.Window} this
      */
     hide: function(animateTarget, cb, scope) {
-        if (this.hidden || this.fireEvent('beforehide', this) === false) {
-            return this;
+        var me = this;
+        
+        if (me.hidden || me.fireEvent('beforehide', me) === false) {
+            return me;
         }
         if (cb) {
-            this.on('hide', cb, scope, {
+            me.on('hide', cb, scope, {
                 single: true
             });
         }
-        this.hidden = true;
-        if (this.animateTarget) {
-            this.animHide();
+        me.hidden = true;
+        if (me.animateTarget) {
+            me.animHide();
         } else {
-            this.el.hide();
-            this.afterHide();
+            me.el.hide();
+            me.afterHide();
         }
-        return this;
+        return me;
     },
 
     // private
     afterHide: function() {
-        this.proxy.hide();
+        var me = this;
+        
+        me.proxy.hide();
 
         // No longer subscribe to resizing now that we're hidden
-        if (this.monitorResize || this.constrain || this.constrainHeader) {
-            Ext.EventManager.removeResizeListener(this.onWindowResize, this);
+        if (me.monitorResize || me.constrain || me.constrainHeader) {
+            Ext.EventManager.removeResizeListener(me.onWindowResize, me);
         }
 
         // Turn off keyboard handling once window is hidden
-        if (this.keyMap) {
-            this.keyMap.disable();
+        if (me.keyMap) {
+            me.keyMap.disable();
         }
 
-        this.onHide();
-        this.fireEvent('hide', this);
+        me.onHide();
+        me.fireEvent('hide', me);
     },
 
     // private
@@ -507,14 +533,16 @@ Ext.define('Ext.window.Window', {
     },
 
     afterCollapse: function() {
-        if (this.maximizable) {
-            this.tools.maximize.hide();
-            this.tools.restore.hide();
+        var me = this;
+        
+        if (me.maximizable) {
+            me.tools.maximize.hide();
+            me.tools.restore.hide();
         }
-        if (this.resizer) {
-            this.resizer.disable();
+        if (me.resizer) {
+            me.resizer.disable();
         }
-        this.callParent([arguments]);
+        me.callParent(arguments);
     },
 
     afterExpand: function() {
@@ -528,7 +556,7 @@ Ext.define('Ext.window.Window', {
         if (me.resizer) {
             me.resizer.enable();
         }
-        me.callParent([arguments]);
+        me.callParent(arguments);
     },
 
     /**
@@ -538,31 +566,33 @@ Ext.define('Ext.window.Window', {
      * @return {Ext.window.Window} this
      */
     maximize: function() {
-        if (!this.maximized) {
-            this.expand(false);
-            this.restoreSize = this.getSize();
-            this.restorePos = this.getPosition(true);
-            if (this.maximizable) {
-                this.tools.maximize.hide();
-                this.tools.restore.show();
+        var me = this;
+        
+        if (!me.maximized) {
+            me.expand(false);
+            me.restoreSize = me.getSize();
+            me.restorePos = me.getPosition(true);
+            if (me.maximizable) {
+                me.tools.maximize.hide();
+                me.tools.restore.show();
             }
-            this.maximized = true;
-            this.el.disableShadow();
+            me.maximized = true;
+            me.el.disableShadow();
 
-            if (this.dd) {
-                this.dd.disable();
+            if (me.dd) {
+                me.dd.disable();
             }
-            if (this.collapseTool) {
-                this.collapseTool.hide();
+            if (me.collapseTool) {
+                me.collapseTool.hide();
             }
-            this.el.addCls(Ext.baseCSSPrefix + 'window-maximized');
-            this.container.addCls(Ext.baseCSSPrefix + 'window-maximized-ct');
+            me.el.addCls(Ext.baseCSSPrefix + 'window-maximized');
+            me.container.addCls(Ext.baseCSSPrefix + 'window-maximized-ct');
 
-            this.setPosition(0, 0);
-            this.fitContainer();
-            this.fireEvent('maximize', this);
+            me.setPosition(0, 0);
+            me.fitContainer();
+            me.fireEvent('maximize', me);
         }
-        return this;
+        return me;
     },
 
     /**
@@ -573,44 +603,46 @@ Ext.define('Ext.window.Window', {
      * @return {Ext.window.Window} this
      */
     restore: function() {
-        if (this.maximized) {
-            this.removeCls(Ext.baseCSSPrefix + 'window-maximized');
+        var me = this,
+            tools = me.tools;
+            
+        if (me.maximized) {
+            me.removeCls(Ext.baseCSSPrefix + 'window-maximized');
 
             // Toggle tool visibility
-            var t = this.tools;
-            if (t.restore) {
-                t.restore.hide();
+            if (tools.restore) {
+                tools.restore.hide();
             }
-            if (t.maximize) {
-                t.maximize.show();
+            if (tools.maximize) {
+                tools.maximize.show();
             }
-            if (this.collapseTool) {
-                this.collapseTool.show();
+            if (me.collapseTool) {
+                me.collapseTool.show();
             }
 
             // Restore the position/sizing
-            this.setPosition(this.restorePos);
-            this.setSize(this.restoreSize);
+            me.setPosition(me.restorePos);
+            me.setSize(me.restoreSize);
 
             // Unset old position/sizing
-            delete this.restorePos;
-            delete this.restoreSize;
+            delete me.restorePos;
+            delete me.restoreSize;
 
-            this.maximized = false;
+            me.maximized = false;
 
-            this.el.enableShadow(true);
+            me.el.enableShadow(true);
 
             // Allow users to drag and drop again
-            if (this.dd) {
-                this.dd.enable();
+            if (me.dd) {
+                me.dd.enable();
             }
 
-            this.container.removeCls(Ext.baseCSSPrefix + 'window-maximized-ct');
+            me.container.removeCls(Ext.baseCSSPrefix + 'window-maximized-ct');
 
-            this.doConstrain();
-            this.fireEvent('restore', this);
+            me.doConstrain();
+            me.fireEvent('restore', me);
         }
-        return this;
+        return me;
     },
 
     /**

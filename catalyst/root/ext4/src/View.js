@@ -4,7 +4,8 @@
  * @private
  * Base View class
  */
-Ext.View = Ext.extend(Ext.util.Stateful, {
+Ext.define('Ext.View', {
+    extend: 'Ext.util.Stateful',
     /**
      * @type {Boolean}
      * Set to true for all Ext.View's.

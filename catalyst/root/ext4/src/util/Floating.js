@@ -7,6 +7,13 @@ Ext.define('Ext.util.Floating', {
     uses: ['Ext.Layer'],
 
     /**
+     * @cfg {Boolean} focusOnToFront
+     * Specifies whether the floated component should be automatically {@link #focus focused} when it is
+     * {@link #toFront brought to the front}. Defaults to true.
+     */
+    focusOnToFront: true,
+
+    /**
      * Construction of a floating Component involves transforming the el into a Layer based around that el.
      * @param config
      */
@@ -47,7 +54,7 @@ Ext.define('Ext.util.Floating', {
      * <p>By default, this Component is constrained to be within the container it was added to, or the element
      * it was rendered to.</p>
      * <p>An alternative constraint may be passed.</p>
-     * @params {Mixed} constrainTo Optional. The Element or {@link Ext.util.Region Region} into which this Component is to be constrained.
+     * @param {Mixed} constrainTo Optional. The Element or {@link Ext.util.Region Region} into which this Component is to be constrained.
      */
     doConstrain: function(constrainTo) {
         var me = this,
@@ -85,21 +92,25 @@ Ext.define('Ext.util.Floating', {
     },
 
     /**
-     * Brings this floating Component to the front of any other visible, managed, floating Components
-     * @param {Boolean} preventFocus (optional) Specify <code>false</code> to prevent the Component from being focused.
+     * <p>Brings this floating Component to the front of any other visible, floating Components managed by the same {@link Ext.ZIndexManager ZIndexManager}</p>
+     * <p>If this Component is modal, inserts the modal mask just below this Component in the z-index stack.</p>
+     * @param {Boolean} preventFocus (optional) Specify <code>true</code> to prevent the Component from being focused.
      * @return {Component} this
      */
     toFront: function(preventFocus) {
-        if (this.zIndexManager.bringToFront(this)) {
+        var me = this;
+        if (me.zIndexManager.bringToFront(me)) {
+            if (!Ext.isDefined(preventFocus)) {
+                preventFocus = !me.focusOnToFront;
+            }
             if (!preventFocus) {
-
                 // Kick off a delayed focus request.
                 // If another floating Component is toFronted before the delay expires
                 // this will not receive focus.
-                this.focus(false, true);
+                me.focus(false, true);
             }
         }
-        return this;
+        return me;
     },
 
     /**

@@ -35,7 +35,7 @@ Ext.define('Ext.dd.DragTracker', {
      * @cfg {Boolean} trackOver
      * <p>Defaults to <code>false</code>. Set to true to fire mouseover and mouseout events when the mouse enters or leaves the target element.</p>
      * <p>This is implicitly set when an {@link #overCls} is specified.</p>
-     * <b>If the {@link {#delegate} option is used, these events fire only when a delegate element is entered of left.</b>.
+     * <b>If the {@link #delegate} option is used, these events fire only when a delegate element is entered of left.</b>.
      */
     trackOver: false,
 
@@ -43,7 +43,7 @@ Ext.define('Ext.dd.DragTracker', {
      * @cfg {String} overCls
      * <p>A CSS class to add to the DragTracker's target element when the element (or, if the {@link #delegate} option is used,
      * when a delegate element) is mouseovered.</p>
-     * <b>If the {@link {#delegate} option is used, these events fire only when a delegate element is entered of left.</b>.
+     * <b>If the {@link #delegate} option is used, these events fire only when a delegate element is entered of left.</b>.
      */
 
     /**

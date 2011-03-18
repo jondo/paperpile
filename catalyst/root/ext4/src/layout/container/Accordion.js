@@ -41,7 +41,6 @@ Ext.define('Ext.layout.container.Accordion', {
 
     /**
      * @cfg {Boolean} fill
-     * <p>Only <b><code>fill: true</code> is supported in PR2.</b></p>
      * True to adjust the active item's height to fill the available space in the container, false to use the
      * item's current height, or auto height if not explicitly set (defaults to true).
      */
@@ -62,30 +61,36 @@ Ext.define('Ext.layout.container.Accordion', {
     titleCollapse : true,
     /**
      * @cfg {Boolean} hideCollapseTool
-     * True to hide the contained panels' collapse/expand toggle buttons, false to display them (defaults to false).
-     * When set to true, {@link #titleCollapse} should be true also.
+     * True to hide the contained Panels' collapse/expand toggle buttons, false to display them (defaults to false).
+     * When set to true, {@link #titleCollapse} is automatically set to <code>true</code>.
      */
     hideCollapseTool : false,
     /**
      * @cfg {Boolean} collapseFirst
      * True to make sure the collapse/expand toggle button always renders first (to the left of) any other tools
-     * in the contained panels' title bars, false to render it last (defaults to false).
+     * in the contained Panels' title bars, false to render it last (defaults to false).
      */
     collapseFirst : false,
     /**
      * @cfg {Boolean} animate
      * True to slide the contained panels open and closed during expand/collapse using animation, false to open and
-     * close directly with no animation (defaults to <code>true</code>).  Note: The layout performs animated collapsing
+     * close directly with no animation (defaults to <code>true</code>). Note: The layout performs animated collapsing
      * and expanding, <i>not</i> the child Panels.
      */
     animate : true,
     /**
      * @cfg {Boolean} activeOnTop
-     * <p><b>Not implemented in PR2.</b></p>
+     * <p><b>Not implemented in PR4.</b></p>
+     * <p>Only valid when {@link #multi" is <code>false</code>.</p>
      * True to swap the position of each panel as it is expanded so that it becomes the first item in the container,
      * false to keep the panels in the rendered order. <b>This is NOT compatible with "animate:true"</b> (defaults to false).
      */
     activeOnTop : false,
+    /**
+     * @cfg {Boolean} multi
+     * Defaults to <code>false</code>. Set to <code>true</code> to enable multiple accordion items to be open at once.
+     */
+    multi: false,
 
     constructor: function() {
         var me = this;
@@ -95,14 +100,27 @@ Ext.define('Ext.layout.container.Accordion', {
         // animate flag must be false during initial render phase so we don't get animations.
         me.initialAnimate = me.animate;
         me.animate = false;
+
+        // Child Panels are not absolutely positioned if we are not filling, so use a different itemCls.
+        if (me.fill === false) {
+            me.itemCls = Ext.baseCSSPrefix + 'accordion-item';
+        }
     },
 
     // Cannot lay out a fitting accordion before we have been allocated a height.
     // So during render phase, layout will not be performed.
     beforeLayout: function() {
-        this.callParent(arguments);
-        if (this.fill && !this.owner.el.dom.style.height) {
-            return false;
+        var me = this;
+
+        me.callParent(arguments);
+        if (me.fill) {
+            if (!me.owner.el.dom.style.height) {
+                return false;
+            }
+        } else {
+            me.owner.componentLayout.monitorChildren = false;
+            me.autoSize = true;
+            me.owner.setAutoScroll(true);
         }
     },
 
@@ -122,6 +140,13 @@ Ext.define('Ext.layout.container.Accordion', {
                 // Set up initial properties for Panels in an accordion.
                 if (me.collapseFirst) {
                     comp.collapseFirst = me.collapseFirst;
+                }
+                if (me.hideCollapseTool) {
+                    comp.hideCollapseTool = me.hideCollapseTool;
+                    comp.titleCollapse = true;
+                }
+                else if (me.titleCollapse) {
+                    comp.titleCollapse = me.titleCollapse;
                 }
 
                 delete comp.hideHeader;
@@ -146,6 +171,11 @@ Ext.define('Ext.layout.container.Accordion', {
                     } else {
                         comp.collapsed = true;
                     }
+                } else {
+                    delete comp.flex;
+                    comp.animCollapse = me.initialAnimate;
+                    comp.autoHeight = true;
+                    comp.autoScroll = false;
                 }
             }
         }
@@ -184,11 +214,35 @@ Ext.define('Ext.layout.container.Accordion', {
         }
     },
 
+    onLayout: function() {
+        var me = this;
+
+        if (me.fill) {
+            me.callParent(arguments);
+        } else {
+            var targetSize = me.getLayoutTargetSize(),
+                items = me.getVisibleItems(),
+                len = items.length,
+                i = 0, comp;
+
+            for (; i < len; i++) {
+                comp = items[i];
+                if (comp.collapsed) {
+                    items[i].setWidth(targetSize.width);
+                } else {
+                    items[i].setSize(null, null);
+                }
+            }
+        }
+        return me;
+    },
+
     // When a Component expands, adjust the heights of the other Components to be just enough to accommodate
     // their headers.
     // The expanded Component receives the only flex value, and so gets all remaining space.
     onComponentExpand: function(toExpand) {
-        var it = this.owner.items.items,
+        var me = this,
+            it = me.owner.items.items,
             len = it.length,
             i = 0,
             comp;
@@ -196,35 +250,84 @@ Ext.define('Ext.layout.container.Accordion', {
         for (; i < len; i++) {
             comp = it[i];
             if (comp === toExpand && comp.collapsed) {
-                comp.body.show();
-                delete comp.collapsed;
-                delete comp.height;
-                comp.flex = 1;
-                comp.el.removeCls(comp.collapsedCls);
-                comp.fireEvent('expand', comp);
-                comp.collapseTool.setType('collapse-' + comp.collapseDirection);
-            } else if (comp !== toExpand && !comp.collapsed) {
-                comp.height = comp.header.getHeight();
-                comp.collapsed = true;
-                delete comp.flex;
-                comp.el.addCls(comp.collapsedCls);
-                comp.fireEvent('collapse', comp);
-                comp.collapseTool.setType('expand-' + comp.getOppositeDirection(comp.collapseDirection));
+                me.setExpanded(comp);
+            } else if (!me.multi && (comp !== toExpand && !comp.collapsed)) {
+                me.setCollapsed(comp);
             }
         }
-        this.animate = this.initialAnimate;
-        this.layout();
-        this.animate = false;
+        me.animate = me.initialAnimate;
+        me.layout();
+        me.animate = false;
         return false;
     },
 
     onComponentCollapse: function(comp) {
-        var toExpand = comp.next() || comp.prev();
+        var me = this,
+            toExpand = comp.next() || comp.prev(),
+            expanded = me.multi ? me.owner.query('>panel:not([collapsed])') : [];
 
-        // Expand the next sibling if possible, prev sibling if we collapsed the last
-        if (toExpand) {
-            this.onComponentExpand(toExpand);
+        // If we are allowing multi, and the "toCollapse" component is NOT the only expanded Component,
+        // then ask the box layout to collapse it to its header.
+        if (me.multi) {
+            me.setCollapsed(comp);
+
+            // If the collapsing Panel is the only expanded one, expand the following Component.
+            // All this is handling fill: true, so there must be at least one expanded,
+            if (expanded.length === 1 && expanded[0] === comp) {
+                me.setExpanded(toExpand);
+            }
+            me.animate = me.initialAnimate;
+            me.layout();
+            me.animate = false;
+        }
+        // Not allowing multi: expand the next sibling if possible, prev sibling if we collapsed the last
+        else if (toExpand) {
+            me.onComponentExpand(toExpand);
         }
         return false;
+    },
+
+    setCollapsed: function(comp) {
+        var otherDocks = comp.getDockedItems(),
+            dockItem,
+            len = otherDocks.length,
+            i = 0;
+
+        // Hide all docked items except the header
+        comp.hiddenDocks = [];
+        for (; i < len; i++) {
+            dockItem = otherDocks[i];
+            if ((dockItem !== comp.header) && !dockItem.hidden) {
+                dockItem.hidden = true;
+                comp.hiddenDocks.push(comp);
+            }
+        }
+        comp.addCls(comp.collapsedCls);
+        comp.header.addCls(comp.collapsedHeaderCls);
+        comp.height = comp.header.getHeight();
+        comp.collapsed = true;
+        delete comp.flex;
+        comp.fireEvent('collapse', comp);
+        comp.collapseTool.setType('expand-' + comp.getOppositeDirection(comp.collapseDirection));
+    },
+
+    setExpanded: function(comp) {
+        var otherDocks = comp.hiddenDocks,
+            len = otherDocks ? otherDocks.length : 0,
+            i = 0;
+
+        // Show temporarily hidden docked items
+        for (; i < len; i++) {
+            otherDocks[i].hidden = false;
+        }
+        comp.body.show();
+        delete comp.collapsed;
+        delete comp.height;
+        comp.flex = 1;
+        comp.removeCls(comp.collapsedCls);
+        comp.header.removeCls(comp.collapsedHeaderCls);
+        comp.fireEvent('expand', comp);
+        comp.collapseTool.setType('collapse-' + comp.collapseDirection);
+        comp.setAutoScroll(comp.initialConfig.autoScroll);
     }
 });

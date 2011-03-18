@@ -1,12 +1,10 @@
 /**
  * @class Ext.form.HtmlEditor
- * @extends Ext.form.BaseField
+ * @extends Ext.Component
  * Provides a lightweight HTML Editor component. Some toolbar features are not supported by Safari and will be
  * automatically hidden when needed.  These are noted in the config options where appropriate.
  * <br><br>The editor's toolbar buttons have tooltips defined in the {@link #buttonTips} property, but they are not
  * enabled by default unless the global {@link Ext.tip.QuickTips} singleton is {@link Ext.tip.QuickTips#init initialized}.
- * <br><br><b>Note: The focus/blur and validation marking functionality inherited from Ext.form.BaseField is NOT
- * supported by this editor.</b>
  * <br><br>An Editor is a sensitive component that can't be used in all spots standard fields can be used. Putting an Editor within
  * any element that has display set to 'none' can cause problems in Safari and Firefox due to their default iframe reloading bugs.
  * <br><br>Example usage:
@@ -42,9 +40,20 @@ new Ext.panel.Panel({
  */
 
 Ext.define('Ext.form.HtmlEditor', {
-    extend:'Ext.form.BaseField',
+    extend:'Ext.Component',
+    mixins: {
+        labelable: 'Ext.form.Labelable',
+        field: 'Ext.form.Field'
+    },
     alias: 'widget.htmleditor',
-    requires: ['Ext.tip.QuickTips', 'Ext.picker.Color', 'Ext.toolbar.Item', 'Ext.toolbar.Toolbar', 'Ext.util.Format'],
+    requires: [
+        'Ext.tip.QuickTips',
+        'Ext.picker.Color',
+        'Ext.toolbar.Item',
+        'Ext.toolbar.Toolbar',
+        'Ext.util.Format',
+        'Ext.layout.component.form.HtmlEditor'
+    ],
 
     /**
      * @cfg {Boolean} enableFormat Enable the bold, italic and underline buttons (defaults to true)
@@ -102,43 +111,40 @@ Ext.define('Ext.form.HtmlEditor', {
      */
     defaultValue: (Ext.isOpera || Ext.isIE6) ? '&#160;' : '&#8203;',
 
+    fieldBodyCls: Ext.baseCSSPrefix + 'html-editor-wrap',
+
+    componentLayout: 'htmleditor',
+
     // private properties
-    actionMode: 'wrap',
-    validationEvent : false,
-    deferHeight: true,
     initialized : false,
     activated : false,
     sourceEditMode : false,
-    onFocus : Ext.emptyFn,
     iframePad:3,
     hideMode:'offsets',
-    defaultAutoCreate : {
-        tag: "textarea",
-        style:"width:500px;height:300px;",
-        autocomplete: "off"
-    },
 
     // private
     initComponent : function(){
-        this.addEvents(
+        var me = this;
+
+        me.addEvents(
             /**
              * @event initialize
              * Fires when the editor is fully initialized (including the iframe)
-             * @param {HtmlEditor} this
+             * @param {Ext.form.HtmlEditor} this
              */
             'initialize',
             /**
              * @event activate
              * Fires when the editor is first receives the focus. Any insertion must wait
              * until after this event.
-             * @param {HtmlEditor} this
+             * @param {Ext.form.HtmlEditor} this
              */
             'activate',
              /**
              * @event beforesync
              * Fires before the textarea is updated with content from the editor iframe. Return false
              * to cancel the sync.
-             * @param {HtmlEditor} this
+             * @param {Ext.form.HtmlEditor} this
              * @param {String} html
              */
             'beforesync',
@@ -146,85 +152,98 @@ Ext.define('Ext.form.HtmlEditor', {
              * @event beforepush
              * Fires before the iframe editor is updated with content from the textarea. Return false
              * to cancel the push.
-             * @param {HtmlEditor} this
+             * @param {Ext.form.HtmlEditor} this
              * @param {String} html
              */
             'beforepush',
              /**
              * @event sync
              * Fires when the textarea is updated with content from the editor iframe.
-             * @param {HtmlEditor} this
+             * @param {Ext.form.HtmlEditor} this
              * @param {String} html
              */
             'sync',
              /**
              * @event push
              * Fires when the iframe editor is updated with content from the textarea.
-             * @param {HtmlEditor} this
+             * @param {Ext.form.HtmlEditor} this
              * @param {String} html
              */
             'push',
              /**
              * @event editmodechange
              * Fires when the editor switches edit modes
-             * @param {HtmlEditor} this
+             * @param {Ext.form.HtmlEditor} this
              * @param {Boolean} sourceEdit True if source edit, false if standard editing.
              */
             'editmodechange'
         );
-        Ext.form.HtmlEditor.superclass.initComponent.call(this);
-    },
 
-    // private
-    createFontOptions : function(){
-        var buf = [], fs = this.fontFamilies, ff, lc;
-        for(var i = 0, len = fs.length; i< len; i++){
-            ff = fs[i];
-            lc = ff.toLowerCase();
-            buf.push(
-                '<option value="',lc,'" style="font-family:',ff,';"',
-                    (this.defaultFont == lc ? ' selected="true">' : '>'),
-                    ff,
-                '</option>'
-            );
-        }
-        return buf.join('');
+        me.callParent(arguments);
+
+        // Init mixins
+        me.initLabelable();
+        me.initField();
     },
 
     /*
      * Protected method that will not generally be called directly. It
      * is called when the editor creates its toolbar. Override this method if you need to
      * add custom toolbar buttons.
-     * @param {HtmlEditor} editor
+     * @param {Ext.form.HtmlEditor} editor
      */
     createToolbar : function(editor){
-        var items = [];
-        var tipsEnabled = Ext.tip.QuickTips && Ext.tip.QuickTips.isEnabled();
-
+        var me = this,
+            items = [],
+            tipsEnabled = Ext.tip.QuickTips && Ext.tip.QuickTips.isEnabled(),
+            baseCSSPrefix = Ext.baseCSSPrefix,
+            fontSelectItem, toolbar, undef;
 
         function btn(id, toggle, handler){
             return {
                 itemId : id,
-                cls : Ext.baseCSSPrefix + 'btn-icon',
-                iconCls: Ext.baseCSSPrefix + 'edit-'+id,
+                cls : baseCSSPrefix + 'btn-icon',
+                iconCls: baseCSSPrefix + 'edit-'+id,
                 enableToggle:toggle !== false,
                 scope: editor,
                 handler:handler||editor.relayBtnCmd,
                 clickEvent:'mousedown',
-                tooltip: tipsEnabled ? editor.buttonTips[id] || undefined : undefined,
-                overflowText: editor.buttonTips[id].title || undefined,
+                tooltip: tipsEnabled ? editor.buttonTips[id] || undef : undef,
+                overflowText: editor.buttonTips[id].title || undef,
                 tabIndex:-1
             };
         }
 
 
-        if(this.enableFont && !Ext.isSafari2){
-            var fontSelectItem = new Ext.toolbar.Item({
-               autoEl: {
-                    tag: 'select',
-                    cls: Ext.baseCSSPrefix + 'font-select',
-                    html: this.createFontOptions()
-               }
+        if (me.enableFont && !Ext.isSafari2) {
+            fontSelectItem = Ext.widget('component', {
+                renderTpl: [
+                    '<select class="{cls}">',
+                        '<tpl for="fonts">',
+                            '<option value="{[values.toLowerCase()]}" style="font-family:{.}"<tpl if="values.toLowerCase()==parent.defaultFont"> selected</tpl>>{.}</option>',
+                        '</tpl>',
+                    '</select>'
+                ],
+                renderData: {
+                    cls: baseCSSPrefix + 'font-select',
+                    fonts: me.fontFamilies,
+                    defaultFont: me.defaultFont
+                },
+                renderSelectors: {
+                    selectEl: 'select'
+                },
+                onDisable: function() {
+                    var selectEl = this.selectEl;
+                    if (selectEl) {
+                        selectEl.dom.disabled = true;
+                    }
+                },
+                onEnable: function() {
+                    var selectEl = this.selectEl;
+                    if (selectEl) {
+                        selectEl.dom.disabled = false;
+                    }
+                }
             });
 
             items.push(
@@ -233,7 +252,7 @@ Ext.define('Ext.form.HtmlEditor', {
             );
         }
 
-        if(this.enableFormat){
+        if (me.enableFormat) {
             items.push(
                 btn('bold'),
                 btn('italic'),
@@ -241,70 +260,74 @@ Ext.define('Ext.form.HtmlEditor', {
             );
         }
 
-        if(this.enableFontSize){
+        if (me.enableFontSize) {
             items.push(
                 '-',
-                btn('increasefontsize', false, this.adjustFont),
-                btn('decreasefontsize', false, this.adjustFont)
+                btn('increasefontsize', false, me.adjustFont),
+                btn('decreasefontsize', false, me.adjustFont)
             );
         }
 
-        if(this.enableColors){
+        if (me.enableColors) {
             items.push(
                 '-', {
                     itemId: 'forecolor',
-                    cls: Ext.baseCSSPrefix + 'btn-icon',
-                    iconCls: Ext.baseCSSPrefix + 'edit-forecolor',
+                    cls: baseCSSPrefix + 'btn-icon',
+                    iconCls: baseCSSPrefix + 'edit-forecolor',
                     clickEvent:'mousedown',
-                    tooltip: tipsEnabled ? editor.buttonTips.forecolor || undefined : undefined,
+                    tooltip: tipsEnabled ? editor.buttonTips.forecolor || undef : undef,
                     tabIndex:-1,
-                    menu : new Ext.picker.Color({
-                        allowReselect: true,
-                        focus: Ext.emptyFn,
-                        value:'000000',
-                        plain:true,
-                        listeners: {
-                            scope: this,
-                            select: function(cp, color){
-                                this.execCmd('forecolor', Ext.isWebKit || Ext.isIE ? '#'+color : color);
-                                this.deferFocus();
+                    menu : Ext.widget('menu', {
+                        plain: true,
+                        items: [{
+                            xtype: 'colorpicker',
+                            allowReselect: true,
+                            focus: Ext.emptyFn,
+                            value: '000000',
+                            plain: true,
+                            clickEvent: 'mousedown',
+                            handler: function(cp, color) {
+                                me.execCmd('forecolor', Ext.isWebKit || Ext.isIE ? '#'+color : color);
+                                me.deferFocus();
+                                this.up('menu').hide();
                             }
-                        },
-                        clickEvent:'mousedown'
+                        }]
                     })
                 }, {
                     itemId: 'backcolor',
-                    cls: Ext.baseCSSPrefix + 'btn-icon',
-                    iconCls: Ext.baseCSSPrefix + 'edit-backcolor',
+                    cls: baseCSSPrefix + 'btn-icon',
+                    iconCls: baseCSSPrefix + 'edit-backcolor',
                     clickEvent:'mousedown',
-                    tooltip: tipsEnabled ? editor.buttonTips.backcolor || undefined : undefined,
+                    tooltip: tipsEnabled ? editor.buttonTips.backcolor || undef : undef,
                     tabIndex:-1,
-                    menu : new Ext.picker.Color({
-                        focus: Ext.emptyFn,
-                        value:'FFFFFF',
-                        plain:true,
-                        allowReselect: true,
-                        listeners: {
-                            scope: this,
-                            select: function(cp, color){
-                                if(Ext.isGecko){
-                                    this.execCmd('useCSS', false);
-                                    this.execCmd('hilitecolor', color);
-                                    this.execCmd('useCSS', true);
-                                    this.deferFocus();
-                                }else{
-                                    this.execCmd(Ext.isOpera ? 'hilitecolor' : 'backcolor', Ext.isWebKit || Ext.isIE ? '#'+color : color);
-                                    this.deferFocus();
+                    menu : Ext.widget('menu', {
+                        plain: true,
+                        items: [{
+                            xtype: 'colorpicker',
+                            focus: Ext.emptyFn,
+                            value: 'FFFFFF',
+                            plain: true,
+                            allowReselect: true,
+                            clickEvent: 'mousedown',
+                            handler: function(cp, color) {
+                                if (Ext.isGecko) {
+                                    me.execCmd('useCSS', false);
+                                    me.execCmd('hilitecolor', color);
+                                    me.execCmd('useCSS', true);
+                                    me.deferFocus();
+                                } else {
+                                    me.execCmd(Ext.isOpera ? 'hilitecolor' : 'backcolor', Ext.isWebKit || Ext.isIE ? '#'+color : color);
+                                    me.deferFocus();
                                 }
+                                this.up('menu').hide();
                             }
-                        },
-                        clickEvent:'mousedown'
+                        }]
                     })
                 }
             );
         }
 
-        if(this.enableAlignments){
+        if (me.enableAlignments) {
             items.push(
                 '-',
                 btn('justifyleft'),
@@ -313,80 +336,85 @@ Ext.define('Ext.form.HtmlEditor', {
             );
         }
 
-        if(!Ext.isSafari2){
-            if(this.enableLinks){
+        if (!Ext.isSafari2) {
+            if (me.enableLinks) {
                 items.push(
                     '-',
-                    btn('createlink', false, this.createLink)
+                    btn('createlink', false, me.createLink)
                 );
             }
 
-            if(this.enableLists){
+            if (me.enableLists) {
                 items.push(
                     '-',
                     btn('insertorderedlist'),
                     btn('insertunorderedlist')
                 );
             }
-            if(this.enableSourceEdit){
+            if (me.enableSourceEdit) {
                 items.push(
                     '-',
                     btn('sourceedit', true, function(btn){
-                        this.toggleSourceEdit(!this.sourceEditMode);
+                        me.toggleSourceEdit(!me.sourceEditMode);
                     })
                 );
             }
         }
 
         // build the toolbar
-        var tb = new Ext.toolbar.Toolbar({
-            renderTo: this.wrap.dom.firstChild,
+        toolbar = Ext.widget('toolbar', {
+            renderTo: me.toolbarWrap,
+            padding: '0 0 0 2px',
             items: items
         });
 
         if (fontSelectItem) {
-            this.fontSelect = fontSelectItem.el;
+            me.fontSelect = fontSelectItem.selectEl;
 
-            this.mon(this.fontSelect, 'change', function(){
-                var font = this.fontSelect.dom.value;
-                this.relayCmd('fontname', font);
-                this.deferFocus();
-            }, this);
+            me.mon(me.fontSelect, 'change', function(){
+                me.relayCmd('fontname', me.fontSelect.dom.value);
+                me.deferFocus();
+            });
         }
 
         // stop form submits
-        this.mon(tb.el, 'click', function(e){
+        me.mon(toolbar.el, 'click', function(e){
             e.preventDefault();
         });
 
-        this.tb = tb;
-        this.tb.doLayout();
+        me.toolbar = toolbar;
     },
 
-    onDisable: function(){
-        this.wrap.mask();
-        Ext.form.HtmlEditor.superclass.onDisable.call(this);
+    onDisable: function() {
+        this.bodyEl.mask();
+        this.callParent(arguments);
     },
 
-    onEnable: function(){
-        this.wrap.unmask();
-        Ext.form.HtmlEditor.superclass.onEnable.call(this);
+    onEnable: function() {
+        this.bodyEl.unmask();
+        this.callParent(arguments);
     },
 
-    setReadOnly: function(readOnly){
+    /**
+     * Sets the read only state of this field.
+     * @param {Boolean} readOnly Whether the field should be read only.
+     */
+    setReadOnly: function(readOnly) {
+        var me = this,
+            body;
 
-        Ext.form.HtmlEditor.superclass.setReadOnly.call(this, readOnly);
-        if(this.initialized){
-            if(Ext.isIE){
-                this.getEditorBody().contentEditable = !readOnly;
-            }else{
-                this.setDesignMode(!readOnly);
+        me.callParent(arguments);
+        if (me.initialized) {
+            if (Ext.isIE) {
+                me.getEditorBody().contentEditable = !readOnly;
+            } else {
+                me.setDesignMode(!readOnly);
             }
-            var bd = this.getEditorBody();
-            if(bd){
-                bd.style.cursor = this.readOnly ? 'default' : 'text';
+            body = me.getEditorBody();
+            if (body) {
+                body.style.cursor = readOnly ? 'default' : 'text';
             }
-            this.disableItems(readOnly);
+            me.disableItems(readOnly);
         }
     },
 
@@ -397,246 +425,201 @@ Ext.define('Ext.form.HtmlEditor', {
      *
      * Note: IE8-Standards has unwanted scroller behavior, so the default meta tag forces IE7 compatibility
      */
-    getDocMarkup : function(){
-        var h = Ext.fly(this.iframe).getHeight() - this.iframePad * 2;
-        return Ext.String.format('<html><head><style type="text/css">body{border: 0; margin: 0; padding: {0}px; height: {1}px; cursor: text}</style></head><body></body></html>', this.iframePad, h);
+    getDocMarkup: function() {
+        var me = this,
+            h = me.iframeEl.getHeight() - me.iframePad * 2;
+        return Ext.String.format('<html><head><style type="text/css">body{border:0;margin:0;padding:{0}px;height:{1}px;cursor:text}</style></head><body></body></html>', me.iframePad, h);
     },
 
     // private
-    getEditorBody : function(){
+    getEditorBody: function() {
         var doc = this.getDoc();
         return doc.body || doc.documentElement;
     },
 
     // private
-    getDoc : function(){
-        return Ext.isIE ? this.getWin().document : (this.iframe.contentDocument || this.getWin().document);
+    getDoc: function() {
+        return (!Ext.isIE && this.iframeEl.dom.contentDocument) || this.getWin().document;
     },
 
     // private
-    getWin : function(){
-        return Ext.isIE ? this.iframe.contentWindow : window.frames[this.iframe.name];
+    getWin: function() {
+        return Ext.isIE ? this.iframeEl.dom.contentWindow : window.frames[this.iframeEl.dom.name];
     },
 
     // private
-    onRender : function(ct, position){
-        Ext.form.HtmlEditor.superclass.onRender.call(this, ct, position);
-        this.el.dom.style.border = '0 none';
-        this.el.dom.setAttribute('tabIndex', -1);
-        this.el.addCls(Ext.baseCSSPrefix + 'hidden');
-        if(Ext.isIE){ // fix IE 1px bogus margin
-            this.el.applyStyles('margin-top:-1px;margin-bottom:-1px;');
-        }
-        this.wrap = this.el.wrap({
-            cls: Ext.baseCSSPrefix + 'html-editor-wrap', cn:{cls: Ext.baseCSSPrefix + 'html-editor-tb'}
+    onRender: function() {
+        var me = this,
+            renderSelectors = me.renderSelectors;
+
+        Ext.applyIf(renderSelectors, me.getLabelableSelectors());
+
+        Ext.applyIf(renderSelectors, {
+            toolbarWrap: 'div.' + Ext.baseCSSPrefix + 'html-editor-tb',
+            iframeEl: 'iframe',
+            textareaEl: 'textarea'
         });
 
-        this.createToolbar(this);
+        me.callParent(arguments);
 
-        this.disableItems(true);
-
-        this.tb.doLayout();
-
-        this.createIFrame();
-
-        if(!this.width){
-            var sz = this.el.getSize();
-            this.setSize(sz.width, this.height || sz.height);
-        }
-        this.resizeEl = this.positionEl = this.wrap;
-    },
-
-    createIFrame: function(){
-        var iframe = document.createElement('iframe');
-        iframe.name = Ext.id();
-        iframe.frameBorder = '0';
-        iframe.style.overflow = 'auto';
-        iframe.src = Ext.SSL_SECURE_URL;
-
-        this.wrap.dom.appendChild(iframe);
-        this.iframe = iframe;
-
-        this.monitorTask = Ext.TaskMgr.start({
-            run: this.checkDesignMode,
-            scope: this,
+        // Start polling for when the iframe document is ready to be manipulated
+        me.monitorTask = Ext.TaskMgr.start({
+            run: me.checkDesignMode,
+            scope: me,
             interval:100
         });
+
+        me.createToolbar(me);
+        me.disableItems(true);
     },
 
-    initFrame : function(){
-        Ext.TaskMgr.stop(this.monitorTask);
-        var doc = this.getDoc();
-        this.win = this.getWin();
+    initRenderTpl: function() {
+        var me = this;
+        if (!me.hasOwnProperty('renderTpl')) {
+            me.renderTpl = me.labelableRenderTpl;
+        }
+        return me.callParent();
+    },
+
+    initRenderData: function() {
+        return Ext.applyIf(this.callParent(), this.getLabelableRenderData());
+    },
+
+    getSubTplData: function() {
+        var cssPrefix = Ext.baseCSSPrefix;
+        return {
+            toolbarWrapCls: cssPrefix + 'html-editor-tb',
+            textareaCls: cssPrefix + 'hidden',
+            iframeName: Ext.id(),
+            iframeSrc: Ext.SSL_SECURE_URL,
+            size: 'width:550px;height:100px;'
+        };
+    },
+
+    getSubTplMarkup: function() {
+        return this.fieldSubTpl.apply(this.getSubTplData());
+    },
+
+    initFrameDoc: function() {
+        var me = this,
+            doc, task;
+        
+        Ext.TaskMgr.stop(me.monitorTask);
+        
+        doc = me.getDoc();
+        me.win = me.getWin();
 
         doc.open();
-        doc.write(this.getDocMarkup());
+        doc.write(me.getDocMarkup());
         doc.close();
 
-        var task = { // must defer to wait for browser to be ready
-            run : function(){
-                var doc = this.getDoc();
-                if(doc.body || doc.readyState == 'complete'){
+        task = { // must defer to wait for browser to be ready
+            run: function() {
+                var doc = me.getDoc();
+                if (doc.body || doc.readyState === 'complete') {
                     Ext.TaskMgr.stop(task);
-                    this.setDesignMode(true);
-                     Ext.defer(this.initEditor, 10, this);
+                    me.setDesignMode(true);
+                    Ext.defer(me.initEditor, 10, me);
                 }
             },
             interval : 10,
             duration:10000,
-            scope: this
+            scope: me
         };
         Ext.TaskMgr.start(task);
     },
 
 
-    checkDesignMode : function(){
-        if(this.wrap && this.wrap.dom.offsetWidth){
-            var doc = this.getDoc();
-            if(!doc){
-                return;
-            }
-            if(!doc.editorInitialized || this.getDesignMode() != 'on'){
-                this.initFrame();
-            }
+    checkDesignMode: function() {
+        var me = this,
+            doc = me.getDoc();
+        if (doc && (!doc.editorInitialized || me.getDesignMode() !== 'on')) {
+            me.initFrameDoc();
         }
     },
 
     /* private
      * set current design mode. To enable, mode can be true or 'on', off otherwise
      */
-    setDesignMode : function(mode){
-        var doc = this.getDoc();
+    setDesignMode: function(mode) {
+        var me = this,
+            doc = me.getDoc();
         if (doc) {
-            if(this.readOnly){
+            if (me.readOnly) {
                 mode = false;
             }
             doc.designMode = (/on|true/i).test(String(mode).toLowerCase()) ?'on':'off';
         }
-
     },
 
     // private
-    getDesignMode : function(){
+    getDesignMode: function() {
         var doc = this.getDoc();
-        if(!doc){ return ''; }
-        return String(doc.designMode).toLowerCase();
-
+        return !doc ? '' : String(doc.designMode).toLowerCase();
     },
 
-    disableItems: function(disabled){
-        if(this.fontSelect){
-            this.fontSelect.dom.disabled = disabled;
-        }
-        this.tb.items.each(function(item){
-            if(item.getItemId() != 'sourceedit'){
+    disableItems: function(disabled) {
+        this.getToolbar().items.each(function(item){
+            if(item.getItemId() !== 'sourceedit'){
                 item.setDisabled(disabled);
             }
         });
     },
 
-    // private
-    onResize : function(w, h){
-        Ext.form.HtmlEditor.superclass.onResize.apply(this, arguments);
-        if(this.el && this.iframe){
-            if(Ext.isNumber(w)){
-                var aw = w - this.wrap.getFrameWidth('lr');
-                this.el.setWidth(aw);
-                this.tb.setWidth(aw);
-                this.iframe.style.width = Math.max(aw, 0) + 'px';
-            }
-            if(Ext.isNumber(h)){
-                var ah = h - this.wrap.getFrameWidth('tb') - this.tb.el.getHeight();
-                this.el.setHeight(ah);
-                this.iframe.style.height = Math.max(ah, 0) + 'px';
-                var bd = this.getEditorBody();
-                if(bd){
-                    bd.style.height = Math.max((ah - (this.iframePad*2)), 0) + 'px';
-                }
-            }
-        }
-    },
-
     /**
      * Toggles the editor between standard and source edit mode.
-     * @param {Boolean} sourceEdit (optional) True for source edit, false for standard
+     * @param {Boolean} sourceEditMode (optional) True for source edit, false for standard
      */
-    toggleSourceEdit : function(sourceEditMode){
-        var iframeHeight,
-            elHeight;
+    toggleSourceEdit: function(sourceEditMode) {
+        var me = this,
+            iframe = me.iframeEl,
+            textarea = me.textareaEl,
+            hiddenCls = Ext.baseCSSPrefix + 'hidden',
+            btn = me.getToolbar().getComponent('sourceedit');
 
-        if (sourceEditMode === undefined) {
-            sourceEditMode = !this.sourceEditMode;
+        if (!Ext.isBoolean(sourceEditMode)) {
+            sourceEditMode = !me.sourceEditMode;
         }
-        this.sourceEditMode = sourceEditMode === true;
-        var btn = this.tb.getComponent('sourceedit');
+        me.sourceEditMode = sourceEditMode;
 
-        if (btn.pressed !== this.sourceEditMode) {
-            btn.toggle(this.sourceEditMode);
-            if (!btn.xtbHidden) {
-                return;
-            }
+        if (btn.pressed !== sourceEditMode) {
+            btn.toggle(sourceEditMode);
         }
-        if (this.sourceEditMode) {
-            // grab the height of the containing panel before we hide the iframe
-            this.previousSize = this.getSize();
-
-            iframeHeight = Ext.get(this.iframe).getHeight();
-
-            this.disableItems(true);
-            this.syncValue();
-            this.iframe.className = Ext.baseCSSPrefix + 'hidden';
-            this.el.removeCls(Ext.baseCSSPrefix + 'hidden');
-            this.el.dom.removeAttribute('tabIndex');
-            this.el.focus();
-            this.el.dom.style.height = iframeHeight + 'px';
+        if (sourceEditMode) {
+            me.disableItems(true);
+            me.syncValue();
+            iframe.addCls(hiddenCls);
+            textarea.removeCls(hiddenCls);
+            textarea.dom.removeAttribute('tabIndex');
+            textarea.focus();
         }
         else {
-            elHeight = parseInt(this.el.dom.style.height, 10);
-            if (this.initialized) {
-                this.disableItems(this.readOnly);
+            if (me.initialized) {
+                me.disableItems(me.readOnly);
             }
-            this.pushValue();
-            this.iframe.className = '';
-            this.el.addCls(Ext.baseCSSPrefix + 'hidden');
-            this.el.dom.setAttribute('tabIndex', -1);
-            this.deferFocus();
-
-            this.setSize(this.previousSize);
-            delete this.previousSize;
-            this.iframe.style.height = elHeight + 'px';
+            me.pushValue();
+            iframe.removeCls(hiddenCls);
+            textarea.addCls(hiddenCls);
+            textarea.dom.setAttribute('tabIndex', -1);
+            me.deferFocus();
         }
-        this.fireEvent('editmodechange', this, this.sourceEditMode);
+        me.fireEvent('editmodechange', me, sourceEditMode);
+        me.doComponentLayout();
     },
 
     // private used internally
     createLink : function() {
         var url = prompt(this.createLinkText, this.defaultLinkValue);
-        if(url && url != 'http:/'+'/'){
+        if (url && url !== 'http:/'+'/') {
             this.relayCmd('createlink', url);
         }
     },
 
-    // private
-    initEvents : function(){
-        this.originalValue = this.getValue();
-    },
-
-    /**
-     * Overridden and disabled. The editor element does not support standard valid/invalid marking. @hide
-     * @method
-     */
-    markInvalid : Ext.emptyFn,
-
-    /**
-     * Overridden and disabled. The editor element does not support standard valid/invalid marking. @hide
-     * @method
-     */
-    clearInvalid : Ext.emptyFn,
-
     // docs inherit from Field
-    setValue : function(v){
-        Ext.form.HtmlEditor.superclass.setValue.call(this, v);
-        this.pushValue();
+    setValue: function(value) {
+        var me = this;
+        me.mixins.field.setValue.call(me, value);
+        me.pushValue();
         return this;
     },
 
@@ -648,7 +631,7 @@ Ext.define('Ext.form.HtmlEditor', {
      */
     cleanHtml: function(html) {
         html = String(html);
-        if(Ext.isWebKit){ // strip safari nonsense
+        if (Ext.isWebKit) { // strip safari nonsense
             html = html.replace(/\sclass="(?:Apple-style-span|khtml-block-placeholder)"/gi, '');
         }
 
@@ -657,84 +640,91 @@ Ext.define('Ext.form.HtmlEditor', {
          * value and compares it to the character code of the first character in the string
          * because it can cause encoding issues when posted to the server.
          */
-        if(html.charCodeAt(0) == this.defaultValue.replace(/\D/g, '')){
+        if (html.charCodeAt(0) === this.defaultValue.replace(/\D/g, '')) {
             html = html.substring(1);
         }
         return html;
     },
 
     /**
-     * Protected method that will not generally be called directly. Syncs the contents
+     * @protected method that will not generally be called directly. Syncs the contents
      * of the editor iframe with the textarea.
      */
     syncValue : function(){
-        if(this.initialized){
-            var bd = this.getEditorBody();
-            var html = bd.innerHTML;
-            if(Ext.isWebKit){
-                var bs = bd.getAttribute('style'); // Safari puts text-align styles on the body element!
-                var m = bs.match(/text-align:(.*?);/i);
-                if(m && m[1]){
-                    html = '<div style="'+m[0]+'">' + html + '</div>';
+        var me = this,
+            body, html, bodyStyle, match;
+        if (me.initialized) {
+            body = me.getEditorBody();
+            html = body.innerHTML;
+            if (Ext.isWebKit) {
+                bodyStyle = body.getAttribute('style'); // Safari puts text-align styles on the body element!
+                match = bodyStyle.match(/text-align:(.*?);/i);
+                if (match && match[1]) {
+                    html = '<div style="' + match[0] + '">' + html + '</div>';
                 }
             }
-            html = this.cleanHtml(html);
-            if(this.fireEvent('beforesync', this, html) !== false){
-                this.el.dom.value = html;
-                this.fireEvent('sync', this, html);
+            html = me.cleanHtml(html);
+            if (me.fireEvent('beforesync', me, html) !== false) {
+                me.textareaEl.dom.value = html;
+                me.fireEvent('sync', me, html);
             }
         }
     },
 
     //docs inherit from Field
     getValue : function() {
-        this[this.sourceEditMode ? 'pushValue' : 'syncValue']();
-        return Ext.form.HtmlEditor.superclass.getValue.call(this);
+        var me = this,
+            value;
+        if (!me.sourceEditMode) {
+            me.syncValue();
+        }
+        value = me.rendered ? me.textareaEl.dom.value : me.value;
+        me.value = value;
+        return value;
     },
 
     /**
-     * Protected method that will not generally be called directly. Pushes the value of the textarea
+     * @protected method that will not generally be called directly. Pushes the value of the textarea
      * into the iframe editor.
      */
-    pushValue : function(){
-        if(this.initialized){
-            var v = this.el.dom.value;
-            if(!this.activated && v.length < 1){
-                v = this.defaultValue;
+    pushValue: function() {
+        var me = this,
+            v;
+        if(me.initialized){
+            v = me.textareaEl.dom.value;
+            if (!me.activated && v.length < 1) {
+                v = me.defaultValue;
             }
-            if(this.fireEvent('beforepush', this, v) !== false){
-                this.getEditorBody().innerHTML = v;
-                if(Ext.isGecko){
+            if (me.fireEvent('beforepush', me, v) !== false) {
+                me.getEditorBody().innerHTML = v;
+                if (Ext.isGecko) {
                     // Gecko hack, see: https://bugzilla.mozilla.org/show_bug.cgi?id=232791#c8
-                    this.setDesignMode(false);  //toggle off first
-                    this.setDesignMode(true);
+                    me.setDesignMode(false);  //toggle off first
+                    me.setDesignMode(true);
                 }
-                this.fireEvent('push', this, v);
+                me.fireEvent('push', me, v);
             }
-
         }
     },
 
     // private
     deferFocus : function(){
-         Ext.defer(this.focus, 10, this);
+         this.focus(false, true);
     },
 
-    // docs inherit from Field
-    focus : function(){
-        if(this.win && !this.sourceEditMode){
-            this.win.focus();
-        }else{
-            this.el.focus();
-        }
+    getFocusEl: function() {
+        var me = this,
+            win = me.win;
+        return win && !me.sourceEditMode ? win : me.textareaEl;
     },
 
     // private
     initEditor : function(){
         //Destroying the component during/before initEditor can cause issues.
-        try{
-            var dbody = this.getEditorBody(),
-                ss = this.el.getStyles('font-size', 'font-family', 'background-image', 'background-repeat', 'background-color', 'color'),
+        try {
+            var me = this,
+                dbody = me.getEditorBody(),
+                ss = me.textareaEl.getStyles('font-size', 'font-family', 'background-image', 'background-repeat', 'background-color', 'color'),
                 doc,
                 fn;
 
@@ -743,12 +733,12 @@ Ext.define('Ext.form.HtmlEditor', {
 
             Ext.core.DomHelper.applyStyles(dbody, ss);
 
-            doc = this.getDoc();
+            doc = me.getDoc();
 
-            if(doc){
-                try{
+            if (doc) {
+                try {
                     Ext.EventManager.removeAll(doc);
-                }catch(e){}
+                } catch(e) {}
             }
 
             /*
@@ -757,7 +747,7 @@ Ext.define('Ext.form.HtmlEditor', {
              * Since onEditorEvent is shared on the prototype, if we have multiple html editors, the first time one of the editors
              * is destroyed, it causes the fn to be deleted from the prototype, which causes errors. Essentially, we're just anonymizing the function.
              */
-            fn = Ext.Function.bind(this.onEditorEvent, this);
+            fn = Ext.Function.bind(me.onEditorEvent, me);
             Ext.EventManager.on(doc, {
                 mousedown: fn,
                 dblclick: fn,
@@ -766,98 +756,108 @@ Ext.define('Ext.form.HtmlEditor', {
                 buffer:100
             });
 
-            if(Ext.isGecko){
-                Ext.EventManager.on(doc, 'keypress', this.applyCommand, this);
+            if (Ext.isGecko) {
+                Ext.EventManager.on(doc, 'keypress', me.applyCommand, me);
             }
-            if(Ext.isIE || Ext.isWebKit || Ext.isOpera){
-                Ext.EventManager.on(doc, 'keydown', this.fixKeys, this);
+            if (Ext.isIE || Ext.isWebKit || Ext.isOpera) {
+                Ext.EventManager.on(doc, 'keydown', me.fixKeys, me);
             }
             doc.editorInitialized = true;
-            this.initialized = true;
-            this.pushValue();
-            this.setReadOnly(this.readOnly);
-            this.fireEvent('initialize', this);
-        }catch(e){}
+            me.initialized = true;
+            me.pushValue();
+            me.setReadOnly(me.readOnly);
+            me.fireEvent('initialize', me);
+        } catch(e) {}
     },
 
     // private
     beforeDestroy : function(){
-        if(this.monitorTask){
-            Ext.TaskMgr.stop(this.monitorTask);
+        var me = this,
+            monitorTask = me.monitorTask,
+            doc, prop;
+
+        if (monitorTask) {
+            Ext.TaskMgr.stop(monitorTask);
         }
-        if(this.rendered){
-            Ext.destroy(this.tb);
-            var doc = this.getDoc();
-            if(doc){
-                try{
+        if (me.rendered) {
+            doc = me.getDoc();
+            if (doc) {
+                try {
                     Ext.EventManager.removeAll(doc);
-                    for (var prop in doc){
+                    for (prop in doc) {
                         delete doc[prop];
                     }
-                }catch(e){}
+                } catch(e) {}
             }
-            if(this.wrap){
-                this.wrap.dom.innerHTML = '';
-                this.wrap.remove();
-            }
+            Ext.destroyMembers('tb', 'toolbarWrap', 'iframeEl', 'textareaEl');
         }
-        Ext.form.HtmlEditor.superclass.beforeDestroy.call(this);
+        me.callParent();
     },
 
     // private
     onFirstFocus : function(){
-        this.activated = true;
-        this.disableItems(this.readOnly);
-        if(Ext.isGecko){ // prevent silly gecko errors
-            this.win.focus();
-            var s = this.win.getSelection();
-            if(!s.focusNode || s.focusNode.nodeType != 3){
-                var r = s.getRangeAt(0);
-                r.selectNodeContents(this.getEditorBody());
-                r.collapse(true);
-                this.deferFocus();
+        var me = this,
+            selection, range;
+        me.activated = true;
+        me.disableItems(me.readOnly);
+        if (Ext.isGecko) { // prevent silly gecko errors
+            me.win.focus();
+            selection = me.win.getSelection();
+            if (!selection.focusNode || selection.focusNode.nodeType !== 3) {
+                range = selection.getRangeAt(0);
+                range.selectNodeContents(me.getEditorBody());
+                range.collapse(true);
+                me.deferFocus();
             }
-            try{
-                this.execCmd('useCSS', true);
-                this.execCmd('styleWithCSS', false);
-            }catch(e){}
+            try {
+                me.execCmd('useCSS', true);
+                me.execCmd('styleWithCSS', false);
+            } catch(e) {}
         }
-        this.fireEvent('activate', this);
+        me.fireEvent('activate', me);
     },
 
     // private
-    adjustFont: function(btn){
-        var adjust = btn.getItemId() == 'increasefontsize' ? 1 : -1,
-            doc = this.getDoc(),
-            v = parseInt(doc.queryCommandValue('FontSize') || 2, 10);
-        if((Ext.isSafari && !Ext.isSafari2) || Ext.isChrome || Ext.isAir){
+    adjustFont: function(btn) {
+        var adjust = btn.getItemId() === 'increasefontsize' ? 1 : -1,
+            size = this.getDoc().queryCommandValue('FontSize') || '2',
+            isPxSize = size.indexOf('px') !== -1,
+            isSafari;
+        size = parseInt(size, 10);
+        if (isPxSize) {
             // Safari 3 values
             // 1 = 10px, 2 = 13px, 3 = 16px, 4 = 18px, 5 = 24px, 6 = 32px
-            if(v <= 10){
-                v = 1 + adjust;
-            }else if(v <= 13){
-                v = 2 + adjust;
-            }else if(v <= 16){
-                v = 3 + adjust;
-            }else if(v <= 18){
-                v = 4 + adjust;
-            }else if(v <= 24){
-                v = 5 + adjust;
-            }else {
-                v = 6 + adjust;
+            if (size <= 10) {
+                size = 1 + adjust;
             }
-            v = Ext.Number.constrain(v, 1, 6);
-        }else{
-            if(Ext.isSafari){ // safari
+            else if (size <= 13) {
+                size = 2 + adjust;
+            }
+            else if (size <= 16) {
+                size = 3 + adjust;
+            }
+            else if (size <= 18) {
+                size = 4 + adjust;
+            }
+            else if (size <= 24) {
+                size = 5 + adjust;
+            }
+            else {
+                size = 6 + adjust;
+            }
+            size = Ext.Number.constrain(size, 1, 6);
+        } else {
+            isSafari = Ext.isSafari;
+            if (isSafari) { // safari
                 adjust *= 2;
             }
-            v = Math.max(1, v+adjust) + (Ext.isSafari ? 'px' : 0);
+            size = Math.max(1, size + adjust) + (isSafari ? 'px' : 0);
         }
-        this.execCmd('FontSize', v);
+        this.execCmd('FontSize', size);
     },
 
     // private
-    onEditorEvent : function(e){
+    onEditorEvent: function(e) {
         this.updateToolbar();
     },
 
@@ -866,48 +866,52 @@ Ext.define('Ext.form.HtmlEditor', {
      * Protected method that will not generally be called directly. It triggers
      * a toolbar update by reading the markup state of the current selection in the editor.
      */
-    updateToolbar: function(){
+    updateToolbar: function() {
+        var me = this,
+            btns, doc, name, fontSelect;
 
-        if(this.readOnly){
+        if (me.readOnly) {
             return;
         }
 
-        if(!this.activated){
-            this.onFirstFocus();
+        if (!me.activated) {
+            me.onFirstFocus();
             return;
         }
 
-        var btns = this.tb.items.map,
-            doc = this.getDoc();
+        btns = me.getToolbar().items.map;
+        doc = me.getDoc();
 
-        if(this.enableFont && !Ext.isSafari2){
-            var name = (doc.queryCommandValue('FontName')||this.defaultFont).toLowerCase();
-            if(name != this.fontSelect.dom.value){
-                this.fontSelect.dom.value = name;
+        if (me.enableFont && !Ext.isSafari2) {
+            name = (doc.queryCommandValue('FontName') || me.defaultFont).toLowerCase();
+            fontSelect = me.fontSelect.dom;
+            if (name !== fontSelect.value) {
+                fontSelect.value = name;
             }
         }
-        if(this.enableFormat){
-            btns.bold.toggle(doc.queryCommandState('bold'));
-            btns.italic.toggle(doc.queryCommandState('italic'));
-            btns.underline.toggle(doc.queryCommandState('underline'));
+
+        function updateButtons() {
+            Ext.Array.forEach(Ext.Array.toArray(arguments), function(name) {
+                btns[name].toggle(doc.queryCommandState(name));
+            });
         }
-        if(this.enableAlignments){
-            btns.justifyleft.toggle(doc.queryCommandState('justifyleft'));
-            btns.justifycenter.toggle(doc.queryCommandState('justifycenter'));
-            btns.justifyright.toggle(doc.queryCommandState('justifyright'));
+        if(me.enableFormat){
+            updateButtons('bold', 'italic', 'underline');
         }
-        if(!Ext.isSafari2 && this.enableLists){
-            btns.insertorderedlist.toggle(doc.queryCommandState('insertorderedlist'));
-            btns.insertunorderedlist.toggle(doc.queryCommandState('insertunorderedlist'));
+        if(me.enableAlignments){
+            updateButtons('justifyleft', 'justifycenter', 'justifyright');
+        }
+        if(!Ext.isSafari2 && me.enableLists){
+            updateButtons('insertorderedlist', 'insertunorderedlist');
         }
 
         Ext.menu.MenuManager.hideAll();
 
-        this.syncValue();
+        me.syncValue();
     },
 
     // private
-    relayBtnCmd : function(btn){
+    relayBtnCmd: function(btn) {
         this.relayCmd(btn.getItemId());
     },
 
@@ -917,11 +921,12 @@ Ext.define('Ext.form.HtmlEditor', {
      * @param {String} cmd The Midas command
      * @param {String/Boolean} value (optional) The value to pass to the command (defaults to null)
      */
-    relayCmd : function(cmd, value){
-        Ext.defer(function(){
-            this.focus();
-            this.execCmd(cmd, value);
-            this.updateToolbar();
+    relayCmd: function(cmd, value) {
+        Ext.defer(function() {
+            var me = this;
+            me.focus();
+            me.execCmd(cmd, value);
+            me.updateToolbar();
         }, 10, this);
     },
 
@@ -933,18 +938,21 @@ Ext.define('Ext.form.HtmlEditor', {
      * @param {String/Boolean} value (optional) The value to pass to the command (defaults to null)
      */
     execCmd : function(cmd, value){
-        var doc = this.getDoc();
-        doc.execCommand(cmd, false, value === undefined ? null : value);
-        this.syncValue();
+        var me = this,
+            doc = me.getDoc(),
+            undef;
+        doc.execCommand(cmd, false, value === undef ? null : value);
+        me.syncValue();
     },
 
     // private
     applyCommand : function(e){
-        if(e.ctrlKey){
-            var c = e.getCharCode(), cmd;
-            if(c > 0){
+        if (e.ctrlKey) {
+            var me = this,
+                c = e.getCharCode(), cmd;
+            if (c > 0) {
                 c = String.fromCharCode(c);
-                switch(c){
+                switch (c) {
                     case 'b':
                         cmd = 'bold';
                     break;
@@ -955,10 +963,10 @@ Ext.define('Ext.form.HtmlEditor', {
                         cmd = 'underline';
                     break;
                 }
-                if(cmd){
-                    this.win.focus();
-                    this.execCmd(cmd);
-                    this.deferFocus();
+                if (cmd) {
+                    me.win.focus();
+                    me.execCmd(cmd);
+                    me.deferFocus();
                     e.preventDefault();
                 }
             }
@@ -971,74 +979,80 @@ Ext.define('Ext.form.HtmlEditor', {
      * @param {String} text
      */
     insertAtCursor : function(text){
-        if(!this.activated){
-            return;
-        }
-        if(Ext.isIE){
-            this.win.focus();
-            var doc = this.getDoc(),
-                r = doc.selection.createRange();
-            if(r){
-                r.pasteHTML(text);
-                this.syncValue();
-                this.deferFocus();
+        var me = this,
+            range;
+
+        if (me.activated) {
+            me.win.focus();
+            if (Ext.isIE) {
+                range = me.getDoc().selection.createRange();
+                if (range) {
+                    range.pasteHTML(text);
+                    me.syncValue();
+                    me.deferFocus();
+                }
+            }else{
+                me.execCmd('InsertHTML', text);
+                me.deferFocus();
             }
-        }else{
-            this.win.focus();
-            this.execCmd('InsertHTML', text);
-            this.deferFocus();
         }
     },
 
     // private
-    fixKeys : function(){ // load time branching for fastest keydown performance
-        if(Ext.isIE){
+    fixKeys: function() { // load time branching for fastest keydown performance
+        if (Ext.isIE) {
             return function(e){
-                var k = e.getKey(),
-                    doc = this.getDoc(),
-                        r;
-                if(k == e.TAB){
+                var me = this,
+                    k = e.getKey(),
+                    doc = me.getDoc(),
+                    range, target;
+                if (k === e.TAB) {
                     e.stopEvent();
-                    r = doc.selection.createRange();
-                    if(r){
-                        r.collapse(true);
-                        r.pasteHTML('&nbsp;&nbsp;&nbsp;&nbsp;');
-                        this.deferFocus();
+                    range = doc.selection.createRange();
+                    if(range){
+                        range.collapse(true);
+                        range.pasteHTML('&nbsp;&nbsp;&nbsp;&nbsp;');
+                        me.deferFocus();
                     }
-                }else if(k == e.ENTER){
-                    r = doc.selection.createRange();
-                    if(r){
-                        var target = r.parentElement();
-                        if(!target || target.tagName.toLowerCase() != 'li'){
+                }
+                else if (k === e.ENTER) {
+                    range = doc.selection.createRange();
+                    if (range) {
+                        target = range.parentElement();
+                        if(!target || target.tagName.toLowerCase() !== 'li'){
                             e.stopEvent();
-                            r.pasteHTML('<br />');
-                            r.collapse(false);
-                            r.select();
+                            range.pasteHTML('<br />');
+                            range.collapse(false);
+                            range.select();
                         }
                     }
                 }
             };
-        }else if(Ext.isOpera){
+        }
+        else if (Ext.isOpera) {
             return function(e){
-                var k = e.getKey();
-                if(k == e.TAB){
+                var me = this;
+                if (e.getKey() === e.TAB) {
                     e.stopEvent();
-                    this.win.focus();
-                    this.execCmd('InsertHTML','&nbsp;&nbsp;&nbsp;&nbsp;');
-                    this.deferFocus();
+                    me.win.focus();
+                    me.execCmd('InsertHTML','&nbsp;&nbsp;&nbsp;&nbsp;');
+                    me.deferFocus();
                 }
             };
-        }else if(Ext.isWebKit){
+        }
+        else if (Ext.isWebKit) {
             return function(e){
-                var k = e.getKey();
-                if(k == e.TAB){
+                var me = this,
+                    k = e.getKey();
+                if (k === e.TAB) {
                     e.stopEvent();
-                    this.execCmd('InsertText','\t');
-                    this.deferFocus();
-                }else if(k == e.ENTER){
+                    me.execCmd('InsertText','\t');
+                    me.deferFocus();
+                }
+                else if (k === e.ENTER) {
                     e.stopEvent();
-                    this.execCmd('InsertHtml','<br /><br />');
-                    this.deferFocus();
+                    me.execCmd('InsertHtml','<br /><br />');
+                    me.deferFocus();
                 }
              };
         }
@@ -1049,7 +1063,7 @@ Ext.define('Ext.form.HtmlEditor', {
      * @return {Ext.toolbar.Toolbar}
      */
     getToolbar : function(){
-        return this.tb;
+        return this.toolbar;
     },
 
     /**
@@ -1184,77 +1198,32 @@ Ext.define('Ext.form.HtmlEditor', {
      * @cfg {String} msgFx @hide
      */
     /**
-     * @cfg {String} validateOnBlur @hide
-     */
-    /**
      * @cfg {Boolean} allowDomMove  @hide
      */
     /**
      * @cfg {String} applyTo @hide
      */
     /**
-     * @cfg {String} autoHeight  @hide
-     */
-    /**
-     * @cfg {String} autoWidth  @hide
-     */
-    /**
-     * @cfg {String} cls  @hide
-     */
-    /**
-     * @cfg {String} disabled  @hide
-     */
-    /**
-     * @cfg {String} disabledCls  @hide
-     */
-    /**
-     * @cfg {String} msgTarget  @hide
-     */
-    /**
      * @cfg {String} readOnly  @hide
-     */
-    /**
-     * @cfg {String} style  @hide
-     */
-    /**
-     * @cfg {String} validationDelay  @hide
-     */
-    /**
-     * @cfg {String} validationEvent  @hide
      */
     /**
      * @cfg {String} tabIndex  @hide
      */
     /**
-     * @property disabled
-     * @hide
-     */
-    /**
-     * @method applyToMarkup
-     * @hide
-     */
-    /**
-     * @method disable
-     * @hide
-     */
-    /**
-     * @method enable
-     * @hide
-     */
-    /**
      * @method validate
      * @hide
      */
-    /**
-     * @event valid
-     * @hide
-     */
-    /**
-     * @method setDisabled
-     * @hide
-     */
-    /**
-     * @cfg keys
-     * @hide
-     */
+}, function() {
+
+    this.prototype.fieldSubTpl = new Ext.XTemplate(
+        '<div class="{toolbarWrapCls}"></div>',
+        '<textarea id="{id}" name="{name}" tabIndex="-1" class="{textareaCls}" ',
+            'style="{size}" autocomplete="off"></textarea>',
+        '<iframe name="{iframeName}" frameBorder="0" style="overflow:auto;{size}" src="{iframeSrc}"></iframe>',
+        {
+            compiled: true,
+            disableFormats: true
+        }
+    );
+
 });

@@ -111,7 +111,7 @@ Ext.extend(Ext.tree.TreeDropZone, Ext.dd.DropZone, {
     },
 
     // private
-    getDropPoint : function(e, n, dd){
+    getDropPoint : function(e, n, dd) {
         var tn = n.node;
         if(tn.isRoot){
             return tn.allowChildren !== false ? "append" : false; // always append for root

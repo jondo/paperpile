@@ -19,15 +19,18 @@ Ext.define('Ext.grid.RowBodyFeature', {
     extend: 'Ext.grid.Feature',
     alias: 'feature.rowbody',
     rowBodyHiddenCls: Ext.baseCSSPrefix + 'grid-row-body-hidden',
+    rowBodyTrCls: Ext.baseCSSPrefix + 'grid-rowbody-tr',
+    rowBodyTdCls: Ext.baseCSSPrefix + 'grid-cell-rowbody',
+    rowBodyDivCls: Ext.baseCSSPrefix + 'grid-rowbody',
 
     eventPrefix: 'rowbody',
     eventSelector: '.' + Ext.baseCSSPrefix + 'grid-rowbody-tr',
     
     getRowBody: function(values) {
         return [
-            '<tr class="' + Ext.baseCSSPrefix + 'grid-rowbody-tr {rowBodyCls}">',
-                '<td class="' + Ext.baseCSSPrefix + 'grid-cell-rowbody" colspan="{rowBodyColspan}">',
-                    '<div class="' + Ext.baseCSSPrefix + 'grid-rowbody">{rowBody}</div>',
+            '<tr class="' + this.rowBodyTrCls + ' {rowBodyCls}">',
+                '<td class="' + this.rowBodyTdCls + '" colspan="{rowBodyColspan}">',
+                    '<div class="' + this.rowBodyDivCls + '">{rowBody}</div>',
                 '</td>',
             '</tr>'
         ].join('');
@@ -36,7 +39,10 @@ Ext.define('Ext.grid.RowBodyFeature', {
     // injects getRowBody into the metaRowTpl.
     getMetaRowTplFragments: function() {
         return {
-            getRowBody: this.getRowBody
+            getRowBody: this.getRowBody,
+            rowBodyTrCls: this.rowBodyTrCls,
+            rowBodyTdCls: this.rowBodyTdCls,
+            rowBodyDivCls: this.rowBodyDivCls
         };
     },
     

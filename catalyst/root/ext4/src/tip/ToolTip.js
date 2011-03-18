@@ -26,7 +26,7 @@ Ext.define('Ext.tip.ToolTip', {
     /**
      * @cfg {Boolean} autoHide True to automatically hide the tooltip after the
      * mouse exits the target element or after the <code>{@link #dismissDelay}</code>
-     * has expired if set (defaults to true).  If <code>{@link closable} = true</code>
+     * has expired if set (defaults to true).  If <code>{@link #closable} = true</code>
      * a close tool button will be rendered into the tooltip header.
      */
     /**
@@ -190,14 +190,12 @@ myGrid.on('render', function(grid) {
                     }
                     me.setPagePosition(xy);
                 }
-            }
-            else {
+            } else {
                 me.hide();
                 me.lastActive = new Date(0);
                 me.onTargetOver(e);
             }
-        }
-        else if (!me.closable && me.isVisible()) {
+        } else if ((!me.closable && me.isVisible()) && me.autoHide !== false) {
             me.hide();
         }
     },
@@ -375,6 +373,7 @@ myGrid.on('render', function(grid) {
     onTargetOver: function(e) {
         var me = this,
             t;
+
         if (me.disabled || e.within(me.target.dom, true)) {
             return;
         }
@@ -397,7 +396,7 @@ myGrid.on('render', function(grid) {
                 me.showTimer = Ext.defer(me.show, me.showDelay, me);
             }
         }
-        else if (!me.hidden && me.autoHide !== me) {
+        else if (!me.hidden && me.autoHide !== false) {
             me.show();
         }
     },
@@ -444,7 +443,8 @@ myGrid.on('render', function(grid) {
         if (me.anchor) {
             // pre-show it off screen so that the el will have dimensions
             // for positioning calcs when getting xy next
-            me.showAt([ -1000, -1000]);
+            Ext.tip.Tip.superclass.show.call(me);
+            me.setPagePosition(-10000, -10000);
             me.anchor = me.origAnchor;
         }
 
@@ -469,7 +469,7 @@ myGrid.on('render', function(grid) {
         // Show may have been vetoed.
         if (me.isVisible()) {
             me.setPagePosition(xy[0], xy[1]);
-            me.toFront();
+            me.toFront(true);
         }
 
         if (me.dismissDelay && me.autoHide !== false) {

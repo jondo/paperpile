@@ -14,6 +14,8 @@ Ext.define('Ext.grid.Header', {
     extend: 'Ext.Component',
     alias: 'widget.gridheader',
     
+    requires: ['Ext.util.KeyNav'],
+    
     headerCls: Ext.baseCSSPrefix + 'column-header ' + Ext.baseCSSPrefix + 'unselectable',
     overCls: Ext.baseCSSPrefix + 'column-header-over',
     height: 23,
@@ -98,7 +100,7 @@ Ext.define('Ext.grid.Header', {
     initComponent: function() {
         this.cls = this.headerCls + ' ' + (this.cls ? this.cls : '');
         if (Ext.isDefined(this.header)) {
-            console.warn("Header is now using text instead of header.");
+//            console.warn("Header is now using text instead of header.");
             this.text = this.header;
             delete this.header;
         }
@@ -138,6 +140,27 @@ Ext.define('Ext.grid.Header', {
         el.addClsOnOver(this.overCls);
         el.on('click', this.onElClick, this);
         el.on('dblclick', this.onElDblClick, this);
+        
+        this.keyNav = Ext.create('Ext.util.KeyNav', el, {
+            enter: this.onEnterKey,
+            down: this.onDownKey,
+            scope: this
+        });
+    },
+    
+    onDestroy: function() {
+        var me = this;
+        Ext.destroy(me.keyNav);
+        delete me.keyNav;
+        me.callParent(arguments);
+    },
+    
+    onDownKey: function(e) {
+        this.onElClick(e, this.triggerEl.dom || this.el.dom);
+    },
+    
+    onEnterKey: function(e) {
+        this.onElClick(e, this.el.dom);
     },
     
     onElDblClick: function(e, t) {
@@ -153,10 +176,10 @@ Ext.define('Ext.grid.Header', {
         if (ownerCt && !ownerCt.locked) {
             // Firefox doesn't check the current target in a within check.
             // Therefore we check the target directly and then within (ancestors)
-            if (this.triggerEl && (e.target === this.triggerEl.dom || e.within(this.triggerEl))) {
+            if (this.triggerEl && (e.target === this.triggerEl.dom || t === this.triggerEl.dom || e.within(this.triggerEl))) {
                 ownerCt.onHeaderTriggerClick(this, e, t);
             // if its not on the left hand edge, sort
-            } else if (!this.isOnLeftEdge(e) && !this.isOnRightEdge(e)) {
+            } else if (e.getKey() || (!this.isOnLeftEdge(e) && !this.isOnRightEdge(e))) {
                 this.toggleSortState();
                 ownerCt.onHeaderClick(this, e, t);
             }
@@ -172,6 +195,19 @@ Ext.define('Ext.grid.Header', {
             this.setSortState(this.possibleSortStates[nextIdx]);
         }
     },
+    
+    doSort: function(state) {
+        var ds = this.up('tablepanel').store;
+        ds.sort(this.getSortParam(), state);
+    },
+    
+    /**
+     * Returns the parameter to sort upon when sorting this header. By default
+     * this returns the dataIndex and will not need to be overriden in most cases.
+     */
+    getSortParam: function() {
+        return this.dataIndex;
+    },
 
     //setSortState: function(state, updateUI) {
     //setSortState: function(state, doSort) {
@@ -179,13 +215,12 @@ Ext.define('Ext.grid.Header', {
         var colSortClsPrefix = Ext.baseCSSPrefix + 'column-header-sort-',
             ascCls = colSortClsPrefix + 'ASC',
             descCls = colSortClsPrefix + 'DESC',
-            nullCls = colSortClsPrefix + 'null',
-            ds = this.up('gridpanel').store;
+            nullCls = colSortClsPrefix + 'null';
 
         this.addCls(colSortClsPrefix + state);
         
         if (state) {
-            ds.sort(this.dataIndex, state);
+            this.doSort(state);
         }
         
         switch (state) {
@@ -261,6 +296,12 @@ Ext.define('Ext.grid.Header', {
             // we can calculate the desired width when renderered
             // but not visible because its being obscured by a layout
             return this.componentLayout.lastComponentSize.width;
+        // Flexed but yet to be rendered this could be the case
+        // where a HeaderContainer and Headers are simply used as data
+        // structures and not rendered.
+        } else if (this.flex) {
+            // this is going to be wrong, the defaultWidth
+            return this.width;
         } else {
             return this.width;
         }

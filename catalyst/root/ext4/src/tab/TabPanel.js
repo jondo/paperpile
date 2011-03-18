@@ -14,7 +14,7 @@
  *
  * <p><b><u>TabPanel's layout</u></b></p> 
  * 
- * <p>TabPanels use a {@link Ext.layout.container.Dock DockLayout} to position the {@link Ext.tab.TabBar TabBar} at the
+ * <p>TabPanels use a Dock layout to position the {@link Ext.tab.TabBar TabBar} at the
  * top of the widget. Panels added to the TabPanel will have their header hidden by default because the Tab will 
  * automatically take the Panel's configured title and icon.</p>
  * <p>TabPanels use their {@link Ext.panel.Panel#header header} or {@link Ext.panel.Panel#footer footer} element

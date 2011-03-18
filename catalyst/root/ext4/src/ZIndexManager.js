@@ -107,8 +107,6 @@ Ext.define('Ext.ZIndexManager', {
                 comp.setActive(true);
                 if (comp.modal) {
                     this._showModalMask(comp.el.getStyle('zIndex') - 4);
-                } else {
-                    this._hideModalMask();
                 }
             }
         }
@@ -116,12 +114,29 @@ Ext.define('Ext.ZIndexManager', {
 
     // private
     _activateLast: function(justHidden) {
-        for (var i = this.accessList.length-1; i >=0; --i) {
-            if (!this.accessList[i].hidden) {
-                this._setActiveChild(this.accessList[i]);
-                return;
+        var comp,
+            lastActivated = false,
+            i;
+
+        // Go down through the z-index stack.
+        // Activate the next visible one down.
+        // Keep going down to find the next visible modal one to shift the modal mask down under
+        for (i = this.accessList.length-1; i >= 0; --i) {
+            comp = this.accessList[i];
+            if (!comp.hidden) {
+                if (!lastActivated) {
+                    this._setActiveChild(comp);
+                    lastActivated = true;
+                }
+
+                // Move any modal mask down to just under the next modal floater down the stack
+                if (comp.modal) {
+                    this._showModalMask(comp.el.getStyle('zIndex') - 4);
+                    return;
+                }
             }
         }
+
         // none to activate
         this._setActiveChild(null);
         this._hideModalMask();
@@ -193,6 +208,9 @@ MyDesktop.getDesktop().getManager().register(Ext.MessageBox);
         delete this.list[comp.id];
         comp.un('hide', this._activateLast);
         Ext.Array.remove(this.accessList, comp);
+
+        // Destruction requires that the topmost visible floater be activated. Same as hiding.
+        this._activateLast(comp);
     },
 
     /**

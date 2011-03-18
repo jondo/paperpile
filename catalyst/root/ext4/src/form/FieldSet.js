@@ -62,7 +62,7 @@ var form = new Ext.form.FormPanel({
 Ext.define('Ext.form.FieldSet', {
     extend: 'Ext.container.Container',
     alias: 'widget.fieldset',
-    requires: ['Ext.form.Checkbox', 'Ext.panel.Tool', 'Ext.layout.container.Anchor'],
+    uses: ['Ext.form.Checkbox', 'Ext.panel.Tool', 'Ext.layout.container.Anchor', 'Ext.layout.component.Body'],
 
     /**
      * @cfg {String} title
@@ -115,11 +115,13 @@ Ext.define('Ext.form.FieldSet', {
      */
     layout: 'anchor',
 
+    componentLayout: 'body',
+
     // No aria role necessary as fieldset has its own recognized semantics
     ariaRole: '',
 
     renderTpl: ['<div class="{baseCls}-body"></div>'],
-    
+
     getElConfig: function(){
         return {tag: 'fieldset', id: this.id};
     },

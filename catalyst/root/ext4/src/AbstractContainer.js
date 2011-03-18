@@ -24,7 +24,7 @@ Ext.define('Ext.AbstractContainer', {
      * <p><b>*Important</b>: In order for child items to be correctly sized and
      * positioned, typically a layout manager <b>must</b> be specified through
      * the <code>layout</code> configuration option.</p>
-     * <br><p>The sizing and positioning of child {@link items} is the responsibility of
+     * <br><p>The sizing and positioning of child {@link #items} is the responsibility of
      * the Container's layout manager which creates and manages the type of layout
      * you have in mind.  For example:</p>
      * <p>If the {@link #layout} configuration is not explicitly specified for
@@ -336,7 +336,14 @@ items: [
             layout = me.getLayout();
 
         if (me.rendered && layout && !me.suspendLayout) {
-            layout.layout();
+            if (!Ext.isNumber(me.width) || (!Ext.isNumber(me.height)) && me.componentLayout.layoutBusy !== true) {
+                me.doComponentLayout();
+            }
+            else {
+                if (me.layout.layoutBusy !== true) {
+                    layout.layout();
+                }
+            }
         }
 
         return me;

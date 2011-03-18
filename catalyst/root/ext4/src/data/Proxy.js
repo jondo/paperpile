@@ -39,7 +39,7 @@
  */
 Ext.define('Ext.data.Proxy', {
     requires: [
-        'Ext.data.Batch', 'Ext.data.Operation', 'Ext.data.Reader', 'Ext.data.Writer'
+        'Ext.data.Batch', 'Ext.data.Operation', 'Ext.data.JsonReader', 'Ext.data.JsonWriter'
     ],
     
     alias: 'proxy.proxy',
@@ -70,6 +70,8 @@ Ext.define('Ext.data.Proxy', {
      * @cfg {String/Ext.data.Model} model The name of the Model to tie to this Proxy. Can be either the string name of
      * the Model, or a reference to the Model constructor. Required.
      */
+    
+    isProxy: true,
     
     constructor: function(config) {
         config = config || {};

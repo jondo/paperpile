@@ -16,7 +16,7 @@
 Ext.define('Ext.resizer.Splitter', {
     extend: 'Ext.Component',
     requires: ['Ext.XTemplate'],
-    uses: ['Ext.panel.Panel', 'Ext.resizer.SplitterTracker'],
+    uses: ['Ext.resizer.SplitterTracker'],
     alias: 'widget.splitter',
     baseCls: Ext.baseCSSPrefix + 'splitter',
     collapsedCls: Ext.baseCSSPrefix + 'splitter-collapsed',

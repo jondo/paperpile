@@ -132,31 +132,32 @@ Ext.define('Ext.grid.HeaderResizer', {
     // initialize the left and right hand side markers around
     // the header that we are resizing
     onStart: function(e){
-        var dragHd      = this.dragHd,
-            dragHdEl    = dragHd.el,
-            width       = dragHdEl.getWidth(),
-            t           = e.getTarget();
+        var me       = this,
+            dragHd   = me.dragHd,
+            dragHdEl = dragHd.el,
+            width    = dragHdEl.getWidth(),
+            headerCt = me.headerCt,
+            t        = e.getTarget();
 
-        if (this.dragHd && !Ext.fly(t).hasCls('x-column-header-trigger')) {
-            this.headerCt.dragging = true;
+        if (me.dragHd && !Ext.fly(t).hasCls('x-column-header-trigger')) {
+            headerCt.dragging = true;
         }
 
-        this.origWidth = width;
+        me.origWidth = width;
         
         // setup marker proxies
-        if (!this.dynamic) {
+        if (!me.dynamic) {
             var xy           = dragHdEl.getXY(),
-                gridSection  = this.headerCt.up('gridsection'),
+                gridSection  = headerCt.up(),
                 lhsMarker    = gridSection.getLhsMarker(),
                 rhsMarker    = gridSection.getRhsMarker(),
                 el           = rhsMarker.parent(),
                 topLeft      = el.translatePoints(xy),
-                markerHeight = gridSection.getHeight();
-                
-            if (gridSection.horizontalScroller.ownerCt === gridSection) {
-                markerHeight -= (Ext.getScrollBarWidth() - 2);
-            }
+                top          = headerCt.el.getTop(true),
+                markerHeight = gridSection.body.getHeight() + headerCt.getHeight();
             
+            lhsMarker.setTop(top);
+            rhsMarker.setTop(top);
             lhsMarker.setHeight(markerHeight);
             rhsMarker.setHeight(markerHeight);
             lhsMarker.setLeft(topLeft.left);
@@ -168,7 +169,7 @@ Ext.define('Ext.grid.HeaderResizer', {
     onDrag: function(e){
         if (!this.dynamic) {
             var xy          = this.tracker.getXY('point'),
-                gridSection = this.headerCt.up('gridsection'),
+                gridSection = this.headerCt.up(),
                 rhsMarker   = gridSection.getRhsMarker(),
                 el          = rhsMarker.parent(),
                 topLeft     = el.translatePoints(xy);
@@ -186,7 +187,7 @@ Ext.define('Ext.grid.HeaderResizer', {
         if (this.dragHd) {
             if (!this.dynamic) {
                 var dragHd      = this.dragHd,
-                    gridSection = this.headerCt.up('gridsection'),
+                    gridSection = this.headerCt.up(),
                     lhsMarker   = gridSection.getLhsMarker(),
                     rhsMarker   = gridSection.getRhsMarker(),
                     currWidth   = dragHd.getWidth(),

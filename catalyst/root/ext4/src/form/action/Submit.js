@@ -177,9 +177,17 @@ Ext.define('Ext.form.action.Submit', {
         // create a clone to replace it with to maintain correct layout.
         uploadFields.each(function(field) {
             if (field.rendered) { // can only have a selected file value after being rendered
-                var input = field.inputEl,
-                    clone = input.cloneNode(true);
-                Ext.fly(input).replaceWith(clone).appendTo(formEl);
+                var input = field.inputEl.dom,
+                    clone = input.cloneNode(true),
+                    previous = input.previousSibling,
+                    parent = input.parentNode;
+                    
+                formEl.appendChild(input);
+                if (previous) {
+                    Ext.fly(clone).insertAfter(previousSibling);
+                } else {
+                    parent.appendChild(clone);
+                }
             }
         });
 

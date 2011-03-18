@@ -125,13 +125,6 @@ Ext.define('Ext.data.RestProxy', {
      * RestProxy intro docs for full details. Defaults to undefined.
      */
     
-    api: {
-        create : 'create',
-        read   : 'read',
-        update : 'update',
-        destroy: 'destroy'
-    },
-    
     /**
      * Specialized version of buildUrl that incorporates the {@link #appendId} and {@link #format} options into the
      * generated url. Override this to provide further customizations, but remember to call the superclass buildUrl
@@ -164,13 +157,40 @@ Ext.define('Ext.data.RestProxy', {
         request.url = url;
         
         return Ext.data.RestProxy.superclass.buildUrl.apply(this, arguments);
+    },
+    
+    /*
+     * Inherit docs. We are overriding this so that the we can break off
+     * each record into its own request
+     */
+    batch: function(operations, listeners) {
+        var batch = Ext.create('Ext.data.Batch', {
+            proxy: this,
+            listeners: listeners || {}
+        }), records;
+        
+        Ext.each(this.batchOrder.split(','), function(action) {
+            records = operations[action];
+            if (records) {
+                Ext.each(records, function(record){
+                    batch.add(Ext.create('Ext.data.Operation', {
+                        action : action, 
+                        records: [record]
+                    }));
+                });
+            }
+        }, this);
+        
+        batch.start();
+        
+        return batch;
     }
 }, function() {
     Ext.apply(this.prototype, {
         /**
          * Mapping of action name to HTTP request method. These default to RESTful conventions for the 'create', 'read',
          * 'update' and 'destroy' actions (which map to 'POST', 'GET', 'PUT' and 'DELETE' respectively). This object should
-         * not be changed except globally via {@link Ext.override} - the {@link #getMethod} function can be overridden instead.
+         * not be changed except globally via {@link Ext#override Ext.override} - the {@link #getMethod} function can be overridden instead.
          * @property actionMethods
          * @type Object
          */

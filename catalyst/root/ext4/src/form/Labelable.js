@@ -135,7 +135,7 @@ Ext.define("Ext.form.Labelable", {
      * Must be one of the following values:</p>
      * <div class="mdetail-params"><ul>
      * <li><code>qtip</code> Display a quick tip containing the message when the user hovers over the field. This is the default.
-     * <div class="subdesc"><b>{@link Ext.tip.QuickTips#init Ext.tip.QuickTips.init} must have been called for this setting to work.</b></div</li>
+     * <div class="subdesc"><b>{@link Ext.tip.QuickTips#init Ext.tip.QuickTips.init} must have been called for this setting to work.</b></div></li>
      * <li><code>title</code> Display the message in a default browser title attribute popup.</li>
      * <li><code>under</code> Add a block div beneath the field containing the error message.</li>
      * <li><code>side</code> Add an error icon to the right of the field, displaying the message in a popup on hover.</li>
@@ -340,6 +340,13 @@ Ext.define("Ext.form.Labelable", {
                 me[key] = val;
             }
         });
+    },
+
+    /**
+     * @private Calculate and return the natural width of the bodyEl. Override to provide custom logic.
+     */
+    getBodyNaturalWidth: function() {
+        return this.bodyEl.getWidth();
     }
 
 });

@@ -94,12 +94,12 @@ Ext.define('Ext.chart.series.Series', {
     },
 
     // @private set the bbox and clipBox for the series
-    setBBox: function() {
+    setBBox: function(noGutter) {
         var me = this,
             chart = me.chart,
             chartBBox = chart.chartBBox,
-            gutterX = chart.maxGutter[0],
-            gutterY = chart.maxGutter[1],
+            gutterX = noGutter ? 0 : chart.maxGutter[0],
+            gutterY = noGutter ? 0 : chart.maxGutter[1],
             clipBox, bbox;
 
         clipBox = {
@@ -190,7 +190,31 @@ Ext.define('Ext.chart.series.Series', {
      *                  </ul>
      */
     getItemForPoint: function(x, y) {
+        //if there are no items to query just return null.
+        if (!this.items || !this.items.length || this.seriesIsHidden) {
+            return null;
+        }
+        var me = this,
+            items = me.items,
+            bbox = me.bbox,
+            item, i, ln;
+
+        // Check bounds
+        if (!Ext.draw.Draw.withinBox(x, y, bbox)) {
+            return null;
+        }
+        
+        for (i = 0, ln = items.length; i < ln; i++) {
+            if (items[i] && this.isItemInPoint(x, y, items[i], i)) {
+                return items[i];
+            }
+        }
+        
         return null;
+    },
+    
+    isItemInPoint: function(x, y, item, i) {
+        return false;
     },
 
     /**
@@ -201,6 +225,7 @@ Ext.define('Ext.chart.series.Series', {
             items = me.items,
             item, len, i, sprite;
 
+        me.seriesIsHidden = true;
         me._prevShowMarkers = me.showMarkers;
 
         me.showMarkers = false;
@@ -225,6 +250,7 @@ Ext.define('Ext.chart.series.Series', {
         var me = this,
             prevAnimate = me.chart.animate;
         me.chart.animate = false;
+        me.seriesIsHidden = false;
         me.showMarkers = me._prevShowMarkers;
         me.drawSeries();
         me.chart.animate = prevAnimate;
@@ -244,5 +270,18 @@ Ext.define('Ext.chart.series.Series', {
             return stroke;
         }
         return '#000';
+    },
+    
+    /**
+     * Checks whether the data field should be visible in the legend
+     * @private
+     * @param {Number} index The index of the current item
+     */
+    visibleInLegend: function(index){
+        var excludes = this.__excludes;
+        if (excludes) {
+            return !excludes[index];
+        }
+        return !this.seriesIsHidden;
     }
 });

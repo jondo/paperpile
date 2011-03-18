@@ -66,6 +66,17 @@ Ext.define('Ext.AbstractDataView', {
         'Ext.DomQuery',
         'Ext.selection.DataViewModel'
     ],
+    
+    inheritableStatics: {
+        getRecord: function(node) {
+            return this.getBoundView(node).getRecord(node);
+        },
+        
+        getBoundView: function(node) {
+            return Ext.getCmp(node.boundView);
+        }
+    },
+    
     /**
      * @cfg {String/Array} tpl
      * @required
@@ -253,7 +264,7 @@ Ext.define('Ext.AbstractDataView', {
         }
         
         if (!this.selModel.hasRelaySetup) {
-            this.relayEvents(this.selModel, ['selectionchange', 'select', 'deselect']);
+            this.relayEvents(this.selModel, ['selectionchange', 'beforeselect', 'select', 'deselect']);
             this.selModel.hasRelaySetup = true;
         }
 
@@ -289,6 +300,7 @@ Ext.define('Ext.AbstractDataView', {
             this.all.fill(Ext.query(this.getItemSelector(), el.dom));
             this.updateIndexes(0);
         }
+        this.selModel.refresh();
         this.hasSkippedEmptyText = true;
         this.fireEvent('refresh', this);
     },
@@ -364,7 +376,7 @@ Ext.define('Ext.AbstractDataView', {
                     
                     //when we load the associations for a specific model instance we add it to the set of loaded ids so that
                     //we don't load it twice. If we don't do this, we can fall into endless recursive loading failures.
-                    if (ids.indexOf(internalId) == -1) {
+                    if (Ext.Array.indexOf(ids, internalId) == -1) {
                         ids.push(internalId);
                         
                         associationData[association.name][j] = associatedRecord.data;
@@ -442,6 +454,7 @@ Ext.define('Ext.AbstractDataView', {
             n = this.all.last().insertSibling(nodes, 'after', true);
             a.push.apply(a, nodes);
         }
+        this.selModel.refresh();
         this.updateIndexes(index);
     },
 
@@ -469,6 +482,9 @@ Ext.define('Ext.AbstractDataView', {
         endIndex = endIndex || ((endIndex === 0) ? 0 : (ns.length - 1));
         for(var i = startIndex; i <= endIndex; i++){
             ns[i].viewIndex = i;
+            if (!ns[i].boundView) {
+                ns[i].boundView = this.id;
+            }
         }
     },
 
@@ -594,12 +610,14 @@ Ext.define('Ext.AbstractDataView', {
 
     /**
      * Gets a record from a node
-     * @param {HTMLElement} node The node to evaluate
+     * @param {Element/HTMLElement} node The node to evaluate
+     * 
      * @return {Record} record The {@link Ext.data.Model} object
      */
     getRecord: function(node){
-        return this.store.getAt(node.viewIndex);
+        return this.store.getAt(Ext.getDom(node).viewIndex);
     },
+    
 
     /**
      * Returns true if the passed node is selected, else false.
