@@ -19,6 +19,7 @@ Ext.define('Paperpile.pub.View', {
   alias: 'widget.pubview',
   initComponent: function() {
     Ext.apply(this, {
+      sidebarUpdateDelay: 100,
       layout: 'border',
       items: [this.createCenter(), this.createEast()],
       listeners: {
@@ -40,7 +41,7 @@ Ext.define('Paperpile.pub.View', {
       flex: 2,
       listeners: {
         scope: this,
-        afterselectionchange: Ext.Function.createBuffered(me.onSelect, 50, me)
+        afterselectionchange: me.onSelect
       }
     });
     this.grid = Ext.create(this.getGridType(), params);
@@ -97,6 +98,13 @@ Ext.define('Paperpile.pub.View', {
   },
 
   onSelect: function(sm, selections) {
+    if (this.updateSelectionTask === undefined) {
+      this.updateSelectionTask = new Ext.util.DelayedTask();
+    }
+    this.updateSelectionTask.delay(this.sidebarUpdateDelay, this.doUpdateSelection, this, [sm, selections]);
+  },
+
+  doUpdateSelection: function(sm, selections) {
     var panels = [this.abstract, this.overview];
     var grid_id = this.grid.id;
     Ext.each(panels, function(panel) {
@@ -107,7 +115,6 @@ Ext.define('Paperpile.pub.View', {
       var pub = selections[0];
       pub.data.grid_id = grid_id;
       //      pub.set('grid_id', grid_id);
-
       Ext.each(panels, function(panel) {
         panel.setPublication(pub);
       });
@@ -133,5 +140,9 @@ Ext.define('Paperpile.pub.View', {
       }
       Paperpile.app.Actions.execute(id, array);
     }
+  },
+
+  updateFromServer: function(data) {
+    this.grid.updateFromServer(data);
   }
 });

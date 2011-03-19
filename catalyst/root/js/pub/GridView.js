@@ -72,6 +72,7 @@ Ext.define('Paperpile.pub.Grid', {
       autoheight: true,
       multiSelect: true,
       trackOver: true,
+      loadingText: null, // Remove the loading text to kill the loading mask.
       overItemCls: 'pp-grid-over',
       selectedItemCls: 'pp-grid-selected',
       store: this.getStore(),
@@ -1088,8 +1089,6 @@ Ext.define('Paperpile.pub.Grid', {
   // Update specific fields of specific entries to avoid complete
   // reload of everything.
   updateFromServer: function(data) {
-	    Paperpile.log(data);
-	    Paperpile.log("Updating!");
     var pubs = data.pubs;
     if (!pubs) {
       pubs = [];
@@ -1097,30 +1096,30 @@ Ext.define('Paperpile.pub.Grid', {
 
     var store = this.getStore();
     var selected_guid = '';
-    var sel = this.getSingleSelection();
-    if (sel) selected_guid = sel.data.guid;
+    var pub = this.getSingleSelection();
+    if (sel) selected_guid = sel.getId();
 
     // Track the rowIndex of the row that the mouse is currently hovering (if any).
     var mouseOverRow = undefined;
 
     var updateSidePanel = false;
     for (var guid in pubs) {
-      var rowIndex = store.findExact('guid', guid);
-      var record = store.getAt(rowIndex);
+	var rowIndex = store.findById(guid);
+      var pub = store.getAt(rowIndex);
       if (!record) {
         continue;
       }
       var needsUpdating = false;
       var update = pubs[guid];
-      record.editing = true; // Set the 'editing' flag.
+      pub.editing = true; // Set the 'editing' flag.
       for (var field in update) {
         if (update[field] != record.get(field)) {
-          record.set(field, update[field]);
+          pub.set(field, update[field]);
         }
       }
 
       // Unset the 'editing' flag. Using the flag directly avoids calling store.afterEdit() for every record.
-      record.editing = false;
+      pub.editing = false;
       if (record.dirty) {
         needsUpdating = true;
         if (guid == selected_guid) updateSidePanel = true;
