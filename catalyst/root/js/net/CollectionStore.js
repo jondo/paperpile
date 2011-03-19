@@ -19,7 +19,6 @@ Ext.define('Paperpile.net.CollectionStore', {
   },
   updateFromServer: function(data) {
     if (data.collection_delta) {
-      Paperpile.log("Realoding!");
       this.load();
     }
   }

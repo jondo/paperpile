@@ -74,9 +74,6 @@ Ext.define('Paperpile.Viewport', {
       listeners: {
         load: {
           fn: function(store, records, success) {
-            store.each(function(record) {
-              Paperpile.log(record.get('name') + "  " + record.get('count'));
-            });
             me.onLabelStoreLoad();
           }
         }

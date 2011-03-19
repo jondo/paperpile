@@ -30,7 +30,7 @@ Paperpile.Url = function(url) {
 
 Paperpile.log = function() {
   if (IS_QT) {
-      QRuntime.log(obj2str(arguments[0], 2));
+      QRuntime.log(obj2str(arguments[0], 3));
   } else if (IS_CHROME) {
     console.log(arguments[0]);
   } else if (window.console) {
@@ -38,10 +38,25 @@ Paperpile.log = function() {
   }
 };
 
-function obj2str(o, level) {
+Paperpile.logFull = function() {
+  if (IS_QT) {
+      QRuntime.log(obj2str(arguments[0], 10));
+  } else if (IS_CHROME) {
+    console.log(arguments[0]);
+  } else if (window.console) {
+    console.log(arguments);
+  }
+};
+
+function obj2str(o, level, maxLevel) {
   if (level === undefined) {
     level = 0
   }
+
+  if (level / 2 > maxLevel) {
+      return '[object]';
+  }
+
   if (typeof o !== 'object') {
     return o;
   }
@@ -63,7 +78,7 @@ function obj2str(o, level) {
         continue;
       }
       out += '\n';
-      out += space + p + ': ' + obj2str(o[p], level + 2);
+      out += space + p + ': ' + obj2str(o[p], level + 2, maxLevel);
     }
     out += '\n';
     out += pre_space + '}';
