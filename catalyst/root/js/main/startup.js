@@ -30,7 +30,7 @@ Paperpile.Url = function(url) {
 
 Paperpile.log = function() {
   if (IS_QT) {
-    QRuntime.log(obj2str(arguments[0]));
+      QRuntime.log(obj2str(arguments[0], 2));
   } else if (IS_CHROME) {
     console.log(arguments[0]);
   } else if (window.console) {
@@ -38,22 +38,46 @@ Paperpile.log = function() {
   }
 };
 
-function obj2str(o) {
+function obj2str(o, level) {
+  if (level === undefined) {
+    level = 0
+  }
   if (typeof o !== 'object') {
     return o;
   }
-  var out = '{';
-  for (var p in o) {
-    if (!o.hasOwnProperty(p)) {
-      continue;
+
+  var pre_space = '';
+  var space = '';
+  for (var i = 0; i < level; i++) {
+    space += ' ';
+    if (i < level - 2) {
+	pre_space += ' ';
     }
-    out += '\n ';
-    out += p + ': ' + o[p];
   }
-  out += '\n}';
+
+  var out;
+  if (typeof o === 'object') {
+    out = '{';
+    for (var p in o) {
+      if (!o.hasOwnProperty(p)) {
+        continue;
+      }
+      out += '\n';
+      out += space + p + ': ' + obj2str(o[p], level + 2);
+    }
+    out += '\n';
+    out += pre_space + '}';
+  } else if (typeof o === 'array') {
+    out = '[';
+    for (var i = 0; i < o.length; i++) {
+      out += '\n';
+      out += space + ob2str(o[i], level + 2) + ', ';
+    }
+    out += '\n';
+    out += pre_space + ']';
+  }
   return out;
 }
-
 
 Paperpile.serverLog = '';
 Paperpile.isLogging = 1;
