@@ -54,7 +54,7 @@ sub resultsgrid : Local {
 
   my $grid_id   = $c->request->params->{grid_id};
   my $task      = $c->request->params->{task} || '';
-  my $offset    = $c->request->params->{start};
+  my $offset    = $c->request->params->{start} || 0;
   my $limit     = $c->request->params->{limit};
   my $selection = $c->request->params->{selection} || '';
 
