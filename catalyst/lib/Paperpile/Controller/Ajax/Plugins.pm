@@ -177,13 +177,12 @@ sub _resultsgrid_format {
   }
 
   my %metaData = (
-    totalProperty => 'total_entries',
     root          => 'data'
   );
 
   $c->component('View::JSON')->encoding('utf8');
 
-  $c->stash->{total_entries} = $total_entries;
+  $c->stash->{total} = $total_entries;
   $c->stash->{data}          = [@data];
   $c->stash->{metaData}      = {%metaData};
 
