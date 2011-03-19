@@ -72,7 +72,8 @@ Ext.define('Paperpile.pub.Grid', {
       autoheight: true,
       multiSelect: true,
       trackOver: true,
-      loadingText: null, // Remove the loading text to kill the loading mask.
+      loadingText: null,
+      // Remove the loading text to kill the loading mask.
       overItemCls: 'pp-grid-over',
       selectedItemCls: 'pp-grid-selected',
       store: this.getStore(),
@@ -104,11 +105,8 @@ Ext.define('Paperpile.pub.Grid', {
 
     this.pager = new Paperpile.grid.Pager({
       dock: 'bottom',
-      pageSize: this.limit,
       store: this.getStore(),
-      displayInfo: true,
-      displayMsg: '<span style="color:black;">Displaying {0} - {1} of {2}</span>',
-      emptyMsg: "No references to display"
+      displayInfo: true
     });
     this.pager.on('pagebutton', function(pager) {
       this.onPageButtonClick();
@@ -139,6 +137,19 @@ Ext.define('Paperpile.pub.Grid', {
     },
     this);
 
+  },
+
+  initialLoad: function() {
+    if (this.isLoaded()) {
+      Paperpile.log("Calling initialLoad on an already loaded store -- for shame...");
+    }
+    var store = this.getStore();
+    var limit = Paperpile.main.globalSettings['pager_limit'] || 25;
+    store.pageSize = limit;
+    store.load({
+      start: 0,
+      limit: limit
+    });
   },
 
   getTemplate: function() {
@@ -268,33 +279,6 @@ Ext.define('Paperpile.pub.Grid', {
       this.lookupDetails();
       break;
     }
-  },
-
-  onAllSelected: function() {
-    var num = this.getSelectionModel().getCount();
-    /*
-    Paperpile.status.clearMsg();
-    Paperpile.status.updateMsg({
-      type: 'info',
-      msg: 'All ' + num + ' references are selected.',
-      action1: 'Clear selection',
-      callback: function() {
-        this.getSelectionModel().clearSelectionsAndUpdate();
-        Paperpile.status.clearMsg();
-      },
-      scope: this
-    });
-    */
-    // Create a callback to clear this message if the selection changes.
-    /*
-    var messageNum = Paperpile.status.getMessageNumber();
-    var clearMsg = function() {
-      Paperpile.status.clearMessageNumber(messageNum);
-    };
-    this.mon(this.getSelectionModel(), 'afterselectionchange', clearMsg, this, {
-      single: true
-    });
-    */
   },
 
   // Base classes should return /false/ if the base query info should be hidden.
@@ -536,15 +520,18 @@ Ext.define('Paperpile.pub.Grid', {
       return this._store;
     }
     this._store = new Ext.data.Store({
-      autoLoad: true,
+      autoLoad: false,
       model: 'Publication',
-      proxy: new Ext.data.HttpProxy({
+      proxy: new Ext.data.AjaxProxy({
         model: 'Publication',
-        idProperty: 'guid',
         url: Paperpile.Url('/ajax/plugins/resultsgrid'),
+        startParam: 'start',
+        pageParam: 'page',
+        limitParam: 'limit',
+        sortParam: 'sort',
         // We don't set timeout here but handle timeout separately in
         // specific plugins.
-        timeout: 10000000,
+        timeout: 1000000,
         method: 'GET',
         extraParams: {
           grid_id: this.id,
@@ -552,8 +539,7 @@ Ext.define('Paperpile.pub.Grid', {
           plugin_name: this.plugin_name,
           plugin_query: this.plugin_query,
           plugin_mode: this.plugin_mode,
-          plugin_order: Paperpile.main.globalSettings['sort_field'],
-          limit: this.limit
+          plugin_order: Paperpile.main.globalSettings['sort_field']
         },
       }),
     });
@@ -585,16 +571,16 @@ Ext.define('Paperpile.pub.Grid', {
   },
 
   cancelLoad: function() {
-    if (!this.store) {
+    if (!this.getStore()) {
       return;
     }
     // The refresh button does not get reset and keeps
     // spinning. It is resetted if an error occurs in the
     // proxy. Therefore I call the exception explicitly as a
     // workaround
-    this.store.proxy.fireEvent('exception');
+    this.getStore().proxy.fireEvent('exception');
 
-    this.store.proxy.getConnection().abort();
+    this.getStore().proxy.getConnection().abort();
 
     // Kill process on the backend. Should not do any harm. On
     // the backend side a grid call just adds papers to the
@@ -1021,8 +1007,7 @@ Ext.define('Paperpile.pub.Grid', {
   handleCopyFormatted: function() {
     this.handleCopy('Bibfile', 'CITATIONS', '{n} Citation{s} copied');
   },
-  deleteEntry: function(mode, deleteAll) {
-  },
+  deleteEntry: function(mode, deleteAll) {},
 
   handleEdit: function(isNew, autoComplete) {
     var selection = this.getSingleSelection();
@@ -1089,61 +1074,40 @@ Ext.define('Paperpile.pub.Grid', {
   // Update specific fields of specific entries to avoid complete
   // reload of everything.
   updateFromServer: function(data) {
-    var pubs = data.pubs;
-    if (!pubs) {
-      pubs = [];
-    }
 
-    var store = this.getStore();
-    var selected_guid = '';
-    var pub = this.getSingleSelection();
-    if (sel) selected_guid = sel.getId();
-
-    // Track the rowIndex of the row that the mouse is currently hovering (if any).
-    var mouseOverRow = undefined;
-
-    var updateSidePanel = false;
-    for (var guid in pubs) {
-	var rowIndex = store.findById(guid);
-      var pub = store.getAt(rowIndex);
-      if (!record) {
-        continue;
+    if (data.pub_delta) {
+      // Reload the whole store if we get a pub_delta flag.
+      if (data.pub_delta_ignore != this.id) {
+        Paperpile.log("Pub delta -- reloading grid store!");
+        this.getStore().load();
+        return;
       }
-      var needsUpdating = false;
-      var update = pubs[guid];
-      pub.editing = true; // Set the 'editing' flag.
-      for (var field in update) {
-        if (update[field] != record.get(field)) {
-          pub.set(field, update[field]);
+    } else {
+      // Go through each record and apply updates if needed.
+      var pubs = data.pubs;
+      if (!pubs) {
+        pubs = [];
+      }
+
+      var store = this.getStore();
+      var pub = this.getSingleSelection();
+
+      for (var guid in pubs) {
+        var pubDataFromServer = pubs[guid];
+        var pub = store.getById(guid);
+        if (!pub) {
+          Paperpile.log("  pub not found for guid " + guid);
+          continue;
+        }
+        pub.editing = true;
+        pub.dirty = false;
+        pub.set(field, pubDataFromServer);
+        if (pub.dirty) {
+          Paperpile.log("Publication was modified from server!");
+          Paperpile.log(pub.modified);
+          store.fireEvent('update', store, record, Ext.data.Model.EDIT);
         }
       }
-
-      // Unset the 'editing' flag. Using the flag directly avoids calling store.afterEdit() for every record.
-      pub.editing = false;
-      if (record.dirty) {
-        needsUpdating = true;
-        if (guid == selected_guid) updateSidePanel = true;
-      }
-
-      // Store this rowIndex if the mouse is hovering here.
-      var r = this.getView().getRow(rowIndex);
-      if (Ext.fly(r).hasClass('x-grid3-row-over')) {
-        mouseOverRow = rowIndex;
-      }
-      if (needsUpdating) {
-        store.fireEvent('update', store, record, Ext.data.Record.EDIT);
-      }
-    }
-
-    if (data.updateSidePanel) updateSidePanel = true;
-    if (updateSidePanel) {
-      this.refreshView.defer(20, this);
-    }
-
-    if (mouseOverRow !== undefined) {
-      // Re-apply the hover effect to get rid of the flickering during updates.
-      var r = this.getView().getRow(mouseOverRow);
-      Ext.fly(r).addClass('x-grid3-row-over');
     }
   },
 
@@ -1176,11 +1140,6 @@ Ext.define('Paperpile.pub.Grid', {
       Paperpile.log("Nothing selected -- make sure the call to getSingleSelection handles undefined!");
       return undefined;
     }
-  },
-
-  reloadFeed: function() {
-    this.plugin_reload = 1;
-    this.getStore().reload();
   },
 
   onDblClick: function(grid, rowIndex, e) {

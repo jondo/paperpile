@@ -93,9 +93,13 @@ Ext.define('Paperpile.pub.View', {
     return "Paperpile.pub.Grid";
   },
 
-  handleHideSouth: function() {
-    Paperpile.log("YO");
+  onRender: function() {
+
+    this.overview.setStore(this.grid.store);
+    this.callParent(arguments);
   },
+
+  handleHideSouth: function() {},
 
   onSelect: function(sm, selections) {
     if (this.updateSelectionTask === undefined) {
@@ -144,5 +148,15 @@ Ext.define('Paperpile.pub.View', {
 
   updateFromServer: function(data) {
     this.grid.updateFromServer(data);
+
+    var panels = [this.abstract, this.overview];
+    Ext.each(panels, function(panel) {
+      if (panel['updateFromServer']) {
+        panel.updateFromServer(data);
+      } else {
+        Paperpile.log("Panel " + panel.itemId + " cannot update from server!");
+      }
+    });
+
   }
 });

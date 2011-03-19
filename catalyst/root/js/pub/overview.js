@@ -45,6 +45,10 @@ Ext.define('Paperpile.pub.Overview', {
     this.callParent(arguments);
   },
 
+  setStore: function(store) {
+    this.store = store;
+  },
+
   createTemplate: function() {
     return Paperpile.pub.OverviewTemplates.single();
   },
@@ -54,6 +58,12 @@ Ext.define('Paperpile.pub.Overview', {
     this.items.each(function(item, index) {
       item.setPublication(pub);
     });
+  },
+
+  onStoreUpdate: function(store, record) {
+    if (record.getId() == this.pub.getId()) {
+      Paperpile.log("  overview: this record was updated!");
+    }
   },
 
   setMulti: function(selections) {

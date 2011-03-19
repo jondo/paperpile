@@ -75,8 +75,6 @@ Ext.define('Paperpile.grid.Pager', {
         this.body.update(string);
         var x = this.pager.getPositionForPage(page) - this.getBox().width / 2;
         var y = this.pager.getBox().y - this.getBox().height;
-        Paperpile.log(x);
-        Paperpile.log(y);
         this.setPagePosition(x, y);
       }
     });
@@ -168,7 +166,6 @@ Ext.define('Paperpile.grid.Pager', {
     }
   },
   handleProgressBarClick: function(e) {
-    Paperpile.log(this.getPageForPosition(e.getXY()));
     this.store.loadPage(this.getPageForPosition(e.getXY()));
     this.fireEvent('pagebutton', this);
   },

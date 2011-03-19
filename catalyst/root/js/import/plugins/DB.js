@@ -15,8 +15,8 @@
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
 Ext.define('Paperpile.pub.GridDB', {
-	extend: 'Paperpile.pub.Grid',
-	    alias: 'widget.pubGridDB',
+  extend: 'Paperpile.pub.Grid',
+  alias: 'widget.pubGridDB',
   plugin_base_query: '',
   plugin_iconCls: 'pp-icon-folder',
   plugin_name: 'DB',
@@ -24,27 +24,17 @@ Ext.define('Paperpile.pub.GridDB', {
   plugins: [],
 
   initComponent: function() {
-	    this.callParent(arguments);
+    this.callParent(arguments);
 
     // Replace the 'handleHdOver' with an empty function to remove the 
     // build-in header highlighting.
     var view = this.getView();
-    view.handleHdOver = Ext.emptyFn;
 
-    this.limit = Paperpile.main.globalSettings['pager_limit'] || 25;
-
-    var store = this.getStore();
-
-    store.load({
-      params: {
-        start: 0,
-        limit: this.limit
-      }
-    });
+    this.initialLoad();
   },
 
   loadKeyboardShortcuts: function() {
-	    this.callParent(arguments);
+    this.callParent(arguments);
   },
 
   toggleFilter: function(item, checked) {
@@ -96,24 +86,23 @@ Ext.define('Paperpile.pub.GridDB', {
   },
 
   createContextMenu: function() {
-	    this.callParent(arguments);
+    this.callParent(arguments);
   },
 
   createToolbar: function() {
-	    var toolbar = this.callParent(arguments);
+    var toolbar = this.callParent(arguments);
 
-	    // Do some other stuff.
-
-	    return toolbar;
+    // Do some other stuff.
+    return toolbar;
   },
 
   refreshCollections: function() {
-	    this.callParent(arguments);
+    this.callParent(arguments);
 
   },
 
   initToolbarMenuItemIds: function() {
-	    this.callParent(arguments);
+    this.callParent(arguments);
     var ids = this.toolbarMenuItemIds;
 
     ids.insert(0, 'FILTER_FIELD');
@@ -135,7 +124,7 @@ Ext.define('Paperpile.pub.GridDB', {
   },
 
   updateButtons: function() {
-	    this.callParent(arguments);
+    this.callParent(arguments);
 
     var tbar = this.getTopToolbar();
 
@@ -149,18 +138,6 @@ Ext.define('Paperpile.pub.GridDB', {
       item = tbar.getComponent('VIEW_PDF');
       if (item) {
         item.disable();
-      }
-    }
-  },
-
-  onUpdate: function(data) {
-	    this.callParent(arguments);
-
-    // If the update has to do with collections and we are 
-    // a collection tab, refresh the whole view.
-    if (this.collection_type) {
-      if (data.collection_delta) {
-        this.getStore().reload();
       }
     }
   },
@@ -196,9 +173,8 @@ Ext.define('Paperpile.pub.GridDB', {
   }
 });
 
-
 Ext.define('Paperpile.pub.ViewDB', {
-	extend: 'Paperpile.pub.View',
+  extend: 'Paperpile.pub.View',
   createGrid: function(params) {
     return new Paperpile.pub.GridDB(params);
   },

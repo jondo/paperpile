@@ -45,10 +45,10 @@ Ext.define('Paperpile.pub.panel.BasicInfo', {
           } else {
             return 'Publication';
           }
-	  },
-	      prettyDate: function(date, all) {
-	      return Paperpile.utils.prettyDate(date);
-	  }
+        },
+        prettyDate: function(date, all) {
+          return Paperpile.utils.prettyDate(date);
+        }
 
       });
   }
