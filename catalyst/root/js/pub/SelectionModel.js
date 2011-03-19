@@ -520,8 +520,9 @@ Ext.define('Paperpile.grid.SelectionModel', {
   isAllSelected: function() {
     if (this.fakeAllSelected) {
       return true;
+    } else {
+      return false;
     }
-    return false;
   },
 
   isPageSelected: function() {

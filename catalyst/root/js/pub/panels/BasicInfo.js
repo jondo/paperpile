@@ -49,12 +49,23 @@ Ext.define('Paperpile.pub.panel.BasicInfo', {
 
       });
 
+    var me = this;
     this.multiTpl = new Ext.XTemplate(
       '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
       '<h2>Reference Info</h2>',
-      '{[this.getPubCount(values)]} references selected.', {
+      '<tpl if="this.isAllSelected(values)">',
+      '  All {[this.getPubCount(values)]} references are selected.',
+      '</tpl>',
+      '<tpl if="this.isAllSelected(values) === false">',
+      '  {[this.getPubCount(values)]} references selected.',
+      '</tpl>', {
+        isAllSelected: function(selection) {
+          var grid = me.up('pubview').grid;
+          return grid.isAllSelected();
+        },
         getPubCount: function(selection) {
-          return (selection.length);
+          var grid = me.up('pubview').grid;
+          return grid.getSelectionCount();
         }
       });
   }

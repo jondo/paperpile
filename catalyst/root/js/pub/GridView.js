@@ -1100,15 +1100,10 @@ Ext.define('Paperpile.pub.Grid', {
 
   selectAll: function() {
     this.getSelectionModel().selectAll();
-    this._allSelected = true;
   },
 
   isAllSelected: function() {
-    if (this._allSelected) {
-      return true;
-    } else {
-      return false;
-    }
+    return this.getSelectionModel().isAllSelected();
   },
 
   setSearchQuery: function() {

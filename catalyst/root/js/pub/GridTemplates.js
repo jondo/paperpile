@@ -51,7 +51,7 @@ Ext.define('Paperpile.grid.GridTemplates', {
 	  if (record) {
 	      data.push(record.data);
 	  } else {
-	      Paperpile.log("No record found for GUID "+guid);
+	      //Paperpile.log("No record found for GUID "+guid);
 	  }
         }
       });
