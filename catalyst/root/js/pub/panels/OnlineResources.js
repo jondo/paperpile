@@ -1,19 +1,18 @@
 Ext.define('Paperpile.pub.panel.OnlineResources', {
-  extend: 'Ext.Component',
+  extend: 'Paperpile.pub.PubPanel',
   alias: 'widget.OnlineResources',
   initComponent: function() {
     Ext.apply(this, {
-      tpl: this.createTemplate()
+      hideOnMulti: true
     });
+
+    this.callParent(arguments);
   },
 
-  setPublication: function(pub) {
-    this.pub = pub;
-    this.update(pub.data);
-  },
+  createTemplates: function() {
+    this.callParent(arguments);
 
-  createTemplate: function() {
-    return new Ext.XTemplate(
+    this.singleTpl = new Ext.XTemplate(
       '<div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
       '<h2>Online Resources</h2>',
       '  <ul>',
@@ -25,8 +24,7 @@ Ext.define('Paperpile.pub.panel.OnlineResources', {
       '    </tpl>',
       '   <li><a href="#" action="EMAIL_REFERENCE" arg="{guid}" class="pp-textlink pp-action pp-action-email">E-mail Reference</a></li>',
       '  </ul>',
-      '  </div>',
-       {
+      '  </div>', {
         hasOnlineLink: function(values) {
           if (values.doi || values.linkout || values.url || values.eprint || values.arxivid) {
             return true;

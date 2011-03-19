@@ -1,19 +1,27 @@
 Ext.define('Paperpile.pub.panel.Collections', {
-  extend: 'Ext.Component',
+  extend: 'Paperpile.pub.PubPanel',
   alias: 'widget.Collections',
   initComponent: function() {
-    Ext.apply(this, {
-      tpl: this.createTemplate()
+    Ext.apply(this, {});
+
+    this.callParent(arguments);
+  },
+
+  viewRequiresUpdate: function() {
+    var needsUpdate = false;
+    Ext.each(this.selection, function(pub) {
+      if (pub.modified.labels || pub.modified.folders) {
+        needsUpdate = true;
+      }
     });
+    return needsUpdate;
+
   },
 
-  setPublication: function(pub) {
-    this.pub = pub;
-    this.update(pub.data);
-  },
+  createTemplates: function() {
+    this.callParent(arguments);
 
-  createTemplate: function() {
-    return new Ext.XTemplate(
+    this.singleTpl = new Ext.XTemplate(
       '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
       '<h2>Folders and Labels</h2>',
       '<tpl if="folders">',
@@ -59,7 +67,7 @@ Ext.define('Paperpile.pub.panel.Collections', {
             }
           });
           return data;
-	  },
+        },
         getLabelsList: function(labels) {
           var guids = labels.split(',');
           var store = Ext.getStore('labels');

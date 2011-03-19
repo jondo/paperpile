@@ -94,8 +94,6 @@ Ext.define('Paperpile.pub.View', {
   },
 
   onRender: function() {
-
-    this.overview.setStore(this.grid.store);
     this.callParent(arguments);
   },
 
@@ -115,22 +113,9 @@ Ext.define('Paperpile.pub.View', {
       panel.grid_id = grid_id;
     });
 
-    if (selections.length == 1) {
-      var pub = selections[0];
-      pub.data.grid_id = grid_id;
-      //      pub.set('grid_id', grid_id);
-      Ext.each(panels, function(panel) {
-        panel.setPublication(pub);
+    Ext.each(panels, function(panel) {
+        panel.setSelection(selections);
       });
-    } else if (selections.length == 0) {
-      Ext.each(panels, function(panel) {
-        panel.onEmpty();
-      });
-    } else {
-      Ext.each(panels, function(panel) {
-        panel.setMulti(selections);
-      });
-    }
   },
 
   onMouseDown: function(event, target, o) {
@@ -154,7 +139,7 @@ Ext.define('Paperpile.pub.View', {
       if (panel['updateFromServer']) {
         panel.updateFromServer(data);
       } else {
-        Paperpile.log("Panel " + panel.itemId + " cannot update from server!");
+        Paperpile.log("Panel " + panel.id + " cannot update from server!");
       }
     });
 

@@ -36,15 +36,22 @@ Ext.define('Paperpile.pub.Abstract', {
       });
   },
 
-  setPublication: function(pub) {
-    this.pub = pub;
-    this.update(pub.data);
-	},
+  setSelection: function(selection) {
+    this.selection = selection;
+
+    if (selection.length == 1) {
+      var pub = selection[0];
+      this.update(pub.data);
+    } else if (selection.length > 1) {
+	//this.onMulti();
+    } else {
+	//this.onEmpty();
+    }
+  },
 
   setMulti: function(pub) {
     delete this.pub;
     this.update({});
   }
-
 
 });

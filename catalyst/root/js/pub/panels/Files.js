@@ -1,10 +1,8 @@
 Ext.define('Paperpile.pub.panel.Files', {
-  extend: 'Ext.Component',
+  extend: 'Paperpile.pub.PubPanel',
   alias: 'widget.Files',
   initComponent: function() {
-    Ext.apply(this, {
-      tpl: this.createTemplate(),
-    });
+    Ext.apply(this, {});
 
     this.callParent(arguments);
   },
@@ -21,19 +19,24 @@ Ext.define('Paperpile.pub.panel.Files', {
     this.progress.updateProgress(0.5, "Hello world!");
   },
 
-  setPublication: function(pub) {
-    this.pub = pub;
-    this.update(pub.data);
-    if (this.downloadInProgress(pub)) {
-      this.updateProgress(pub);
-    }
-  },
-
   downloadInProgress: function(pub) {
     return pub._search_job && pub._search_job.size;
   },
 
-  createTemplate: function() {
+  viewRequiresUpdate: function(data) {
+    var needsUpdate = false;
+    Ext.each(this.selection, function(pub) {
+      if (this.downloadInProgress(pub)) {
+        needsUpdate = true;
+      }
+    },
+    this);
+    return needsUpdate;
+  },
+
+  createTemplates: function() {
+    this.callParent(arguments);
+
     var tpl = [
       '<tpl if="this.hasAttachments(values) || this.hasPdf(values) || this.isImported(values)">',
       '  <div class="pp-box pp-box-side-panel pp-box-style1">',
@@ -41,8 +44,7 @@ Ext.define('Paperpile.pub.panel.Files', {
       this.getAttachmentsSection(),
       '  </div>',
       '</tpl>'].join("\n");
-
-    return new Ext.XTemplate(tpl,
+    this.singleTpl = new Ext.XTemplate(tpl,
       this.getFunctions());
   },
 

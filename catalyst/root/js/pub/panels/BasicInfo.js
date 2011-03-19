@@ -1,19 +1,16 @@
 Ext.define('Paperpile.pub.panel.BasicInfo', {
-  extend: 'Ext.Component',
+  extend: 'Paperpile.pub.PubPanel',
   alias: 'widget.BasicInfo',
   initComponent: function() {
-    Ext.apply(this, {
-      tpl: this.createTemplate()
-    });
+    Ext.apply(this, {});
+
+    this.callParent(arguments);
   },
 
-  setPublication: function(pub) {
-    this.pub = pub;
-    this.update(pub.data);
-  },
+  createTemplates: function() {
+    this.callParent(arguments);
 
-  createTemplate: function() {
-    return new Ext.XTemplate(
+    this.singleTpl = new Ext.XTemplate(
       '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
       '<h2>Reference Info</h2>',
       '<dl class="pp-ref-info">',
@@ -50,6 +47,15 @@ Ext.define('Paperpile.pub.panel.BasicInfo', {
           return Paperpile.utils.prettyDate(date);
         }
 
+      });
+
+    this.multiTpl = new Ext.XTemplate(
+      '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
+      '<h2>Reference Info</h2>',
+      '{[this.getPubCount(values)]} references selected.', {
+        getPubCount: function(selection) {
+          return (selection.length);
+        }
       });
   }
 
