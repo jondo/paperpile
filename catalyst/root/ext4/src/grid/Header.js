@@ -15,6 +15,7 @@ Ext.define('Ext.grid.Header', {
     alias: 'widget.gridheader',
     
     requires: ['Ext.util.KeyNav'],
+    alternateClassName: 'Ext.grid.Column',
     
     headerCls: Ext.baseCSSPrefix + 'column-header ' + Ext.baseCSSPrefix + 'unselectable',
     overCls: Ext.baseCSSPrefix + 'column-header-over',

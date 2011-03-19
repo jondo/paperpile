@@ -13,7 +13,7 @@ Ext.define('Ext.tree.SelectionModel', {
     alias: 'selection.treemodel',
     
     // typically selection models prune records from the selection
-    // model when they are removed, because the FlatTreeView constantly
+    // model when they are removed, because the TreeView constantly
     // adds/removes records as they are expanded/collapsed
     pruneRemoved: false,
     
@@ -28,13 +28,9 @@ Ext.define('Ext.tree.SelectionModel', {
             if (focused.expanded) {
                 this.onKeyDown(e, t);
             // if its not a leaf node, expand it
-            } else if (!focused.node.isLeaf()) {
+            } else if (!focused.isLeaf()) {
                 view.expand(focused);
-            // this enables scrolling to the left/right when there are no
-            // available actions left.
-            } /*else {
-                this.callParent(arguments);
-            }*/
+            }
         }
     },
     
@@ -45,30 +41,25 @@ Ext.define('Ext.tree.SelectionModel', {
             parentNode, parentRecord;
 
         if (focused) {
-            parentNode = focused.node.parentNode;
+            parentNode = focused.parentNode;
             // if focused node is already expanded, collapse it
-            if (focused.expanded) {
+            if (focused.isExpanded()) {
                 view.collapse(focused);
             // has a parentNode and its not root
             // TODO: this needs to cover the case where the root isVisible
-            } else if (parentNode && !parentNode.isRoot) {
-                parentRecord = parentNode.attributes.record;
+            } else if (parentNode && !parentNode.isRoot()) {
                 // Select a range of records when doing multiple selection.
                 if (e.shiftKey) {
-                    viewSm.selectRange(parentRecord, focused, e.ctrlKey, 'up');
-                    viewSm.setLastFocused(parentRecord);
+                    viewSm.selectRange(parentNode, focused, e.ctrlKey, 'up');
+                    viewSm.setLastFocused(parentNode);
                 // just move focus, not selection
                 } else if (e.ctrlKey) {
-                    viewSm.setLastFocused(parentRecord);
+                    viewSm.setLastFocused(parentNode);
                 // select it
                 } else {
-                    viewSm.select(parentRecord);
+                    viewSm.select(parentNode);
                 }
-            // this enables scrolling to the left/right when there are no
-            // available actions left.
-            } /*else {
-                this.callParent(arguments);
-            }*/
+            }
         }
     }
 });

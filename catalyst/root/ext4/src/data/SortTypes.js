@@ -1,9 +1,48 @@
 /**
  * @class Ext.data.SortTypes
  * @singleton
- * Defines the default sorting (casting?) comparison functions used when sorting data.
+ * This class defines a series of static methods that are used on a
+ * {@link Ext.data.Field} for performing sorting. The methods cast the 
+ * underlying values into a data type that is appropriate for sorting on
+ * that particular field.  If a {@link Ext.data.Field#type} is specified, 
+ * the sortType will be set to a sane default if the sortType is not 
+ * explicitly defined on the field. The sortType will make any necessary
+ * modifications to the value and return it.
+ * <ul>
+ * <li><b>asText</b> - Removes any tags and converts the value to a string</li>
+ * <li><b>asUCText</b> - Removes any tags and converts the value to an uppercase string</li>
+ * <li><b>asUCText</b> - Converts the value to an uppercase string</li>
+ * <li><b>asDate</b> - Converts the value into Unix epoch time</li>
+ * <li><b>asFloat</b> - Converts the value to a floating point number</li>
+ * <li><b>asInt</b> - Converts the value to an integer number</li>
+ * </ul>
+ * <p>
+ * It is also possible to create a custom sortType that can be used throughout
+ * an application.
+ * <pre><code>
+Ext.apply(Ext.data.SortTypes, {
+    asPerson: function(person){
+        // expects an object with a first and last name property
+        return person.lastName.toUpperCase() + person.firstName.toLowerCase();
+    }    
+});
+
+Ext.regModel('Employee', {
+    fields: [{
+        name: 'person',
+        sortType: 'asPerson'
+    }, {
+        name: 'salary',
+        type: 'float' // sortType set to asFloat
+    }]
+});
+ * </code></pre>
+ * </p>
+ * @docauthor Evan Trimboli <evan@sencha.com>
  */
 Ext.define('Ext.data.SortTypes', {
+    
+    singleton: true,
     
     /**
      * Default sort that does nothing

@@ -217,7 +217,14 @@ store.load();
  */
 Ext.define('Ext.data.Model', {
     extend: 'Ext.util.Stateful',
-    requires: ['Ext.data.Errors', 'Ext.data.Operation', 'Ext.data.Proxy', 'Ext.data.validations'],
+    alternateClassName: 'Ext.data.Record',
+    
+    requires: [
+        'Ext.data.Errors', 
+        'Ext.data.Operation', 
+        'Ext.data.Proxy', 
+        'Ext.data.validations'
+    ],
     
     statics: {
         PREFIX : 'ext-record',
@@ -228,20 +235,23 @@ Ext.define('Ext.data.Model', {
         
         /**
          * Generates a sequential id. This method is typically called when a record is {@link #create}d
-         * and {@link #Record no id has been specified}. The returned id takes the form:
+         * and {@link #Record no id has been specified}. The id will automatically be assigned
+         * to the record. The returned id takes the form:
          * <tt>&#123;PREFIX}-&#123;AUTO_ID}</tt>.<div class="mdetail-params"><ul>
          * <li><b><tt>PREFIX</tt></b> : String<p class="sub-desc"><tt>Ext.data.Model.PREFIX</tt>
          * (defaults to <tt>'ext-record'</tt>)</p></li>
          * <li><b><tt>AUTO_ID</tt></b> : String<p class="sub-desc"><tt>Ext.data.Model.AUTO_ID</tt>
          * (defaults to <tt>1</tt> initially)</p></li>
          * </ul></div>
-         * @param {Record} rec The record being created.  The record does not exist, it's a {@link #phantom}.
+         * @param {Ext.data.Model} rec The record being created.  The record does not exist, it's a {@link #phantom}.
          * @return {String} auto-generated string id, <tt>"ext-record-i++'</tt>;
          * @static
          */
         id: function(rec) {
+            var id = [Ext.data.Model.PREFIX, '-', Ext.data.Model.AUTO_ID++].join('');
             rec.phantom = true;
-            return [Ext.data.Model.PREFIX, '-', Ext.data.Model.AUTO_ID++].join('');
+            rec.internalId = id;
+            return id;
         },
         
         /**
@@ -376,6 +386,11 @@ Ext.define('Ext.data.Model', {
         if (typeof this.init == 'function') {
             this.init();
         }
+
+        this.modelName = this.$className;
+        this.id = this.modelName + '-' + this.internalId;
+
+        Ext.ModelMgr.register(this);
     },
     
     /**

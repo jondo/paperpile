@@ -4,7 +4,7 @@
  * 03-10-2007, 06:23 PM
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">در حال بارگذاری ...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">در حال بارگذاری ...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "";
@@ -85,7 +85,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText         : "امروز",
     minText           : "این تاریخ قبل از محدوده مجاز است",
     maxText           : "این تاریخ پس از محدوده مجاز است",
@@ -98,10 +98,15 @@ if(Ext.picker.Date){
     monthYearText     : 'یک ماه را انتخاب کنید (Control+Up/Down برای انتقال در سال)',
     todayTip          : "{0} (Spacebar)",
     format            : "y/m/d",
-    okText            : "&#160;OK&#160;",
-    cancelText        : "Cancel",
     startDay          : 0
    });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;OK&#160;",
+      cancelText        : "Cancel"
+  });
 }
 
 if(Ext.toolbar.PagingToolbar){

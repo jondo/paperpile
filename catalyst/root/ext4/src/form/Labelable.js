@@ -1,12 +1,27 @@
 /**
  * @class Ext.form.Labelable
- * <p>A mixin which allows a component to be configured and decorated with a label and/or error message
- * like a form field. This is used by {@link Ext.form.BaseField} and {@link Ext.form.FieldContainer}
- * to let them be managed by the field layout.</p>
- * <p>Component classes which use this mixin should use the Field layout
- * or a derivation thereof to properly size and position the label and message according to the component config.
- * They must also call the {@link #initLabelable} method during component initialization to ensure the mixin gets
- * set up correctly.</p>
+
+A mixin which allows a component to be configured and decorated with a label and/or error message as is
+common for form fields. This is used by e.g. {@link Ext.form.BaseField} and {@link Ext.form.FieldContainer}
+to let them be managed by the {@link Ext.layout.component.form.Field Field layout}.
+
+**NOTE**: This mixin is mainly for internal library use and most users should not need to use it directly. It
+is more likely you will want to use one of the component classes that import this mixin, such as
+{@link Ext.form.BaseField} or {@link Ext.form.FieldContainer}.
+
+Use of this mixin does not make a component a field in the logical sense, meaning it does not provide any
+logic or state related to values or validation; that is handled by the related {@link Ext.form.Field}
+mixin. These two mixins may be used separately (for example {@link Ext.form.FieldContainer} is Labelable but not a
+Field), or in combination (for example {@link Ext.form.BaseField} implements both and has logic for connecting the
+two.)
+
+Component classes which use this mixin should use the {@link Ext.layout.component.form.Field Field layout}
+or a derivation thereof to properly size and position the label and message according to the component config.
+They must also call the {@link #initLabelable} method during component initialization to ensure the mixin gets
+set up correctly.
+
+ * @markdown
+ * @docauthor Jason Johnston <jason@sencha.com>
  */
 Ext.define("Ext.form.Labelable", {
 
@@ -139,6 +154,7 @@ Ext.define("Ext.form.Labelable", {
      * <li><code>title</code> Display the message in a default browser title attribute popup.</li>
      * <li><code>under</code> Add a block div beneath the field containing the error message.</li>
      * <li><code>side</code> Add an error icon to the right of the field, displaying the message in a popup on hover.</li>
+     * <li><code>none</code> Don't display any error message. This might be useful if you are implementing custom error display.</li>
      * <li><code>[element id]</code> Add the error message directly to the innerHTML of the specified element.</li>
      * </ul></div>
      */
@@ -313,7 +329,10 @@ Ext.define("Ext.form.Labelable", {
             activeError = me.getActiveError(),
             hasError = !!activeError;
 
-        me.fireEvent('errorchange', me, activeError);
+        if (activeError !== me.lastActiveError) {
+            me.fireEvent('errorchange', me, activeError);
+            me.lastActiveError = activeError;
+        }
 
         if (me.rendered && !me.isDestroyed && !me.preventMark) {
             // Add/remove invalid class

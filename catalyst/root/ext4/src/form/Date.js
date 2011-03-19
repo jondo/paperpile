@@ -1,40 +1,79 @@
 /**
  * @class Ext.form.Date
  * @extends Ext.form.Picker
- * <p>Provides a date input field with a {@link Ext.picker.Date date picker} dropdown and automatic date
- * validation.</p>
- * <p>This field recognizes and uses JavaScript Date objects as its main {@link #value} type. In addition,
- * it recognizes string values which are parsed according to the {@link #format} and/or {@link #altFormats}
- * configs. These may be reconfigured to use date formats appropriate for the user's locale.</p>
- * <p>The field may be limited to a certain range of dates by using the {@link #minValue}, {@link #maxValue},
- * {@link #disabledDays}, and {@link #disabledDates} config parameters.</p>
- * <p>Example usage:</p>
- * <pre><code>new Ext.form.FormPanel({
-    renderTo: Ext.getBody(),
-    width: 300,
-    bodyPadding: 10,
-    title: 'Dates',
-    items: [{
-        xtype: 'datefield',
-        anchor: '100%',
-        fieldLabel: 'From',
-        name: 'from_date',
-        maxValue: new Date()  // limited to the current date or prior
-    }, {
-        xtype: 'datefield',
-        anchor: '100%',
-        fieldLabel: 'To',
-        name: 'to_date',
-        maxValue: new Date(),
-        value: new Date()  // defaults to today
-    }]
-});</code></pre>
+
+Provides a date input field with a {@link Ext.picker.Date date picker} dropdown and automatic date
+validation.
+
+This field recognizes and uses the JavaScript Date object as its main {@link #value} type. In addition,
+it recognizes string values which are parsed according to the {@link #format} and/or {@link #altFormats}
+configs. These may be reconfigured to use date formats appropriate for the user's locale.
+
+The field may be limited to a certain range of dates by using the {@link #minValue}, {@link #maxValue},
+{@link #disabledDays}, and {@link #disabledDates} config parameters. These configurations will be used both
+in the field's validation, and in the date picker dropdown by preventing invalid dates from being selected.
+
+#Example usage:#
+
+    new Ext.form.FormPanel({
+        renderTo: Ext.getBody(),
+        width: 300,
+        bodyPadding: 10,
+        title: 'Dates',
+        items: [{
+            xtype: 'datefield',
+            anchor: '100%',
+            fieldLabel: 'From',
+            name: 'from_date',
+            maxValue: new Date()  // limited to the current date or prior
+        }, {
+            xtype: 'datefield',
+            anchor: '100%',
+            fieldLabel: 'To',
+            name: 'to_date',
+            maxValue: new Date(),
+            value: new Date()  // defaults to today
+        }]
+    });
+
+#Date Formats Examples#
+
+This example shows a couple of different date format parsing scenarios. Both use custom date format
+configurations; the first one matches the configured `format` while the second matches the `altFormats`.
+
+    new Ext.form.FormPanel({
+        renderTo: Ext.getBody(),
+        width: 300,
+        bodyPadding: 10,
+        title: 'Dates',
+        items: [{
+            xtype: 'datefield',
+            anchor: '100%',
+            fieldLabel: 'Date',
+            name: 'date',
+            // The value matches the format; will be parsed and displayed using that format.
+            format: 'm d Y',
+            value: '2 4 1978'
+        }, {
+            xtype: 'datefield',
+            anchor: '100%',
+            fieldLabel: 'Date',
+            name: 'date',
+            // The value does not match the format, but does match an altFormat; will be parsed
+            // using the altFormat and displayed using the format.
+            format: 'm d Y',
+            altFormats: 'm,d,Y|m.d.Y',
+            value: '2.4.1978'
+        }]
+    });
 
  * @constructor
  * Create a new Date field
  * @param {Object} config
  * 
  * @xtype datefield
+ * @markdown
+ * @docauthor Jason Johnston <jason@sencha.com>
  */
 Ext.define('Ext.form.Date', {
     extend:'Ext.form.Picker',

@@ -3,7 +3,7 @@
  * 03-June-2007
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Öüñôùóç...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Öüñôùóç...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "";
@@ -69,7 +69,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-   Ext.apply(Ext.DatePicker.prototype, {
+   Ext.apply(Ext.picker.Date.prototype, {
       todayText         : "ÓÞìåñá",
       minText           : "Ç çìåñïìçíßá áõôÞ åßíáé ðñéí ôçí ìéêñüôåñç çìåñïìçíßá",
       maxText           : "Ç çìåñïìçíßá áõôÞ åßíáé ìåôÜ ôçí ìåãáëýôåñç çìåñïìçíßá",

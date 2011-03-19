@@ -12,9 +12,13 @@
  * <p>The code below illustrates how to explicitly create a Container:<pre><code>
 // explicitly create a Container
 var embeddedColumns = new Ext.container.Container({
-    autoEl: 'div',  // This is the default
-    layout: 'hbox',
+    autoEl: {tag: 'div'},
+    layout: {
+        type: 'hbox'
+    },
+    width: 400,
     defaults: {
+        labelWidth: 80,
         // implicitly create Container by specifying xtype
         xtype: 'datefield',
         flex: 1,
@@ -59,7 +63,7 @@ var embeddedColumns = new Ext.container.Container({
 //  Create the GridPanel.
 var myNewGrid = new Ext.grid.GridPanel({
     store: myStore,
-    columns: myColumnModel,
+    headers: myHeaders,
     title: 'Results', // the title becomes the title of the tab
 });
 
@@ -104,52 +108,44 @@ Ext.Ajax.request({
     }
 });
 </code></pre>
- * <p>The server script needs to return an executable Javascript statement which, when processed
- * using <code>eval()</code>, will return either a config object with an {@link Ext.Component#xtype xtype},
- * or an instantiated Component. The server might return this for example:</p><pre><code>
-(function() {
-    function formatDate(value){
-        return value ? value.dateFormat('M d, Y') : '';
-    };
-
-    var store = new Ext.data.Store({
-        url: 'get-invoice-data.php',
-        baseParams: {
-            startDate: '01/01/2008',
-            endDate: '01/31/2008'
+ * <p>The server script needs to return a JSON representation of a configuration object, which, when decoded
+ * will return a config object with an {@link Ext.Component#xtype xtype}. The server might return the following
+ * JSON:</p><pre><code>
+{
+    "xtype": 'grid',
+    "title": 'Invoice Report',
+    "store": {
+        "model": 'Invoice',
+        "proxy": {
+            "type": 'ajax',
+            "url": 'get-invoice-data.php',
+            "reader": {
+                "type": 'json'
+                "record": 'transaction',
+                "idProperty": 'id',
+                "totalRecords": 'total'
+            })
         },
-        reader: new Ext.data.JsonReader({
-            record: 'transaction',
-            idProperty: 'id',
-            totalRecords: 'total'
-        }, [
-           'customer',
-           'invNo',
-           {name: 'date', type: 'date', dateFormat: 'm/d/Y'},
-           {name: 'value', type: 'float'}
-        ])
-    });
-
-    var grid = new Ext.grid.GridPanel({
-        title: 'Invoice Report',
-        bbar: new Ext.toolbar.PagingToolbar(store),
-        store: store,
-        columns: [
-            {header: "Customer", width: 250, dataIndex: 'customer', sortable: true},
-            {header: "Invoice Number", width: 120, dataIndex: 'invNo', sortable: true},
-            {header: "Invoice Date", width: 100, dataIndex: 'date', renderer: formatDate, sortable: true},
-            {header: "Value", width: 120, dataIndex: 'value', renderer: 'usMoney', sortable: true}
-        ],
-    });
-    store.load();
-    return grid;  // return instantiated component
-})();
+        "autoLoad": {
+            "params": {
+                "startDate": '01/01/2008',
+                "endDate": '01/31/2008'
+            }
+        }
+    },
+    "headers": [
+        {"header": "Customer", "width": 250, "dataIndex": 'customer', "sortable": true},
+        {"header": "Invoice Number", "width": 120, "dataIndex": 'invNo', "sortable": true},
+        {"header": "Invoice Date", "width": 100, "dataIndex": 'date', "renderer": Ext.util.Format.dateRenderer('M d, y'), "sortable": true},
+        {"header": "Value", "width": 120, "dataIndex": 'value', "renderer": 'usMoney', "sortable": true}
+    ]
+}
 </code></pre>
  * <p>When the above code fragment is passed through the <code>eval</code> function in the success handler
- * of the Ajax request, the code is executed by the Javascript processor, and the anonymous function
- * runs, and returns the instantiated grid component.</p>
- * <p>Note: since the code above is <i>generated</i> by a server script, the <code>baseParams</code> for
- * the Store, the metadata to allow generation of the Record layout, and the ColumnModel
+ * of the Ajax request, the result will be a config object which, when added to a Container, will cause instantiation
+ * of a GridPanel. <b>Be sure that the Container is configured with a layout which sizes and positions the child items to your requirements.</b></p>
+ * <p>Note: since the code above is <i>generated</i> by a server script, the <code>autoLoad</code> params for
+ * the Store, the user's preferred date format, the metadata to allow generation of the Model layout, and the ColumnModel
  * can all be generated into the code since these are all known on the server.</p>
  *
  * @xtype container

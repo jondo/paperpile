@@ -4,7 +4,7 @@
  * translated from ext-lang-en.js
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">A carregar...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">A carregar...</div>';
 
 if(Ext.View){
   Ext.View.prototype.emptyText = "";
@@ -93,7 +93,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText         : "Hoje",
     minText           : "A data &eacute; anterior ao m&iacute;nimo definido",
     maxText           : "A data &eacute; posterior ao m&aacute;ximo definido",
@@ -106,9 +106,14 @@ if(Ext.picker.Date){
     monthYearText     : 'Escolha um m&ecirc;s (Control+Up/Down ava&ccedil;ar/recuar anos)',
     todayTip          : "{0} (barra de espa&ccedil;o)",
     format            : "y/m/d",
-    okText            : "*OK*",
-    cancelText        : "Cancelar",
     startDay          : 0
+  });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;OK&#160;",
+      cancelText        : "Cancelar"
   });
 }
 

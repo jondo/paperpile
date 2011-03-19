@@ -11,7 +11,11 @@ init : function(){
    win.restoreState();
 }
  </code></pre>
+ * This class passes on calls from components to the underlying {@link Ext.state.Provider} so that
+ * there is a common interface that can be used without needing to refer to a specific provider instance
+ * in every component.
  * @singleton
+ * @docauthor Evan Trimboli <evan@sencha.com>
  */
 Ext.define('Ext.state.Manager', {
     singleton: true,

@@ -1,5 +1,6 @@
 /**
- * @author Jacky Nguyen
+ * @author Jacky Nguyen <jacky@sencha.com>
+ * @docauthor Jacky Nguyen <jacky@sencha.com>
  * @class Ext.ClassManager
 
 Ext.ClassManager manages all classes and handles mapping from string class name to
@@ -868,8 +869,8 @@ these convenient shorthands:
                 }
 
                 return Ext.create(name, config);
-
-            } else if (Ext.isFunction(item)) {
+            }
+            else if (Ext.isFunction(item)) {
                 return Ext.create(item);
             }
 

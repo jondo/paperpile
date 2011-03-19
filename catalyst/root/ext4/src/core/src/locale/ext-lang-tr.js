@@ -9,7 +9,7 @@
  * 2008-10-05, 06:22 PM
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Yükleniyor ...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Yükleniyor ...</div>';
 
 if(Ext.View){
   Ext.View.prototype.emptyText = "";
@@ -112,7 +112,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText         : "Bugün",
     minText           : "Bu tarih izin verilen en küçük tarihten daha önce",
     maxText           : "Bu tarih izin verilen en büyük tarihten daha sonra",
@@ -125,11 +125,17 @@ if(Ext.picker.Date){
     monthYearText     : 'Bir ay sŸeçiniz (Yýlý artýrmak/azaltmak için Control+Up/Down)',
     todayTip          : "{0} (BoþŸluk TuþŸu - Spacebar)",
     format            : "d/m/Y",
-    okText            : "&#160;Tamam&#160;",
-    cancelText        : "Ä°ptal",
     startDay          : 1
   });
 }
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;Tamam&#160;",
+      cancelText        : "Ä°ptal"
+  });
+}
+
 
 if(Ext.toolbar.PagingToolbar){
   Ext.apply(Ext.PagingToolbar.prototype, {

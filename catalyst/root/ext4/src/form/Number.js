@@ -1,36 +1,98 @@
 /**
  * @class Ext.form.Number
  * @extends Ext.form.Text
- * <p>Numeric text field that provides automatic keystroke filtering and numeric validation. The
- * range of acceptable number values can be controlled by setting the {@link #minValue} and/or
- * {@link #maxValue} configs.</p>
- * <p>By default, the number field is also rendered with a set of up/down spinner buttons for incrementing
- * the value by the {@link #step} value. To hide the spinner buttons, set <code>hideTrigger:true</code>.</p>
- * <p>Example:</p>
- * <pre><code>new Ext.form.FormPanel({
-    renderTo: Ext.getBody(),
-    title: 'Personal Info',
-    width: 300,
-    bodyPadding: 10,
-    items: [{
-        xtype: 'textfield',
-        name: 'name',
-        fieldLabel: 'Full Name',
-        anchor: '100%'
-    }, {
-        xtype: 'numberfield',
-        name: 'age',
-        fieldLabel: 'Age',
-        minValue: 0,
-        anchor: '100%'
-    }]
-});</code></pre>
+
+A numeric text field that provides automatic keystroke filtering to disallow non-numeric characters,
+and numeric validation to limit the value to a range of valid numbers. The range of acceptable number
+values can be controlled by setting the {@link #minValue} and {@link #maxValue} configs, and fractional
+decimals can be disallowed by setting {@link #allowDecimals} to `false`.
+
+By default, the number field is also rendered with a set of up/down spinner buttons and has
+up/down arrow key and mouse wheel event listeners attached for incrementing/decrementing the value by the
+{@link #step} value. To hide the spinner buttons set `{@link #hideTrigger hideTrigger}:true`; to disable the arrow key
+and mouse wheel handlers set `{@link #keyNavEnabled keyNavEnabled}:false` and
+`{@link #mouseWheelEnabled mouseWheelEnabled}:false`. See the example below.
+
+#Example usage:#
+
+    new Ext.form.FormPanel({
+        renderTo: Ext.getBody(),
+        title: 'On The Wall',
+        width: 300,
+        bodyPadding: 10,
+        items: [{
+            xtype: 'numberfield',
+            anchor: '100%',
+            name: 'bottles',
+            fieldLabel: 'Bottles of Beer',
+            value: 99,
+            maxValue: 99,
+            minValue: 0
+        }],
+        buttons: [{
+            text: 'Take one down, pass it around',
+            handler: function() {
+                this.up('form').down('[name=bottles]').spinDown();
+            }
+        }]
+    });
+
+#Removing UI Enhancements#
+
+    new Ext.form.FormPanel({
+        renderTo: Ext.getBody(),
+        title: 'Personal Info',
+        width: 300,
+        bodyPadding: 10,
+        items: [{
+            xtype: 'numberfield',
+            anchor: '100%',
+            name: 'age',
+            fieldLabel: 'Age',
+            minValue: 0, //prevents negative numbers
+
+            // Remove spinner buttons, and arrow key and mouse wheel listeners
+            hideTrigger: true,
+            keyNavEnabled: false,
+            mouseWheelEnabled: false
+        }]
+    });
+
+#Using Step#
+
+    new Ext.form.FormPanel({
+        renderTo: Ext.getBody(),
+        title: 'Step',
+        width: 300,
+        bodyPadding: 10,
+        items: [{
+            xtype: 'numberfield',
+            anchor: '100%',
+            name: 'evens',
+            fieldLabel: 'Even Numbers',
+
+            // Set step so it skips every other number
+            step: 2,
+            value: 0,
+
+            // Add change handler to force user-entered numbers to evens
+            listeners: {
+                change: function(field, value) {
+                    value = parseInt(value, 10);
+                    field.setValue(value + value % 2);
+                }
+            }
+        }]
+    });
+
 
  * @constructor
  * Creates a new Number field
  * @param {Object} config Configuration options
  * 
  * @xtype numberfield
+ * @markdown
+ * @docauthor Jason Johnston <jason@sencha.com>
  */
 Ext.define('Ext.form.Number', {
     extend:'Ext.form.Spinner',

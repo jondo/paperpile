@@ -4,7 +4,7 @@
  * Vladas Saulis (vladas at prodata dot lt),  10-18-2007
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Kraunasi...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Kraunasi...</div>';
 
 if(Ext.View){
   Ext.View.prototype.emptyText = "";
@@ -111,7 +111,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText         : "Šiandien",
     minText           : "Ši data yra mažesnė už leistiną",
     maxText           : "Ši data yra didesnė už leistiną",
@@ -124,9 +124,14 @@ if(Ext.picker.Date){
     monthYearText     : 'Pasirinkti mėnesį (Control+Up/Down perėjimui tarp metų)',
     todayTip          : "{0} (Tarpas)",
     format            : "y-m-d",
-    okText            : "&#160;Gerai&#160;",
-    cancelText        : "Atsisaktyi",
     startDay          : 1
+  });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;Gerai&#160;",
+      cancelText        : "Atsisaktyi"
   });
 }
 

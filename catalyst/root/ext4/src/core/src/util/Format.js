@@ -186,7 +186,7 @@
          */
         dateRenderer : function(format) {
             return function(v) {
-                return Ext.Date.dateFormat(v, format || Ext.Date.defaultFormat);
+                return UtilFormat.date(v, format);
             };
         },
 

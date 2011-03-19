@@ -1,6 +1,7 @@
 /**
  * @class Ext.chart.series.Cartesian
  * @extends Ext.chart.series.Series
+ * @private
  *
  * Common base class for series implementations which plot values using x/y coordinates.
  *

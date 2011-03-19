@@ -8,7 +8,7 @@
  * 01.09.2009
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Завантаження...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Завантаження...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "<Порожньо>";
@@ -74,7 +74,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-   Ext.apply(Ext.DatePicker.prototype, {
+   Ext.apply(Ext.picker.Date.prototype, {
       todayText         : "Сьогодні",
       minText           : "Ця дата меньша за мінімальну допустиму дату",
       maxText           : "Ця дата більша за максимальну допустиму дату",
@@ -87,10 +87,15 @@ if(Ext.picker.Date){
       monthYearText     : 'Вибір місяця (Control+Вверх/Вниз для вибору року)',
       todayTip          : "{0} (Пробіл)",
       format            : "d.m.y",
-      okText            : "&#160;OK&#160;",
-      cancelText        : "Відміна",
       startDay          : 1
    });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;OK&#160;",
+      cancelText        : "Відміна"
+  });
 }
 
 if(Ext.toolbar.PagingToolbar){

@@ -27,6 +27,7 @@ new Ext.panel.Panel({
 Ext.define('Ext.toolbar.Spacer', {
     extend: 'Ext.Component',
     alias: 'widget.tbspacer',
+    alternateClassName: 'Ext.Toolbar.Spacer',
     baseCls: Ext.baseCSSPrefix + 'toolbar-spacer',
     focusable: false
 });

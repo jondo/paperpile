@@ -6,7 +6,7 @@
  * updated by Thylia (20 Apr 2010)
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">En cours de chargement...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">En cours de chargement...</div>';
 
 if(Ext.DataView){
    Ext.DataView.prototype.emptyText = "";
@@ -114,7 +114,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-    Ext.apply(Ext.DatePicker.prototype, {
+    Ext.apply(Ext.picker.Date.prototype, {
         todayText         : "Aujourd'hui",
         minText           : "Cette date est antérieure à la date minimum",
         maxText           : "Cette date est postérieure à la date maximum",
@@ -126,11 +126,16 @@ if(Ext.picker.Date){
         prevText          : "Mois précédent (CTRL+Flèche gauche)",
         monthYearText     : "Choisissez un mois (CTRL+Flèche haut ou bas pour changer d'année.)",
         todayTip          : "{0} (Barre d'espace)",
-        okText            : "&#160;OK&#160;",
-        cancelText        : "Annuler",
         format            : "d/m/y",
         startDay          : 1
     });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;OK&#160;",
+      cancelText        : "Annuler"
+  });
 }
 
 if(Ext.toolbar.PagingToolbar){

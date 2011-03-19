@@ -10,6 +10,7 @@ Ext.define('Ext.direct.Transaction', {
     /* Begin Definitions */
    
     alias: 'direct.transaction',
+    alternateClassName: 'Ext.Direct.Transaction',
    
     statics: {
         TRANSACTION_ID: 0

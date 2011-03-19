@@ -144,6 +144,7 @@ Order ID: 50, which contains items:
  */
 Ext.define('Ext.data.Reader', {
     requires: ['Ext.data.ResultSet'],
+    alternateClassName: 'Ext.data.DataReader',
     
     /**
      * @cfg {String} idProperty Name of the property within a row object
@@ -252,7 +253,9 @@ Ext.define('Ext.data.Reader', {
 
         data = me.getData(data);
 
-        var root    = me.getRoot(data),
+        // If we pass an array as the data, we dont use getRoot on the data.
+        // Instead the root equals to the data.
+        var root    = Ext.isArray(data) ? data : me.getRoot(data),
             total   = root.length,
             success = true,
             value, records, message, recordCount;

@@ -47,6 +47,12 @@ Ext.define('Ext.form.Picker', {
      */
     openCls: Ext.baseCSSPrefix + 'pickerfield-open',
 
+    /**
+     * @property isExpanded
+     * @type Boolean
+     * True if the picker is currently expanded, false if not.
+     */
+
 
     initComponent: function() {
         this.callParent();

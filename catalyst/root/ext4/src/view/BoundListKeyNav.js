@@ -91,7 +91,7 @@ Ext.define('Ext.view.BoundListKeyNav', {
         if (item) {
             item = item.dom;
             boundList.highlightItem(item);
-            boundList.el.scrollChildIntoView(item, false);
+            boundList.getTargetEl().scrollChildIntoView(item, false);
         }
     },
 

@@ -2,12 +2,43 @@
  * @class Ext.form.ComboBox
  * @extends Ext.form.Picker
 
-A combobox control with support for autocomplete, remote-loading, paging and many other features.
+A combobox control with support for autocomplete, remote loading, and many other features.
 
-A ComboBox works in a similar manner to a traditional HTML &lt;select> field. The difference is
-that to submit the {@link #valueField}, you must specify a {@link #hiddenName} to create a hidden input
-field to hold the value of the valueField. The _{@link #displayField}_ is shown in the text field
-which is named according to the {@link #name}.
+A ComboBox is like a combination of a traditional HTML text `<input>` field and a `<select>`
+field; the user is able to type freely into the field, and/or pick values from a dropdown selection
+list. The user can input any value by default, even if it does not appear in the selection list;
+to prevent free-form values and restrict them to items in the list, set {@link #forceSelection} to `true`.
+
+The selection list's options are populated from any {@link Ext.data.Store}, including remote
+stores. The data items in the store are mapped to each option's displayed text and backing value via
+the {@link #valueField} and {@link #displayField} configurations, respectively.
+
+If your store is not remote, i.e. it depends only on local data and is loaded up front, you should be
+sure to set the {@link #queryMode} to `'local'`, as this will improve responsiveness for the user.
+
+#Example usage:#
+
+    // The data store containing the list of states
+    var states = Ext.create('Ext.data.Store', {
+        fields: ['abbr', 'name'],
+        data : [
+            {"abbr":"AL", "name":"Alabama"},
+            {"abbr":"AK", "name":"Alaska"},
+            {"abbr":"AZ", "name":"Arizona"}
+            //...
+        ]
+    });
+
+    // Create the combo box, attached to the states data store
+    var combo = Ext.create('Ext.form.ComboBox', {
+        fieldLabel: 'Choose State',
+        renderTo: Ext.getBody(),
+
+        store: states,
+        queryMode: 'local',
+        displayField: 'name',
+        valueField: 'abbr'
+    });
 
 #Events#
 
@@ -25,61 +56,17 @@ To do something when something in ComboBox is selected, configure the select eve
     var cb = new Ext.form.ComboBox(yourOptions);
     cb.on('select', yourFunction, yourScope);
 
-#ComboBox in Grid#
+#Multiple Selection#
 
-If using a ComboBox in an {@link Ext.grid.Editing Editor Grid} a {@link Ext.grid.Header#renderer renderer}
-will be needed to show the displayField when the editor is not active.  Set up the renderer manually, or implement
-a reusable render, for example:
-
-    // create reusable renderer
-    Ext.util.Format.comboRenderer = function(combo){
-        return function(value){
-            var record = combo.findRecord(combo.{@link #valueField}, value);
-            return record ? record.get(combo.{@link #displayField}) : combo.{@link #valueNotFoundText};
-        }
-    }
-
-    // create the combo instance
-    var combo = new Ext.form.ComboBox({
-        {@link #typeAhead}: true,
-        {@link #triggerAction}: 'all',
-        {@link #lazyRender}:true,
-        {@link #mode}: 'local',
-        {@link #store}: new Ext.data.ArrayStore({
-            id: 0,
-            fields: [
-                'myId',
-                'displayText'
-            ],
-            data: [[1, 'item1'], [2, 'item2']]
-        }),
-        {@link #valueField}: 'myId',
-        {@link #displayField}: 'displayText'
-    });
-
-    // snippet of column model used within grid
-    var cm = new Ext.grid.ColumnModel([{
-           ...
-        },{
-           header: "Some Header",
-           dataIndex: 'whatever',
-           width: 130,
-           editor: combo, // specify reference to combo instance
-           renderer: Ext.util.Format.comboRenderer(combo) // pass combo instance to reusable renderer
-        },
-        ...
-    ]);
-
-#Filtering#
-
-A ComboBox {@link #doQuery uses filtering itself}, for information about filtering the ComboBox
-store manually see <tt>{@link #lastQuery}</tt>.
+ComboBox also allows selection of multiple items from the list; to enable multi-selection set the
+{@link #multiSelect} config to `true`.
 
  * @constructor
  * Create a new ComboBox.
  * @param {Object} config Configuration options
  * @xtype combo
  * @markdown
+ * @docauthor Jason Johnston <jason@sencha.com>
  */
 Ext.define('Ext.form.ComboBox', {
     extend:'Ext.form.Picker',
@@ -205,6 +192,14 @@ var combo = new Ext.form.ComboBox({
     queryCaching: true,
 
     /**
+     * @cfg {Number} pageSize If greater than <tt>0</tt>, a {@link Ext.toolbar.PagingToolbar} is displayed in the
+     * footer of the dropdown list and the {@link #doQuery filter queries} will execute with page start and
+     * {@link Ext.toolbar.PagingToolbar#pageSize limit} parameters. Only applies when <tt>{@link #queryMode} = 'remote'</tt>
+     * (defaults to <tt>0</tt>).
+     */
+    pageSize: 0,
+
+    /**
      * @cfg {Number} queryDelay The length of time in milliseconds to delay between the start of typing and
      * sending the query to filter the dropdown list (defaults to <tt>500</tt> if <tt>{@link #queryMode} = 'remote'</tt>
      * or <tt>10</tt> if <tt>{@link #queryMode} = 'local'</tt>)
@@ -249,6 +244,12 @@ var combo = new Ext.form.ComboBox({
     forceSelection: false,
 
     /**
+     * @cfg {String} valueNotFoundText When using a name/value combo, if the value passed to setValue is not found in
+     * the store, valueNotFoundText will be displayed as the field text if defined (defaults to undefined). If this
+     * default text is used, it means there is no value set and no validation will occur on this field.
+     */
+
+    /**
      * The value of the match string used to filter the store. Delete this property to force a requery.
      * Example use:
      * <pre><code>
@@ -278,81 +279,39 @@ var combo = new Ext.form.ComboBox({
      * @type String
      */
 
-
-    ///// Config properties for the BoundList:
-    // TODO consider removing all of these in favor of a single listConfig object which would be passed
-    // directly to the BoundList constructor after combination with default configs. That would be
-    // simpler and more flexible as any aspect of the BoundList could be customized.
-
+    /**
+     * @cfg {Object} defaultListConfig
+     * Set of options that will be used as defaults for the user-configured {@link #listConfig} object.
+     */
+    defaultListConfig: {
+        emptyText: '',
+        loadingText: 'Loading...',
+        minWidth: 70,
+        maxHeight: 300,
+        shadow: 'sides'
+    },
 
     /**
-     * @cfg {String} listEmptyText The empty text to display in the data view if no items are found.
-     * (defaults to '')
-     */
-    listEmptyText: '',
-
-    /**
-     * @cfg {String} listLoadingText The text to display in the dropdown list while data is loading.  Only applies
-     * when <tt>{@link #mode} = 'remote'</tt> (defaults to <tt>'Loading...'</tt>)
-     */
-    listLoadingText: 'Loading...',
-
-    /**
-     * @cfg {Number} listMaxHeight The maximum height in pixels of the dropdown list before scrollbars are shown
-     * (defaults to <tt>300</tt>)
-     */
-    listMaxHeight: 300,
-
-    /**
-     * @cfg {Number} listWidth The width in pixels of the dropdown list (defaults to the width of the ComboBox
-     * field).
+     * @cfg {Object} listConfig
+     * <p>An optional set of configuration properties that will be passed to the {@link Ext.view.BoundList}'s
+     * constructor. Any configuration that is valid for BoundList can be included. Some of the more useful
+     * ones are:</p>
+     * <ul>
+     *     <li>{@link Ext.view.BoundList#cls} - defaults to empty</li>
+     *     <li>{@link Ext.view.BoundList#emptyText} - defaults to empty string</li>
+     *     <li>{@link Ext.view.BoundList#getInnerTpl} - defaults to the template defined in BoundList</li>
+     *     <li>{@link Ext.view.BoundList#itemSelector} - defaults to the value defined in BoundList</li>
+     *     <li>{@link Ext.view.BoundList#loadingText} - defaults to <tt>'Loading...'</tt></li>
+     *     <li>{@link Ext.view.BoundList#minWidth} - defaults to <tt>70</tt></li>
+     *     <li>{@link Ext.view.BoundList#maxWidth} - defaults to <tt>undefined</tt></li>
+     *     <li>{@link Ext.view.BoundList#maxHeight} - defaults to <tt>300</tt></li>
+     *     <li>{@link Ext.view.BoundList#resizable} - defaults to <tt>false</tt></li>
+     *     <li>{@link Ext.view.BoundList#shadow} - defaults to <tt>'sides'</tt></li>
+     *     <li>{@link Ext.view.BoundList#width} - defaults to <tt>undefined</tt> (automatically set to the width
+     *         of the ComboBox field if {@link #matchFieldWidth} is true)</li>
+     * </ul>
      */
 
-    /**
-     * @cfg {Function} getInnerTpl If specified, will be used to generate the template for the markup inside
-     * each item in the dropdown list. Defaults to the {@link Ext.view.BoundList}'s default behavior, which
-     * is to display the value of each item's {@link #displayField}.
-     * @return {String} The template string
-     */
-
-
-
-    //<debug>
-    // Moved to ext3-compat.js
-//    deprecatedProperties: [
-//        // slated to be removed/yet to be implemented
-//        'autoCreate',
-//        'clearFilterOnReset',
-//        'handleHeight',
-//        'hiddenId',
-//        'hiddenName',
-//        'itemSelector', // could be passed to BoundList config
-//        'lazyInit',
-//        'lazyRender',
-//        'listAlign', // -> pickerAlign
-//        'listClass', // could be passed to BoundList config's cls
-//        'loadingText', // -> listLoadingText
-//        'maxHeight', // -> listMaxHeight
-//        'minHeight', // -> ???
-//        'minListWidth', // -> ???
-//        'mode', // -> queryMode
-//        'pageSize',
-//        'resizable', // could be passed to BoundList config
-//        'selectedClass', // could be passed to BoundList config's selectedItemCls
-//        'shadow', // could be passed to BoundList config's floating.shadow
-//        'title',
-//        'tpl', // -> getInnerTpl
-//        'transform',
-//        'triggerClass', // -> triggerCls,
-//        'valueNotFoundText' // -> ???
-//    ],
-    //</debug>
-    
-    
-    /**
-     * @type Boolean
-     * @property isExpanded
-     */
 
     initComponent: function() {
         var me = this,
@@ -372,15 +331,6 @@ var combo = new Ext.form.ComboBox({
         if (me.selectOnFocus && !me.editable) {
             throw "Ext.form.ComboBox: If selectOnFocus is enabled the combo must be editable: true.";
         }
-
-//        var dp = me.deprecatedProperties,
-//            ln = dp.length,
-//            i  = 0;
-//        for (; i < ln; i++) {
-//            if (isDefined(me[dp[i]])) {
-//                throw dp[i] + " is no longer supported.";
-//            }
-//        }
         //</debug>
 
         this.addEvents(
@@ -419,7 +369,12 @@ var combo = new Ext.form.ComboBox({
         }
 
         if (!me.displayTpl) {
-            me.displayTpl = new Ext.XTemplate('<tpl for=".">{' + me.displayField + '}<tpl if="xindex < xcount">' + me.delimiter + '</tpl></tpl>');
+            me.displayTpl = new Ext.XTemplate(
+                '<tpl for=".">' +
+                    '{[typeof values === "string" ? values : values.' + me.displayField + ']}' +
+                    '<tpl if="xindex < xcount">' + me.delimiter + '</tpl>' +
+                '</tpl>'
+            );
         } else if (Ext.isString(me.displayTpl)) {
             me.displayTpl = new Ext.XTemplate(me.displayTpl);
         }
@@ -619,8 +574,13 @@ var combo = new Ext.form.ComboBox({
 
     // private
     getParams: function(queryString) {
-        var p = {};
+        var p = {},
+            pageSize = this.pageSize;
         p[this.queryParam] = queryString;
+        if (pageSize) {
+            p.start = 0;
+            p.limit = pageSize;
+        }
         return p;
     },
 
@@ -691,26 +651,19 @@ var combo = new Ext.form.ComboBox({
         var me = this,
             value = me.value,
             picker,
-            opts = {
+            opts = Ext.apply({
                 selModel: {
                     mode: me.multiSelect ? 'SIMPLE' : 'SINGLE'
                 },
                 floating: true,
                 hidden: true,
-                ownerCt: this.ownerCt,
+                ownerCt: me.ownerCt,
                 renderTo: document.body,
                 store: me.store,
                 displayField: me.displayField,
-                width: me.listWidth,
-                maxHeight: me.listMaxHeight,
-                loadingText: me.listLoadingText,
-                emptyText: me.listEmptyText,
-                focusOnToFront: false
-            };
-
-        if (me.getInnerTpl) {
-            opts.getInnerTpl = me.getInnerTpl;
-        }
+                focusOnToFront: false,
+                pageSize: me.pageSize
+            }, me.listConfig, me.defaultListConfig);
 
         picker = new Ext.view.BoundList(opts);
 
@@ -795,20 +748,6 @@ var combo = new Ext.form.ComboBox({
      */
     select: function(r) {
         this.setValue(r, true);
-/*        //<debug>
-        if (!r || !r.isModel) {
-            throw "Ext.form.ComboBox: Attempting to select a non record.";
-        }
-        //</debug>
-        var list         = this.getPicker(),
-            sm           = list.getSelectionModel(),
-            displayField = this.displayField,
-            displayValue = r.get(this.displayField),
-            value        = r.get(this.valueField);
-        
-        sm.doSelect(r);
-        this.value = value;
-        this.setRawValue(displayValue); */
     },
     
 
@@ -835,88 +774,81 @@ var combo = new Ext.form.ComboBox({
     },    
 
     /**
-     * Sets the combo box's value(s).
-     * @private
-     * intentionally overriding superclass
-     * @param v Either an array, or a single instance of key value(s) or Model(s)
-     * @param doSelect Pass true to select the Models in the bound list.
-     * Do not pass this when selecting <b>from</b> the list!
+     * Sets the specified value(s) into the field. For each value, if a record is found in the {@link #store} that
+     * matches based on the {@link #valueField}, then that record's {@link #displayField} will be displayed in the
+     * field.  If no match is found, and the {@link #valueNotFoundText} config option is defined, then that will be
+     * displayed as the default field text. Otherwise a blank value will be shown, although the value will still be set.
+     * @param {String|Array} value The value(s) to be set. Can be either a single String or {@link Ext.data.Model},
+     * or an Array of Strings or Models. 
+     * @return {Ext.form.Field} this
      */
-    setValue: function(v, doSelect) {
+    setValue: function(value, doSelect) {
         var me = this,
-            i = 0,
-            l,
-            r,
-            usingModels,
-            ln,
+            valueNotFoundText = me.valueNotFoundText,
+            i, len,
+            record, selModel,
             models = [],
-            data = [],
-            value = [];
+            displayTplData = [],
+            processedValue = [];
 
-        if (v) {
-            if (me.store.loading) {
-                // Called while the Store is loading. Ensure it is
-                // processed by the onLoad method.
-                this.value = v;
-                return;
-            } else {
-                // This method processes multi-values, so ensure value is an array.
-                if (Ext.isArray(v)) {
-                    ln = v.length;
-                } else {
-                    v = [ v ];
-                    ln = 1;
-                }
-
-                // Are we processing an Array of Models or keys?
-                usingModels = v[0] instanceof Ext.data.Model;
-
-                // Loop through them
-                for (; i < ln; i++) {
-                    if (usingModels) {
-                        r = v[i];
-                    } else {
-                        r = this.findRecordByValue(v[i]);
-                    }
-                    // record found, select it.
-                    if (r) {
-                        models.push(r);
-                        data.push(r.data);
-                        value.push(r.get(this.valueField));
-                    // record was not found, this could happen because
-                    // store is not loaded or they set a value not in the store
-                    } else {
-                        value.push(v[i]);
-                    }
-                }
-            }
-
-            // Select the rows in the list if required.
-            // This must not recurse into here.
-            if ((this.isExpanded && (doSelect !== false)) || (this.picker && doSelect)) {
-                this.inSetValue = true;
-                this.picker.getSelectionModel().select(models);
-                delete this.inSetValue;
-            }
-
-            // Set the value of this field. If we are multiselecting, then that is an array.
-            this.value = (value.length == 1) ? value[0] : value;
-
-            // Calculate raw value from the collection of Model data
-            this.setRawValue(this.displayTpl.apply(data));
+        if (me.store.loading) {
+            // Called while the Store is loading. Ensure it is processed by the onLoad method.
+            me.value = value;
+            return me;
         }
+
+        // This method processes multi-values, so ensure value is an array.
+        value = Ext.Array.from(value);
+
+        // Loop through values
+        for (i = 0, len = value.length; i < len; i++) {
+            record = value[i];
+            if (!record || !record.isModel) {
+                record = me.findRecordByValue(record);
+            }
+            // record found, select it.
+            if (record) {
+                models.push(record);
+                displayTplData.push(record.data);
+                processedValue.push(record.get(me.valueField));
+            }
+            // record was not found, this could happen because
+            // store is not loaded or they set a value not in the store
+            else {
+                // if valueNotFoundText is defined, display it, otherwise display nothing for this value
+                if (Ext.isDefined(valueNotFoundText)) {
+                    displayTplData.push(valueNotFoundText);
+                }
+                processedValue.push(value[i]);
+            }
+        }
+
+        // Select the rows in the list if required.
+        // This must not recurse into here.
+        if ((me.isExpanded && (doSelect !== false)) || (me.picker && doSelect)) {
+            me.inSetValue = true;
+            selModel = me.picker.getSelectionModel();
+            selModel.deselectAll();
+            if (models.length) {
+                selModel.select(models);
+            }
+        }
+
+        // Set the value of this field. If we are multiselecting, then that is an array.
+        me.value = (processedValue.length == 1) ? processedValue[0] : processedValue;
+
+        // Calculate raw value from the collection of Model data
+        me.setRawValue(me.displayTpl.apply(displayTplData));
+
+        return me;
     },
 
-    // @private
-    // intentionally overriding superclass
     getValue: function() {
         return this.value;
     },
     
-    // @private
     getSubmitValue: function() {
-        var me = this;
-        return (me.disabled || !me.submitValue) ? null : me.getValue();
+        return this.getValue();
     },
 
     /**

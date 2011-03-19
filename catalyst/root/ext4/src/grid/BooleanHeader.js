@@ -7,6 +7,8 @@
 Ext.define('Ext.grid.BooleanHeader', {
     extend: 'Ext.grid.Header',
     alias: ['widget.booleanheader'],
+    alternateClassName: 'Ext.grid.BooleanColumn',
+    
     /**
      * @cfg {String} trueText
      * The string returned by the renderer when the column value is not falsey (defaults to <tt>'true'</tt>).

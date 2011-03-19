@@ -197,7 +197,7 @@ Ext.define('Ext.view.DropZone', {
                 me.invalidateDrop();
                 me.handleNodeDrop(data, me.overRecord, me.currentPosition);
                 dropped = true;
-                me.fireViewEvent('drop', node, data, me.overRecord, me.currentPosition)
+                me.fireViewEvent('drop', node, data, me.overRecord, me.currentPosition);
             };
 
         if (me.valid && (me.fireViewEvent('beforedrop', node, data, me.overRecord, me.currentPosition, processDrop) !== false)) {

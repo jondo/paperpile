@@ -1,9 +1,10 @@
 /**
- * @author Jacky Nguyen
+ * @author Jacky Nguyen <jacky@sencha.com>
+ * @docauthor Jacky Nguyen <jacky@sencha.com>
  * @class Ext.Base
  *
- * The root of all classes created with {@link Ext#define Ext.define}
- * All prototype and static properties of this class are inherited by any other class
+ * The root of all classes created with {@link Ext#define}
+ * All prototype and static members of this class are inherited by any other class
  *
  */
 (function(flexSetter) {
@@ -39,15 +40,15 @@ var Base = Ext.Base = function() {};
     Ext.define('My.SnowLeopard', {
         extend: 'My.Cat',
         statics: {
-            speciesName: 'Snow Leopard' // My.SnowLeopard.speciesName = 'Snow Leopard'
+            speciesName: 'Snow Leopard'         // My.SnowLeopard.speciesName = 'Snow Leopard'
         }
     });
 
-    var kitty = new My.Cat();           // alerts 'Cat'
-    var katty = new My.SnowLeopard();   // alerts 'Snow Leopard'
+    var cat = new My.Cat();                     // alerts 'Cat'
+    var snowLeopard = new My.SnowLeopard();     // alerts 'Snow Leopard'
 
-    var cutie = katty.clone();
-    alert(Ext.getClassName(cutie));     // alerts 'My.SnowLeopard'
+    var clone = snowLeopard.clone();
+    alert(Ext.getClassName(clone));             // alerts 'My.SnowLeopard'
 
          * @type Class
          * @protected
@@ -57,6 +58,7 @@ var Base = Ext.Base = function() {};
 
         /**
          * Default constructor, simply returns `this`
+         *
          * @constructor
          * @protected
          * @return {Object} this
@@ -131,10 +133,12 @@ var Base = Ext.Base = function() {};
          * @ignore
          */
         parent: function(args) {
+            //<debug warn>
             if (Ext.isDefined(Ext.global.console)) {
                 console.warn("[" + this.parent.caller.displayName + "] this.parent is deprecated. " +
                              "Please use this.callParent instead.");
             }
+            //</debug>
 
             return this.callParent.apply(this, arguments);
         },
@@ -172,8 +176,7 @@ var Base = Ext.Base = function() {};
             if (!method.$owner) {
                 //<debug error>
                 if (!method.caller) {
-                    throw new Error("[" + Ext.getClassName(this) + "#callParent] Calling a protected method from the " +
-                                    "public scope");
+                    throw new Error("[" + Ext.getClassName(this) + "#callParent] Calling a protected method from the public scope");
                 }
                 //</debug>
 
@@ -185,11 +188,11 @@ var Base = Ext.Base = function() {};
 
             //<debug error>
             if (!(methodName in parentClass)) {
-                throw new Error("[" + Ext.getClassName(this) + "#" + methodName + "] this.parent was called but there's no " +
-                                "such method (" + methodName + ") found in the parent class (" +
+                throw new Error("[" + Ext.getClassName(this) + "#" + methodName + "] this.callParent() was called but there's no such method (" + methodName + ") found in the parent class (" +
                                 (Ext.getClassName(parentClass) || 'Object') + ")");
             }
             //</debug>
+
             return parentClass[methodName].apply(this, args || []);
         },
 
@@ -197,18 +200,23 @@ var Base = Ext.Base = function() {};
         /**
          * Get the reference to the class from which this object was instantiated. Note that unlike {@link Ext.Base#self},
          * `this.statics()` is scope-independent and it always returns the class from which it was called, regardless of what
-         * `this` points to during runtime
+         * `this` points to during run-time
 
     Ext.define('My.Cat', {
         statics: {
+            totalCreated: 0,
             speciesName: 'Cat' // My.Cat.speciesName = 'Cat'
         },
 
         constructor: function() {
-            alert(this.statics().speciesName); // always equals to 'Cat' no matter what 'this' refers to
-                                                 // equivalent to: My.Cat.speciesName
+            var statics = this.statics();
 
-            alert(this.self.speciesName);      // dependent on 'this'
+            alert(statics.speciesName);     // always equals to 'Cat' no matter what 'this' refers to
+                                            // equivalent to: My.Cat.speciesName
+
+            alert(this.self.speciesName);   // dependent on 'this'
+
+            statics.totalCreated++;
 
             return this;
         },
@@ -216,7 +224,7 @@ var Base = Ext.Base = function() {};
         clone: function() {
             var cloned = new this.self;                      // dependent on 'this'
 
-            cloned.groupName = this.statics().speciesName; // equivalent to: My.Cat.speciesName
+            cloned.groupName = this.statics().speciesName;   // equivalent to: My.Cat.speciesName
 
             return cloned;
         }
@@ -224,8 +232,10 @@ var Base = Ext.Base = function() {};
 
 
     Ext.define('My.SnowLeopard', {
+        extend: 'My.Cat',
+
         statics: {
-            speciesName: 'Snow Leopard' // My.SnowLeopard.speciesName = 'Snow Leopard'
+            speciesName: 'Snow Leopard'     // My.SnowLeopard.speciesName = 'Snow Leopard'
         },
 
         constructor: function() {
@@ -233,13 +243,15 @@ var Base = Ext.Base = function() {};
         }
     });
 
-    var kitty = new My.Cat();         // alerts 'Cat', then alerts 'Cat'
+    var cat = new My.Cat();                 // alerts 'Cat', then alerts 'Cat'
 
-    var katty = new My.SnowLeopard(); // alerts 'Cat', then alerts 'Snow Leopard'
+    var snowLeopard = new My.SnowLeopard(); // alerts 'Cat', then alerts 'Snow Leopard'
 
-    var cutie = kitty.clone();
-    alert(Ext.getClassName(cutie));   // alerts 'My.SnowLeopard'
-    alert(cutie.groupName);           // alerts 'Cat'
+    var clone = snowLeopard.clone();
+    alert(Ext.getClassName(clone));         // alerts 'My.SnowLeopard'
+    alert(clone.groupName);                 // alerts 'Cat'
+
+    alert(My.Cat.totalCreated);             // alerts 3
 
          * @protected
          * @return {Class}
@@ -314,7 +326,7 @@ var Base = Ext.Base = function() {};
         /**
          * @private
          */
-        ownMethod: flexSetter(function(name, fn) {
+        ownMethod: function(name, fn) {
             var originalFn, className;
 
             if (fn === Ext.emptyFn) {
@@ -341,19 +353,19 @@ var Base = Ext.Base = function() {};
             fn.$isOwned = true;
 
             this.prototype[name] = fn;
-        }),
+        },
 
         /**
          * @private
          */
-        borrowMethod: flexSetter(function(name, fn) {
+        borrowMethod: function(name, fn) {
             if (!fn.$isOwned) {
                 this.ownMethod(name, fn);
             }
             else {
                 this.prototype[name] = fn;
             }
-        }),
+        },
 
         /**
          * Add / override static properties of this class. This method is a {@link Ext.Function#flexSetter flexSetter}.

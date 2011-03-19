@@ -36,11 +36,9 @@ Ext.define('Ext.tree.TreeViewDropZone', {
     
     // private
     expandNode : function(node) {
-        var view = this.view,
-            record = node.getRecord();
-
-        if (!node.isLeaf() && !record.expanded) {
-            view.expand(record);
+        var view = this.view;
+        if (!node.isLeaf() && !node.isExpanded()) {
+            view.expand(node);
             this.expandProcId = false;
         }
     },
@@ -61,15 +59,14 @@ Ext.define('Ext.tree.TreeViewDropZone', {
     getPosition: function(e, node) {
         var view = this.view,
             record = view.getRecord(node),
-            treeNode = record.node,
             y = e.getPageY(),
-            noAppend = treeNode.isLeaf(),
+            noAppend = record.isLeaf(),
             noBelow = false,
             region = Ext.fly(node).getRegion(),
             fragment;
         
         // If we are dragging on top of the root node of the tree, we always want to append.
-        if (treeNode.isRoot) {
+        if (record.isRoot()) {
             return 'append';
         }
         
@@ -79,7 +76,7 @@ Ext.define('Ext.tree.TreeViewDropZone', {
         }
         
         if (!this.allowParentInsert) {
-            noBelow = treeNode.hasChildNodes() && record.expanded;
+            noBelow = record.hasChildNodes() && record.isExpanded();
         }
         
         fragment = (region.bottom - region.top) / (noAppend ? 2 : 3);
@@ -100,16 +97,14 @@ Ext.define('Ext.tree.TreeViewDropZone', {
         }
 
         var view = this.view,
-            record = view.getRecord(node),
-            targetNode = record.node,
-            dropRecord = view.getRecord(data.item),
-            dropNode = dropRecord.node;
+            targetRecord = view.getRecord(node),
+            dropRecord = view.getRecord(data.item);
         
-        if (!(targetNode && position)) {
+        if (!(targetRecord && position)) {
             return false;
         }
         
-        if (dropNode && (targetNode == dropNode || dropNode.contains(targetNode))) {
+        if (targetRecord && (targetRecord == dropRecord || dropRecord.contains(targetRecord))) {
             return false;
         }
         
@@ -122,12 +117,13 @@ Ext.define('Ext.tree.TreeViewDropZone', {
             returnCls = this.dropNotAllowed,
             view = this.view,
             targetRecord = view.getRecord(node),
-            targetNode = targetRecord.node,
-            indicator = this.getIndicator();
+            indicator = this.getIndicator(),
+            indicatorX = 0,
+            indicatorY = 0;
 
         // auto node expand check
-        if (position == 'append' && !this.expandProcId && !targetNode.isLeaf() && !targetRecord.expanded) {
-            this.queueExpand(targetNode);
+        if (position == 'append' && !this.expandProcId && !targetRecord.isLeaf() && !targetRecord.isExpanded()) {
+            this.queueExpand(targetRecord);
         } 
         else if (position != 'append') {
             this.cancelExpand();
@@ -136,18 +132,20 @@ Ext.define('Ext.tree.TreeViewDropZone', {
         if (this.isValidDropPoint(node, position, dragZone, e, data)) {
             this.valid = true;
             this.currentPosition = position;
-            this.currentRecord = targetRecord;
+            this.overRecord = targetRecord;            
+            
+            indicator.setWidth(Ext.fly(node).getWidth());
+            indicatorY = Ext.fly(node).getY() - Ext.fly(view.el).getY() - 1;
             
             if (position == 'above') {
-                returnCls = targetNode.isFirst() ? Ext.baseCSSPrefix + 'tree-drop-ok-above' : Ext.baseCSSPrefix + 'tree-drop-ok-between';
-                indicator.setWidth(Ext.fly(node).getWidth());
-                indicator.showAt(indicator.el.getAlignToXY(node, 'tl'));
+                returnCls = targetRecord.isFirst() ? Ext.baseCSSPrefix + 'tree-drop-ok-above' : Ext.baseCSSPrefix + 'tree-drop-ok-between';
+                indicator.showAt(0, indicatorY);
                 indicator.toFront();
             }
             else if (position == 'below') {
-                returnCls = targetNode.isLast() ? Ext.baseCSSPrefix + 'tree-drop-ok-below' : Ext.baseCSSPrefix + 'tree-drop-ok-between';
-                indicator.setWidth(Ext.fly(node).getWidth());
-                indicator.showAt(indicator.el.getAlignToXY(node, 'bl'));
+                returnCls = targetRecord.isLast() ? Ext.baseCSSPrefix + 'tree-drop-ok-below' : Ext.baseCSSPrefix + 'tree-drop-ok-between';
+                indicatorY += Ext.fly(node).getHeight();
+                indicator.showAt(0, indicatorY);
                 indicator.toFront();
             }
             else {
@@ -171,27 +169,32 @@ Ext.define('Ext.tree.TreeViewDropZone', {
     handleNodeDrop : function(data, targetRecord, position) {
         var view = this.view,
             sourceRecord = view.getRecord(data.item),
-            treeStore = view.getStore();
+            treeStore = view.getStore(),
+            parentNode = targetRecord.parentNode;
         
         // Cancel any pending expand operation
         this.cancelExpand();
-                
-        if (this.valid) {        
-            // @TODO: Move the actual records in the treestore
-            // @TODO: Fire an event to let the tree know there has been a valid drop
-            
-            // if (position == 'above') {
-            //     sourceRecord.insertBefore(targetNode);
-            // }
-            // else if (position == 'below') {
-            //     sourceRecord.insertAfter(targetNode);
-            // }
-            // else {
-            //     sourceRecord.appendTo(targetNode);
-            // }
-                
-            // Remove the indicators if there
-            this.invalidateDrop();            
+   
+        if (position == 'above') {
+            parentNode.insertBefore(sourceRecord, targetRecord);
+        }
+        else if (position == 'below') {
+            if (targetRecord.nextSibling) {
+                parentNode.insertBefore(sourceRecord, targetRecord.nextSibling);
+            }
+            else {
+                parentNode.appendChild(sourceRecord);
+            }
+        }
+        else {
+            if (!targetRecord.isExpanded()) {
+                targetRecord.expand(function() {
+                    targetRecord.appendChild(sourceRecord);
+                });
+            }
+            else {
+                targetRecord.appendChild(sourceRecord);
+            }
         }
     }
 });

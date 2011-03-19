@@ -22,8 +22,8 @@ Ext.define('Ext.layout.container.Anchor', {
     /* Begin Definitions */
 
     alias: 'layout.anchor',
-
     extend: 'Ext.layout.Container',
+    alternatClassName: 'Ext.layout.AnchorLayout',
 
     /* End Definitions */
 
@@ -102,10 +102,20 @@ anchor: '-50 75%'
             len = components.length,
             boxes = [],
             box, newTargetSize, anchorWidth, anchorHeight, component, anchorSpec, calcWidth, calcHeight,
-            anchorsArray, anchor, i, el, undefined;
+            anchorsArray, anchor, i, el;
 
         if (ownerWidth < 20 && ownerHeight < 20) {
             return;
+        }
+
+        // Anchor layout uses natural HTML flow to arrange the child items.
+        // To ensure that all browsers (I'm looking at you IE!) add the bottom margin of the last child to the
+        // containing element height, we create a zero-sized element with style clear:both to force a "new line"
+        if (!me.clearEl) {
+            me.clearEl = target.createChild({
+                cls: Ext.baseCSSPrefix + 'clear',
+                role: 'presentation'
+            });
         }
 
         // find the container anchoring size

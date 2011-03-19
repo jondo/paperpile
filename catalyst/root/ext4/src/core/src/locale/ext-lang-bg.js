@@ -9,7 +9,7 @@
  * (utf-8 encoding)
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Зареждане...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Зареждане...</div>';
 
 if(Ext.View){
   Ext.View.prototype.emptyText = "";
@@ -90,7 +90,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText         : "Днес",
     minText           : "Тази дата е преди минималната",
     maxText           : "Тази дата е след максималната",
@@ -103,9 +103,14 @@ if(Ext.picker.Date){
     monthYearText     : 'Избери месец (Control+Up/Down за преместване по години)',
     todayTip          : "{0} (Spacebar)",
     format            : "d.m.y",
-    okText            : "&#160;OK&#160;",
-    cancelText        : "Отмени",
     startDay          : 1
+  });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;OK&#160;",
+      cancelText        : "Отмени"
   });
 }
 

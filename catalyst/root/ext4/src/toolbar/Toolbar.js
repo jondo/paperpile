@@ -1,94 +1,192 @@
 /**
  * @class Ext.toolbar.Toolbar
  * @extends Ext.container.Container
- * <p>Basic Toolbar class. Although the <code>{@link Ext.container.Container#defaultType defaultType}</code> for Toolbar
- * is <code>{@link Ext.button.Button button}</code>, Toolbar elements (child items for the Toolbar container) may
- * be virtually any type of Component. Toolbar elements can be created explicitly via their constructors,
- * or implicitly via their xtypes, and can be <code>{@link #add}</code>ed dynamically.</p>
- * <p>Some items have shortcut strings for creation:</p>
- * <pre>
-<u>Shortcut</u>  <u>xtype</u>          <u>Class</u>                  <u>Description</u>
-'->'      'tbfill'       {@link Ext.toolbar.Fill}       begin using the right-justified button container
-'-'       'tbseparator'  {@link Ext.toolbar.Separator}  add a vertical separator bar between toolbar items
-' '       'tbspacer'     {@link Ext.toolbar.Spacer}     add horiztonal space between elements
- * </pre>
- *
- * Example usage of various elements:
- * <pre><code>
-var tb = new Ext.toolbar.Toolbar({
+
+Basic Toolbar class. Although the {@link Ext.container.Container#defaultType defaultType} for Toolbar is {@link Ext.button.Button button}, Toolbar 
+elements (child items for the Toolbar container) may be virtually any type of Component. Toolbar elements can be created explicitly via their 
+constructors, or implicitly via their xtypes, and can be {@link #add}ed dynamically.
+
+__Some items have shortcut strings for creation:__
+
+| Shortcut | xtype         | Class                         | Description                                        |
+|:---------|:--------------|:------------------------------|:---------------------------------------------------|
+| `->`     | `tbspacer`    | {@link Ext.toolbar.Fill}      | begin using the right-justified button container   |
+| `-`      | `tbseparator` | {@link Ext.toolbar.Separator} | add a vertical separator bar between toolbar items |
+| ` `      | `tbspacer`    | {@link Ext.toolbar.Spacer}    | add horiztonal space between elements              |
+
+Example usage:
+
+    var toolbar = new Ext.toolbar.Toolbar({
+        renderTo: document.body,
+        width   : 600,
+        items: [
+            {
+                // xtype: 'button', // default for Toolbars
+                text: 'Button'
+            },
+            {
+                xtype: 'splitbutton',
+                text : 'Split Button'
+            },
+            // begin using the right-justified button container
+            '->', // same as {xtype: 'tbfill'}, // Ext.toolbar.Fill
+            {
+                xtype    : 'textfield',
+                name     : 'field1',
+                emptyText: 'enter search term'
+            },
+            // add a vertical separator bar between toolbar items
+            '-', // same as {xtype: 'tbseparator'} to create Ext.toolbar.Separator
+            'text 1', // same as {xtype: 'tbtext', text: 'text1'} to create Ext.toolbar.TextItem
+            {xtype: 'tbspacer'},// same as ' ' to create Ext.toolbar.Spacer
+            'text 2',
+            {xtype: 'tbspacer', width: 50}, // add a 50px space
+            'text 3'
+        ]
+    });
+
+Toolbars have {@link #enable} and {@link #disable} methods which when called, will enable/disable all items within your toolbar.
+
+Example usage:
+
+var toolbar = new Ext.toolbar.Toolbar({
     renderTo: document.body,
-    width: 600,
-    height: 100,
+    width   : 400,
     items: [
         {
-            // xtype: 'button', // default for Toolbars, same as 'tbbutton'
             text: 'Button'
         },
         {
-            xtype: 'splitbutton', // same as 'tbsplitbutton'
-            text: 'Split Button'
+            xtype: 'splitbutton',
+            text : 'Split Button'
         },
-        // begin using the right-justified button container
-        '->', // same as {xtype: 'tbfill'}, // Ext.toolbar.Fill
+        '->',
         {
-            xtype: 'textfield',
-            name: 'field1',
+            xtype    : 'textfield',
+            name     : 'field1',
             emptyText: 'enter search term'
-        },
-        // add a vertical separator bar between toolbar items
-        '-', // same as {xtype: 'tbseparator'} to create Ext.toolbar.Separator
-        'text 1', // same as {xtype: 'tbtext', text: 'text1'} to create Ext.toolbar.TextItem
-        {xtype: 'tbspacer'},// same as ' ' to create Ext.toolbar.Spacer
-        'text 2',
-        {xtype: 'tbspacer', width: 50}, // add a 50px space
-        'text 3'
+        }
     ]
 });
- * </code></pre>
- * Example adding a ComboBox within a menu of a button:
- * <pre><code>
-// ComboBox creation
-var combo = new Ext.form.ComboBox({
-    store: new Ext.data.ArrayStore({
-        autoDestroy: true,
-        fields: ['initials', 'fullname'],
-        data : [
-            ['FF', 'Fred Flintstone'],
-            ['BR', 'Barney Rubble']
-        ]
-    }),
-    displayField: 'fullname',
-    typeAhead: true,
-    mode: 'local',
-    forceSelection: true,
-    triggerAction: 'all',
-    emptyText: 'Select a name...',
-    selectOnFocus: true,
-    width: 135,
-    getListParent: function() {
-        return this.el.up('.x-menu');
-    },
-    iconCls: 'no-icon' //use iconCls if placing within menu to shift to right side of menu
+
+var enableBtn = new Ext.button.Button({
+    text    : 'Enable All Items',
+    disabled: true,
+    scope   : this,
+    handler : function() {
+        //disable the enable button and enable the disable button
+        enableBtn.disable();
+        disableBtn.enable();
+        
+        //enable the toolbar
+        toolbar.enable();
+    }
 });
 
-// put ComboBox in a Menu
-var menu = new Ext.menu.Menu({
-    id: 'mainMenu',
+var disableBtn = new Ext.button.Button({
+    text    : 'Disable All Items',
+    scope   : this,
+    handler : function() {
+        //enable the enable button and disable button
+        disableBtn.disable();
+        enableBtn.enable();
+        
+        //disable the toolbar
+        toolbar.disable();
+    }
+});
+
+new Ext.toolbar.Toolbar({
+    renderTo: document.body,
+    width   : 400,
+    margin  : '5 0 0 0',
+    items   : [enableBtn, disableBtn]
+});
+
+Adding items to and removing items from a toolbar is as simple as calling the {@link #add} and {@link #remove} methods. There is also a {@link #removeAll} method 
+which remove all items within the toolbar.
+
+Example usage:
+
+var toolbar = new Ext.toolbar.Toolbar({
+    renderTo: document.body,
+    width   : 700,
     items: [
-        combo // A Field in a Menu
+        {
+            text: 'Example Button'
+        }
     ]
 });
 
-// add a Button with the menu
-tb.add({
-        text:'Button w/ Menu',
-        menu: menu  // assign menu by instance
-    });
- * </code></pre>
+var addedItems = [];
+
+new Ext.toolbar.Toolbar({
+    renderTo: document.body,
+    width   : 700,
+    margin  : '5 0 0 0',
+    items   : [
+        {
+            text   : 'Add a button',
+            scope  : this,
+            handler: function() {
+                var text = prompt('Please enter the text for your button:');
+                addedItems.push(toolbar.add({
+                    text: text
+                }));
+            }
+        },
+        {
+            text   : 'Add a text item',
+            scope  : this,
+            handler: function() {
+                var text = prompt('Please enter the text for your item:');
+                addedItems.push(toolbar.add(text));
+            }
+        },
+        {
+            text   : 'Add a toolbar seperator',
+            scope  : this,
+            handler: function() {
+                addedItems.push(toolbar.add('-'));
+            }
+        },
+        {
+            text   : 'Add a toolbar spacer',
+            scope  : this,
+            handler: function() {
+                addedItems.push(toolbar.add('->'));
+            }
+        },
+        '->',
+        {
+            text   : 'Remove last inserted item',
+            scope  : this,
+            handler: function() {
+                if (addedItems.length) {
+                    toolbar.remove(addedItems.pop());
+                } else if (toolbar.items.length) {
+                    toolbar.remove(toolbar.items.last());
+                } else {
+                    alert('No items in the toolbar');
+                }
+            }
+        },
+        {
+            text   : 'Remove all items',
+            scope  : this,
+            handler: function() {
+                toolbar.removeAll();
+            }
+        }
+    ]
+});
+
  * @constructor
  * Creates a new Toolbar
  * @param {Object/Array} config A config object or an array of buttons to <code>{@link #add}</code>
  * @xtype toolbar
+ * @docauthor Robert Dougan <rob@sencha.com>
+ * @markdown
  */
 Ext.define('Ext.toolbar.Toolbar', {
     extend: 'Ext.container.Container',
@@ -101,10 +199,20 @@ Ext.define('Ext.toolbar.Toolbar', {
     ],
     alias: 'widget.toolbar',
     alternateClassName: 'Ext.Toolbar',
+    
     isToolbar: true,
-
-    vertical: false,
+    baseCls  : Ext.baseCSSPrefix + 'toolbar',
+    ariaRole : 'toolbar',
+    ui       : 'default',
+    
     defaultType: 'button',
+    
+    /**
+     * @cfg {Boolean} vertical
+     * Set to `true` to make the toolbar vertical. The layout will become a `vbox`.
+     * (defaults to `false`)
+     */
+    vertical: false,
 
     /**
      * @cfg {String/Object} layout
@@ -120,16 +228,11 @@ Ext.define('Ext.toolbar.Toolbar', {
      * Defaults to false. Configure <code>true</code> to make the toolbar provide a button
      * which activates a dropdown Menu to show items which overflow the Toolbar's width.
      */
-    enableOverflow : false,
-
+    enableOverflow: false,
+    
+    // private
     trackMenus: true,
-
-    baseCls: Ext.baseCSSPrefix + 'toolbar',
-
-    ariaRole: 'toolbar',
-
-    ui: 'default',
-
+    
     initComponent: function() {
         var me = this;
 
@@ -310,8 +413,8 @@ Ext.define('Ext.toolbar.Toolbar', {
     }
 }, function() {
     this.shortcuts = {
-        '-': 'tbseparator',
-        ' ': 'tbspacer',
+        '-' : 'tbseparator',
+        ' ' : 'tbspacer',
         '->': 'tbfill'
     };
 });

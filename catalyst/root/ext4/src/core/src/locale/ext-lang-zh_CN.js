@@ -7,7 +7,7 @@
  * 2009-10-22 15:00:57
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">加载中...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">加载中...</div>';
 
 if(Ext.DataView){
    Ext.DataView.prototype.emptyText = "";
@@ -76,7 +76,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-   Ext.apply(Ext.DatePicker.prototype, {
+   Ext.apply(Ext.picker.Date.prototype, {
       todayText         : "今天",
       minText           : "日期必须大于最小允许日期",//update
       maxText           : "日期必须小于最大允许日期",//update
@@ -88,10 +88,15 @@ if(Ext.picker.Date){
       prevText          : '上个月 (Ctrl+Left)',
       monthYearText     : '选择一个月 (Control+Up/Down 来改变年份)',//update
       todayTip          : "{0} (空格键选择)",
-      format            : "y年m月d日",
+      format            : "y年m月d日"
+   });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
       okText            : "确定",
       cancelText        : "取消"
-   });
+  });
 }
 
 if(Ext.toolbar.PagingToolbar){

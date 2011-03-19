@@ -3,49 +3,224 @@
  * @class Ext.tab.TabPanel
  * @extends Ext.panel.Panel
 
- * <p>A basic tab container. TabPanels can be used exactly like a standard {@link Ext.panel.Panel}
- * for layout purposes, but also have special support for containing child Components
- * (<code>{@link Ext.container.Container#items items}</code>) that are managed using a
- * {@link Ext.layout.container.Card CardLayout layout manager}, and displayed as separate tabs.</p> 
- *
- * <b>Note:</b> By default, a tab's close tool <i>destroys</i> the child tab Component
- * and all its descendants. This makes the child tab Component, and all its descendants <b>unusable</b>. To enable
- * re-use of a tab, configure the TabPanel with <b><code>{@link #autoDestroy autoDestroy: false}</code></b>.
- *
- * <p><b><u>TabPanel's layout</u></b></p> 
- * 
- * <p>TabPanels use a Dock layout to position the {@link Ext.tab.TabBar TabBar} at the
- * top of the widget. Panels added to the TabPanel will have their header hidden by default because the Tab will 
- * automatically take the Panel's configured title and icon.</p>
- * <p>TabPanels use their {@link Ext.panel.Panel#header header} or {@link Ext.panel.Panel#footer footer} element
- * (depending on the {@link #tabPosition} configuration) to accommodate the tab selector buttons.
- * This means that a TabPanel will not display any configured title, and will not display any
- * configured header {@link Ext.panel.Panel#tools tools}.</p> 
- * <p>To display a header, embed the TabPanel in a {@link Ext.panel.Panel Panel} which uses
- * <b><code>{@link Ext.container.Container#layout layout:'fit'}</code></b>.</p> 
- *
- * <p><b><u>Creating TabPanels</u></b></p> 
- * <p>TabPanels can be created and rendered completely in code, as in this example:</p> 
- * <pre><code> 
+A basic tab container. TabPanels can be used exactly like a standard {@link Ext.panel.Panel} for layout purposes, but also 
+have special support for containing child Components (`{@link Ext.container.Container#items items}`) that are managed 
+using a {@link Ext.layout.container.Card CardLayout layout manager}, and displayed as separate tabs.
+
+__Note:__
+
+By default, a tab's close tool _destroys_ the child tab Component and all its descendants. This makes the child tab 
+Component, and all its descendants __unusable__. To enable re-use of a tab, configure the TabPanel with `{@link #autoDestroy autoDestroy: false}`.
+
+__TabPanel's layout:__
+
+TabPanels use a Dock layout to position the {@link Ext.tab.TabBar TabBar} at the top of the widget. Panels added to the TabPanel will have their 
+header hidden by default because the Tab will automatically take the Panel's configured title and icon.
+
+TabPanels use their {@link Ext.panel.Panel#header header} or {@link Ext.panel.Panel#footer footer} element (depending on the {@link #tabPosition} 
+configuration) to accommodate the tab selector buttons. This means that a TabPanel will not display any configured title, and will not display any 
+configured header {@link Ext.panel.Panel#tools tools}.
+
+To display a header, embed the TabPanel in a {@link Ext.panel.Panel Panel} which uses `{@link Ext.container.Container#layout layout:'fit'}`.
+
+__Examples:__
+
+Here is a basic TabPanel rendered to the body. This also shows the useful configuration {@link #activeTab}, which allows you to set the active tab on render. 
+If you do not set an {@link #activeTab}, no tabs will be active by default.
+
+Example usage:
+
+    var tabs = new Ext.TabPanel({
+        renderTo : Ext.getBody(),
+        activeTab: 0,
+        items: [
+            {
+                title: 'Tab 1',
+                html : 'A simple tab'
+            },
+            {
+                title: 'Tab 2',
+                html : 'Another one'
+            }
+        ]
+    });
+
+You can remove the background of the TabBar by setting the {@link #plain} property to `false`.
+
+Example usage:
+
 var tabs = new Ext.TabPanel({
-    renderTo: Ext.getBody(),
+    renderTo : Ext.getBody(),
     activeTab: 0,
-    items: [{
-        title: 'Tab 1',
-        html: 'A simple tab'
-    },{
-        title: 'Tab 2',
-        html: 'Another one'
-    }]
+    plain    : true,
+    items: [
+        {
+            title: 'Tab 1',
+            html : 'A simple tab'
+        },
+        {
+            title: 'Tab 2',
+            html : 'Another one'
+        }
+    ]
 });
-</code></pre> 
+
+Another useful configuration of TabPanel is {@link #tabPosition}. This allows you to change the position where the tabs are displayed. The available 
+options for this are `'top'` (default) and `'bottom'`.
+
+Example usage:
+
+    var tabs = new Ext.TabPanel({
+        renderTo : Ext.getBody(),
+        activeTab: 0,
+        tabPosition: 'bottom',
+        items: [
+            {
+                title: 'Tab 1',
+                html : 'A simple tab'
+            },
+            {
+                title: 'Tab 2',
+                html : 'Another one'
+            }
+        ]
+    });
+
+The {@link #setActiveTab} is a very useful method in TabPanel which will allow you to change the current active tab. You can either give it an index or 
+an instance of a tab.
+
+Example usage:
+
+    var tabs = new Ext.TabPanel({
+        renderTo : Ext.getBody(),
+        items: [
+            {
+                id   : 'my-tab',
+                title: 'Tab 1',
+                html : 'A simple tab'
+            },
+            {
+                title: 'Tab 2',
+                html : 'Another one'
+            }
+        ]
+    });
+    
+    var tab = Ext.getCmp('my-tab');
+    
+    new Ext.button.Button({
+        renderTo: Ext.getBody(),
+        text    : 'Select the first tab',
+        scope   : this,
+        handler : function() {
+            tabs.setActiveTab(tab);
+        }
+    });
+    
+    new Ext.button.Button({
+        renderTo: Ext.getBody(),
+        text    : 'Select the second tab',
+        scope   : this,
+        handler : function() {
+            tabs.setActiveTab(1);
+        }
+    });
+
+The {@link #getActiveTab} is a another useful method in TabPanel which will return the current active tab.
+
+Example usage:
+
+    var tabs = new Ext.TabPanel({
+        renderTo : Ext.getBody(),
+        items: [
+            {
+                title: 'Tab 1',
+                html : 'A simple tab'
+            },
+            {
+                title: 'Tab 2',
+                html : 'Another one'
+            }
+        ]
+    });
+    
+    new Ext.button.Button({
+        renderTo: Ext.getBody(),
+        text    : 'Get active tab',
+        scope   : this,
+        handler : function() {
+            var tab = tabs.getActiveTab();
+            alert('Current tab: ' + tab.title);
+        }
+    });
+
+Adding a new tab is very simple with a TabPanel. You simple call the {@link #add} method with an config object for a panel.
+
+Example usage:
+
+    var tabs = new Ext.TabPanel({
+        renderTo : Ext.getBody(),
+        items: [
+            {
+                title: 'Tab 1',
+                html : 'A simple tab'
+            },
+            {
+                title: 'Tab 2',
+                html : 'Another one'
+            }
+        ]
+    });
+    
+    new Ext.button.Button({
+        renderTo: Ext.getBody(),
+        text    : 'New tab',
+        scope   : this,
+        handler : function() {
+            var tab = tabs.add({
+                title: 'Tab ' + (tabs.items.length + 1), //we use the tabs.items property to get the length of current items/tabs
+                html : 'Another one'
+            });
+            
+            tabs.setActiveTab(tab);
+        }
+    });
+
+Additionally, removing a tab is very also simple with a TabPanel. You simple call the {@link #remove} method with an config object for a panel.
+
+Example usage:
+
+    var tabs = new Ext.TabPanel({
+        renderTo : Ext.getBody(),
+        items: [
+            {
+                title: 'Tab 1',
+                html : 'A simple tab'
+            },
+            {
+                id   : 'remove-this-tab',
+                title: 'Tab 2',
+                html : 'Another one'
+            }
+        ]
+    });
+    
+    new Ext.button.Button({
+        renderTo: Ext.getBody(),
+        text    : 'Remove tab',
+        scope   : this,
+        handler : function() {
+            var tab = Ext.getCmp('remove-this-tab');
+            tabs.remove(tab);
+        }
+    });
+
  * @extends Ext.Panel
  * @constructor
  * @param {Object} config The configuration options
  * @xtype tabpanel
  */
 Ext.define('Ext.tab.TabPanel', {
-    //baseCls: Ext.baseCSSPrefix + 'tab-panel',
     extend: 'Ext.panel.Panel',
     alias: 'widget.tabpanel',
     alternateClassName: ['Ext.TabPanel'],
@@ -57,6 +232,7 @@ Ext.define('Ext.tab.TabPanel', {
      * In 4.0, The only other supported value is <code>'bottom'</code>.
      */
     tabPosition : 'top',
+    
     /**
      * @cfg {Object} tabBar Optional configuration object for the internal {@link Ext.tab.TabBar}. If present, this is 
      * passed straight through to the TabBar's constructor

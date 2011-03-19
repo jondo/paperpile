@@ -59,8 +59,8 @@ var p = new Ext.Panel({
 Ext.define('Ext.layout.container.Column', {
 
     extend: 'Ext.layout.container.Auto',
-
     alias: ['layout.column'],
+    alternateClassName: 'Ext.layout.ColumnLayout',
 
     type: 'column',
 
@@ -77,8 +77,13 @@ Ext.define('Ext.layout.container.Column', {
             this.innerCt = this.getTarget().createChild({
                 cls: Ext.baseCSSPrefix + 'column-inner'
             });
+
+            // Column layout uses natural HTML flow to arrange the child items.
+            // To ensure that all browsers (I'm looking at you IE!) add the bottom margin of the last child to the
+            // containing element height, we create a zero-sized element with style clear:both to force a "new line"
             this.innerCt.createChild({
-                cls: Ext.baseCSSPrefix + 'clear'
+                cls: Ext.baseCSSPrefix + 'clear',
+                role: 'presentation'
             });
         }
         return this.innerCt;
@@ -95,7 +100,7 @@ Ext.define('Ext.layout.container.Column', {
             margins = [],
             size = this.getLayoutTargetSize();
 
-        if(size.width < 1 && size.height < 1){ // display none?
+        if (size.width < 1 && size.height < 1) { // display none?
             return;
         }
 

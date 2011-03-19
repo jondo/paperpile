@@ -19,18 +19,26 @@ Ext.define('Ext.util.Sorter', {
      */
     
     /**
+     * @cfg {Function} transform A function that will be run on each value before
+     * it is compared in the sorter. The function will receive a single argument,
+     * the value.
+     */
+    
+    /**
      * @cfg {String} direction The direction to sort by. Defaults to ASC
      */
     direction: "ASC",
     
     constructor: function(config) {
-        Ext.apply(this, config);
+        var me = this;
         
-        if (this.property == undefined && this.sorterFn == undefined) {
+        Ext.apply(me, config);
+        
+        if (me.property == undefined && me.sorterFn == undefined) {
             throw "A Sorter requires either a property or a sorter function";
         }
         
-        this.sort = this.createSortFunction(this.sorterFn || this.defaultSorterFn);
+        me.sort = me.createSortFunction(me.sorterFn || me.defaultSorterFn);
     },
     
     /**
@@ -56,8 +64,15 @@ Ext.define('Ext.util.Sorter', {
      * Basic default sorter function that just compares the defined property of each object
      */
     defaultSorterFn: function(o1, o2) {
-        var v1 = this.getRoot(o1)[this.property],
-            v2 = this.getRoot(o2)[this.property];
+        var me = this,
+            transform = me.transform,
+            v1 = me.getRoot(o1)[me.property],
+            v2 = me.getRoot(o2)[me.property];
+            
+        if (transform) {
+            v1 = transform(v1);
+            v2 = transform(v2);
+        }
 
         return v1 > v2 ? 1 : (v1 < v2 ? -1 : 0);
     },

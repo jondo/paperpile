@@ -166,18 +166,28 @@ Ext.decode = Ext.JSON.decode;
 /**
  * @class Ext
 
- Ext core utilities and functions. This object contains many aliases for common functions,
- for example {@link Ext#getCmp Ext.getCmp} aliases {@link Ext.ComponentMgr#get Ext.ComponentMgr.get}.
+ The Ext namespace (global object) encapsulates all classes, singletons, and utility methods provided by Sencha's libraries.</p>
+ Most user interface Components are at a lower level of nesting in the namespace, but many common utility functions are provided
+ as direct properties of the Ext namespace.
+
+ Also many frequently used methods from other classes are provided as shortcuts within the Ext namespace.
+ For example {@link Ext#getCmp Ext.getCmp} aliases {@link Ext.ComponentMgr#get Ext.ComponentMgr.get}.
 
  Many applications are initiated with {@link Ext#onReady Ext.onReady} which is called once the DOM is ready. 
  This ensures all scripts have been loaded, preventing dependency issues. For example
 
      Ext.onReady(function(){
-         new Ext.Container({
+         new Ext.Component({
              renderTo: document.body,
              html: 'DOM ready!'
          });
      });
+
+For more information about how to use the Ext classes, see
+
+* <a href="http://www.sencha.com/learn/">The Learning Center</a>
+* <a href="http://www.sencha.com/learn/Ext_FAQ">The FAQ</a>
+* <a href="http://www.sencha.com/forum/">The forums</a>
 
  * @singleton
  * @markdown
@@ -557,7 +567,7 @@ Ext.ns("Ext.grid", "Ext.list", "Ext.dd", "Ext.tree", "Ext.form", "Ext.menu",
         document.execCommand("BackgroundImageCache", false, true);
     } catch(e) {}
 
-    Ext.setVersion('extjs', '4.0.0pr4');
+    Ext.setVersion('extjs', '4.0.0pr5');
     Ext.apply(Ext, {
         /**
          * URL to a blank file used by Ext when in secure mode for iframe src and onReady src to prevent
@@ -1435,7 +1445,7 @@ Ext.zip(
          */
         dateRenderer : function(format) {
             return function(v) {
-                return Ext.Date.dateFormat(v, format || Ext.Date.defaultFormat);
+                return UtilFormat.date(v, format);
             };
         },
 
@@ -2019,6 +2029,9 @@ Ext.supports = {
             '<div style="height:30px;width:50px;">',
                 '<div style="height:20px;width:20px;"></div>',
             '</div>',
+            '<div style="width: 200px; height: 200px; position: relative; padding: 5px;">',
+                '<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>',
+            '</div>',
             '<div style="float:left; background-color:transparent;"></div>'
         ].join('');
 
@@ -2316,6 +2329,13 @@ Ext.supports = {
             identity: 'BoundingClientRect',
             fn: function(doc, div) {
                 return Ext.isFunction(div.getBoundingClientRect);
+            }
+        },
+        {
+            identity: 'IncludePaddingInWidthCalculation',
+            fn: function(doc, div){
+                var el = Ext.get(div.childNodes[1].firstChild);
+                return el.getWidth() == 210;
             }
         }
     ]

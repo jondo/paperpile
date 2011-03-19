@@ -1,7 +1,8 @@
 /**
  * @class Ext.AbstractContainer
  * @extends Ext.Component
- * Please refer to sub classes documentation
+ * <p>An abstract base class which provides shared methods for Containers across the Sencha product line.</p>
+ * Please refer to sub class's documentation
  */
 Ext.define('Ext.AbstractContainer', {
 
@@ -95,41 +96,35 @@ layout: {
      */
     /**
      * @cfg {Object/Array} items
-     * <pre><b>** IMPORTANT</b>: be sure to <b>{@link #layout specify a <code>layout</code>} if needed ! **</b></pre>
-     * <p>A single item, or an array of child Components to be added to this container,
-     * for example:</p>
+     * <p>A single item, or an array of child Components to be added to this container</p>
+     * <p><b>Unless configured with a {@link #layout}, a Container simply renders child Components serially into
+     * its encapsulating element and performs no sizing or positioning upon them.</b><p>
+     * <p>Example:</p>
      * <pre><code>
 // specifying a single item
 items: {...},
-layout: 'fit',    // specify a layout!
+layout: 'fit',    // The single items is sized to fit
 
 // specifying multiple items
 items: [{...}, {...}],
-layout: 'hbox', // specify a layout!
+layout: 'hbox', // The items are arranged horizontally
        </code></pre>
      * <p>Each item may be:</p>
-     * <div><ul class="mdetail-params">
-     * <li>any type of object based on {@link Ext.Component}</li>
-     * <li>a fully instanciated object or</li>
-     * <li>an object literal that:</li>
-     * <div><ul class="mdetail-params">
-     * <li>has a specified <code>{@link Ext.Component#xtype xtype}</code></li>
-     * <li>the {@link Ext.Component#xtype} specified is associated with the Component
-     * desired and should be chosen from one of the available xtypes as listed
-     * in {@link Ext.Component}.</li>
-     * <li>If an <code>{@link Ext.Component#xtype xtype}</code> is not explicitly
-     * specified, the {@link #defaultType} for that Container is used.</li>
-     * <li>will be "lazily instanciated", avoiding the overhead of constructing a fully
-     * instanciated Component object</li>
-     * </ul></div></ul></div>
+     * <ul>
+     * <li>A {@link Ext.Component Component}</li>
+     * <li>A Component configuration object</li>
+     * </ul>
+     * <p>If a configuration object is specified, the actual type of Component to be
+     * instantiated my be indicated by using the {@link Ext.Component#xtype xtype} option.</p>
+     * <p>Every Component class has its own {@link Ext.Component#xtype xtype}.</p>
+     * <p>If an {@link Ext.Component#xtype xtype} is not explicitly
+     * specified, the {@link #defaultType} for the Container is used, which by default is usually <code>panel</code>.</p>
      * <p><b>Notes</b>:</p>
-     * <div><ul class="mdetail-params">
-     * <li>Ext uses lazy rendering. Child Components will only be rendered
+     * <p>Ext uses lazy rendering. Child Components will only be rendered
      * should it become necessary. Items are automatically laid out when they are first
-     * shown (no sizing is done while hidden), or in response to a {@link #doLayout} call.</li>
-     * <li>Do not specify <code>{@link Ext.panel.Panel#contentEl contentEl}</code>/
-     * <code>{@link Ext.panel.Panel#html html}</code> with <code>items</code>.</li>
-     * </ul></div>
+     * shown (no sizing is done while hidden), or in response to a {@link #doLayout} call.</p>
+     * <p>Do not specify <code>{@link Ext.panel.Panel#contentEl contentEl}</code> or 
+     * <code>{@link Ext.panel.Panel#html html}</code> with <code>items</code>.</p>
      */
     /**
      * @cfg {Object|Function} defaults

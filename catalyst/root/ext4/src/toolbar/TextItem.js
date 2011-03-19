@@ -19,6 +19,8 @@ Ext.define('Ext.toolbar.TextItem', {
     extend: 'Ext.toolbar.Item',
     requires: ['Ext.XTemplate'],
     alias: 'widget.tbtext',
+    alternateClassName: 'Ext.Toolbar.TextItem',
+    
     /**
      * @cfg {String} text The text to be used as innerHTML (html tags are accepted)
      */

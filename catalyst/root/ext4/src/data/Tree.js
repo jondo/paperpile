@@ -6,25 +6,54 @@
  * @param {Node} root (optional) The root node
  */
 Ext.define('Ext.data.Tree', {
+    alias: 'data.tree',
+    
     mixins: {
         observable: "Ext.util.Observable"
     },
-    
+
+    /**
+     * The root node for this tree
+     * @type Node
+     */
+    root: null,
+        
     constructor: function(root) {
         this.nodeHash = {};
-        
-        /**
-         * The root node for this tree
-         * @type Node
-         */
-        this.root = null;
-        
+
+        this.mixins.observable.constructor.call(this);
+                        
         if (root) {
             this.setRootNode(root);
         }
-        
-        this.mixins.observable.constructor.call(this); 
-        this.mixins.observable.addEvents.call(this,
+    },
+    
+    /**
+     * @cfg {String} pathSeparator
+     * The token used to separate paths in node ids (defaults to '/').
+     */
+    pathSeparator: "/",
+
+    /**
+     * Returns the root node for this tree.
+     * @return {Node}
+     */
+    getRootNode : function() {
+        return this.root;
+    },
+
+    /**
+     * Sets the root node for this tree.
+     * @param {Node} node
+     * @return {Node}
+     */
+    setRootNode : function(node) {
+        this.root = node;
+        node.set('root', true);
+        Ext.data.NodeInterface.decorate(node);
+        node.updateInfo();
+                
+        this.relayEvents(node, [
             /**
              * @event append
              * Fires when a new child node is appended to a node in this tree.
@@ -102,40 +131,57 @@ Ext.define('Ext.data.Tree', {
              * @param {Node} node The child node to be inserted
              * @param {Node} refNode The child node the node is being inserted before
              */
-            "beforeinsert"
-        );
+            "beforeinsert",
+             
+             /**
+              * @event expand
+              * Fires when this node is expanded.
+              * @param {Node} this The expanding node
+              */
+             "expand",
+             
+             /**
+              * @event collapse
+              * Fires when this node is collapsed.
+              * @param {Node} this The collapsing node
+              */
+             "collapse",
+             
+             /**
+              * @event beforeexpand
+              * Fires before this node is expanded.
+              * @param {Node} this The expanding node
+              */
+             "beforeexpand",
+             
+             /**
+              * @event beforecollapse
+              * Fires before this node is collapsed.
+              * @param {Node} this The collapsing node
+              */
+             "beforecollapse"
+        ]);
+        
+        node.on({
+            insert: this.onNodeInsert,
+            append: this.onNodeAppend,
+            remove: this.onNodeRemove,
+            scope: this
+        });
+        
+        return node;
     },
     
-    /**
-     * @cfg {String} pathSeparator
-     * The token used to separate paths in node ids (defaults to '/').
-     */
-    pathSeparator: "/",
-
-    // private
-    proxyNodeEvent : function(){
-        return this.fireEvent.apply(this, arguments);
-    },
-
-    /**
-     * Returns the root node for this tree.
-     * @return {Node}
-     */
-    getRootNode : function() {
-        return this.root;
-    },
-
-    /**
-     * Sets the root node for this tree.
-     * @param {Node} node
-     * @return {Node}
-     */
-    setRootNode : function(node) {
-        this.root = node;
-        node.ownerTree = this;
-        node.isRoot = true;
+    onNodeInsert: function(parent, node) {
         this.registerNode(node);
-        return node;
+    },
+    
+    onNodeAppend: function(parent, node) {
+        this.registerNode(node);
+    },
+    
+    onNodeRemove: function(parent, node) {
+        this.unregisterNode(node);
     },
 
     /**
@@ -149,15 +195,15 @@ Ext.define('Ext.data.Tree', {
 
     // private
     registerNode : function(node) {
-        this.nodeHash[node.id] = node;
+        this.nodeHash[node.get('id') || node.interalId] = node;
     },
 
     // private
     unregisterNode : function(node) {
-        delete this.nodeHash[node.id];
+        delete this.nodeHash[node.get('id') || node.interalId];
     },
 
     toString : function() {
         return "[Tree"+(this.id?" "+this.id:"")+"]";
-    }
+    } 
 });

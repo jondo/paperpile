@@ -3,7 +3,7 @@
  * 25 April 2007
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Nalagam...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Nalagam...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "";
@@ -69,7 +69,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-   Ext.apply(Ext.DatePicker.prototype, {
+   Ext.apply(Ext.picker.Date.prototype, {
       todayText         : "Danes",
       minText           : "Navedeni datum je pred spodnjim datumom",
       maxText           : "Navedeni datum je za zgornjim datumom",

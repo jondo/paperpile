@@ -285,6 +285,7 @@ Ext.define('Ext.chart.series.Scatter', {
             shadowGroups = me.shadowGroups,
             shadowAttributes = me.shadowAttributes,
             lnsh = shadowGroups.length,
+            bbox = me.bbox,
             i, shadow, shadows, attr, endMarkerStyle, type;
 
         endMarkerStyle = Ext.apply(me.markerStyle, me.markerCfg);

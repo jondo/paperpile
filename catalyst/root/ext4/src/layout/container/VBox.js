@@ -10,9 +10,9 @@ Ext.define('Ext.layout.container.VBox', {
     /* Begin Definitions */
 
     alias: ['layout.vbox'],
-
     extend: 'Ext.layout.container.Box',
-
+    alternatClassName: 'Ext.layout.VBoxLayout',
+    
     /* End Definitions */
 
     /**

@@ -100,6 +100,7 @@ ed.get('age'); //returns 25 - we wanted an int, not a float, so no decimal place
  */
 Ext.define('Ext.data.Field', {
     requires: ['Ext.data.Types', 'Ext.data.SortTypes'],
+    alias: 'data.field',
     
     constructor : function(config) {
         if (Ext.isString(config)) {

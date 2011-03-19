@@ -6,7 +6,7 @@
  * updated to 2.2 by Condor (8 Aug 2008)
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Loading...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Loading...</div>';
 
 if(Ext.DataView){
   Ext.DataView.prototype.emptyText = "";
@@ -93,7 +93,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText         : "Today",
     minText           : "This date is before the minimum date",
     maxText           : "This date is after the maximum date",
@@ -106,9 +106,14 @@ if(Ext.picker.Date){
     monthYearText     : 'Choose a month (Control+Up/Down to move years)',
     todayTip          : "{0} (Spacebar)",
     format            : "d/m/Y",
-    okText            : "&#160;OK&#160;",
-    cancelText        : "Cancel",
     startDay          : 0
+  });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;OK&#160;",
+      cancelText        : "Cancel"
   });
 }
 

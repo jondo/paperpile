@@ -1,7 +1,8 @@
 /**
  * @class Ext.container.ButtonGroup
  * @extends Ext.panel.Panel
- * Container for a group of buttons. Example usage:
+ * <p>Provides a container for arranging a group of related Buttons in a tabular manner.</p>
+ * Example usage:
  * <pre><code>
 var p = new Ext.panel.Panel({
     title: 'Panel with Button Group',
@@ -129,4 +130,20 @@ Ext.define('Ext.container.ButtonGroup', {
         }
         return c;
     }
+
+    /**
+     * @cfg {Array} tools  @hide
+     */
+    /**
+     * @cfg {Boolean} collapsible  @hide
+     */
+    /**
+     * @cfg {Boolean} collapseMode  @hide
+     */
+    /**
+     * @cfg {Boolean} animCollapse  @hide
+     */
+    /**
+     * @cfg {Boolean} closable  @hide
+     */
 });

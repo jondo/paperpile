@@ -1,100 +1,118 @@
 /**
  * @class Ext.form.FieldContainer
  * @extends Ext.container.Container
- * <p>A container which participates in field layout.
- * This allows grouping of several components with a {@link #fieldLabel field label} and optional
- * {@link #msgTarget error message}, so that it lines up nicely with other fields in a form. The
- * {@link #items} of the container will be layed out within the field body area according to the
- * configured {@link #layout}.</p>
- * <p>Like regular fields, FieldContainer can inherit its decoration configuration from the
- * {@link Ext.form.FormPanel#fieldDefaults fieldDefaults} of an enclosing FormPanel. In addition,
- * FieldContainer itself can pass {@link #fieldDefaults} to any {@link Ext.form.Labelable fields}
- * it may itself contain.</p>
- * <p>Example usage:</p>
- * <pre><code>Ext.create('Ext.form.FormPanel', {
-    renderTo: Ext.getBody(),
-    title: 'FieldContainer Examples',
-    width: 600,
-    bodyPadding: 10,
 
-    items: [{
-        fieldLabel: 'Panels',
-        xtype: 'fieldcontainer',
-        layout: 'hbox',
-        defaults: {
-            height: 50,
-            flex: 1
-        },
+FieldContainer is a derivation of {@link Ext.container.Container Container} that implements the
+{@link Ext.form.Labelable Labelable} mixin. This allows it to be configured so that it is rendered with
+a {@link #fieldLabel field label} and optional {@link #msgTarget error message} around its sub-items.
+This is useful for arranging a group of fields or other components within a single item in a form, so
+that it lines up nicely with other fields. A common use is for grouping a set of related fields under
+a single label in a form.
+
+The container's configured {@link #items} will be layed out within the field body area according to the
+configured {@link #layout} type. The default layout is `'autocontainer'`.
+
+Like regular fields, FieldContainer can inherit its decoration configuration from the
+{@link Ext.form.FormPanel#fieldDefaults fieldDefaults} of an enclosing FormPanel. In addition,
+FieldContainer itself can pass {@link #fieldDefaults} to any {@link Ext.form.Labelable fields}
+it may itself contain.
+
+If you are grouping a set of {@link Ext.form.Checkbox Checkbox} or {@link Ext.form.Radio Radio}
+fields in a single labeled container, consider using a {@link Ext.form.CheckboxGroup}
+or {@link Ext.form.RadioGroup} instead as they are specialized for handling those types.
+
+__Example usage:__
+
+    Ext.create('Ext.form.FormPanel', {
+        renderTo: Ext.getBody(),
+        title: 'FieldContainer Example',
+        width: 600,
+        bodyPadding: 10,
+
         items: [{
-            xtype: 'panel',
-            title: 'Panel 1'
-        }, {
-            xtype: 'splitter'
-        }, {
-            xtype: 'panel',
-            title: 'Panel 2'
-        }, {
-            xtype: 'splitter'
-        }, {
-            xtype: 'panel',
-            title: 'Panel 3'
+            xtype: 'fieldcontainer',
+            fieldLabel: 'Panels',
+            labelWidth: 75,
+
+            // The body area will contain three panels, arranged
+            // horizontally, separated by draggable splitters.
+            layout: 'hbox',
+            defaults: {
+                height: 50,
+                flex: 1
+            },
+            items: [{
+                xtype: 'panel',
+                title: 'Panel 1'
+            }, {
+                xtype: 'splitter'
+            }, {
+                xtype: 'panel',
+                title: 'Panel 2'
+            }, {
+                xtype: 'splitter'
+            }, {
+                xtype: 'panel',
+                title: 'Panel 3'
+            }]
         }]
-    }]
-});</code></pre>
+    });
+
+__Usage of {@link #fieldDefaults}:__
+
+    Ext.create('Ext.form.FormPanel', {
+        renderTo: Ext.getBody(),
+        title: 'FieldContainer Example',
+        width: 350,
+        bodyPadding: 10,
+
+        items: [{
+            xtype: 'fieldcontainer',
+            fieldLabel: 'Your Name',
+            labelWidth: 75,
+            defaultType: 'textfield',
+
+            // Arrange fields vertically, stretched to full width
+            layout: 'anchor',
+            defaults: {
+                layout: '100%'
+            },
+
+            // These config values will be applied to both sub-fields, except
+            // for Last Name which will use its own msgTarget.
+            fieldDefaults: {
+                msgTarget: 'under',
+                labelAlign: 'top'
+            },
+
+            items: [{
+                fieldLabel: 'First Name',
+                name: 'firstName'
+            }, {
+                fieldLabel: 'Last Name',
+                name: 'lastName',
+                msgTarget: 'under'
+            }]
+        }]
+    });
 
  * @constructor
  * Creates a new Ext.form.FieldContainer instance.
  * @param {Object} config The component configuration.
  *
  * @xtype fieldcontainer
+ * @markdown
+ * @docauthor Jason Johnston <jason@sencha.com>
  */
 Ext.define('Ext.form.FieldContainer', {
     extend: 'Ext.container.Container',
     mixins: {
-        labelable: 'Ext.form.Labelable'
+        labelable: 'Ext.form.Labelable',
+        fieldAncestor: 'Ext.form.FieldAncestor'
     },
     alias: 'widget.fieldcontainer',
 
     componentLayout: 'field',
-
-    /**
-     * @cfg {Object} fieldDefaults
-     * <p>If specified, the properties in this object are used as default config values for each
-     * {@link Ext.form.Labelable} instance (e.g. {@link Ext.form.BaseField} or {@link Ext.form.FieldContainer})
-     * that is added as a descendant of this FieldContainer. Corresponding values specified in an individual field's
-     * own configuration, or from the {@link Ext.container.Container#defaults defaults config} of its parent container,
-     * will take precedence. See the documentation for {@link Ext.form.Labelable} to see what config
-     * options may be specified in the <tt>fieldDefaults</tt>.</p>
-     * <p>Example:</p>
-     * <pre><code>new Ext.form.FieldContainer({
-    fieldDefaults: {
-        labelAlign: 'left',
-        labelWidth: 100
-    },
-    items: [{
-        xtype: 'fieldset',
-        defaults: {
-            labelAlign: 'top'
-        },
-        items: [{
-            name: 'field1'
-        }, {
-            name: 'field2'
-        }]
-    }, {
-        xtype: 'fieldset',
-        items: [{
-            name: 'field3',
-            labelWidth: 150
-        }, {
-            name: 'field4'
-        }]
-    }]
-});</code></pre>
-     * <p>In this example, field1 and field2 will get labelAlign:'top' (from the fieldset's <tt>defaults</tt>)
-     * and labelWidth:100 (from <tt>fieldDefaults</tt>), field3 and field4 will both get labelAlign:'left' (from
-     * <tt>fieldDefaults</tt> and field3 will use the labelWidth:150 from its own config.</p>
-     */
 
     /**
      * @cfg {Boolean} combineLabels
@@ -122,50 +140,11 @@ Ext.define('Ext.form.FieldContainer', {
         var me = this,
             onSubCmpAddOrRemove = me.onSubCmpAddOrRemove;
 
-        // Init mixin
+        // Init mixins
         me.initLabelable();
-
-        // Catch addition of descendant fields
-        me.on('add', onSubCmpAddOrRemove, me);
-        me.on('remove', onSubCmpAddOrRemove, me);
-
-        me.initFieldDefaults();
+        me.initFieldAncestor();
+        
         me.callParent();
-    },
-
-    /**
-     * @private Initialize the {@link #fieldDefaults} object
-     */
-    initFieldDefaults: function() {
-        if (!this.fieldDefaults) {
-            this.fieldDefaults = {};
-        }
-    },
-
-    /**
-     * @private
-     * Handle the addition and removal of components in the FieldContainer's child tree.
-     */
-    onSubCmpAddOrRemove: function(parent, child) {
-        var me = this,
-            isAdding = !!child.ownerCt;
-
-        function handleCmp(cmp) {
-            var isLabelable = cmp.isFieldLabelable,
-                isField = cmp.isFormField;
-            if (isLabelable || isField) {
-                if (isLabelable) {
-                    me['onLabelable' + (isAdding ? 'Added' : 'Removed')](cmp);
-                }
-                if (isField) {
-                    me['onField' + (isAdding ? 'Added' : 'Removed')](cmp);
-                }
-            }
-            else if (cmp.isContainer) {
-                Ext.Array.forEach(cmp.getRefItems(), handleCmp);
-            }
-        }
-        handleCmp(child);
     },
 
     /**
@@ -173,20 +152,9 @@ Ext.define('Ext.form.FieldContainer', {
      * @param {Ext.form.Labelable} labelable The instance that was added
      */
     onLabelableAdded: function(labelable) {
-        labelable.applyFieldDefaults(this.fieldDefaults);
-        this.updateLabel();
-    },
-
-    /**
-     * @protected Called when a {@link Ext.form.Field} instance is added to the container's subtree.
-     * @param {Ext.form.Field} field The field which was added
-     */
-    onFieldAdded: function(field) {
         var me = this;
-        if (me.combineErrors) {
-            // buffer slightly to avoid excessive re-layouts while sub-fields are changing en masse
-            me.mon(field, 'errorchange', me.onFieldErrorChange, me, {buffer: 10});
-        }
+        me.mixins.fieldAncestor.onLabelableAdded.call(this, labelable);
+        me.updateLabel();
     },
 
     /**
@@ -194,18 +162,9 @@ Ext.define('Ext.form.FieldContainer', {
      * @param {Ext.form.Labelable} labelable The instance that was removed
      */
     onLabelableRemoved: function(labelable) {
-        this.updateLabel();
-    },
-
-    /**
-     * @protected Called when a {@link Ext.form.Field} instance is removed from the container's subtree.
-     * @param {Ext.form.Field} field The field which was removed
-     */
-    onFieldRemoved: function(field) {
         var me = this;
-        if (me.combineErrors) {
-            me.mun(field, 'errorchange', me.onFieldErrorChange, me);
-        }
+        me.mixins.fieldAncestor.onLabelableRemoved.call(this, labelable);
+        me.updateLabel();
     },
 
     onRender: function() {
@@ -275,7 +234,7 @@ Ext.define('Ext.form.FieldContainer', {
      * @private Fired when the error message of any field within the container changes, and updates the
      * combined error message to match.
      */
-    onFieldErrorChange: function() {
+    onFieldErrorChange: function(field, activeError) {
         var me = this,
             oldError = me.getActiveError(),
             invalidFields = Ext.Array.filter(me.query('[isFormField]'), function(field) {

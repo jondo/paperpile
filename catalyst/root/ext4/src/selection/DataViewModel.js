@@ -95,12 +95,11 @@ Ext.define('Ext.selection.DataViewModel', {
     onSelectChange: function(record, isSelected, suppressEvent) {
         var me = this,
             view = me.view,
-            allowSelect = true,
-            select;
+            allowSelect = true;
         
         if (isSelected) {
             if (!suppressEvent) {
-                select = me.fireEvent('beforeselect', me, record) !== false;
+                allowSelect = me.fireEvent('beforeselect', me, record) !== false;
             }
             if (allowSelect) {
                 view.onItemSelect(record);

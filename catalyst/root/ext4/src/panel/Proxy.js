@@ -10,6 +10,8 @@
  */
 Ext.define('Ext.panel.Proxy', {
     
+    alternateClassName: 'Ext.dd.PanelProxy',
+    
     constructor: function(panel, config){
         /**
          * @property panel

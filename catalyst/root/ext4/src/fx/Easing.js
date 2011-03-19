@@ -87,6 +87,12 @@ Ext.require('Ext.fx.CubicBezier', function() {
                 s = p / 4;
             return pow(2, -10 * n) * sin((n - s) * (2 * pi) / p) + 1;
         },
+        elasticOut: function (n) {
+            return 1 - Ext.fx.Easing.elasticIn(1 - n);
+        },
+        bounceIn: function (n) {
+            return 1 - Ext.fx.Easing.bounceOut(1 - n);
+        },
         bounceOut: function (n) {
             var s = 7.5625,
                 p = 2.75,
@@ -115,14 +121,10 @@ Ext.require('Ext.fx.CubicBezier', function() {
         'back-out': Ext.fx.Easing.backOut,
         'ease-in': Ext.fx.Easing.easeIn,
         'ease-out': Ext.fx.Easing.easeOut,
-        'bounce-out': Ext.fx.Easing.bounceOut,
         'elastic-in': Ext.fx.Easing.elasticIn,
-        'easeInOut': Ext.fx.Easing.easeInOut,
-        'ease-in-out': Ext.fx.Easing.easeInOut,
-        // TODO
-        'bounceIn': Ext.fx.Easing.bounceOut,
-        'bounce-in': Ext.fx.Easing.bounceOut,
         'elastic-out': Ext.fx.Easing.elasticIn,
-        'elasticOut': Ext.fx.Easing.elasticIn
+        'bounce-in': Ext.fx.Easing.bounceIn,
+        'bounce-out': Ext.fx.Easing.bounceOut,
+        'ease-in-out': Ext.fx.Easing.easeInOut
     });
 });

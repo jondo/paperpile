@@ -9,13 +9,23 @@ Ext.define('Ext.ImageComponent', {
     alias: ['widget.image', 'widget.imagecomponent'],
     /** @cfg {String} src The image src */
     src: '',
+
+    getElConfig: function() {
+        return {
+            tag: 'img',
+            src: this.src
+        };
+    },
     
-    onRender: function(container) {
-        if (!this.el) {
-            this.el = container.createChild({
-                tag: 'img',
-                src: this.src
-            });
+    /**
+     * Updates the {@link #src} of the image
+     */
+    setSrc: function(src) {
+        var me = this,
+            img = me.el;
+        me.src = src;
+        if (img) {
+            img.src = src;
         }
     }
 });

@@ -8,6 +8,23 @@
  * grouping, activation, to front, to back and other application-specific behavior.</p>
  * <p>By default, Windows will be rendered to document.body. To {@link #constrain} a Window to another element
  * specify {@link Ext.Component#renderTo renderTo}.</p>
+ * <p><b>As with all {@link Ext.container.Container Container}s, it is important to consider how you want the Window
+ * to size and arrange any child Components. Choose an appropriate {@link #layout} configuration which lays out
+ * child Components in the required manner.</b></p>
+ * Example:<code><pre>
+Ext.create('Ext.window.Window', {
+    title: 'Hello',
+    height: 200,
+    width: 400,
+    layout: 'fit',
+    items: {  // Let's put an empty grid in just to illustrate fit layout
+        xtype: 'grid',
+        border: false,
+        headers: [{header: 'World'}]                 // One header just for show. There's no data,
+        store: Ext.create('Ext.data.ArrayStore', {}) // A dummy empty data store
+    }
+}).show();
+</pre></code>
  * @constructor
  * @param {Object} config The config object
  * @xtype window
@@ -131,18 +148,10 @@ Ext.define('Ext.window.Window', {
      */
     maximizable: false,
 
-    /**
-     * @cfg {Number} minHeight
-     * The minimum height in pixels allowed for this window (defaults to 100).  Only applies when {@link #resizable}
-     * is set.
-     */
+    // inherit docs
     minHeight: 100,
 
-    /**
-     * @cfg {Number} minWidth
-     * The minimum width in pixels allowed for this window (defaults to 200).  Only applies when {@link #resizable}
-     * is set.
-     */
+    // inherit docs
     minWidth: 200,
 
     /**
@@ -187,7 +196,7 @@ Ext.define('Ext.window.Window', {
     ariaRole: 'alertdialog',
 
     overlapHeader: true,
-    
+
     // private
     initComponent: function() {
         var me = this;
@@ -386,7 +395,7 @@ Ext.define('Ext.window.Window', {
     },
 
     /**
-     * Gets the configured default focus item.  If a defaultComponent is set, it will receive focus, otherwise the
+     * Gets the configured default focus item.  If a {@link #defaultFocus} is set, it will receive focus, otherwise the
      * Container itself will receive focus.
      */
     getFocusEl: function() {

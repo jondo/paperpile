@@ -9,7 +9,7 @@
  * Changed by: Emil Cazamir, 2008-09-01
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Încărcare...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Încărcare...</div>';
 
 if(Ext.grid.GridPanel){
    Ext.grid.GridPanel.prototype.ddText = "{0} rând(uri) selectate";
@@ -98,7 +98,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText         : "Astăzi",
     minText           : "Această dată este anterioară datei minime",
     maxText           : "Această dată este ulterioară datei maxime",
@@ -111,9 +111,14 @@ if(Ext.picker.Date){
     monthYearText     : 'Alege o lună (Control+Sus/Jos pentru a parcurge anii)',
     todayTip          : "{0} (Bara spațiu)",
     format            : "d.m.Y",
-    okText            : "&#160;OK&#160;",
-    cancelText        : "Renunță",
     startDay          : 0
+  });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;OK&#160;",
+      cancelText        : "Renunță"
   });
 }
 

@@ -234,6 +234,7 @@ Ext.define('Ext.data.AjaxProxy', {
     requires: ['Ext.util.MixedCollection', 'Ext.Ajax'],
     extend: 'Ext.data.ServerProxy',
     alias: 'proxy.ajax',
+    alternateClassName: 'Ext.data.HttpProxy',
     
     /**
      * @property actionMethods

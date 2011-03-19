@@ -5,12 +5,11 @@
  * Ext component lifecycle of creation, rendering and destruction which is provided by the {@link Ext.container.Container Container} class.
  * Components may be added to a Container through the {@link Ext.container.Container#items items} config option at the time the Container is created,
  * or they may be added dynamically via the {@link Ext.container.Container#add add} method.</p>
- * <p>The Component base class has built-in support for basic hide/show and enable/disable behavior.</p>
+ * <p>The Component base class has built-in support for basic hide/show and enable/disable and size control behavior.</p>
  * <p>All Components are registered with the {@link Ext.ComponentMgr} on construction so that they can be referenced at any time via
  * {@link Ext#getCmp Ext.getCmp}, passing the {@link #id}.</p>
- * <p>All user-developed visual widgets that are required to participate in automated lifecycle and size management should subclass Component (or
- * {@link Ext.AbstractComponent} if managed box model handling is required, ie height and width management).</p>
- * <p>See the <a href="http://extjs.com/learn/Tutorial:Creating_new_UI_controls">Creating new UI controls</a> tutorial for details on how
+ * <p>All user-developed visual widgets that are required to participate in automated lifecycle and size management should subclass Component.</p>
+ * <p>See the <a href="http://sencha.com/learn/Tutorial:Creating_new_UI_controls">Creating new UI controls</a> tutorial for details on how
  * and to either extend or augment ExtJs base classes to create custom Components.</p>
  * <p>Every component has a specific xtype, which is its Ext-specific type name, along with methods for checking the
  * xtype like {@link #getXType} and {@link #isXType}. This is the list of all valid xtypes:</p>
@@ -87,7 +86,20 @@ columnchart      {@link Ext.chart.series.Column}
 linechart        {@link Ext.chart.series.Line}
 piechart         {@link Ext.chart.series.Pie}
 
-</pre>
+</pre><p>
+ * It should not usually be necessary to instantiate a Component because there are provided subclasses which implement specialized Component
+ * use cases which over most application needs. However it is possible to instantiate a base Component, and it will be renderable,
+ * or will particpate in layouts as the child item of a Container:<pre><code>
+myDivComponent = new Ext.Component({
+    html: 'Hello world!',
+    renderTo: document.body
+});
+</code></pre>
+ *</p>
+ *<p>The Component above creates its encapsulating <code>div</code> upon render, and use the configured HTML as content. More complex
+ * internal structure may be created using the {@link #renderTpl} configuration, although to display database-derived mass
+ * data, it is recommended that an ExtJS data-backed Component such as a {Ext.view.DataView DataView}, or {Ext.grid.GridPanel GridPanel},
+ * or {@link Ext.tree.TreePanel TreePanel} be used.</p>
  * @constructor
  * @param {Ext.core.Element/String/Object} config The configuration options may be specified as either:
  * <div class="mdetail-params"><ul>
@@ -181,7 +193,7 @@ Ext.define('Ext.Component', {
     /**
      * @property {Ext.ZIndexManager} zIndexManager
      * <p>Optional. Only present for {@link #floating} Components after they have been rendered.</p>
-     * <p>A reference to the ZIndexManager which is manging this Component's z-index.</p>
+     * <p>A reference to the ZIndexManager which is managing this Component's z-index.</p>
      * <p>The {@link Ext.ZIndexManager ZIndexManager} maintains a stack of floating Component z-indices, and also provides a single modal
      * mask which is insert just beneath the topmost visible modal floating Component.</p>
      * <p>Floating Components may be {@link #toFront brought to the front} or {@link #toBack sent to the back} of the z-index stack.</p>
@@ -202,6 +214,28 @@ Ext.define('Ext.Component', {
      * <p>For example, the dropdown {@link Ext.view.BoundList BoundList} of a ComboBox which is in a Window will have the Window as its
      * <code>floatParent</code></p>
      * <p>See {@link #floating} and {@link #zIndexManager}</p>
+     */
+
+    /**
+     * @cfg {Mixed} draggable
+     * <p>Specify as true to make a {@link #floating} Component draggable using the Component's encapsulating element as the drag handle.</p>
+     * <p>This may also be specified as a config object for the {@link Ext.util.ComponentDragger ComponentDragger} which is instantiated to perform dragging.</p>
+     * <p>For example to create a Component which may only be dragged around using a certain internal element as the drag handle,
+     * use the delegate option:</p>
+     * <code><pre>
+new Ext.Component({
+    constrain: true,
+    floating:true,
+    style: {
+        backgroundColor: '#fff',
+        border: '1px solid black'
+    },
+    html: '<h1 style="cursor:move">The title</h1><p>The content</p>',
+    draggable: {
+        delegate: 'h1'
+    }
+}).show();
+</pre></code>
      */
 
     /**

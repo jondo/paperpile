@@ -10,14 +10,14 @@ Ext.core.Element.addMethods({
      * back in, the function is not called.
      * @param {Number} delay The delay <b>in milliseconds</b> to wait for possible mouse re-entry before calling the handler function.
      * @param {Function} handler The function to call if the mouse remains outside of this Element for the specified time.
-     * @param scope {Object} The scope (<code>this</code> reference) in which the handler function executes. Defaults to this Element.
-     * @returns {Object} The listeners object which was added to this element so that monitoring can be stopped. Example usage:</pre><code>
+     * @param {Object} scope The scope (<code>this</code> reference) in which the handler function executes. Defaults to this Element.
+     * @return {Object} The listeners object which was added to this element so that monitoring can be stopped. Example usage:</pre><code>
 // Hide the menu if the mouse moves out for 250ms or more
-this.mouseOutMonitor = this.menuEl.monitorMouseLeave(250, this.hideMenu, this);
+this.mouseLeaveMonitor = this.menuEl.monitorMouseLeave(250, this.hideMenu, this);
 
 ...
-
-this.menuEl.un(this.mouseOutMonitor);
+// Remove mouseleave monitor on menu destroy
+this.menuEl.un(this.mouseLeaveMonitor);
 </code></pre>
      */
     monitorMouseLeave: function(delay, handler, scope) {

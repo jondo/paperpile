@@ -7,7 +7,7 @@
  * 17 May 2008
  */
  
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Učitavanje...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Učitavanje...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "";
@@ -100,7 +100,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-   Ext.apply(Ext.DatePicker.prototype, {
+   Ext.apply(Ext.picker.Date.prototype, {
       todayText         : "Danas",
       minText           : "Taj datum je prije najmanjeg datuma",
       maxText           : "Taj datum je poslije najvećeg datuma",
@@ -113,10 +113,15 @@ if(Ext.picker.Date){
       monthYearText     : 'Odaberite mjesec (Control+Gore/Dolje za promjenu godine)',
       todayTip          : "{0} (Razmaknica)",
       format            : "d.m.y",
-      okText            : "&#160;U redu&#160;",
-      cancelText        : "Odustani",      
       startDay 		 : 1
    });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;U redu&#160;",
+      cancelText        : "Odustani"
+  });
 }
 
 if(Ext.toolbar.PagingToolbar){

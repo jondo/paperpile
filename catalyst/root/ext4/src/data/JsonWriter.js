@@ -53,7 +53,7 @@ Ext.define('Ext.data.JsonWriter', {
                 // sending as a param, need to encode
                 request.params[root] = Ext.encode(data);
             } else {
-                throw 'Must specify a root when using encode'
+                throw 'Must specify a root when using encode';
             }
         } else {
             // send as jsonData

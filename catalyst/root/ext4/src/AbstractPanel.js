@@ -1,7 +1,8 @@
 /**
  * @class Ext.AbstractPanel
  * @extends Ext.container.Container
- * Please refer to sub classes documentation
+ * <p>A base class which provides methods common to Panel classes across the Sencha product range.</p>
+ * <p>Please refer to sub class's documentation</p>
  * @constructor
  * @param {Object} config The config object
  */
@@ -25,21 +26,21 @@ Ext.define('Ext.AbstractPanel', {
      * @cfg {Number/String} bodyPadding
      * A shortcut for setting a padding style on the body element. The value can either be
      * a number to be applied to all sides, or a normal css string describing padding.
-     * Defaults to <tt>undefined</tt>.
+     * Defaults to <code>undefined</code>.
      */
 
     /**
      * @cfg {Number/String} bodyMargin
      * A shortcut for setting a margin style on the body element. The value can either be
      * a number to be applied to all sides, or a normal css string describing margins.
-     * Defaults to <tt>undefined</tt>.
+     * Defaults to <code>undefined</code>.
      */
 
     /**
      * @cfg {Number/String} bodyBorder
      * A shortcut for setting a border style on the body element. The value can either be
      * a number to be applied to all sides, or a normal css string describing borders.
-     * Defaults to <tt>undefined</tt>.
+     * Defaults to <code>undefined</code>.
      */
 
     isPanel: true,
@@ -48,6 +49,7 @@ Ext.define('Ext.AbstractPanel', {
 
     renderTpl: ['<div class="{baseCls}-body<tpl if="bodyCls"> {bodyCls}</tpl>"<tpl if="bodyStyle"> style="{bodyStyle}"</tpl>></div>'],
 
+    // TODO: Move code examples into product-specific files. The code snippet below is Touch only.
     /**
      * @cfg {Object/Array} dockedItems
      * A component or series of components to be added as docked items to this panel.
@@ -60,7 +62,7 @@ var panel = new Ext.panel.Panel({
         xtype: 'toolbar',
         dock: 'top',
         items: [{
-            text: 'Docked to the bottom'
+            text: 'Docked to the top'
         }]
     }]
 });</pre></code>
@@ -103,7 +105,7 @@ var panel = new Ext.panel.Panel({
     },
 
     /**
-     * Finds a docked component by id, itemId or position
+     * Finds a docked component by id, itemId or position. Also see {@link #getDockedItems}
      * @param {String/Number} comp The id, itemId or position of the docked component (see {@link #getComponent} for details)
      * @return {Ext.Component} The docked component (if found)
      */
@@ -249,12 +251,24 @@ var panel = new Ext.panel.Panel({
     },
 
     /**
-     * Retrieve an array of all currently docked components.
+     * Retrieve an array of all currently docked Components.
+     * @param {String} cqSelector A {@link Ext.ComponentQuery ComponentQuery} selector string to filter the returned items.
      * @return {Array} An array of components.
      */
-    getDockedItems : function() {
-        if (this.dockedItems && this.dockedItems.items.length) {
-            var dockedItems = this.dockedItems.items.slice();
+    getDockedItems : function(cqSelector) {
+        var me = this,
+            dockedItems,
+            i, len;
+
+        if (me.dockedItems && me.dockedItems.items.length) {
+
+            // Allow filtering of returned docked items by CQ selector.
+            if (cqSelector) {
+                dockedItems = Ext.ComponentQuery.query(cqSelector, me.dockedItems.items);
+            } else {
+                dockedItems = me.dockedItems.items.slice();
+            }
+
             dockedItems.sort(function(a, b) {
                 var aw = a.weight || 0,
                     bw = b.weight || 0;
@@ -273,33 +287,15 @@ var panel = new Ext.panel.Panel({
         return this.body;
     },
 
-
     getRefItems: function(deep) {
-        var refItems    = this.callParent(arguments),
-            // deep does not account for dockedItems within dockedItems.
-            dockedItems = this.getDockedItems(),
-            ln          = dockedItems.length,
-            i           = 0,
-            item;
-
-        refItems = refItems.concat(dockedItems);
-
-        if (deep) {
-            for (; i < ln; i++) {
-                item = dockedItems[i];
-                if (item.getRefItems) {
-                    refItems = refItems.concat(item.getRefItems(true));
-                }
-            }
-        }
-
-        return refItems;
+        // deep fetches all docked items, and their descendants using '*' selector and then '* *'
+        return this.callParent(arguments).concat(this.getDockedItems(deep ? '*,* *' : undefined));
     },
-    
+
     beforeDestroy: function(){
         var docked = this.dockedItems,
             c;
-            
+
         if (docked) {
             while ((c = docked.first())) {
                 this.removeDocked(c, true);

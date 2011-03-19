@@ -3,7 +3,7 @@
  * By spartacus (from forums) 06-12-2007
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">...טוען</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">...טוען</div>';
 
 if(Ext.View){
   Ext.View.prototype.emptyText = "";
@@ -96,7 +96,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText         : "היום",
     minText           : ".תאריך זה חל קודם לתאריך ההתחלתי שנקבע",
     maxText           : ".תאריך זה חל לאחר התאריך הסופי שנקבע",
@@ -109,9 +109,14 @@ if(Ext.picker.Date){
     monthYearText     : '(לבחירת שנה Control+Up/Down) בחר חודש',
     todayTip          : "מקש רווח) {0})",
     format            : "d/m/Y",
-    okText            : "&#160;אישור&#160;",
-    cancelText        : "ביטול",
     startDay          : 0
+  });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;אישור&#160;",
+      cancelText        : "ביטול"
   });
 }
 

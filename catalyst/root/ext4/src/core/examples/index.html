@@ -248,5 +248,61 @@ alert(bb.special); // alerts true
         <p>
             <button onclick="run('sample9')">Run Code</button>
         </p>
+
+        <pre id="sample10">
+Ext.define('My.Cat', {
+    statics: {
+        totalCreated: 0,
+        speciesName: 'Cat' // My.Cat.speciesName = 'Cat'
+    },
+
+    constructor: function() {
+        var statics = this.statics();
+
+        alert(statics.speciesName);     // always equals to 'Cat' no matter what 'this' refers to
+                                        // equivalent to: My.Cat.speciesName
+
+        alert(this.self.speciesName);   // dependent on 'this'
+
+        statics.totalCreated++;
+
+        return this;
+    },
+
+    clone: function() {
+        var cloned = new this.self;                      // dependent on 'this'
+
+        cloned.groupName = this.statics().speciesName;   // equivalent to: My.Cat.speciesName
+
+        return cloned;
+    }
+});
+
+
+Ext.define('My.SnowLeopard', {
+    extend: 'My.Cat',
+
+    statics: {
+        speciesName: 'Snow Leopard'     // My.SnowLeopard.speciesName = 'Snow Leopard'
+    },
+
+    constructor: function() {
+        this.callParent();
+    }
+});
+
+var cat = new My.Cat();                 // alerts 'Cat', then alerts 'Cat'
+
+var snowLeopard = new My.SnowLeopard(); // alerts 'Cat', then alerts 'Snow Leopard'
+
+var clone = snowLeopard.clone();
+alert(Ext.getClassName(clone));         // alerts 'My.SnowLeopard'
+alert(clone.groupName);                 // alerts 'Cat'
+
+alert(My.Cat.totalCreated);             // alerts 3
+        </pre>
+        <p>
+            <button onclick="run('sample10')">Run Code</button>
+        </p>
     </body>
 </html>

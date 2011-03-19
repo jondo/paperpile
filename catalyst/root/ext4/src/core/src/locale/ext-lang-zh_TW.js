@@ -4,7 +4,7 @@
  * 09 April 2007
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">讀取中...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">讀取中...</div>';
 
 if(Ext.View){
     Ext.View.prototype.emptyText = "";
@@ -70,7 +70,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-    Ext.apply(Ext.DatePicker.prototype, {
+    Ext.apply(Ext.picker.Date.prototype, {
        todayText         : "今天",
        minText           : "日期必須大於最小容許日期",
        maxText           : "日期必須小於最大容許日期",
@@ -82,10 +82,15 @@ if(Ext.picker.Date){
        prevText          : "上個月 (Ctrl+左方向鍵)",
        monthYearText     : "選擇月份 (Ctrl+上/下方向鍵選擇年份)",
        todayTip          : "{0} (空白鍵)",
-       format            : "y/m/d",
-       okText            : "确定",
-       cancelText        : "取消"
+       format            : "y/m/d"
     });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "确定",
+      cancelText        : "取消"
+  });
 }
 
 if(Ext.toolbar.PagingToolbar){

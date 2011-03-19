@@ -17,8 +17,8 @@
  * </ul></p>
  * <p>It also creates a specialized instance of {@link Ext.dd.DropZone} which cooperates with other DropZones which are members of the same
  * ddGroup which processes such data objects.</p>
- * <p>Adding this plugin to a view means that two new events may be fired from the client DataView, <code>{@link #event-beforedrop}</code> and
- * <code>{@link #event-beforedrop}</code></p>
+ * <p>Adding this plugin to a view means that two new events may be fired from the client DataView, <code>{@link #event-beforedrop beforedrop}</code> and
+ * <code>{@link #event-drop drop}</code></p>
  */
 Ext.define('Ext.grid.GridViewDDPlugin', {
     extend: 'Ext.AbstractPlugin',
@@ -48,11 +48,11 @@ Ext.define('Ext.grid.GridViewDDPlugin', {
      * <li>records : Array
      *  <div class="sub-desc">An Array of {@link Ext.data.Model Model}s representing the selected data being dragged from the source DataView.</div></li>
      * </ul>
-     * @param overModel {Ext.data.Model} The Model over which the drop gesture took place.
-     * @param dropPosition {String} <code>"before"</code> or <code>"after"</code> depending on whether the mouse is above or below the midline of the node.
-     * @param dropFunction {Function} A function to call to complete the drop operation and either move or copy Model instances from the source
-     * View's Store tp the destination View's Store. This is useful when you want to perform some kind of asynchronous processing before confirming
-     * the drop, such as an {@link Ext.Msg#confirm} call, or an Ajax request. Return <code>false</code> from this event handlerm and call the
+     * @param {Ext.data.Model} overModel The Model over which the drop gesture took place.
+     * @param {String} dropPosition <code>"before"</code> or <code>"after"</code> depending on whether the mouse is above or below the midline of the node.
+     * @param {Function} dropFunction A function to call to complete the drop operation and either move or copy Model instances from the source
+     * View's Store to the destination View's Store. This is useful when you want to perform some kind of asynchronous processing before confirming
+     * the drop, such as an {@link Ext.Msg#confirm confirm} call, or an Ajax request. Return <code>false</code> from this event handler, and call the
      * <code>dropFunction</code> at any time to perform the data transfer.
      */
     /**
@@ -74,8 +74,8 @@ Ext.define('Ext.grid.GridViewDDPlugin', {
      * <li>records : Array
      *  <div class="sub-desc">An Array of {@link Ext.data.Model Model}s representing the selected data being dragged from the source DataView.</div></li>
      * </ul>
-     * @param overModel {Ext.data.Model} The Model over which the drop gesture took place.
-     * @param dropPosition {String} <code>"before"</code> or <code>"after"</code> depending on whether the mouse is above or below the midline of the node.
+     * @param {Ext.data.Model} overModel The Model over which the drop gesture took place.
+     * @param {String} dropPosition <code>"before"</code> or <code>"after"</code> depending on whether the mouse is above or below the midline of the node.
      */
 
     dragText : '{0} selected row{1}',

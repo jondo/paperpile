@@ -7,7 +7,7 @@
  * By sakuro (30 Aug 2008)
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">読み込み中...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">読み込み中...</div>';
 
 if(Ext.DataView){
   Ext.DataView.prototype.emptyText = "";
@@ -96,7 +96,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText         : "今日",
     minText           : "選択した日付は最小値以下です。",
     maxText           : "選択した日付は最大値以上です。",
@@ -109,9 +109,14 @@ if(Ext.picker.Date){
     monthYearText     : '月選択 (コントロール+上/下で年移動)',
     todayTip          : "{0} (スペースキー)",
     format            : "Y/m/d",
-    okText            : "OK",
-    cancelText        : "キャンセル",
     startDay          : 0
+  });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;OK&#160;",
+      cancelText        : "キャンセル",
   });
 }
 

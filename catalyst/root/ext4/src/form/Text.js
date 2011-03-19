@@ -1,46 +1,66 @@
 /**
  * @class Ext.form.Text
  * @extends Ext.form.BaseField
- * <p>Basic text field.  Can be used as a direct replacement for traditional text inputs,
- * or as the base class for more sophisticated input controls (like {@link Ext.form.TextArea}
- * and {@link Ext.form.ComboBox}).</p>
- * <p><b><u>Validation</u></b></p>
- * <p>The validation procedure is described in the documentation for {@link #validateValue}.</p>
- * <p><b><u>Alter Validation Behavior</u></b></p>
- * <p>Validation behavior for each field can be configured:</p>
- * <div class="mdetail-params"><ul>
- * <li><code>{@link Ext.form.Text#invalidText invalidText}</code> : the default validation message to
- * show if any validation step above does not provide a message when invalid</li>
- * <li><code>{@link Ext.form.Text#maskRe maskRe}</code> : filter out keystrokes before any validation occurs</li>
- * <li><code>{@link Ext.form.Text#stripCharsRe stripCharsRe}</code> : filter characters after being typed in,
- * but before being validated</li>
- * <li><code>{@link Ext.form.BaseField#invalidCls invalidCls}</code> : alternate style when invalid</li>
- * <li><code>{@link Ext.form.Field#validateOnChange validateOnChange}</code>,
- * <code>{@link Ext.form.BaseField#checkChangeEvents checkChangeEvents}</code>, and
- * <code>{@link Ext.form.BaseField#checkChangeBuffer checkChangeBuffer}</code> : modify how/when validation is triggered</li>
- * </ul></div>
- * <p>Example usage:</p>
- * <pre><code>new Ext.form.FormPanel({
-    renderTo: Ext.getBody(),
-    title: 'Contact Info',
-    width: 300,
-    bodyPadding: 10,
-    items: [{
-        xtype: 'textfield',
-        name: 'name',
-        fieldLabel: 'Name'
-    }, {
-        xtype: 'textfield',
-        name: 'email',
-        fieldLabel: 'Email Address',
-        vtype: 'email'
-    }]
-});</code></pre>
- *
+ 
+A basic text field.  Can be used as a direct replacement for traditional text inputs,
+or as the base class for more sophisticated input controls (like {@link Ext.form.TextArea}
+and {@link Ext.form.ComboBox}). Has support for empty-field placeholder values (see {@link #emptyText}).
+
+#Validation#
+
+The Text field has a useful set of validations built in:
+
+- {@link #allowBlank} for making the field required
+- {@link #minLength} for requiring a minimum value length
+- {@link #maxLength} for setting a maximum value length (with {@link #enforceMaxLength} to add it
+  as the `maxlength` attribute on the input element)
+- {@link regex} to specify a custom regular expression for validation
+
+In addition, custom validations may be added:
+ 
+- {@link #vtype} specifies a virtual type implementation from {@link Ext.form.VType} which can contain
+  custom validation logic
+- {@link #validator} allows a custom arbitrary function to be called during validation
+
+The details around how and when each of these validation options get used are described in the
+documentation for {@link #getErrors}.
+
+By default, the field value is checked for validity immediately while the user is typing in the
+field. This can be controlled with the {@link #validateOnChange}, {@link #checkChangeEvents}, and
+{@link #checkChangeBugger} configurations. Also see the details on Form Validation in the
+{@link Ext.form.FormPanel} class documentation.
+
+#Masking and Character Stripping#
+
+Text fields can be configured with custom regular expressions to be applied to entered values before
+validation: see {@link #maskRe} and {@link #stripCharsRe} for details.
+
+#Example usage:#
+
+    new Ext.form.FormPanel({
+        renderTo: Ext.getBody(),
+        title: 'Contact Info',
+        width: 300,
+        bodyPadding: 10,
+        items: [{
+            xtype: 'textfield',
+            name: 'name',
+            fieldLabel: 'Name',
+            allowBlank: false  // requires a non-empty value
+        }, {
+            xtype: 'textfield',
+            name: 'email',
+            fieldLabel: 'Email Address',
+            vtype: 'email'  // requires value to be a valid email address format
+        }]
+    });
+
  * @constructor Creates a new TextField
  * @param {Object} config Configuration options
  *
  * @xtype textfield
+ * @markdown
+ * @docauthor Jason Johnston <jason@sencha.com>
  */
 Ext.define('Ext.form.Text', {
     extend:'Ext.form.BaseField',
@@ -147,7 +167,7 @@ Ext.define('Ext.form.Text', {
     
     /**
      * @cfg {Function} validator
-     * <p>A custom validation function to be called during field validation ({@link #validateValue})
+     * <p>A custom validation function to be called during field validation ({@link #getErrors})
      * (defaults to <tt>undefined</tt>). If specified, this function will be called first, allowing the
      * developer to override the default validation process.</p>
      * <br><p>This function will be passed the following Parameters:</p>
@@ -530,7 +550,7 @@ for any failing validations. Validation rules are processed in the following ord
         value = value || me.processRawValue(me.getRawValue());
 
         if (Ext.isFunction(validator)) {
-            msg = validator(value);
+            msg = validator.call(me, value);
             if (msg !== true) {
                 errors.push(msg);
             }

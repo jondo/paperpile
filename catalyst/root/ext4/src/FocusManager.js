@@ -131,7 +131,8 @@ Ext.define('Ext.FocusManager', {
                         return x && x.focusable !== false && CQ.is(x, '[rendered]:not([disabled]){isVisible(true)}{el.isVisible()}');
                     };
                     
-                for (; i < len, c = cmps[i]; i++) {
+                for (; i < len; i++) {
+                    c = cmps[i];
                     if (isFocusable(c)) {
                         results.push(c);
                     }
@@ -176,7 +177,8 @@ Ext.define('Ext.FocusManager', {
                     i = 0,
                     c;
                     
-                for (; i < len, c = cmps[i]; i++) {
+                for (; i < len; i++) {
+                    c = cmps[i];
                     if (!c.ownerCt) {
                         results.push(c);
                     }
@@ -549,8 +551,8 @@ Ext.define('Ext.FocusManager', {
             cmp,
             i = 0;
             
-        for (; i < len, cmp = cmps[i]; i++) {
-            me.setFocus(cmp, focusable);
+        for (; i < len; i++) {
+            me.setFocus(cmps[i], focusable);
         }
     }
 });

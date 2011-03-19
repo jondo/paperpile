@@ -9,6 +9,7 @@ Ext.define('Ext.grid.DateHeader', {
     extend: 'Ext.grid.Header',
     alias: ['widget.dateheader'],
     requires: ['Ext.util.Format'],
+    alternateClassName: 'Ext.grid.DateColumn',
     
     /**
      * @cfg {String} format

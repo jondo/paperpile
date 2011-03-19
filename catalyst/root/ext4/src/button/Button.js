@@ -17,30 +17,124 @@ Example usage:
             alert('You clicked the button!')
         }
     });
+
+The {@link #handler} configuration can also be updated dynamically using the {@link #setHandler} method.
+
+Example usage:
+
+    new Ext.Button({
+        renderTo: document.body,
+        text    : 'Dyanmic Handler Button',
+        handler : function() {
+            //this button will spit out a different number every time you click it.
+            //so firstly we must check if that number is already set:
+            if (this.clickCount) {
+                //looks like the property is already set, so lets just add 1 to that number and alert the user
+                this.clickCount++;
+                alert('You have clicked the button "' + this.clickCount + '" times.\n\nTry clicking it again..');
+            } else {
+                //if the clickCount property is not set, we will set it and alert the user
+                this.clickCount = 1;
+                alert('You just clicked the button for the first time!\n\nTry pressing it again..');
+            }
+        }
+    });
     
 A button within a container:
 
     new Ext.Container({
         renderTo: document.body,
-        items: [{
-            xtype: 'button',
-            text: 'My Button'
-        }]
+        items   : [
+            {
+                xtype: 'button',
+                text : 'My Button'
+            }
+        ]
     });
- 
+
+A useful option of Button is the {@link #scale} configuration. This configuration has three different options:
+* `'small'`
+* `'medium'`
+* `'large'`
+
+Example usage:
+
+    new Ext.Button({
+        renderTo: document.body,
+        text    : 'Click me',
+        scale   : 'large'
+    });
+
+Buttons can also be toggled. To enable this, you simple set the {@link #enableToggle} property to `true`.
+
+Example usage:
+
+    new Ext.Button({
+        renderTo    : document.body,
+        text        : 'Click Me',
+        enableToggle: true
+    });
+
+You can assign a menu to a button by using the {@link #menu} configuration. This standard configuration can either be a reference to a {@link Ext.menu.Menu menu} 
+object, a {@link Ext.menu.Menu menu} id or a {@link Ext.menu.Menu menu} config blob. When assigning a menu to a button, an arrow is automatically added to the button. 
+You can change the alignment of the arrow using the {@link #arrowAlign} configuration on button.
+
+Example usage:
+
+    new Ext.Button({
+        renderTo  : document.body,
+        text      : 'Menu button',
+        arrowAlign: 'bottom',
+        menu      : [
+            {text: 'Item 1'},
+            {text: 'Item 2'},
+            {text: 'Item 3'},
+            {text: 'Item 4'}
+        ]
+    });
+
+Using listeners, you can easily listen to events fired by any component, using the {@link #listeners} configuration or using the {@link #addListener} method. 
+Button has a variety of different listeners:
+* `click`
+* `toggle`
+* `mouseover`
+* `mouseout`
+* `mouseshow`
+* `menuhide`
+* `menutriggerover`
+* `menutriggerout`
+
+Example usage:
+
+    new Ext.Button({
+        renderTo : document.body,
+        text     : 'Button',
+        listeners: {
+            click: function() {
+                //this == the button, as we are in the local scope
+                this.setText('I was clicked!');
+            },
+            mouseover: function() {
+                //set a new config which says we moused over, if not already set
+                if (!this.mousedOver) {
+                    this.mousedOver = true;
+                    alert('You moused over a button!\n\nI wont do this again.');
+                }
+            }
+        } 
+    });
+
  * @constructor
  * Create a new button
  * @param {Object} config The config object
  * @xtype button
  * @markdown
+ * @docauthor Robert Dougan <rob@sencha.com>
  */
-
 Ext.define('Ext.button.Button', {
 
     /* Begin Definitions */
-
     alias: 'widget.button',
-
     extend: 'Ext.Component',
 
     requires: [
@@ -52,7 +146,6 @@ Ext.define('Ext.button.Button', {
     ],
     
     alternateClassName: 'Ext.Button',
-
     /* End Definitions */
 
     isButton: true,
@@ -63,11 +156,13 @@ Ext.define('Ext.button.Button', {
      * @type Boolean
      */
     hidden: false,
+    
     /**
      * Read-only. True if this button is disabled
      * @type Boolean
      */
     disabled: false,
+    
     /**
      * Read-only. True if this button is pressed (only if enableToggle = true)
      * @type Boolean
@@ -299,15 +394,18 @@ Ext.define('Ext.button.Button', {
      * @type Ext.Template
      * @property template
      */
+    
     /**
      * @cfg {String} cls
      * A CSS class string to apply to the button's main element.
      */
+    
     /**
      * @property menu
      * @type Menu
      * The {@link Ext.menu.Menu Menu} object associated with this Button when configured with the {@link #menu} config option.
      */
+    
     /**
      * @cfg {Boolean} autoWidth
      * By default, if a width is not specified the button will attempt to stretch horizontally to fit its content.
@@ -315,7 +413,8 @@ Ext.define('Ext.button.Button', {
      * the button from doing this automatic sizing.
      * Defaults to <tt>undefined</tt>.
      */
-
+     
+    // inherit docs
     initComponent: function() {
         var me = this;
         me.callParent(arguments);
@@ -328,6 +427,7 @@ Ext.define('Ext.button.Button', {
              * @param {EventObject} e The click event
              */
             'click',
+            
             /**
              * @event toggle
              * Fires when the 'pressed' state of this button changes (only if enableToggle = true)
@@ -335,6 +435,7 @@ Ext.define('Ext.button.Button', {
              * @param {Boolean} pressed
              */
             'toggle',
+            
             /**
              * @event mouseover
              * Fires when the mouse hovers over the button
@@ -342,6 +443,7 @@ Ext.define('Ext.button.Button', {
              * @param {Event} e The event object
              */
             'mouseover',
+            
             /**
              * @event mouseout
              * Fires when the mouse exits the button
@@ -349,6 +451,7 @@ Ext.define('Ext.button.Button', {
              * @param {Event} e The event object
              */
             'mouseout',
+            
             /**
              * @event menushow
              * If this button has a menu, this event fires when it is shown
@@ -356,6 +459,7 @@ Ext.define('Ext.button.Button', {
              * @param {Menu} menu
              */
             'menushow',
+            
             /**
              * @event menuhide
              * If this button has a menu, this event fires when it is hidden
@@ -363,6 +467,7 @@ Ext.define('Ext.button.Button', {
              * @param {Menu} menu
              */
             'menuhide',
+            
             /**
              * @event menutriggerover
              * If this button has a menu, this event fires when the mouse enters the menu triggering element
@@ -371,6 +476,7 @@ Ext.define('Ext.button.Button', {
              * @param {EventObject} e
              */
             'menutriggerover',
+            
             /**
              * @event menutriggerout
              * If this button has a menu, this event fires when the mouse leaves the menu triggering element
@@ -398,11 +504,10 @@ Ext.define('Ext.button.Button', {
         if (Ext.isString(me.toggleGroup)) {
             me.enableToggle = true;
         }
-        // 
-        // me.baseCls += ('-' + me.ui + '-' + me.scale);
 
     },
 
+    // private
     initAria: function() {
         this.callParent();
         var actionEl = this.getActionEl();
@@ -410,11 +515,13 @@ Ext.define('Ext.button.Button', {
             actionEl.dom.setAttribute('aria-haspopup', true);
         }
     },
-
+    
+    // inherit docs
     getActionEl: function() {
         return this.btnEl;
     },
 
+    // inherit docs
     getFocusEl: function() {
         return this.btnEl;
     },

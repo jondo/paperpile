@@ -1,16 +1,8 @@
 /**
  * @class Ext.AbstractComponent
- * Please refer to sub classes documentation
+ * <p>An abstract base class which provides shared methods for Components across the Sencha product line.</p>
+ * <p>Please refer to sub class's documentation</p>
  * @constructor
- * @param {Ext.core.Element/String/Object} config The configuration options may be specified as either:
- * <div class="mdetail-params"><ul>
- * <li><b>an element</b> :
- * <p class="sub-desc">it is set as the internal element and its id used as the component id</p></li>
- * <li><b>a string</b> :
- * <p class="sub-desc">it is assumed to be the id of an existing element and is used as the component id</p></li>
- * <li><b>anything else</b> :
- * <p class="sub-desc">it is assumed to be a standard config object and is applied to the component</p></li>
- * </ul></div>
  */
 
 Ext.define('Ext.AbstractComponent', {

@@ -67,11 +67,10 @@ wrc.{@link Ext.container.Container#add add}({
 Ext.define('Ext.layout.container.Border', {
 
     alias: ['layout.border'],
-
     extend: 'Ext.layout.Container',
-
     requires: ['Ext.resizer.Splitter', 'Ext.container.Container', 'Ext.fx.Anim'],
-
+    alternatClassName: 'Ext.layout.BorderLayout',
+    
     targetCls: Ext.baseCSSPrefix + 'border-layout-ct',
 
     itemCls: Ext.baseCSSPrefix + 'border-item',
@@ -165,7 +164,7 @@ Ext.define('Ext.layout.container.Border', {
             regions[comp.region] = comp;
 
             // Intercept collapsing to implement showing an alternate Component as a collapsed placeHolder
-            if (comp.region != 'center' && comp.collapsible && comp.collapseMode != 'header' && comp.collapseMode != 'mini') {
+            if (comp.region != 'center' && comp.collapsible && comp.collapseMode != 'header') {
 
                 // This layout intercepts any initial collapsed state. Panel must not do this itself.
                 comp.borderCollapse = comp.collapsed;
@@ -378,14 +377,14 @@ Ext.define('Ext.layout.container.Border', {
         // The child items of the shadow layout must retain their original, user-defined ownerCt
         delete container.items;
         container.initItems();
-        container.items.addAll(items)
+        container.items.addAll(items);
     },
 
     // Private
     // Create a splitter for a child of the layout.
     createSplitter: function(comp) {
         var me = this,
-            interceptCollapse = (comp.collapseMode != 'header' && comp.collapseMode != 'mini'),
+            interceptCollapse = (comp.collapseMode != 'header'),
             resizer;
 
         resizer = new Ext.resizer.Splitter({
@@ -399,6 +398,11 @@ Ext.define('Ext.layout.container.Border', {
                 }
             } : null
         });
+
+        // Mini collapse means that the splitter is the placeholder Component
+        if (comp.collapseMode == 'mini') {
+            comp.placeHolder = resizer;
+        }
 
         // Arrange to hide/show a region's associated splitter when the region is hidden/shown
         comp.on({
@@ -433,7 +437,7 @@ Ext.define('Ext.layout.container.Border', {
      * <p><b>Note that this will be a fully instantiated Component, but will only be <i>rendered</i> when the Panel is first collapsed.</b></p>
      * @param {Panel} panel The child Panel of the layout for which to return the {@link Ext.panel.Panel#placeHolder placeHolder}.
      * @returns {Component} The Panel's {@link Ext.panel.Panel#placeHolder placeHolder} unless the {@link Ext.panel.Panel#collapseMode collapseMode} is
-     * <code>'mini'</code> or <code>'header'</code>, in which case <i>undefined</i> is returned.
+     * <code>'header'</code>, in which case <i>undefined</i> is returned.
      */
     getPlaceHolder: function(comp) {
         var me = this,
@@ -444,46 +448,61 @@ Ext.define('Ext.layout.container.Border', {
             horiz = (comp.region == 'north' || comp.region == 'south');
 
         // No placeHolder if the collapse mode is not the Border layout default
-        if ((comp.collapseMode == 'mini') || (comp.collapseMode == 'header')) {
+        if (comp.collapseMode == 'header') {
             return;
         }
 
         // Provide a replacement Container with an expand tool
         if (!placeHolder) {
-            placeHolder = {
-                id: 'collapse-placeholder-' + comp.id,
-                margins: comp.initialConfig.margins,
-                xtype: 'header',
-                orientation: horiz ? 'horizontal' : 'vertical',
-                title: comp.title,
-                textCls: comp.headerTextCls,
-                iconCls: comp.iconCls,
-                baseCls: comp.baseCls + '-header',
-                ui: comp.ui,
-                indicateDrag: comp.draggable,
-                cls: Ext.baseCSSPrefix + 'region-collapsed-placeholder ' + Ext.baseCSSPrefix + 'region-collapsed-' + comp.collapseDirection + '-placeholder',
-                listeners: comp.floatable ? {
-                    click: {
-                        fn: function(e) {
-                            me.floatCollapsedPanel(e, comp);
-                        },
-                        element: 'el'
+            if (comp.collapseMode == 'mini') {
+                placeHolder = new Ext.resizer.Splitter({
+                    id: 'collapse-placeholder-' + comp.id,
+                    collapseTarget: comp,
+                    performCollapse: false,
+                    listeners: {
+                        click: {
+                            fn: Ext.Function.bind(me.onSplitterCollapseClick, me, [comp]),
+                            element: 'collapseEl'
+                        }
                     }
-                } : null
-            };
-            // Hack for IE6/7's inability to display an inline-block
-            if ((Ext.isIE6 || Ext.isIE7) && !horiz) {
-                placeHolder.width = 22;
+                });
+                placeHolder.addCls(placeHolder.collapsedCls);
+            } else {
+                placeHolder = {
+                    id: 'collapse-placeholder-' + comp.id,
+                    margins: comp.initialConfig.margins,
+                    xtype: 'header',
+                    orientation: horiz ? 'horizontal' : 'vertical',
+                    title: comp.title,
+                    textCls: comp.headerTextCls,
+                    iconCls: comp.iconCls,
+                    baseCls: comp.baseCls + '-header',
+                    ui: comp.ui,
+                    indicateDrag: comp.draggable,
+                    cls: Ext.baseCSSPrefix + 'region-collapsed-placeholder ' + Ext.baseCSSPrefix + 'region-collapsed-' + comp.collapseDirection + '-placeholder',
+                    listeners: comp.floatable ? {
+                        click: {
+                            fn: function(e) {
+                                me.floatCollapsedPanel(e, comp);
+                            },
+                            element: 'el'
+                        }
+                    } : null
+                };
+                // Hack for IE6/7's inability to display an inline-block
+                if ((Ext.isIE6 || Ext.isIE7) && !horiz) {
+                    placeHolder.width = 25;
+                }
+                placeHolder[horiz ? 'tools' : 'items'] = [{
+                    xtype: 'tool',
+                    client: comp,
+                    type: 'expand-' + oppositeDirection,
+                    handler: me.onPlaceHolderToolClick,
+                    scope: me
+                }];
             }
-            placeHolder[horiz ? 'tools' : 'items'] = [{
-                xtype: 'tool',
-                client: comp,
-                type: 'expand-' + oppositeDirection,
-                handler: me.onPlaceHolderToolClick,
-                scope: me
-            }];
+            placeHolder = me.owner.createComponent(placeHolder);
         }
-        placeHolder = me.owner.createComponent(placeHolder);
 
         // The collapsed Component holds a reference to its placeHolder and vice versa
         comp.placeHolder = placeHolder;
@@ -521,6 +540,7 @@ Ext.define('Ext.layout.container.Border', {
     onBeforeRegionCollapse: function(comp, direction, animate) {
         var me = this,
             compEl = comp.el,
+            miniCollapse = comp.collapseMode == 'mini',
             shadowContainer = comp.shadowOwnerCt,
             shadowLayout = shadowContainer.layout,
             centerComp = shadowContainer.child('[region=center]'),
@@ -598,17 +618,25 @@ Ext.define('Ext.layout.container.Border', {
         if (comp.animCollapse && me.initialCollapsedComplete) {
             shadowLayout.layout();
             compEl.dom.style.zIndex = 100;
-            placeHolder.el.hide();
+
+            // If we're mini-collapsing, the placholder is a Splitter. We don't want it to "bounce in"
+            if (!miniCollapse) {
+                placeHolder.el.hide();
+            }
             compEl.slideOut(me.slideDirection[comp.region], {
                 duration: Ext.num(comp.animCollapse, Ext.fx.Anim.prototype.duration),
                 listeners: {
                     afteranimate: function() {
                         compEl.show().setLeftTop(-10000, -10000);
                         compEl.dom.style.zIndex = '';
-                        placeHolder.el.slideIn(me.slideDirection[comp.region], {
-                            easing: 'linear',
-                            duration: 100
-                        });
+
+                        // If we're mini-collapsing, the placholder is a Splitter. We don't want it to "bounce in"
+                       if (!miniCollapse) {
+                            placeHolder.el.slideIn(me.slideDirection[comp.region], {
+                                easing: 'linear',
+                                duration: 100
+                            });
+                        }
                         afterCollapse();
                     }
                 }
@@ -632,6 +660,9 @@ Ext.define('Ext.layout.container.Border', {
     onPlaceHolderToolClick: function(e, target, owner, tool) {
         var me = this,
             comp = tool.client,
+
+            // Hide the placeholder unless it was the Component's preexisting splitter
+            hidePlaceholder = (comp.collapseMode != 'mini') || !comp.split,
             compEl = comp.el,
             toCompBox,
             placeHolder = comp.placeHolder,
@@ -683,7 +714,9 @@ Ext.define('Ext.layout.container.Border', {
         // Find where the shadow Box layout plans to put the expanding Component.
         comp.hidden = false;
         comp.collapsed = false;
-        placeHolder.hidden = true;
+        if (hidePlaceholder) {
+            placeHolder.hidden = true;
+        }
         toCompBox = shadowLayout.calculateChildBox(comp);
 
         // Show the collapse tool in case it was hidden by the slide-in
@@ -720,12 +753,14 @@ Ext.define('Ext.layout.container.Border', {
             // In case it was floated out and they clicked the re-expand tool
             comp.removeCls(Ext.baseCSSPrefix + 'border-region-slide-in');
 
-            // Fire the expand event: The Panel has in fact been expanded, but by substitution of an alternative Component
+            // Fire the expand event: The Panel has in fact been expanded, but by removal of an alternative Component
             comp.fireEvent('expand', comp);
         }
 
         // Hide the placeholder
-        placeHolder.el.hide();
+        if (hidePlaceholder) {
+            placeHolder.el.hide();
+        }
 
         // Slide the expanding Component to its new position.
         // When that is done, layout the layout.

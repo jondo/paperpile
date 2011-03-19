@@ -5,7 +5,7 @@
  * Changed by Cariad, 29 July 2007
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Laddar...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Laddar...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "";
@@ -71,7 +71,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-   Ext.apply(Ext.DatePicker.prototype, {
+   Ext.apply(Ext.picker.Date.prototype, {
       todayText         : "Idag",
       minText           : "Detta datum inträffar före det tidigast tillåtna",
       maxText           : "Detta datum inträffar efter det senast tillåtna",

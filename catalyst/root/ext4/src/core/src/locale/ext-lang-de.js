@@ -6,7 +6,7 @@
  * 2010-Mar-10 update by Volker Grabsch
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Übertrage Daten ...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Übertrage Daten ...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "";
@@ -108,7 +108,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-   Ext.apply(Ext.DatePicker.prototype, {
+   Ext.apply(Ext.picker.Date.prototype, {
       todayText         : "Heute",
       minText           : "Dieses Datum liegt von dem erstmöglichen Datum",
       maxText           : "Dieses Datum liegt nach dem letztmöglichen Datum",
@@ -121,10 +121,15 @@ if(Ext.picker.Date){
       monthYearText     : "Monat auswählen (Strg/Control + Hoch/Runter, um ein Jahr auszuwählen)",
       todayTip          : "Heute ({0}) (Leertaste)",
       format            : "d.m.Y",
-      okText            : "&#160;OK&#160;",
-      cancelText        : "Abbrechen",
       startDay          : 1
    });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;OK&#160;",
+      cancelText        : "Abbrechen"
+  });
 }
 
 if(Ext.toolbar.PagingToolbar){

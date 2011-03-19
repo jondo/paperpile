@@ -8,9 +8,9 @@ Ext.define('Ext.layout.container.boxOverflow.Scroller', {
     /* Begin Definitions */
 
     extend: 'Ext.layout.container.boxOverflow.None',
-
     requires: ['Ext.util.ClickRepeater', 'Ext.core.Element'],
-
+    alternateClassName: 'Ext.layout.boxOverflow.Scroller',
+    
     /* End Definitions */
 
     /**

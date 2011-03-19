@@ -6,7 +6,7 @@
  *     by halkon_polako 14-aug-2008
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Carregant...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Carregant...</div>';
 
 if(Ext.DataView){
   Ext.DataView.prototype.emptyText = "";
@@ -93,7 +93,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText         : "Avui",
     minText           : "Aquesta data &#233;s anterior a la data m&#237;nima",
     maxText           : "Aquesta data &#233;s posterior a la data m&#224;xima",
@@ -106,9 +106,14 @@ if(Ext.picker.Date){
     monthYearText     : 'Seleccioni un mes (Control+Fletxa a Dalt o Abaix per canviar els anys)',
     todayTip          : "{0} (Barra d&#39;espai)",
     format            : "d/m/Y",
-    okText            : "&#160;Acceptar&#160;",
-    cancelText        : "Cancel&#183;lar",
     startDay          : 1
+  });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;Acceptar&#160;",
+      cancelText        : "Cancel&#183;lar"
   });
 }
 

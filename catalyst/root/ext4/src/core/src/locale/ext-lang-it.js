@@ -5,7 +5,7 @@
  * Updated by Federico Grilli 21/12/2007 
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Caricamento in corso...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Caricamento in corso...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "";
@@ -98,7 +98,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-   Ext.apply(Ext.DatePicker.prototype, {
+   Ext.apply(Ext.picker.Date.prototype, {
       todayText         : "Oggi",
       minText           : "Data precedente alla data minima",
       maxText           : "Data successiva alla data massima",
@@ -111,10 +111,15 @@ if(Ext.picker.Date){
       monthYearText     : 'Scegli un mese (Ctrl+Su/Giu per cambiare anno)',
       todayTip          : "{0} (Barra spaziatrice)",
       format            : "d/m/y",
-      cancelText		: "Annulla",
-	  okText            : "&#160;OK&#160;",
 	  startDay          : 1
    });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;OK&#160;",
+      cancelText        : "Annulla"
+  });
 }
 
 if(Ext.toolbar.PagingToolbar){

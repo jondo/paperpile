@@ -34,9 +34,9 @@ var accordion = new Ext.panel.Panel({
  */
 Ext.define('Ext.layout.container.Accordion', {
     extend: 'Ext.layout.container.VBox',
-
     alias: ['layout.accordion'],
-
+    alternatClassName: 'Ext.layout.AccordionLayout',
+    
     align: 'stretch',
 
     /**
@@ -294,12 +294,12 @@ Ext.define('Ext.layout.container.Accordion', {
             i = 0;
 
         // Hide all docked items except the header
-        comp.hiddenDocks = [];
+        comp.hiddenDocked = [];
         for (; i < len; i++) {
             dockItem = otherDocks[i];
             if ((dockItem !== comp.header) && !dockItem.hidden) {
                 dockItem.hidden = true;
-                comp.hiddenDocks.push(comp);
+                comp.hiddenDocked.push(dockItem);
             }
         }
         comp.addCls(comp.collapsedCls);
@@ -312,7 +312,7 @@ Ext.define('Ext.layout.container.Accordion', {
     },
 
     setExpanded: function(comp) {
-        var otherDocks = comp.hiddenDocks,
+        var otherDocks = comp.hiddenDocked,
             len = otherDocks ? otherDocks.length : 0,
             i = 0;
 
@@ -320,9 +320,14 @@ Ext.define('Ext.layout.container.Accordion', {
         for (; i < len; i++) {
             otherDocks[i].hidden = false;
         }
-        comp.body.show();
+
+        // If it was an initial native collapse which hides the body
+        if (!comp.body.isVisible()) {
+            comp.body.show();
+        }
         delete comp.collapsed;
         delete comp.height;
+        comp.suspendLayout = false;
         comp.flex = 1;
         comp.removeCls(comp.collapsedCls);
         comp.header.removeCls(comp.collapsedHeaderCls);

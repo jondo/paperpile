@@ -8,6 +8,7 @@
  *
  * The selection model is shared across sibling grid views.
  * @xtype gridview
+ * @author Nicolas Ferrero
  */
 Ext.define('Ext.view.TableView', {
     extend: 'Ext.DataView',
@@ -75,9 +76,10 @@ viewConfig: {
     
     initComponent: function() {
         this.scrollState = {};
+        this.selModel.view = this;
+        this.headerCt.view = this;
         this.initFeatures();
         this.setNewTemplate();
-        
         this.callParent();
         this.store.on('load', this.onStoreLoad, this);
         

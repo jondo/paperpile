@@ -10,7 +10,8 @@ Ext.define('Ext.layout.Container', {
     /* Begin Definitions */
 
     extend: 'Ext.layout.AbstractContainer',
-
+    alternatClassName: 'Ext.layout.ContainerLayout',
+    
     /* End Definitions */
 
     layoutItem: function(item, box) {

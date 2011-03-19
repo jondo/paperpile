@@ -32,7 +32,16 @@ new Ext.slider.Multi({
 Ext.define('Ext.slider.Multi', {
     extend: 'Ext.form.BaseField',
     alias: 'widget.multislider',
-    requires: ['Ext.slider.Thumb', 'Ext.slider.Tip', 'Ext.Number', 'Ext.util.Format', 'Ext.Template', 'Ext.layout.component.SliderField'],
+    alternateClassName: 'Ext.slider.MultiSlider',
+    
+    requires: [
+        'Ext.slider.Thumb', 
+        'Ext.slider.Tip', 
+        'Ext.Number', 
+        'Ext.util.Format', 
+        'Ext.Template', 
+        'Ext.layout.component.SliderField'
+    ],
 
     /**
      * @cfg {Number} value

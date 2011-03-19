@@ -44,7 +44,7 @@ Ext.define('Ext.data.ArrayReader', {
      * reference the correct position in the array.
      */
     buildExtractors: function() {
-        Ext.data.ArrayReader.superclass.buildExtractors.apply(this, arguments);
+        this.callParent(arguments);
         
         var fields = this.model.prototype.fields.items,
             length = fields.length,

@@ -7,7 +7,7 @@
  * encoding fixed by Vili (17 Feb 2009)
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Betöltés...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Betöltés...</div>';
 
 if(Ext.View){
   Ext.View.prototype.emptyText = "";
@@ -100,7 +100,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText         : "Mai nap",
     minText           : "A dátum korábbi a megengedettnél",
     maxText           : "A dátum későbbi a megengedettnél",
@@ -113,9 +113,14 @@ if(Ext.picker.Date){
     monthYearText     : 'Válassz hónapot (Évválasztás: CTRL+Fel/Le)',
     todayTip          : "{0} (Szóköz)",
     format            : "y-m-d",
-    okText            : "&#160;OK&#160;",
-    cancelText        : "Mégsem",
     startDay          : 0
+  });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;OK&#160;",
+      cancelText        : "Mégsem"
   });
 }
 

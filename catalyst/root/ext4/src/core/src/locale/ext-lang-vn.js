@@ -9,7 +9,7 @@
  * 12-April-2007 04:06PM
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Đang tải...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Đang tải...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "";
@@ -75,7 +75,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-   Ext.apply(Ext.DatePicker.prototype, {
+   Ext.apply(Ext.picker.Date.prototype, {
       todayText         : "Hôm nay",
       minText           : "Ngày này nhỏ hơn ngày nhỏ nhất",
       maxText           : "Ngày này lớn hơn ngày lớn nhất",

@@ -38,11 +38,14 @@
  * @param {Object} config Optional config object
  */
 Ext.define('Ext.data.Proxy', {
-    requires: [
-        'Ext.data.Batch', 'Ext.data.Operation', 'Ext.data.JsonReader', 'Ext.data.JsonWriter'
-    ],
-    
     alias: 'proxy.proxy',
+    alternateClassName: 'Ext.data.DataProxy',
+    requires: [
+        'Ext.data.Batch', 
+        'Ext.data.Operation', 
+        'Ext.data.JsonReader', 
+        'Ext.data.JsonWriter'
+    ],
     mixins: {
         observable: 'Ext.util.Observable'
     },

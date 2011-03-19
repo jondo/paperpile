@@ -53,10 +53,9 @@ Ext.define('Ext.layout.container.Absolute', {
     /* Begin Definitions */
 
     alias: 'layout.absolute',
-
     extend: 'Ext.layout.container.Anchor',
-
     requires: ['Ext.chart.axis.Axis', 'Ext.fx.Anim'],
+    alternatClassName: 'Ext.layout.AbsoluteLayout',
 
     /* End Definitions */
 

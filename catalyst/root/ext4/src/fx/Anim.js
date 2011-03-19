@@ -222,7 +222,14 @@ from : {
               * @param {Ext.fx.Anim} this
               * @param {Date} startTime
               */
-            'afteranimate'
+            'afteranimate',
+             /**
+              * @event lastframe
+              * Fires when the animation's last frame has been set.
+              * @param {Ext.fx.Anim} this
+              * @param {Date} startTime
+              */
+            'lastframe'
         );
         me.mixins.observable.constructor.call(me, config);
         if (config.callback) {
@@ -362,6 +369,7 @@ from : {
         else {
             me.currentIteration = 0;
             me.end();
+            me.fireEvent('lastframe', me, me.startTime);
         }
     },
 

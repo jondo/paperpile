@@ -36,6 +36,12 @@ Ext.define('Ext.fx.target.Element', {
             else if (attr === 'scrollLeft') {
                 val = el.getScroll().left;
             }
+            else if (attr === 'height') {
+                val = el.getHeight();
+            }
+            else if (attr === 'width') {
+                val = el.getWidth();
+            }
             else {
                 val = el.getStyle(attr);
             }

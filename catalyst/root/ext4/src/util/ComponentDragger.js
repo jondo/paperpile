@@ -5,9 +5,28 @@
  * {@link Ext.dd.DragTracker} class.</p>
  * <p>A {@link #} delegate may be provided which may be either the element to use as the mousedown target
  * or a {@link Ext.DomQuery} selector to activate multiple mousedown targets.</p>
- * <p></p>
+ * @constructor Create a new ComponentTracker
+ * @param {object} comp The Component to provide dragging for.
+ * @param {object} config The config object
  */
 Ext.define('Ext.util.ComponentDragger', {
+
+    /**
+     * @cfg {Boolean} constrain
+     * Specify as <code>true</code> to constrain the Component to within the bounds of the {@link #constrainTo} region.
+     */
+
+    /**
+     * @cfg {String/Element} delegate
+     * Optional. <p>A {@link Ext.DomQuery DomQuery} selector which identifies child elements within the Component's encapsulating
+     * Element which are the drag handles. This limits dragging to only begin when the matching elements are mousedowned.</p>
+     * <p>This may also be a specific child element within the Component's encapsulating element to use as the drag handle.</p>
+     */
+
+    /**
+     * @cfg {Boolean} constrainDelegate
+     * Specify as <code>true</code> to constrain the drag handles within the {@link constrainTo} region.
+     */
 
     extend: 'Ext.dd.DragTracker',
 

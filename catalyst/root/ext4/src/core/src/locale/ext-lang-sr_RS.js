@@ -5,7 +5,7 @@
  * 12 May 2007
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Учитавам...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Учитавам...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "";
@@ -71,7 +71,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-   Ext.apply(Ext.DatePicker.prototype, {
+   Ext.apply(Ext.picker.Date.prototype, {
       todayText         : "Данас",
       minText           : "Датум је испред најмањег дозвољеног датума",
       maxText           : "Датум је након највећег дозвољеног датума",

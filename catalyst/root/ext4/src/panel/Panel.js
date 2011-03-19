@@ -17,9 +17,65 @@
  * <p>Panel also provides built-in {@link #collapsible collapsible, expandable} and {@link #closable} behavior.  
  * Panels can be easily dropped into any {@link Ext.container.Container Container} or layout, and the
  * layout and rendering pipeline is {@link Ext.container.Container#add completely managed by the framework}.</p>
- * <p><b>Note:</b> By default, the <code>{@link #closable close}</code> header tool <i>destroys</i> the Window resulting in
- * destruction of any child Components. This makes the Window object, and all its descendants <b>unusable</b>. To enable
- * re-use of a Window, use <b><code>{@link #closeAction closeAction: 'hide'}</code></b>.</p>
+ * <p><b>Note:</b> By default, the <code>{@link #closable close}</code> header tool <i>destroys</i> the Panel resulting in removal of the Panel
+ * and the destruction of any descendant Components. This makes the Panel object, and all its descendants <b>unusable</b>. To enable the close
+ * tool to simply <i>hide</i> a Panel for later re-use, configure the Panel with <b><code>{@link #closeAction closeAction: 'hide'}</code></b>.</p>
+ * <p>Usually, Panels are used as constituents within an application, in which case, they would be used as child items of Containers,
+ * and would themselves use Ext.Components as child {@link #items}. However to illustrate simply rendering a Panel into the document,
+ * here's how to do it:<pre><code>
+Ext.create('Ext.panel.Panel', {
+    title: 'Hello',
+    width: 200,
+    html: '<p>World!</p>',
+    renderTo: document.body
+});
+</code></pre></p>
+ * <p>A more realistic scenario is a Panel created to house input fields which will not be rendered, but used as a constituent part of a Container:<pre><code>
+var filterPanel = Ext.create('Ext.panel.Panel', {
+    bodyPadding: 5,  // Don't want content to crunch against the borders
+    title: 'Filters',
+    items: [{
+        xtype: 'datefield',
+        fieldLabel: 'Start date'
+    }, {
+        xtype: 'datefield',
+        fieldLabel: 'End date'
+    }]
+});
+</code></pre></p>
+ * <p>Note that the Panel above is not configured to render into the document, nor is it configured with a size or position. In a real world scenario,
+ * the Container into which the Panel is added will use a {@link #layout} to render, size and position its child Components.</p>
+ * <p>Panels will often use specific {@link #layout}s to provide an application with shape and structure by containing and arranging child
+ * Components: <pre><code>
+var resultsPanel = Ext.create('Ext.panel.Panel', {
+    layout: {
+        type: 'vbox',       // Arrange child items vertically
+        align: 'stretch'    // Each takes up full width
+    },
+    items: [{               // Results grid specified as a config object with an xtype of 'grid'
+        xtype: 'grid',
+        border: false,
+        headers: [{header: 'World'}]                  // One header just for show. There's no data,
+        store: Ext.create('Ext.data.ArrayStore', {}), // A dummy empty data store
+        flex: 1                                       // Use 1/3 of Container's height (hint to Box layout)
+    }, {
+        xtype: 'splitter',       // A splitter between the two child items
+        collapseTarget: 'prev'   // It has a mini-collapse tool: collapse the grid
+    }, {                    // Details Panel specified as a config object (no xtype defaults to 'panel').
+        bodyPadding: 5,
+        items: fieldsArray, // An array of form fields
+        flex: 2             // Use 2/3 of Container's height (hint to Box layout)
+    }]
+});
+</code></pre>
+ * The example illustrates one possible method of displaying search results. The Panel contains a grid with the resulting data arranged
+ * in rows. Each selected row may be displayed in detail in the Panel below. The {@link Ext.layout.container.Vbox vbox} layout is used
+ * to arrange the two vertically. It is configured to stretch child items horizontally to full width. Child items may either be configured 
+ * with a numeric height, or with a <code>flex</code> value to distribute available space proportionately.</p>
+ * <p>This Panel itself may be a child item of, for exaple, a {@link Ext.tab.TabPanel} which will size its child items to fit within its
+ * content area.</p>
+ * <p>Using these techniques, as long as the <b>layout</b> is chosen and configured correctly, an application may have any level of
+ * nested containment, all dynamically sized according to configuration, the user's preference and available browser size.</p>
  * @constructor
  * @param {Object} config The config object
  * @xtype panel
@@ -53,13 +109,12 @@ Ext.define('Ext.panel.Panel', {
     
     /**
      * @cfg {Number} minButtonWidth
-     * Minimum width of all form buttons in pixels (defaults to <tt>75</tt>). If set, this will
+     * Minimum width of all footer toolbar buttons in pixels (defaults to <tt>undefined</tt>). If set, this will
      * be used as the default value for the <tt>{@link Ext.button.Button#minWidth}</tt> config of
      * each Button added to the <b>footer toolbar</b>. Will be ignored for buttons that have this value configured some
      * other way, e.g. in their own config object or via the {@link Ext.Container#config-defaults defaults} of
      * their parent container.
      */
-    minButtonWidth: 30,
 
     /**
      * @cfg {Boolean} collapsed
@@ -168,7 +223,24 @@ Ext.define('Ext.panel.Panel', {
      */
     closeAction: 'destroy',
 
-     /**
+    /**
+     * @cfg {Object/Array} dockedItems
+     * A component or series of components to be added as docked items to this panel.
+     * The docked items can be docked to either the top, right, left or bottom of a panel.
+     * This is typically used for things like toolbars or tab bars:
+     * <pre><code>
+var panel = new Ext.panel.Panel({
+    dockedItems: [{
+        xtype: 'toolbar',
+        dock: 'top',
+        items: [{
+            text: 'Docked to the top'
+        }]
+    }]
+});</pre></code>
+     */
+
+    /**
       * @cfg {Boolean} preventHeader Prevent a Header from being created and shown. Defaults to false.
       */
     preventHeader: false,
@@ -183,7 +255,7 @@ Ext.define('Ext.panel.Panel', {
      * True to apply a frame to the panel.
      */
     frame: false,
-    
+
     /**
      * @cfg {Boolean} frameHeader
      * True to apply a frame to the panel panels header (if 'frame' is true).
@@ -202,7 +274,7 @@ Ext.define('Ext.panel.Panel', {
         if (me.unstyled) {
             me.baseCls = me.baseCSSPrefix + 'plain';
         }
-        
+
         if (me.frame) {
             me.ui = 'framed';
         }
@@ -680,7 +752,9 @@ is equivalent to
             reExpander,
             reExpanderOrientation,
             reExpanderDock,
-            hideOnCollapse = me.collapseMode == 'mini';
+            getDimension,
+            setDimension,
+            collapseDimension;
 
         if (!direction) {
             direction = me.collapseDirection;
@@ -704,6 +778,9 @@ is equivalent to
             case c.DIRECTION_BOTTOM:
                 me.expandedSize = me.getHeight();
                 reExpanderOrientation = 'horizontal';
+                collapseDimension = 'height';
+                getDimension = 'getHeight';
+                setDimension = 'setHeight';
 
                 // Collect the height of the visible header.
                 // Hide all docked items except the header.
@@ -711,7 +788,7 @@ is equivalent to
                 for (; i < dockedItemCount; i++) {
                     comp = dockedItems[i];
                     if (comp.isVisible()) {
-                        if (!hideOnCollapse && comp.isHeader && (!comp.dock || comp.dock == 'top' || comp.dock == 'bottom')) {
+                        if (comp.isHeader && (!comp.dock || comp.dock == 'top' || comp.dock == 'bottom')) {
                             reExpander = comp;
                         } else {
                             me.hiddenDocked.push(comp);
@@ -729,6 +806,9 @@ is equivalent to
             case c.DIRECTION_RIGHT:
                 me.expandedSize = me.getWidth();
                 reExpanderOrientation = 'vertical';
+                collapseDimension = 'width';
+                getDimension = 'getWidth';
+                setDimension = 'setWidth';
 
                 // Collect the height of the visible header.
                 // Hide all docked items except the header.
@@ -736,7 +816,7 @@ is equivalent to
                 for (; i < dockedItemCount; i++) {
                     comp = dockedItems[i];
                     if (comp.isVisible()) {
-                        if (!hideOnCollapse && comp.isHeader && (comp.dock == 'left' || comp.dock == 'right')) {
+                        if (comp.isHeader && (comp.dock == 'left' || comp.dock == 'right')) {
                             reExpander = comp;
                         } else {
                             me.hiddenDocked.push(comp);
@@ -768,55 +848,64 @@ is equivalent to
         // Add the collapsed class now, so that collapsed CSS rules are applied before measurements are taken.
         me.el.addCls(me.collapsedCls);
 
-        // If we're not in collapseMode: 'mini'
-        if (!hideOnCollapse) {
-
-            // We found a header: Measure it to find the collapse-to size.
-            if (reExpander) {
-                reExpander.addCls(me.collapsedHeaderCls);
-                newSize = (reExpanderOrientation == 'vertical') ? reExpander.getWidth() : reExpander.getHeight();
-            }
-            // No header: Render and insert a temporary one, and then measure it.
-            else {
-                reExpander = {
-                    hideMode: 'offsets',
-                    temporary: true,
-                    title: me.title,
-                    orientation: reExpanderOrientation,
-                    dock: reExpanderDock,
-                    textCls: me.headerTextCls,
-                    iconCls: me.iconCls,
-                    baseCls: me.baseCls + '-header',
-                    ui: me.ui,
-                    indicateDrag: me.draggable,
-                    cls: me.baseCls + '-collapsed-placeholder ' + me.collapsedHeaderCls,
-                    renderTo: me.getTargetEl()
-                };
-                reExpander[(reExpander.orientation == 'horizontal') ? 'tools' : 'items'] = [{
-                    xtype: 'tool',
-                    type: 'expand-' + me.expandDirection,
-                    handler: me.toggleCollapse,
-                    scope: me
-                }];
-                reExpander = me.reExpander = Ext.create('Ext.panel.Header', reExpander);
-                newSize = (reExpanderOrientation == 'vertical') ? reExpander.getWidth() : reExpander.getHeight();
-                reExpander.hide();
-
-                // Insert the new docked item
-                me.insertDocked(0, reExpander);
-            }
-
-            // Animate to the new size
-            anim.to[(reExpanderOrientation == 'vertical') ? 'width' : 'height'] = newSize;
-            me.reExpander = reExpander;
-
-            // If collapsing right or down, we'll be also animating the left or top.
-            if (direction == Ext.Component.DIRECTION_RIGHT) {
-                anim.to.left = pos + (width - newSize);
-            } else if (direction == Ext.Component.DIRECTION_BOTTOM) {
-                anim.to.top = pos + (height - newSize);
-            }
+        // We found a header: Measure it to find the collapse-to size.
+        if (reExpander) {
+            reExpander.addCls(me.collapsedHeaderCls);
+            newSize = reExpander[getDimension]();
         }
+        // No header: Render and insert a temporary one, and then measure it.
+        else {
+            reExpander = {
+                hideMode: 'offsets',
+                temporary: true,
+                title: me.title,
+                orientation: reExpanderOrientation,
+                dock: reExpanderDock,
+                textCls: me.headerTextCls,
+                iconCls: me.iconCls,
+                baseCls: me.baseCls + '-header',
+                ui: me.ui,
+                indicateDrag: me.draggable,
+                cls: me.baseCls + '-collapsed-placeholder ' + me.collapsedHeaderCls,
+                renderTo: me.getTargetEl()
+            };
+            reExpander[(reExpander.orientation == 'horizontal') ? 'tools' : 'items'] = [{
+                xtype: 'tool',
+                type: 'expand-' + me.expandDirection,
+                handler: me.toggleCollapse,
+                scope: me
+            }];
+
+            reExpander = me.reExpander = Ext.create('Ext.panel.Header', reExpander);
+
+            // Hack for IE6/7's inability to display an inline-block
+            // No, seriously, this has to be here. Check examples/panel/panel.html, and collapse the second Panel.
+            // Without this, it's broken.
+            if ((Ext.isIE6 || Ext.isIE7) && (reExpanderOrientation == 'vertical')) {
+                newSize = 25;
+                reExpander.el.dom.style.display = 'block';
+                reExpander[setDimension](newSize);
+                reExpander.el.dom.style.display = '';
+            } else {
+                newSize = reExpander[getDimension]();
+            }
+            reExpander.hide();
+
+            // Insert the new docked item
+            me.insertDocked(0, reExpander);
+        }
+
+        me.reExpander = reExpander;
+
+        // If collapsing right or down, we'll be also animating the left or top.
+        if (direction == Ext.Component.DIRECTION_RIGHT) {
+            anim.to.left = pos + (width - newSize);
+        } else if (direction == Ext.Component.DIRECTION_BOTTOM) {
+            anim.to.top = pos + (height - newSize);
+        }
+
+        // Animate to the new size
+        anim.to[collapseDimension] = newSize;
 
         // Remove any flex config before we attempt to collapse.
         me.savedFlex = me.flex;
@@ -829,9 +918,7 @@ is equivalent to
         if (animate) {
             this.animate(anim);
         } else {
-            if (!hideOnCollapse) {
-                me.setSize(anim.to.width, anim.to.height);
-            }
+            me.setSize(anim.to.width, anim.to.height);
             if (Ext.isDefined(anim.to.left) || Ext.isDefined(anim.to.top)) {
                 me.setPosition(anim.to.left, anim.to.top);
             }
@@ -843,20 +930,14 @@ is equivalent to
     afterCollapse: function(animated, internal) {
         var me = this,
             i = 0,
-            l = me.hiddenDocked.length,
-            hideOnCollapse = me.collapseMode == 'mini';
+            l = me.hiddenDocked.length;
 
         me.minWidth = me.savedMinWidth;
         me.minHeight = me.savedMinHeight;
-        if (hideOnCollapse) {
-            me.el.hide();
-            me.hiddenDocked.length = 0;
-        }
-        else {
-            me.body.hide();
-            for (; i < l; i++) {
-                me.hiddenDocked[i].hide();
-            }
+
+        me.body.hide();
+        for (; i < l; i++) {
+            me.hiddenDocked[i].hidden = true;
         }
         if (me.reExpander) {
             me.reExpander.show();
@@ -864,7 +945,7 @@ is equivalent to
         me.collapsed = true;
 
         if (!internal) {
-            if (animated && me.ownerCt) {
+            if (me.ownerCt) {
                 me.ownerCt.doLayout();
             } else {
                 me.doComponentLayout();
@@ -902,7 +983,6 @@ is equivalent to
             direction = me.expandDirection,
             height = me.getHeight(),
             width = me.getWidth(),
-            showOnExpand = me.collapseMode == 'mini',
             pos, anim, satisfyJSLint;
 
         // Disable toggle tool during animated expand
@@ -913,7 +993,7 @@ is equivalent to
         // Show any docked items that we hid on collapse
         // And hide the injected reExpander Header
         for (; i < l; i++) {
-            me.hiddenDocked[i].show();
+            me.hiddenDocked[i].hidden = false;
         }
         if (me.reExpander) {
             if (me.reExpander.temporary) {
@@ -928,6 +1008,15 @@ is equivalent to
             me.collapseTool.setType('collapse-' + me.collapseDirection);
         }
 
+        // Unset the flag before the potential call to calculateChildBox to calculate our newly flexed size
+        me.collapsed = false;
+
+        // Collapsed means body element was hidden
+        me.body.show();
+
+        // Remove any collapsed styling before any animation begins
+        me.el.removeCls(me.collapsedCls);
+
         anim = {
             to: {
             },
@@ -940,18 +1029,6 @@ is equivalent to
                 scope: me
             }
         };
-
-        // Unset the flag before the potential call to calculateChildBox to calculate our newly flexed size
-        me.collapsed = false;
-
-        if (showOnExpand) {
-            me.el.show();
-        } else {
-            me.body.show();
-        }
-
-        // Remove any collapsed styling before any animation begins
-        me.el.removeCls(me.collapsedCls);
 
         if ((direction == Ext.Component.DIRECTION_TOP) || (direction == Ext.Component.DIRECTION_BOTTOM)) {
 
@@ -970,7 +1047,7 @@ is equivalent to
                 anim.to.height = me.ownerCt.layout.calculateChildBox(me).height;
                 delete me.flex;
             }
-            // Else, restore to save height
+            // Else, restore to saved height
             else {
                 anim.to.height = me.expandedSize;
             }
@@ -998,7 +1075,7 @@ is equivalent to
                 anim.to.width = me.ownerCt.layout.calculateChildBox(me).width;
                 delete me.flex;
             }
-            // Else, restore to save height
+            // Else, restore to saved width
             else {
                 anim.to.width = me.expandedSize;
             }

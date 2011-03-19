@@ -8,7 +8,7 @@
  * Indonesian Translations
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Pemuatan...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Pemuatan...</div>';
 
 if(Ext.View){
   Ext.View.prototype.emptyText = "";
@@ -105,7 +105,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText         : "Hari ini",
     minText           : "Tanggal ini sebelum batas tanggal minimal", 
     maxText           : "Tanggal ini setelah batas tanggal maksimal", 
@@ -118,9 +118,14 @@ if(Ext.picker.Date){
     monthYearText     : 'Pilih bulan (Kontrol+Atas/Bawah untuk pindah tahun)', 
     todayTip          : "{0} (Spacebar)",
     format            : "d/m/y",
-    okText            : "&#160;OK&#160;",
-    cancelText        : "Batal",
     startDay          : 1
+  });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;OK&#160;",
+      cancelText        : "Batal"
   });
 }
 

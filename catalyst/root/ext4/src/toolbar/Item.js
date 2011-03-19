@@ -11,6 +11,7 @@
 Ext.define('Ext.toolbar.Item', {
     extend: 'Ext.Component',
     alias: 'widget.tbitem',
+    alternateClassName: 'Ext.Toolbar.Item',
     enable:Ext.emptyFn,
     disable:Ext.emptyFn,
     focus:Ext.emptyFn

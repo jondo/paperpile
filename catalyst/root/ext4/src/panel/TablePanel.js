@@ -4,11 +4,11 @@
  * @xtype tablepanel
  * @markdown
  * @private
-
+ * @author Nicolas Ferrero
 TablePanel is a private class and the basis of both TreePanel and GridPanel.
 
 TablePanel aggregates:
-- a Seleciton Model
+- a Selection Model
 - a View
 - a Store
 - Scrollers
@@ -96,6 +96,14 @@ Ext.define('Ext.panel.TablePanel', {
         };
         if (me.hideHeaders) {
             headerCtCfg.height = 0;
+            headerCtCfg.border = false;
+            // IE Quirks Mode fix
+            // If hidden configuration option was used, several layout calculations will be bypassed.
+            if (Ext.isIEQuirks) {
+                headerCtCfg.style = {
+                    display: 'none'
+                };
+            }
         }
         me.headerCt = new Ext.grid.HeaderContainer(headerCtCfg);
         me.headerCt.on('headerresize', me.onHeaderResize, me);
@@ -131,33 +139,31 @@ Ext.define('Ext.panel.TablePanel', {
                 dock: 'bottom'
             });
         }
+
+        // AbstractDataView will look up a Store configured as an object
+        me.store.on({
+            load: me.onStoreLoad,
+            scope: me
+        });
         
-        me.getViewStore().on('load', this.onStoreLoad, this);
-        
+        me.getView().store.on({
+            datachanged: {
+                fn: this.onViewStoreDataChanged,
+                scope: me,
+                buffer: 50
+            }
+        });
+
         me.callParent();
     },
-    
-    /**
-     * Get the store to be used for the view. For many implementations
-     * this will always be the store, for some implementations that have
-     * multiple views it could return something different.
-     */
-    getViewStore: function() {
-        return this.store;
-    },
-    
-    afterLayout: function() {
-        var me = this,
-            sm, store;
-        me.callParent();
-        if (!me.hasView) {
-            me.hasView = true;
-            sm = me.getSelectionModel();
-            store = me.getViewStore();
-            store.on('datachanged', this.onStoreDataChanged, this, {buffer: 50});
-            Ext.applyIf(me.viewConfig, {
+
+    getView: function() {
+        var me = this;
+
+        if (!me.view) {
+            me.view = me.createComponent(Ext.apply({}, me.viewConfig, {
                 xtype: me.viewType,
-                store: store,
+                store: me.store,
                 headerCt: me.headerCt,
                 selModel: me.getSelectionModel(),
                 features: me.features,
@@ -169,10 +175,25 @@ Ext.define('Ext.panel.TablePanel', {
                     bodyscroll: me.onViewScroll,
                     scope: me
                 }
-            });
-            me.view = me.add(me.viewConfig);
-            sm.view = me.view;
-            me.headerCt.view = me.view;
+            }));
+
+            // The AbstractDataView base class ensures that a Store is instantiated.
+            // Copy a reference back into this
+            me.store = me.view.store;
+        }
+        return me.view;
+    },
+
+    /**
+     * @private
+     * Add the View only after first layout has been completed.
+     */
+    afterLayout: function() {
+        var me = this;
+        me.callParent();
+        if (!me.hasView) {
+            me.hasView = true;
+            me.add(me.view);
             Ext.Function.defer(me.determineScrollbars, 50, me);
             Ext.getBody().on('mousewheel', me.onMouseWheel, me);
         }
@@ -225,15 +246,14 @@ Ext.define('Ext.panel.TablePanel', {
             }
         }
     },
-    
-    
+
     onHeaderResize: function() {
-        if (this.view) {
+        if (this.view && this.view.rendered) {
             this.determineScrollbars();
             this.invalidateScroller();
         }
     },
-    
+
     /**
      * Hide the verticalScroller and remove the horizontalScrollerPresentCls.
      */
@@ -355,7 +375,7 @@ Ext.define('Ext.panel.TablePanel', {
     },
     
     // determine scrollbars and invalidate them
-    onStoreDataChanged: function() {
+    onViewStoreDataChanged: function() {
         this.determineScrollbars();
         this.invalidateScroller();
     },

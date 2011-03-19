@@ -7,7 +7,7 @@
  */
 
 /* Ext Core translations */
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Besig om te laai...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Besig om te laai...</div>';
 
 /* Ext single string translations */
 if(Ext.View){
@@ -76,7 +76,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-    Ext.apply(Ext.DatePicker.prototype, {
+    Ext.apply(Ext.picker.Date.prototype, {
        todayText         : "Vandag",
        minText           : "Hierdie datum is vroër as die minimum datum",
        maxText           : "Hierdie dataum is later as die maximum datum",

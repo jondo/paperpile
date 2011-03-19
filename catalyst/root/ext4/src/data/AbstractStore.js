@@ -118,7 +118,9 @@ Ext.define('Ext.data.AbstractStore', {
 
     //documented above
     constructor: function(config) {
-        this.addEvents(
+        var me = this;
+        
+        me.addEvents(
             /**
              * @event add
              * Fired when a Model instance has been added to this Store
@@ -184,7 +186,7 @@ Ext.define('Ext.data.AbstractStore', {
             'beforesync'
         );
         
-        Ext.apply(this, config);
+        Ext.apply(me, config);
 
         /**
          * Temporary cache in which removed model instances are kept until successfully synchronised with a Proxy,
@@ -193,7 +195,7 @@ Ext.define('Ext.data.AbstractStore', {
          * @property removed
          * @type Array
          */
-        this.removed = [];
+        me.removed = [];
 
         /**
          * Stores the current sort direction ('ASC' or 'DESC') for each field. Used internally to manage the toggling
@@ -201,11 +203,11 @@ Ext.define('Ext.data.AbstractStore', {
          * @property sortToggle
          * @type Object
          */
-        this.sortToggle = {};
+        me.sortToggle = {};
 
-        this.mixins.observable.constructor.apply(this, arguments);
+        me.mixins.observable.constructor.apply(me, arguments);
 
-        this.model = Ext.ModelMgr.getModel(config.model);
+        me.model = Ext.ModelMgr.getModel(config.model);
         
         /**
          * @property modelDefaults
@@ -215,31 +217,31 @@ Ext.define('Ext.data.AbstractStore', {
          * This is used internally by associations to set foreign keys and other fields. See the Association classes source code
          * for examples. This should not need to be used by application developers.
          */
-        Ext.applyIf(this, {
+        Ext.applyIf(me, {
             modelDefaults: {}
         });
 
         //Supports the 3.x style of simply passing an array of fields to the store, implicitly creating a model
-        if (!this.model && config.fields) {
-            this.model = Ext.regModel('Ext.data.Store.ImplicitModel-' + this.storeId || Ext.id(), {
+        if (!me.model && config.fields) {
+            me.model = Ext.regModel('Ext.data.Store.ImplicitModel-' + (me.storeId || Ext.id()), {
                 fields: config.fields
             });
 
-            delete this.fields;
+            delete me.fields;
 
-            this.implicitModel = true;
+            me.implicitModel = true;
         }
 
         //ensures that the Proxy is instantiated correctly
-        this.setProxy(config.proxy || this.model.getProxy());
+        me.setProxy(config.proxy || me.model.getProxy());
 
-        if (this.id && !this.storeId) {
-            this.storeId = this.id;
-            delete this.id;
+        if (me.id && !me.storeId) {
+            me.storeId = me.id;
+            delete me.id;
         }
 
-        if (this.storeId) {
-            Ext.data.StoreMgr.register(this);
+        if (me.storeId) {
+            Ext.data.StoreMgr.register(me);
         }
         
         if (!config.groupers && config.groupField) {
@@ -256,25 +258,25 @@ Ext.define('Ext.data.AbstractStore', {
          * @property groupers
          * @type Ext.util.MixedCollection
          */
-        this.groupers = Ext.create('Ext.util.MixedCollection');
-        this.groupers.addAll(this.decodeGroupers(config.groupers));
+        me.groupers = Ext.create('Ext.util.MixedCollection');
+        me.groupers.addAll(me.decodeGroupers(config.groupers));
         
         /**
          * The collection of {@link Ext.util.Sorter Sorters} currently applied to this Store
          * @property sorters
          * @type Ext.util.MixedCollection
          */
-        this.sorters = Ext.create('Ext.util.MixedCollection');
-        this.sorters.addAll(this.groupers.items);
-        this.sorters.addAll(this.decodeSorters(config.sorters));
+        me.sorters = Ext.create('Ext.util.MixedCollection');
+        me.sorters.addAll(me.groupers.items);
+        me.sorters.addAll(me.decodeSorters(config.sorters));
         
         /**
          * The collection of {@link Ext.util.Filter Filters} currently applied to this Store
          * @property filters
          * @type Ext.util.MixedCollection
          */
-        this.filters = Ext.create('Ext.util.MixedCollection');
-        this.filters.addAll(this.decodeFilters(config.filters));
+        me.filters = Ext.create('Ext.util.MixedCollection');
+        me.filters.addAll(me.decodeFilters(config.filters));
     },
 
 
@@ -285,19 +287,21 @@ Ext.define('Ext.data.AbstractStore', {
      * @return {Ext.data.Proxy} The attached Proxy object
      */
     setProxy: function(proxy) {
+        var me = this;
+        
         if (proxy instanceof Ext.data.Proxy) {
-            proxy.setModel(this.model);
+            proxy.setModel(me.model);
         } else {
             Ext.applyIf(proxy, {
-                model: this.model
+                model: me.model
             });
             
             proxy = Ext.createByAlias('proxy.' + proxy.type, proxy);
         }
         
-        this.proxy = proxy;
+        me.proxy = proxy;
         
-        return this.proxy;
+        return me.proxy;
     },
 
     /**
@@ -310,7 +314,8 @@ Ext.define('Ext.data.AbstractStore', {
 
     //saves any phantom records
     create: function(data, options) {
-        var instance = Ext.ModelMgr.create(Ext.applyIf(data, this.modelDefaults), this.model.modelName),
+        var me = this,
+            instance = Ext.ModelMgr.create(Ext.applyIf(data, me.modelDefaults), me.model.modelName),
             operation;
         
         options = options || {};
@@ -322,7 +327,7 @@ Ext.define('Ext.data.AbstractStore', {
 
         operation = Ext.create('Ext.data.Operation', options);
 
-        this.proxy.create(operation, this.onProxyWrite, this);
+        me.proxy.create(operation, me.onProxyWrite, me);
         
         return instance;
     },
@@ -334,16 +339,18 @@ Ext.define('Ext.data.AbstractStore', {
     onProxyRead: Ext.emptyFn,
 
     update: function(options) {
+        var me = this,
+            operation;
         options = options || {};
 
         Ext.applyIf(options, {
             action : 'update',
-            records: this.getUpdatedRecords()
+            records: me.getUpdatedRecords()
         });
 
-        var operation = Ext.create('Ext.data.Operation', options);
+        operation = Ext.create('Ext.data.Operation', options);
 
-        return this.proxy.update(operation, this.onProxyWrite, this);
+        return me.proxy.update(operation, me.onProxyWrite, me);
     },
 
     onProxyWrite: Ext.emptyFn,
@@ -351,16 +358,19 @@ Ext.define('Ext.data.AbstractStore', {
 
     //tells the attached proxy to destroy the given records
     destroy: function(options) {
+        var me = this,
+            operation;
+            
         options = options || {};
 
         Ext.applyIf(options, {
             action : 'destroy',
-            records: this.getRemovedRecords()
+            records: me.getRemovedRecords()
         });
 
-        var operation = Ext.create('Ext.data.Operation', options);
+        operation = Ext.create('Ext.data.Operation', options);
 
-        return this.proxy.destroy(operation, this.onProxyWrite, this);
+        return me.proxy.destroy(operation, me.onProxyWrite, me);
     },
 
     /**
@@ -378,19 +388,20 @@ Ext.define('Ext.data.AbstractStore', {
      * and updates the Store's internal data MixedCollection.
      */
     onBatchComplete: function(batch, operation) {
-        var operations = batch.operations,
+        var me = this,
+            operations = batch.operations,
             length = operations.length,
             i;
 
-        this.suspendEvents();
+        me.suspendEvents();
 
         for (i = 0; i < length; i++) {
-            this.onProxyWrite(operations[i]);
+            me.onProxyWrite(operations[i]);
         }
 
-        this.resumeEvents();
+        me.resumeEvents();
 
-        this.fireEvent('datachanged', this);
+        me.fireEvent('datachanged', me);
     },
 
     onBatchException: function(batch, operation) {
@@ -461,6 +472,8 @@ Ext.define('Ext.data.AbstractStore', {
 
         var length = sorters.length,
             Sorter = Ext.util.Sorter,
+            fields = this.model ? this.model.prototype.fields : null,
+            field,
             config, i;
 
         for (i = 0; i < length; i++) {
@@ -490,6 +503,11 @@ Ext.define('Ext.data.AbstractStore', {
                     };
                 }
 
+                // ensure sortType gets pushed on if necessary
+                if (fields && !config.transform) {
+                    field = fields.get(config.property);
+                    config.transform = field ? field.sortType : undefined;
+                }
                 sorters[i] = new Sorter(config);
             }
         }
@@ -499,30 +517,6 @@ Ext.define('Ext.data.AbstractStore', {
 
     filter: function(filters, value) {
 
-    },
-
-    /**
-     * @private
-     * Creates and returns a function which sorts an array by the given field and direction
-     * @param {String} field The field to create the sorter for
-     * @param {String} direction The direction to sort by (defaults to "ASC")
-     * @return {Function} A function which sorts by the field/direction combination provided
-     */
-    createSortFunction: function(field, direction) {
-        direction = direction || "ASC";
-        var directionModifier = direction.toUpperCase() == "DESC" ? -1 : 1;
-
-        var fields   = this.model.prototype.fields,
-            sortType = fields.get(field).sortType;
-
-        //create a comparison function. Takes 2 records, returns 1 if record 1 is greater,
-        //-1 if record 2 is greater or 0 if they are equal
-        return function(r1, r2) {
-            var v1 = sortType(r1.data[field]),
-                v2 = sortType(r2.data[field]);
-
-            return directionModifier * (v1 > v2 ? 1 : (v1 < v2 ? -1 : 0));
-        };
     },
 
     /**
@@ -679,15 +673,16 @@ Ext.define('Ext.data.AbstractStore', {
      * @return {Object} The listeners object
      */
     getBatchListeners: function() {
-        var listeners = {
-            scope: this,
-            exception: this.onBatchException
-        };
+        var me = this,
+            listeners = {
+                scope: me,
+                exception: me.onBatchException
+            };
 
-        if (this.batchUpdateMode == 'operation') {
-            listeners['operationcomplete'] = this.onBatchOperationComplete;
+        if (me.batchUpdateMode == 'operation') {
+            listeners['operationcomplete'] = me.onBatchOperationComplete;
         } else {
-            listeners['complete'] = this.onBatchComplete;
+            listeners['complete'] = me.onBatchComplete;
         }
 
         return listeners;
@@ -749,30 +744,34 @@ Ext.define('Ext.data.AbstractStore', {
      * @param {Ext.data.Model} record The model instance that was edited
      */
     afterCommit : function(record) {
-        if (this.autoSave) {
-            this.sync();
+        var me = this;
+        
+        if (me.autoSave) {
+            me.sync();
         }
 
-        this.fireEvent('update', this, record, Ext.data.Model.COMMIT);
+        me.fireEvent('update', me, record, Ext.data.Model.COMMIT);
     },
 
     clearData: Ext.emptyFn,
 
     destroyStore: function() {
-        if (!this.isDestroyed) {
-            if (this.storeId) {
-                Ext.data.StoreMgr.unregister(this);
+        var me = this;
+        
+        if (!me.isDestroyed) {
+            if (me.storeId) {
+                Ext.data.StoreMgr.unregister(me);
             }
-            this.clearData();
-            this.data = null;
-            this.tree = null;
+            me.clearData();
+            me.data = null;
+            me.tree = null;
             // Ext.destroy(this.proxy);
-            this.reader = this.writer = null;
-            this.clearListeners();
-            this.isDestroyed = true;
+            me.reader = me.writer = null;
+            me.clearListeners();
+            me.isDestroyed = true;
 
-            if (this.implicitModel) {
-                Ext.destroy(this.model);
+            if (me.implicitModel) {
+                Ext.destroy(me.model);
             }
         }
     },

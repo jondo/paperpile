@@ -24,10 +24,11 @@ Ext.define('Ext.layout.container.Fit', {
     /* Begin Definitions */
 
     extend: 'Ext.layout.container.AbstractFit',
-
     alias: 'layout.fit',
+    alternatClassName: 'Ext.layout.FitLayout',
 
     /* End Definitions */
+   
     // @private
     onLayout : function() {
         var me = this;

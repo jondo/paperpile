@@ -9,6 +9,7 @@
  * For example: 'groupclick', 'groupdblclick', 'groupcontextmenu'.
  * 
  * @xtype grouping
+ * @author Nicolas Ferrero
  */
 
 Ext.define('Ext.grid.GroupingFeature', {
@@ -81,7 +82,7 @@ Ext.define('Ext.grid.GroupingFeature', {
     hdCollapsedCls: Ext.baseCSSPrefix + 'grid-group-hd-collapsed',
     
     /**
-     * @cfg {String} groupByText Text displayed in the grid header menu for grouping by a column
+     * @cfg {String} groupByText Text displayed in the grid header menu for grouping by header
      * (defaults to 'Group By This Field').
      */
     groupByText : 'Group By This Field',
@@ -92,9 +93,9 @@ Ext.define('Ext.grid.GroupingFeature', {
     showGroupsText : 'Show in Groups',
     
     /**
-     * @cfg {Boolean} hideGroupedColumn <tt>true</tt> to hide the column that is currently grouped (defaults to <tt>false</tt>)
+     * @cfg {Boolean} hideGroupedHeader<tt>true</tt> to hide the header that is currently grouped (defaults to <tt>false</tt>)
      */
-    hideGroupedColumn : false,
+    hideGroupedHeader : false,
     
     /**
      * @cfg {Boolean} startCollapsed <tt>true</tt> to start all groups collapsed (defaults to <tt>false</tt>)
@@ -102,7 +103,7 @@ Ext.define('Ext.grid.GroupingFeature', {
     startCollapsed : false,
     
     /**
-     * @cfg {Boolean} enableGroupingMenu <tt>true</tt> to enable the grouping control in the column menu (defaults to <tt>true</tt>)
+     * @cfg {Boolean} enableGroupingMenu <tt>true</tt> to enable the grouping control in the header menu (defaults to <tt>true</tt>)
      */
     enableGroupingMenu : true,
     
@@ -150,19 +151,20 @@ Ext.define('Ext.grid.GroupingFeature', {
         delete this.groupMenuItem;
         delete this.groupToggleMenuItem;
         delete this.view;
-        delete this.prunedColumn;
+        delete this.prunedHeader;
     },
     
     // perhaps rename to afterViewRender
     attachEvents: function() {
         var view = this.view,
-            menu;
+            header, headerId, menu, menuItem;
             
         view.on('groupclick', this.onGroupClick, this);
         view.on('rowfocus', this.onRowFocus, this);
         
-        this.pruneGroupedColumn();
+        this.pruneGroupedHeader();
         
+
         if (this.enableGroupingMenu) {
             menu = view.headerCt.getMenu();
             menu.add('-');
@@ -181,6 +183,16 @@ Ext.define('Ext.grid.GroupingFeature', {
                 });
             }
         }
+        
+        if (this.hideGroupedHeader) {
+            header = view.headerCt.down('gridheader[dataIndex=' + view.store.groupField + ']');
+            headerId = header.id;
+            menu = view.headerCt.getMenu();
+            menuItem = menu.down('menuitem[headerId='+ headerId +']');
+            if (menuItem) {
+                menuItem.setChecked(false);
+            }
+        }
     },
     
     /**
@@ -193,7 +205,7 @@ Ext.define('Ext.grid.GroupingFeature', {
             view = this.view;
             
         view.store.groupField = hdr.dataIndex;
-        this.pruneGroupedColumn();
+        this.pruneGroupedHeader();
         this.enable();
         view.refresh();
     },
@@ -208,10 +220,10 @@ Ext.define('Ext.grid.GroupingFeature', {
     },
     
     /**
-     * Prunes the grouped column from the header container
+     * Prunes the grouped header from the header container
      * @private
      */
-    pruneGroupedColumn: function() {
+    pruneGroupedHeader: function() {
         var view       = this.view,
             store      = view.store,
             groupField = store.groupField,
@@ -219,10 +231,10 @@ Ext.define('Ext.grid.GroupingFeature', {
             header     = headerCt.down('header[dataIndex=' + groupField + ']');
             
         if (header) {
-            if (this.prunedColumn) {
-                this.prunedColumn.show();
+            if (this.prunedHeader) {
+                this.prunedHeader.show();
             }
-            this.prunedColumn = header;
+            this.prunedHeader = header;
             header.hide();
         }
     },

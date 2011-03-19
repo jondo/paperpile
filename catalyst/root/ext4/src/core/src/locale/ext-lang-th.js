@@ -5,7 +5,7 @@
  * Thailand Translations
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">¡ÓÅÑ§âËÅŽ...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">¡ÓÅÑ§âËÅŽ...</div>';
 
 if(Ext.View){
   Ext.View.prototype.emptyText = "";
@@ -98,7 +98,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText         : "ÇÑ¹¹Õé",
     minText           : "This date is before the minimum date",
     maxText           : "This date is after the maximum date",
@@ -111,9 +111,14 @@ if(Ext.picker.Date){
     monthYearText     : 'àÅ×Í¡àŽ×Í¹ (Control+Up/Down to move years)',
     todayTip          : "{0} (Spacebar)",
     format            : "m/d/y",
-    okText            : "&#160;µ¡Å§&#160;",
-    cancelText        : "Â¡àÅÔ¡",
     startDay          : 0
+  });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;µ¡Å§&#160;",
+      cancelText        : "Â¡àÅÔ¡"
   });
 }
 

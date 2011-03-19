@@ -147,6 +147,9 @@ Ext.supports = {
             '<div style="height:30px;width:50px;">',
                 '<div style="height:20px;width:20px;"></div>',
             '</div>',
+            '<div style="width: 200px; height: 200px; position: relative; padding: 5px;">',
+                '<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>',
+            '</div>',
             '<div style="float:left; background-color:transparent;"></div>'
         ].join('');
 
@@ -444,6 +447,13 @@ Ext.supports = {
             identity: 'BoundingClientRect',
             fn: function(doc, div) {
                 return Ext.isFunction(div.getBoundingClientRect);
+            }
+        },
+        {
+            identity: 'IncludePaddingInWidthCalculation',
+            fn: function(doc, div){
+                var el = Ext.get(div.childNodes[1].firstChild);
+                return el.getWidth() == 210;
             }
         }
     ]

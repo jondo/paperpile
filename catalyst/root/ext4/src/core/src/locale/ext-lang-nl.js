@@ -7,7 +7,7 @@
  * updated to 2.2 by Condor (8 Aug 2008)
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Bezig met laden...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Bezig met laden...</div>';
 
 if(Ext.DataView){
   Ext.DataView.prototype.emptyText = '';
@@ -101,7 +101,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText: 'Vandaag',
     minText: 'Deze datum is eerder dan de minimale datum',
     maxText: 'Deze datum is later dan de maximale datum',
@@ -114,9 +114,14 @@ if(Ext.picker.Date){
     monthYearText: 'Kies een maand (Ctrl+omhoog/omlaag volgend/vorig jaar)',
     todayTip: '{0} (spatie)',
     format: 'j-m-y',
-    okText: '&#160;OK&#160;',
-    cancelText: 'Annuleren',
     startDay: 1
+  });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText: '&#160;OK&#160;',
+      cancelText: 'Annuleren'
   });
 }
 

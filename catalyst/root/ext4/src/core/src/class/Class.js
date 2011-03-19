@@ -1,5 +1,6 @@
 /**
- * @author Jacky Nguyen
+ * @author Jacky Nguyen <jacky@sencha.com>
+ * @docauthor Jacky Nguyen <jacky@sencha.com>
  * @markdown
  * @class Ext.Class
 
@@ -111,7 +112,7 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
 
              alert("[Playing guitar at the same time...]");
 
-             this.mixins.canPlayGuitar.playGuitar.call(this);
+             this.playGuitar();
          }
     });
 

@@ -8,6 +8,8 @@ Ext.define('Ext.grid.NumberHeader', {
     extend: 'Ext.grid.Header',
     alias: ['widget.numberheader'],
     requires: ['Ext.util.Format'],
+    alternateClassName: 'Ext.grid.NumberColumn',
+    
     /**
      * @cfg {String} format
      * A formatting string as used by {@link Ext.util.Format#number} to format a numeric value for this Column

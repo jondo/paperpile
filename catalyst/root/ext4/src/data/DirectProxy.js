@@ -64,6 +64,7 @@ paramOrder: 'param1|param2|param'
             args = [],
             params = request.params,
             paramOrder = me.paramOrder,
+            method,
             i = 0,
             len;
             
@@ -77,7 +78,9 @@ paramOrder: 'param1|param2|param'
         
         if (operation.action == 'read') {
             // We need to pass params
-            if (fn.directCfg.method.len > 0) {
+            method = fn.directCfg.method;
+            
+            if (method.ordered && method.len > 0) {
                 if (paramOrder) {
                     for (len = paramOrder.length; i < len; ++i) {
                         args.push(params[paramOrder[i]]);
@@ -85,6 +88,8 @@ paramOrder: 'param1|param2|param'
                 } else if (me.paramsAsHash) {
                     args.push(params);
                 }
+            } else {
+                args.push(params);
             }
         } else {
             args.push(request.jsonData);

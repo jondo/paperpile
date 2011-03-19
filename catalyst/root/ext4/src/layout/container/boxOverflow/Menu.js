@@ -8,9 +8,9 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
     /* Begin Definitions */
 
     extend: 'Ext.layout.container.boxOverflow.None',
-
     requires: ['Ext.toolbar.Separator', 'Ext.button.Button'],
-
+    alternateClassName: 'Ext.layout.boxOverflow.Menu',
+    
     /* End Definitions */
 
     /**

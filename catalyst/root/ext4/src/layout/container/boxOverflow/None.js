@@ -7,7 +7,9 @@
  * for its container.
  */
 Ext.define('Ext.layout.container.boxOverflow.None', {
-
+    
+    alternateClassName: 'Ext.layout.boxOverflow.None',
+    
     constructor: function(layout, config) {
         this.layout = layout;
         Ext.apply(this, config || {});

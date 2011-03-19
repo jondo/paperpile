@@ -5,13 +5,13 @@
  * Provides searching of Components within Ext.ComponentMgr (globally) or a specific
  * Ext.container.Container on the document with a similar syntax to a CSS selector.
  *
- * Xtypes can be retrieved by their name with an optional . prefix
+ * Components can be retrieved by using their {@link Ext.Component xtype} with an optional . prefix
 <ul>
     <li>component or .component</li>
     <li>gridpanel or .gridpanel</li>
 </ul>
  *
- * An itemId or id must be prefixed with a #.
+ * An itemId or id must be prefixed with a #
 <ul>
     <li>#myContainer</li>
 </ul>
@@ -56,7 +56,7 @@ if (invalidFields.length) {
  * Queries return an array of components.
  * Here are some example queries.
 <pre><code>
-    // retrieve all Ext.Panels on the document by xtype
+    // retrieve all Ext.Panels in the document by xtype
     var panelsArray = Ext.ComponentQuery.query('panel');
 
     // retrieve all Ext.Panels within the container with an id myCt
@@ -68,13 +68,17 @@ if (invalidFields.length) {
     // retrieve all gridpanels and listviews
     var gridsAndLists = Ext.ComponentQuery.query('gridpanel, listview');
 </code></pre>
+
+For easy access to queries based from a particular Container see the {@link Ext.container.Container#query},
+{@link Ext.container.Container#down} and {@link Ext.container.Container#child} methods. Also see
+{@link Ext.Component#up}.
  * @singleton
  */
 Ext.define('Ext.ComponentQuery', {
     singleton: true,
     uses: ['Ext.ComponentMgr']
 }, function() {
-    
+
     var cq = this,
 
         // A function source code pattern with a placeholder which accepts an expression which yields a truth value when applied
@@ -242,6 +246,17 @@ Ext.define('Ext.ComponentQuery', {
             Ext.apply(this, cfg);
         },
 
+        /**
+         * @private
+         * Executes this Query upon the selected root.
+         * The root provides the initial source of candidate Component matches which are progressively
+         * filtered by iterating through this Query's operations cache.
+         * If no root is provided, all registered Components are searched via the ComponentMgr.
+         * root may be a Container who's descendant Components are filtered
+         * root may be a Component with an implementation of getRefItems which provides some nested Components such as the
+         * docked items within a Panel.
+         * root may be an array of candidate Components to filter using this Query.
+         */
         execute : function(root) {
             var operations = this.operations,
                 i = 0,
@@ -252,6 +267,10 @@ Ext.define('Ext.ComponentQuery', {
             // no root, use all Components in the document
             if (!root) {
                 workingItems = Ext.ComponentMgr.all.getArray();
+            }
+            // Root is a candidate Array
+            else if (Ext.isArray(root)) {
+                workingItems = root;
             }
 
             // We are going to loop over our operations and take care of them
@@ -325,14 +344,17 @@ Ext.define('Ext.ComponentQuery', {
         },
 
         /**
-         * <p>Returns an array of matched Components from within the passed root Container.</p>
+         * <p>Returns an array of matched Components from within the passed root object.</p>
          * <p>This method filters returned Components in a similar way to how CSS selector based DOM
          * queries work using a textual selector string.</p>
          * <p>See class summary for details.</p>
          * @param selector The selector string to filter returned Components
-         * @param root The Container within which to perform the query. If omitted, all Components
-         * within the document are included in the search.
+         * @param root <p>The Container within which to perform the query. If omitted, all Components
+         * within the document are included in the search.</p>
+         * <p>This parameter may also be an array of Components to filter according to the selector.</p>
          * @returns {Array} The matched Components.
+         * @member Ext.ComponentQuery
+         * @method query
          */
         query: function(selector, root) {
             var selectors = selector.split(','),
@@ -370,9 +392,11 @@ Ext.define('Ext.ComponentQuery', {
 
         /**
          * Tests whether the passed Component matches the selector string.
-         * @param component The Components to test
+         * @param component The Component to test
          * @param selector The selector string to test against.
-         * @returns {Boolean} True if the Component matches the selector.
+         * @return {Boolean} True if the Component matches the selector.
+         * @member Ext.ComponentQuery
+         * @method query
          */
         is: function(component, selector) {
             if (!selector) {
@@ -488,5 +512,4 @@ Ext.define('Ext.ComponentQuery', {
             });
         }
     });
-    
 });

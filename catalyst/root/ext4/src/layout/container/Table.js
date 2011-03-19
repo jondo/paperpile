@@ -63,8 +63,8 @@ Ext.define('Ext.layout.container.Table', {
     /* Begin Definitions */
 
     alias: ['layout.table'],
-
     extend: 'Ext.layout.container.Auto',
+    alternatClassName: 'Ext.layout.TableLayout',
 
     /* End Definitions */
 

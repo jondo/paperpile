@@ -6,7 +6,19 @@ A specialized container representing the viewable application area (the browser 
 
 The Viewport renders itself to the document body, and automatically sizes itself to the size of
 the browser viewport and manages window resizing. There may only be one Viewport created
-in a page. Inner layouts are available by virtue of the fact that all {@link Ext.panel.Panel Panel}s
+in a page.
+
+Like any {@link Ext.container.Container Container}, a Viewport will only perform sizing and positioning
+on its child Components if you configure it with a {@link #layout}.
+
+A Common layout used with Viewports is {@link Ext.layout.container.Border border layout}, but if the
+required layout is simpler, a different layout should be chosen.
+
+For example, to simply make a single child item occupy all available space, use {@link Ext.layout.container.Fit fit layout}.
+
+To display one "active" item at full size from a choice of several child items, use {@link Ext.container.layout.Card card layout}.
+
+Inner layouts are available by virtue of the fact that all {@link Ext.panel.Panel Panel}s
 added to the Viewport, either through its {@link #items}, or through the items, or the {@link #add}
 method of any of its child Panels may themselves have a layout.
 
@@ -50,6 +62,7 @@ An example showing a classic application border layout:
         }, {
             region: 'center',
             xtype: 'tabpanel', // TabPanel itself has no title
+            activeTab: 0,      // First tab active by default
             items: {
                 title: 'Default Tab',
                 html: 'The first tab\'s content. Others may be added dynamically'

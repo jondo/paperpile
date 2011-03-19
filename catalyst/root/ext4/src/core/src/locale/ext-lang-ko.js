@@ -4,7 +4,7 @@
  * Modify by techbug / 25 February 2008
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">로딩중...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">로딩중...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "";
@@ -70,7 +70,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-   Ext.apply(Ext.DatePicker.prototype, {
+   Ext.apply(Ext.picker.Date.prototype, {
       todayText         : "오늘",
       minText           : "최소 날짜범위를 넘었습니다.",
       maxText           : "최대 날짜범위를 넘었습니다.",
@@ -83,10 +83,15 @@ if(Ext.picker.Date){
       monthYearText     : '월을 선택해주세요. (컨트롤키+위/아래 화살표)',
       todayTip          : "{0} (스페이스바)",
       format            : "m/d/y",
-      okText            : "확인",
-      cancelText        : "취소",
       startDay          : 0
    });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "확인",
+      cancelText        : "취소"
+  });
 }
 
 if(Ext.toolbar.PagingToolbar){

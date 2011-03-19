@@ -142,28 +142,27 @@ Ext.define('Ext.grid.HeaderContainer', {
             
         }
     },
-    
+
     afterLayout: function() {
         Ext.grid.HeaderContainer.superclass.afterLayout.apply(this, arguments);
         var headers = this.query('gridheader:not(gridheader[hidden])'),
             viewEl;
-    if (headers.length) {
-        
-        headers[0].el.radioCls(this.firstHeaderCls);
-        headers[headers.length - 1].el.radioCls(this.lastHeaderCls);
-        
+
+        if (headers.length) {
+            headers[0].el.radioCls(this.firstHeaderCls);
+            headers[headers.length - 1].el.radioCls(this.lastHeaderCls);
+        }
+
         // Maintain First and Last cell cls
-        if (this.view) {
+        if (this.view && this.view.rendered) {
             viewEl = this.view.el;
             viewEl.select('.'+this.firstCellCls).removeCls(this.firstCellCls);
             viewEl.select('.'+this.lastCellCls).removeCls(this.lastCellCls);
             viewEl.select(headers[0].getCellSelector()).addCls(this.firstCellCls);
             viewEl.select(headers[headers.length - 1].getCellSelector()).addCls(this.lastCellCls);
         }
-        
-    }
     },
-    
+
     onHeaderShow: function(header) {
         // Pass up to the GridSection
         var gridSection = this.ownerCt,
@@ -251,7 +250,7 @@ Ext.define('Ext.grid.HeaderContainer', {
     
     onHeaderResize: function(header, w) {
         this.tempLock();
-        if (this.view) {
+        if (this.view && this.view.rendered) {
             this.view.onHeaderResize(header, w);
         }
         this.fireEvent('headerresize', this, header, w);

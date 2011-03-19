@@ -1,17 +1,76 @@
 /**
  * @class Ext.form.Basic
  * @extends Ext.util.Observable
- * <p>Provides input field management, validation, submission, and form loading services for the collection
- * of {@link Ext.form.Field Field} instances within a {@link Ext.form.FormPanel}.</p>
- * <p>By default, Ext Forms are submitted through Ajax, using an instance of {@link Ext.form.action.Submit}.
- * To enable normal browser submission of an Ext Form, use the {@link #standardSubmit} config option.</p>
- * <p>Note: File uploads are not performed using normal 'Ajax' techniques; see the description for
- * {@link #hasUpload} for details.</p>
+
+Provides input field management, validation, submission, and form loading services for the collection
+of {@link Ext.form.Field Field} instances within a {@link Ext.container.Container}. It is recommended
+that you use a {@link Ext.form.FormPanel} as the form container, as that has logic to automatically
+hook up an instance of {@link Ext.form.Basic} (plus other conveniences related to field configuration.)
+
+#Form Actions#
+
+The Basic class delegates the handling of form loads and submits to instances of {@link Ext.form.Action}.
+See the various Action implementations for specific details of each one's functionality, as well as the
+documentation for {@link #doAction} which details the configuration options that can be specified in
+each action call.
+
+The default submit Action is {@link Ext.form.action.Submit}, which uses an Ajax request to submit the
+form's values to a configured URL. To enable normal browser submission of an Ext form, use the
+{@link #standardSubmit} config option.
+
+Note: File uploads are not performed using normal 'Ajax' techniques; see the description for
+{@link #hasUpload} for details.
+
+#Example usage:#
+
+    Ext.create('Ext.form.FormPanel', {
+        title: 'Basic Form',
+        renderTo: Ext.getBody(),
+        bodyPadding: 5,
+        width: 350,
+
+        // Any configuration items here will be automatically passed along to
+        // the Ext.form.Basic instance when it gets created.
+
+        // The form will submit an AJAX request to this URL when submitted
+        url: 'save-form.php',
+
+        items: [{
+            fieldLabel: 'Field',
+            name: 'theField'
+        }],
+
+        buttons: [{
+            text: 'Submit',
+            handler: function() {
+                // The getForm() method returns the Ext.form.Basic instance:
+                var form = this.up('form').getForm();
+                if (form.isValid()) {
+                    // Submit the Ajax request and handle the response
+                    form.submit({
+                        success: function(form, action) {
+                           Ext.Msg.alert('Success', action.result.msg);
+                        },
+                        failure: function(form, action) {
+                            Ext.Msg.alert('Failed', action.result.msg);
+                        }
+                    });
+                }
+            }
+        }]
+    });
+
  * @constructor
  * @param {Ext.container.Container} owner The component that is the container for the form, usually a {@link Ext.form.FormPanel}
  * @param {Object} config Configuration options. These are normally specified in the config to the
  * {@link Ext.form.FormPanel} constructor, which passes them along to the BasicForm automatically.
+ *
+ * @markdown
+ * @docauthor Jason Johnston <jason@sencha.com>
  */
+
+
+
 Ext.define('Ext.form.Basic', {
     extend: 'Ext.util.Observable',
     alternateClassName: 'Ext.form.BasicForm',

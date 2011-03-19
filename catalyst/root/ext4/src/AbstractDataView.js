@@ -219,7 +219,7 @@ Ext.define('Ext.AbstractDataView', {
     },
     
     onRender : function() {
-        var me = this,
+        var me = this, undef,
             loadingHeight = me.loadingHeight,
             loadingText = me.loadingText;
 
@@ -229,12 +229,12 @@ Ext.define('Ext.AbstractDataView', {
             me.loadMask = new Ext.LoadMask(me.el, {
                 msg: loadingText,
                 listeners: {
-                    beforeshow: function(loadMask, el) {
-                        el.update('');
+                    beforeshow: function() {
+                        me.getTargetEl().update('');
                         me.getSelectionModel().deselectAll();
                         me.all.clear();
                         if (Ext.isNumber(loadingHeight)) {
-                            el.setHeight(loadingHeight);
+                            me.setCalculatedSize(undef, loadingHeight);
                         }
                     }
                 }
@@ -440,31 +440,42 @@ Ext.define('Ext.AbstractDataView', {
     },
 
     // private
-    onAdd : function(ds, records, index){
+    onAdd : function(ds, records, index) {
         if (this.all.getCount() === 0) {
             this.refresh();
             return;
         }
+        
+        var nodes = this.bufferRender(records, index);
+        this.doAdd(nodes, records, index);
 
-        var nodes = this.bufferRender(records, index), n, a = this.all.elements;
-        if (index < this.all.getCount()) {
-            n = this.all.item(index).insertSibling(nodes, 'before', true);
-            a.splice.apply(a, [index, 0].concat(nodes));
-        } else {
-            n = this.all.last().insertSibling(nodes, 'after', true);
-            a.push.apply(a, nodes);
-        }
         this.selModel.refresh();
         this.updateIndexes(index);
     },
 
+    doAdd: function(nodes, records, index) {
+        var n, a = this.all.elements;
+        if (index < this.all.getCount()) {
+            n = this.all.item(index).insertSibling(nodes, 'before', true);
+            a.splice.apply(a, [index, 0].concat(nodes));
+        } 
+        else {
+            n = this.all.last().insertSibling(nodes, 'after', true);
+            a.push.apply(a, nodes);
+        }    
+    },
+    
     // private
-    onRemove : function(ds, record, index){
-        this.all.removeElement(index, true);
+    onRemove : function(ds, record, index) {
+        this.doRemove(record, index);
         this.updateIndexes(index);
         if (this.store.getCount() === 0){
             this.refresh();
         }
+    },
+    
+    doRemove: function(record, index) {
+        this.all.removeElement(index, true);
     },
 
     /**

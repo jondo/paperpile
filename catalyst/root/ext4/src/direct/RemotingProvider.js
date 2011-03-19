@@ -22,7 +22,12 @@ Ext.define('Ext.direct.RemotingProvider', {
     
     extend: 'Ext.direct.JsonProvider', 
     
-    requires: ['Ext.util.MixedCollection', 'Ext.util.DelayedTask', 'Ext.direct.Transaction'],
+    requires: [
+        'Ext.util.MixedCollection', 
+        'Ext.util.DelayedTask', 
+        'Ext.direct.Transaction',
+        'Ext.direct.RemotingMethod'
+    ],
    
     /* End Definitions */
    
@@ -168,7 +173,7 @@ TestAction.multiply(
             methods = actions[action];
             
             for (i = 0, len = methods.length; i < len; ++i) {
-                method = methods[i];
+                method = Ext.create('Ext.direct.RemotingMethod', methods[i]);
                 cls[method.name] = this.createHandler(action, method);
             }
         }
@@ -247,7 +252,7 @@ TestAction.multiply(
             if (Ext.isFunction(callback)) {
                 callback(result, event);
             } else {
-                Ext.callback(callback[fn], callback.scope, [result, e]);
+                Ext.callback(callback[funcName], callback.scope, [result, e]);
                 Ext.callback(callback.callback, callback.scope, [result, e]);
             }
         }
@@ -319,14 +324,11 @@ TestAction.multiply(
      */
     configureRequest: function(action, method, args){
         var me = this,
-            data = null, 
-            callback = args[method.len], 
-            scope = args[method.len+1],
+            callData = method.getCallData(args),
+            data = callData.data, 
+            callback = callData.callback, 
+            scope = callData.scope,
             transaction;
-
-        if (method.len !== 0) {
-            data = args.slice(0, method.len);
-        }
 
         transaction = Ext.create('Ext.direct.Transaction', {
             provider: me,

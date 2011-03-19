@@ -221,7 +221,7 @@ Ext.define('Ext.chart.series.Line', {
             x, y, prevX, prevY, firstY, markerCount, i, j, ln, axis, ends, marker, markerAux, item, xValue,
             yValue, coords, xScale, yScale, minX, maxX, minY, maxY, line, animation, endMarkerStyle,
             endLineStyle, type, props, firstMarker;
-
+        
         //if store is empty then there's nothing to draw.
         if (!store || !store.getCount()) {
             return;
@@ -570,7 +570,7 @@ Ext.define('Ext.chart.series.Line', {
                 for(j = 0; j < lnsh; j++) {
                     shadows[j].setAttributes({
                         path: path
-                    });
+                    }, true);
                 }
             }
             if (me.fill) {

@@ -4,7 +4,7 @@
  * 'ä' should read as lowercase 'a' with two dots on top (&auml;)
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Ladataan...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Ladataan...</div>';
 
 if(Ext.View){
   Ext.View.prototype.emptyText = "";
@@ -105,7 +105,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText         : "Tänään",
     minText           : "Tämä päivämäärä on aikaisempi kuin ensimmäinen sallittu",
     maxText           : "Tämä päivämäärä on myöhäisempi kuin viimeinen sallittu",
@@ -118,9 +118,14 @@ if(Ext.picker.Date){
     monthYearText     : 'Valitse kuukausi (vaihda vuotta painamalla Control+ylös/alas)',
     todayTip          : "{0} (välilyönti)",
     format            : "j.n.Y",
-    okText            : "&#160;OK&#160;",
-    cancelText        : "Peruuta",
     startDay          : 1 // viikko alkaa maanantaista
+  });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;OK&#160;",
+      cancelText        : "Peruuta"
   });
 }
 

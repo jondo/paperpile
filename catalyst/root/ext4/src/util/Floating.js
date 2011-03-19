@@ -14,6 +14,14 @@ Ext.define('Ext.util.Floating', {
     focusOnToFront: true,
 
     /**
+     * @cfg {String/Boolean} shadow Specifies whether the floating component should be given a shadow. Set to
+     * <tt>true</tt> to automatically create an {@link Ext.Shadow}, or a string indicating the
+     * shadow's display {@link Ext.Shadow#mode}. Set to <tt>false</tt> to disable the shadow.
+     * (Defaults to <tt>'sides'</tt>.)
+     */
+    shadow: 'sides',
+
+    /**
      * Construction of a floating Component involves transforming the el into a Layer based around that el.
      * @param config
      */
@@ -22,7 +30,7 @@ Ext.define('Ext.util.Floating', {
         this.el = new Ext.Layer(Ext.apply({}, config, {
             hideMode: this.hideMode,
             hidden: this.hidden,
-            shadow: Ext.isDefined(this.shadow) ? this.shadow : 'sides',
+            shadow: this.shadow,
             shadowOffset: this.shadowOffset,
             constrain: false,
             shim: this.shim === false ? false : undefined

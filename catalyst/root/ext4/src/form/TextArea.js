@@ -1,33 +1,38 @@
 /**
  * @class Ext.form.TextArea
  * @extends Ext.form.Text
- * <p>This class creates a multiline text field, which can be used as a direct replacement for traditional
- * textarea fields. In addition, it supports automatically {@link #grow growing} the height of the textarea to
- * fit its content.</p>
- * <p>All of the configuration options from {@link Ext.form.Text} can be used on TextArea.</p>
- * <p>Example:</p>
- * <pre><code>new Ext.form.FormPanel({
-    title: 'My Form',
-    renderTo: Ext.getBody(),
-    width: 500,
-    bodyPadding: 10,
-    items: [{
-        xtype: 'textfield',
-        name: 'recipient',
-        fieldLabel: 'To',
-        anchor: '100%'
-    }, {
-        xtype: 'textareafield',
-        grow: true,
-        name: 'message',
-        fieldLabel: 'Message',
-        anchor: '100%'
-    }]
-});</code></pre>
+
+This class creates a multiline text field, which can be used as a direct replacement for traditional 
+textarea fields. In addition, it supports automatically {@link #grow growing} the height of the textarea to 
+fit its content.
+
+All of the configuration options from {@link Ext.form.Text} can be used on TextArea.
+
+Example usage:
+
+    new Ext.form.FormPanel({
+        title      : 'My Form',
+        renderTo   : Ext.getBody(),
+        width      : 500,
+        bodyPadding: 10,
+        items: [{
+            xtype     : 'textareafield',
+            grow      : true,
+            name      : 'message',
+            fieldLabel: 'Message',
+            anchor    : '100%'
+        }]
+    });
+
+Some other useful configuration options when using {@link #grow} are {@link #growMin} and {@link #growMax}. These 
+allow you to set the minimum and maximum grow heights for the textarea.
+
  * @constructor
  * Creates a new TextArea
  * @param {Object} config Configuration options
  * @xtype textarea
+ * @docauthor Robert Dougan <rob@sencha.com>
+ * @markdown
  */
 Ext.define('Ext.form.TextArea', {
     extend:'Ext.form.Text',
@@ -53,7 +58,14 @@ Ext.define('Ext.form.TextArea', {
      * to ensure there is always a space below the current line.
      */
     growAppend: '\n-',
-
+    
+    /**
+     * @cfg {Boolean} enterIsSpecial
+     * True if you want the enter key to be classed as a <tt>special</tt> key. Special keys are generally navigation 
+     * keys (arrows, space, enter). Setting the config property to <tt>true</tt> would mean that you could not insert 
+     * returns into the textarea.
+     * (defaults to <tt>false</tt>)
+     */
     enterIsSpecial: false,
 
     /**
@@ -62,7 +74,8 @@ Ext.define('Ext.form.TextArea', {
      * <tt>false</tt>.
      */
     preventScrollbars: false,
-
+    
+    // private
     componentLayout: 'textareafield',
 
     // private
@@ -72,12 +85,16 @@ Ext.define('Ext.form.TextArea', {
             cols: me.cols,
             rows: me.rows
         });
-        Ext.form.TextArea.superclass.onRender.call(me, ct, position);
+        
+        me.callParent(arguments);
     },
     
+    // private
     afterRender: function(){
         var me = this;
-        Ext.form.TextArea.superclass.afterRender.call(me);
+        
+        me.callParent(arguments);
+        
         if (me.grow) {
             if (me.preventScrollbars) {
                 me.inputEl.setStyle('overflow', 'hidden');
@@ -85,7 +102,8 @@ Ext.define('Ext.form.TextArea', {
             me.inputEl.setHeight(me.growMin);
         }    
     },
-
+    
+    // private
     fireKey: function(e) {
         if (e.isSpecialKey() && (this.enterIsSpecial || (e.getKey() !== e.ENTER || e.hasModifier()))) {
             this.fireEvent('specialkey', this, e);
@@ -100,6 +118,7 @@ Ext.define('Ext.form.TextArea', {
     autoSize: function() {
         var me = this,
             height;
+        
         if (me.grow && me.rendered) {
             me.doComponentLayout();
             height = me.inputEl.getHeight();
@@ -109,14 +128,14 @@ Ext.define('Ext.form.TextArea', {
             }
         }
     },
-
+    
+    // private
     initAria: function() {
-        Ext.form.TextArea.superclass.initAria.call(this);
+        this.callParent(arguments);
+        
         this.getActionEl().dom.setAttribute('aria-multiline', true);
     }
-
 }, function() {
-
     this.prototype.fieldSubTpl = new Ext.XTemplate(
         '<textarea id="{id}" ',
             '<tpl if="name">name="{name}" </tpl>',
@@ -132,6 +151,5 @@ Ext.define('Ext.form.TextArea', {
             disableFormats: true
         }
     );
-
 });
 

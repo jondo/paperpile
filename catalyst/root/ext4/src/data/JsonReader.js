@@ -217,7 +217,7 @@ Ext.define('Ext.data.JsonReader', {
     buildExtractors : function() {
         var me = this;
         
-        me.callParent();
+        me.callParent(arguments);
 
         if (me.root) {
             me.getRoot = me.createAccessor(me.root);

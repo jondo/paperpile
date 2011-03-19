@@ -5,7 +5,7 @@
  *  
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Lastar...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Lastar...</div>';
 
 if(Ext.View){
   Ext.View.prototype.emptyText = "";
@@ -98,7 +98,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-  Ext.apply(Ext.DatePicker.prototype, {
+  Ext.apply(Ext.picker.Date.prototype, {
     todayText         : "I dag",
     minText           : "Denne datoen er før tidlegaste tillatne dato",
     maxText           : "Denne datoen er etter seinaste tillatne dato",
@@ -111,9 +111,14 @@ if(Ext.picker.Date){
     monthYearText     : 'Velj ein månad (Control+Pil Opp/Ned for å skifte år)',
     todayTip          : "{0} (Mellomrom)",
     format            : "d.m.y",
-    okText            : "&#160;OK&#160;",
-    cancelText        : "Avbryt",
     startDay          : 1
+  });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;OK&#160;",
+      cancelText        : "Avbryt"
   });
 }
 

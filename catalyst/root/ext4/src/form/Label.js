@@ -1,34 +1,59 @@
 /**
  * @class Ext.form.Label
  * @extends Ext.Component
- * <p>Produces a standalone <code>&lt;label /&gt;</code> element which can be inserted into a form and be
- * associated with a field in that form using the {@link #forId} property.</p>
- * <p>NOTE: in most cases it will be more appropriate to use the {@link Ext.form.Labelable#fieldLabel fieldLabel}
- * and associated config properties in field components themselves, as that allows labels to be uniformly sized
- * throughout the form.</p>
- * <p>You will likely be associating the label with a {@link Ext.form.BaseField} component, so
- * you should make sure the {@link #forId} is set to the same value as the {@link Ext.form.BaseField#inputId inputId}
- * of that field. Example:</p>
- * <pre><code>new Ext.form.FormPanel({
-    title: 'Field with Label',
-    layout: 'hbox',
-    items: [{
-        xtype: 'label',
-        forId: 'myFieldId',
-        text: 'My Awesome Field'
-    }, {
-        xtype: 'textfield',
-        hideLabel: true,
-        flex: 1
-    }]
-});</code></pre>
+
+Produces a standalone `<label />` element which can be inserted into a form and be associated with a field
+in that form using the {@link #forId} property.
+
+**NOTE:** in most cases it will be more appropriate to use the {@link Ext.form.Labelable#fieldLabel fieldLabel}
+and associated config properties ({@link Ext.form.Labelable#labelAlign}, {@link Ext.form.Labelable#labelWidth},
+etc.) in field components themselves, as that allows labels to be uniformly sized throughout the form.
+Ext.form.Label should only be used when your layout can not be achieved with the standard
+{@link Ext.layout.component.form.Field field layout}.
+
+You will likely be associating the label with a field component that extends {@link Ext.form.BaseField}, so
+you should make sure the {@link #forId} is set to the same value as the {@link Ext.form.BaseField#inputId inputId}
+of that field.
+
+The label's text can be set using either the {@link #text} or {@link #html} configuration properties; the
+difference between the two is that the former will automatically escape HTML characters when rendering, while
+the latter will not.
+
+#Example usage:#
+
+This example creates a Label after its associated Text field, an arrangement that cannot currently
+be achieved using the standard Field layout's labelAlign.
+
+    new Ext.form.FormPanel({
+        renderTo: Ext.getBody(),
+        width: 400,
+        bodyPadding: 10,
+        title: 'Field with Label',
+        layout: {
+            type: 'hbox',
+            align: 'middle'
+        },
+        items: [{
+            xtype: 'textfield',
+            hideLabel: true,
+            flex: 1
+        }, {
+            xtype: 'label',
+            forId: 'myFieldId',
+            text: 'My Awesome Field',
+            margins: '0 0 0 10'
+        }]
+    });
 
  * @constructor
  * Creates a new Label component.
  * @param {Ext.core.Element/String/Object} config The configuration options.
  * 
  * @xtype label
- */Ext.define('Ext.form.Label', {
+ * @markdown
+ * @docauthor Jason Johnston <jason@sencha.com>
+ */
+Ext.define('Ext.form.Label', {
     extend:'Ext.Component',
     alias: 'widget.label',
     requires: ['Ext.util.Format'],

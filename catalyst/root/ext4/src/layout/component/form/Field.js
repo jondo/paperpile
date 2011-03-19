@@ -127,7 +127,7 @@ Ext.define('Ext.layout.component.form.Field', {
             msgTarget = owner.msgTarget;
         return !owner.preventMark && Ext.isString(msgTarget) ?
                 (strategies[msgTarget] || strategies.elementId) :
-                strategies.base;
+                strategies.none;
     },
 
 
@@ -235,7 +235,9 @@ Ext.define('Ext.layout.component.form.Field', {
         var applyIf = Ext.applyIf,
             emptyFn = Ext.emptyFn,
             base = {
-                prepare: emptyFn,
+                prepare: function(owner) {
+                    owner.errorEl.setDisplayed(false);
+                },
                 adjustHorizInsets: emptyFn,
                 adjustVertInsets: emptyFn,
                 layoutHoriz: emptyFn,
@@ -243,7 +245,7 @@ Ext.define('Ext.layout.component.form.Field', {
             };
 
         return {
-            base: base,
+            none: base,
 
             /**
              * Error displayed as icon (with QuickTip on hover) to right of the bodyEl

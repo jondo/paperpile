@@ -1,12 +1,40 @@
 /**
  * @class Ext.data.StoreMgr
  * @extends Ext.util.MixedCollection
- * The default global group of stores.
+ * <p>Contains a collection of all stores that are created that have an identifier.
+ * An identifier can be assigned by setting the {@link Ext.data.AbstractStore#storeId storeId} 
+ * property. When a store is in the StoreMgr, it can be referred to via it's identifier:
+ * <pre><code>
+Ext.create('Ext.data.Store', {
+    model: 'SomeModel',
+    storeId: 'myStore'
+});
+
+var store = Ext.data.StoreMgr.lookup('myStore');
+ * </code></pre>
+ * Also note that the {@link #lookup} method is aliased to {@link Ext#getStore} for convenience.</p>
+ * <p>
+ * If a store is registered with the StoreMgr, you can also refer to the store by it's identifier when
+ * registering it with any Component that consumes data from a store:
+ * <pre><code>
+Ext.create('Ext.data.Store', {
+    model: 'SomeModel',
+    storeId: 'myStore'
+});
+
+Ext.create('Ext.DataView', {
+    store: 'myStore',
+    // other configuration here
+});
+ * </code></pre>
+ * </p>
  * @singleton
+ * @docauthor Evan Trimboli <evan@sencha.com>
  * TODO: Make this an AbstractMgr
  */
 Ext.define('Ext.data.StoreMgr', {
     extend: 'Ext.util.MixedCollection',
+    alternateClassName: 'Ext.StoreMgr',
     singleton: true,
     
     /**
@@ -59,7 +87,7 @@ Ext.define('Ext.data.StoreMgr', {
                 autoCreated: true
             });
         }
-        return Ext.isObject(id) ? (id.events ? id : Ext.create(id, 'store')) : this.get(id);
+        return Ext.isObject(id) ? (id.events ? id : Ext.create('Ext.data.Store', id)) : this.get(id);
     },
 
     // getKey implementation for MixedCollection

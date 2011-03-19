@@ -9,9 +9,9 @@ Ext.define('Ext.layout.container.Box', {
     /* Begin Definitions */
 
     alias: ['layout.box'],
-
     extend: 'Ext.layout.Container',
-
+    alternatClassName: 'Ext.layout.BoxLayout',
+    
     requires: [
         'Ext.layout.container.boxOverflow.None',
         'Ext.layout.container.boxOverflow.Menu',
@@ -714,6 +714,9 @@ Ext.define('Ext.layout.container.Box', {
             }
         }
         me.getRenderTarget().setSize(innerCtWidth || undefined, innerCtHeight || undefined);
+        if (me.innerCt.dom.scrollTop) {
+            me.innerCt.dom.scrollTop = 0;
+        }
     },
 
     /**

@@ -1,17 +1,79 @@
 /**
  * @class Ext.form.BaseField
  * @extends Ext.Component
- * <p>Base class for form fields that provides default event handling, rendering, and other common functionality
- * needed by all form field types. Utilizes the {@link Ext.form.Field} mixin for value handling and validation,
- * and the {@link Ext.form.Labelable} mixin to provide label and error message display.</p>
- * <p>In most cases you will want to use a subclass, such as {@link Ext.form.Text} or {@link Ext.form.Checkbox},
- * rather than using this class directly.</p>
- * 
+
+Base class for form fields that provides default event handling, rendering, and other common functionality
+needed by all form field types. Utilizes the {@link Ext.form.Field} mixin for value handling and validation,
+and the {@link Ext.form.Labelable} mixin to provide label and error message display.
+
+In most cases you will want to use a subclass, such as {@link Ext.form.Text} or {@link Ext.form.Checkbox},
+rather than creating instances of this class directly. However if you are implementing a custom form field,
+using this as the parent class is recommended.
+
+__Values and Conversions__
+
+Because BaseField implements the Field mixin, it has a main value that can be initialized with the
+{@link #value} config and manipulated via the {@link #getValue} and {@link #setValue} methods. This main
+value can be one of many data types appropriate to the current field, for instance a {@link Ext.form.Date Date}
+field would use a JavaScript Date object as its value type. However, because the field is rendered as a HTML
+input, this value data type can not always be directly used in the rendered field.
+
+Therefore BaseField introduces the concept of a "raw value". This is the value of the rendered HTML input field,
+and is normally a String. The {@link #getRawValue} and {@link #setRawValue} methods can be used to directly
+work with the raw value, though it is recommended to use getValue and setValue in most cases.
+
+Conversion back and forth between the main value and the raw value is handled by the {@link #valueToRaw} and
+{@link #rawToValue} methods. If you are implementing a subclass that uses a non-String value data type, you
+should override these methods to handle the conversion.
+
+__Rendering__
+
+The content of the field body is defined by the {@link #fieldSubTpl} XTemplate, with its argument data
+created by the {@link #getSubTplData} method. Override this template and/or method to create custom
+field renderings.
+
+__Example usage:__
+
+    // A simple subclass of BaseField that creates a HTML5 search field. Redirects to the
+    // searchUrl when the Enter key is pressed.
+    Ext.define('Ext.form.SearchField', {
+        extend: 'Ext.form.BaseField',
+        alias: 'widget.searchfield',
+
+        inputType: 'search',
+
+        // Config defining the search URL
+        searchUrl: 'http://www.google.com/search?q={0}',
+
+        // Add specialkey listener
+        initComponent: function() {
+            this.callParent();
+            this.on('specialkey', this.checkEnterKey, this);
+        },
+
+        // Handle enter key presses, execute the search if the field has a value
+        checkEnterKey: function(field, e) {
+            var value = this.getValue();
+            if (e.getKey() === e.ENTER && !Ext.isEmpty(value)) {
+                location.href = Ext.String.format(this.searchUrl, value);
+            }
+        }
+    });
+
+    //...
+
+    Ext.create('Ext.form.SearchField', {
+        renderTo: 'searchFieldCt',
+        fieldLabel: 'Search'
+    });
+
  * @constructor
  * Creates a new Field
  * @param {Object} config Configuration options
  *
  * @xtype field
+ * @markdown
+ * @docauthor Jason Johnston <jason@sencha.com>
  */
 Ext.define('Ext.form.BaseField', {
     extend: 'Ext.Component',
@@ -192,6 +254,10 @@ var form = new Ext.form.FormPanel({
         return this.inputId || (this.inputId = Ext.id());
     },
 
+    /**
+     * @protected Creates and returns the data object to be used when rendering the {@link #fieldSubTpl}.
+     * @return {Object} The template data
+     */
     getSubTplData: function() {
         var me = this,
             type = me.inputType,
@@ -430,7 +496,7 @@ var form = new Ext.form.FormPanel({
     },
 
     // private
-    fireKey : function(e){
+    fireKey: function(e){
         if(e.isSpecialKey()){
             this.fireEvent('specialkey', this, e);
         }
@@ -459,6 +525,7 @@ var form = new Ext.form.FormPanel({
                 me.mon(inputEl, eventName, onChangeEvent);
             }, me);
         }
+        me.callParent();
     },
 
     // private
@@ -598,6 +665,11 @@ var form = new Ext.form.FormPanel({
     }
 
 }, function() {
+    /**
+     * @cfg {Ext.XTemplate} fieldSubTpl
+     * The template that is used to create the contents of the field. The base implementation creates
+     * a HTML input element. The argument data for this template is created by the {@link #getSubTplData} method.
+     */
     this.prototype.fieldSubTpl = new Ext.XTemplate(
         '<input id="{id}" type="{type}" ',
             '<tpl if="name">name="{name}" </tpl>',

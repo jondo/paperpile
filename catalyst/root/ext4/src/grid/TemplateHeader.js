@@ -10,6 +10,7 @@ Ext.define('Ext.grid.TemplateHeader', {
     extend: 'Ext.grid.Header',
     alias: ['widget.templateheader'],
     requires: ['Ext.XTemplate'],
+    alternateClassName: 'Ext.grid.TemplateColumn',
     
     /**
      * @cfg {String/XTemplate} tpl

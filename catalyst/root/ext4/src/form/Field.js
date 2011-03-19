@@ -1,18 +1,25 @@
 /**
  * @class Ext.form.Field
- * <p>This mixin provides a common interface for the logical behavior of form fields, including:</p>
- * <ul>
- *     <li>Getter and setter methods for field values</li>
- *     <li>Events and methods for tracking value and validity changes</li>
- *     <li>Methods for triggering validation</li>
- * </ul>
- * <p>When implementing custom fields, it is likely that you will want to extend the {@link Ext.form.BaseField}
- * component class rather than using this mixin directly, as it contains additional logic for generating an
- * actual DOM complete with {@link Ext.form.Labelable label and error message} display.</p>
- * <p>If you want to implement this mixin directly and don't want to extend {@link Ext.form.BaseField}, then
- * you will most likely want to override the following methods with custom implementations: {@link #getValue},
- * {@link #setValue}, and {@link #getErrors}. Other methods may be overridden as needed but their base
- * implementations should be sufficient for common cases.</p>
+
+This mixin provides a common interface for the logical behavior and state of form fields, including:
+
+- Getter and setter methods for field values
+- Events and methods for tracking value and validity changes
+- Methods for triggering validation
+
+**NOTE**: When implementing custom fields, it is most likely that you will want to extend the {@link Ext.form.BaseField}
+component class rather than using this mixin directly, as BaseField contains additional logic for generating an
+actual DOM complete with {@link Ext.form.Labelable label and error message} display and a form input field,
+plus methods that bind the Field value getters and setters to the input field's value.
+
+If you do want to implement this mixin directly and don't want to extend {@link Ext.form.BaseField}, then
+you will most likely want to override the following methods with custom implementations: {@link #getValue},
+{@link #setValue}, and {@link #getErrors}. Other methods may be overridden as needed but their base
+implementations should be sufficient for common cases. You will also need to make sure that {@link #initField}
+is called during the component's initialization.
+
+ * @markdown
+ * @docauthor Jason Johnston <jason@sencha.com>
  */
 Ext.define('Ext.form.Field', {
 
@@ -106,8 +113,8 @@ Ext.define('Ext.form.Field', {
         /**
          * @property originalValue
          * @type Mixed
-         * The original value of the field as configured in the {@link #value} configuration, or
-         * as loaded by the last form load operation if the form's {@link Ext.form.Basic#trackResetOnLoad trackResetOnLoad}
+         * The original value of the field as configured in the {@link #value} configuration, or as loaded by
+         * the last form load operation if the form's {@link Ext.form.Basic#trackResetOnLoad trackResetOnLoad}
          * setting is <code>true</code>.
          */
         me.originalValue = me.lastValue = me.value;

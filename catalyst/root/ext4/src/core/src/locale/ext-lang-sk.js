@@ -7,7 +7,7 @@
   *  14 April 2007
   */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Nahrávam...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Nahrávam...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "";
@@ -73,7 +73,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-   Ext.apply(Ext.DatePicker.prototype, {
+   Ext.apply(Ext.picker.Date.prototype, {
       todayText         : "Dnes",
       minText           : "Tento dátum je menší ako minimálny možný dátum",
       maxText           : "Tento dátum je väčší ako maximálny možný dátum",

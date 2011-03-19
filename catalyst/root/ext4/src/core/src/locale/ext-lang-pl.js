@@ -5,7 +5,7 @@
  * Encoding: utf-8
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Wczytywanie danych...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Wczytywanie danych...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "";
@@ -107,7 +107,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-	Ext.apply(Ext.DatePicker.prototype, {
+	Ext.apply(Ext.picker.Date.prototype, {
 		startDay			: 1,
 		todayText			: "Dzisiaj",
 		minText				: "Data jest wcześniejsza od daty minimalnej",
@@ -121,10 +121,16 @@ if(Ext.picker.Date){
 		monthYearText		: "Wybierz miesiąc (Control+Up/Down aby zmienić rok)",
 		todayTip			: "{0} (Spacja)",
 		format				: "Y-m-d",
-		okText            	: "&#160;OK&#160;",
-    	cancelText        	: "Anuluj",
     	startDay          	: 1
 	});
+}
+
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+        okText              : "&#160;OK&#160;",
+        cancelText          : "Anuluj"
+  });
 }
 
 if(Ext.toolbar.PagingToolbar){

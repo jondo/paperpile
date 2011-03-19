@@ -10,7 +10,7 @@
  * + added Ext.grid.GroupingView
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Μεταφόρτωση δεδομένων...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Μεταφόρτωση δεδομένων...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "";
@@ -115,7 +115,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-   Ext.apply(Ext.DatePicker.prototype, {
+   Ext.apply(Ext.picker.Date.prototype, {
       todayText         : "Σήμερα",
       minText           : "Η Ημερομηνία είναι προγενέστερη από την παλαιότερη αποδεκτή",
       maxText           : "Η Ημερομηνία είναι μεταγενέστερη από την νεότερη αποδεκτή",

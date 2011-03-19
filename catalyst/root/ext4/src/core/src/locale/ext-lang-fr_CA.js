@@ -4,7 +4,7 @@
  * 04-08-2007, 03:07 AM
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">En cours de chargement...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">En cours de chargement...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "";
@@ -112,7 +112,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-   Ext.apply(Ext.DatePicker.prototype, {
+   Ext.apply(Ext.picker.Date.prototype, {
       todayText         : "Aujourd'hui",
       minText           : "Cette date est plus petite que la date minimum",
       maxText           : "Cette date est plus grande que la date maximum",

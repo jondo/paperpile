@@ -1,34 +1,131 @@
 /**
- * @author Jacky Nguyen
+ * @author Jacky Nguyen <jacky@sencha.com>
+ * @docauthor Jacky Nguyen <jacky@sencha.com>
  * @class Ext.Loader
  *
- * Ext.Loader is the heart of the new dynamic dependency loading capability in Ext JS 4+. It is most commonly used
- * via the {@link Ext#require Ext.require} shorthand
- *
- * <pre><code>
-Ext.require([
-    'widget.window',
-    'widget.button',
-    'layout.fit'
-]);
 
-Ext.onReady(function() {
-    var window = Ext.widget('window', {
-        width: 500,
-        height: 300,
-        layout: 'fit',
-        items: {
-            xtype: 'button',
-            text: 'Hello World',
-            handler: function() { alert(this.text) }
-        }
-    });
+Ext.Loader is the heart of the new dynamic dependency loading capability in Ext JS 4+. It is most commonly used
+via the {@link Ext#require} shorthand. Ext.Loader supports both asynchronous and synchronous loading
+approaches, and leverage their advantages for the best development flow. We'll discuss about the pros and cons of each approach:
 
-    window.show();
-});
- * </code></pre>
- *
+# Asynchronous Loading #
+
+- Advantages:
+	+ Cross-domain
+	+ No web server needed: you can run the application via the file system protocol (i.e: `file://path/to/your/index
+ .html`)
+	+ Best possible debugging experience: error messages come with the exact file name and line number
+
+- Disadvantages:
+	+ Dependencies need to be specified before-hand
+
+### Method 1: Explicitly include what you need: ###
+
+    // Syntax
+    Ext.require({String/Array} expressions);
+
+    // Example: Single alias
+    Ext.require('widget.window');
+
+    // Example: Single class name
+    Ext.require('Ext.window.Window');
+
+    // Example: Multiple aliases / class names mix
+    Ext.require(['widget.window', 'layout.border', 'Ext.data.Connection']);
+
+    // Wildcards
+    Ext.require(['widget.*', 'layout.*', 'Ext.data.*']);
+
+### Method 2: Explicitly exclude what you don't need: ###
+
+    // Syntax: Note that it must be in this chaining format.
+    Ext.exclude({String/Array} expressions)
+       .require({String/Array} expressions);
+
+    // Include everything except Ext.data.*
+    Ext.exclude('Ext.data.*').require('*'); 
+
+    // Include all widgets except widget.checkbox*,
+    // which will match widget.checkbox, widget.checkboxfield, widget.checkboxgroup, etc.
+    Ext.exclude('widget.checkbox*').require('widget.*');
+
+# Synchronous Loading on Demand #
+
+- *Advantages:*
+	+ There's no need to specify dependencies before-hand, which is always the convenience of including ext-all.js
+ before
+
+- *Disadvantages:*
+	+ Not as good debugging experience since file name won't be shown (except in Firebug at the moment)
+	+ Must be from the same domain due to XHR restriction
+	+ Need a web server, same reason as above
+
+There's one simple rule to follow: Instantiate everything with Ext.create instead of the `new` keyword
+
+    Ext.create('widget.window', { ... }); // Instead of new Ext.window.Window({...});
+
+    Ext.create('Ext.window.Window', {}); // Same as above, using full class name instead of alias
+
+    Ext.widget('window', ﻿{}); // Same as above, all you need is the traditional `xtype`
+
+Behind the scene, {@link Ext.ClassManager} will automatically check whether the given class name / alias has already
+ existed on the page. If it's not, Ext.Loader will immediately switch itself to synchronous mode and automatic load the given
+ class and all its dependencies.
+
+# Hybrid Loading - The Best of Both Worlds #
+
+It has all the advantages combined from asynchronous and synchronous loading. The development flow is simple:
+
+### Step 1: Start writing your application using synchronous approach. For example: ###
+
+    Ext.onReady(function(){
+        var window = Ext.createWidget('window', {
+            width: 500,
+            height: 300,
+            layout: {
+                type: 'border',
+                padding: 5
+            },
+            title: 'Hello Dialog',
+            items: [{
+                title: 'Navigation',
+                collapsible: true,
+                region: 'west',
+                width: 200,
+                html: 'Hello',
+                split: true
+            }, {
+                title: 'TabPanel',
+                region: 'center'
+            }]
+        });
+
+        window.show();
+    })
+
+### Step 2: When you finish, or you need better debugging ability, watch the console for warnings like these: ###
+
+    [Ext.Loader] Synchronously loading 'Ext.window.Window'; consider adding Ext.require('Ext.window.Window') before your application's code
+    ClassManager.js:432
+    [Ext.Loader] Synchronously loading 'Ext.layout.container.Border'; consider adding Ext.require('Ext.layout.container.Border') before your application's code
+
+Simply copy and paste the suggested code above `Ext.onReady`, i.e:
+
+    Ext.require('Ext.window.Window');
+    Ext.require('Ext.layout.container.Border');
+
+    Ext.onReady(...);
+
+Everything should now load via asynchronous mode.
+
+# Deployment #
+
+It's important to note that dynamic loading should only be used during development on your local machines. During production, all dependencies should be combined into one single JavaScript file. Ext.Loader makes the whole process of transitioning from / to between development / maintenance and production as easy as possible. Internally {@link Ext.Loader.history} maintains the list of all dependencies your application needs in the exact loading sequence. It's as simple as concatenating all files in this array into one, then include it on top of your application.
+
+This process will be automated with Sencha Command, to be released and documented towards Ext JS 4 Final.
+
  * @singleton
+ * @markdown
  */
 
 (function(Manager, Class, flexSetter) {
@@ -117,9 +214,9 @@ Ext.onReady(function() {
          */
         config: {
             /**
-             * @cfg {Boolean} enabled
              * Whether or not to enable the dynamic dependency loading feature
              * Defaults to false
+             * @cfg {Boolean} enabled
              */
             enabled: false,
 
@@ -141,15 +238,16 @@ Ext.onReady(function() {
             /**
              * @cfg {Object} paths
              * The mapping from namespaces to file paths
-             * <pre><code>
-             * {
-             *      'Ext': './src' // This is set by default, Ext.layout.Container will refer to ./src/layout/Container.js
-             *      'My': './src/my_own_folder' // My.layout.Container will refer to ./src/my_own_folder/layout/Container.js
-             * }
-             * </code></pre>
-             *
+    {
+        'Ext': '.', // This is set by default, Ext.layout.Container will be
+                    // loaded from ./layout/Container.js
+
+        'My': './src/my_own_folder' // My.layout.Container will be loaded from
+                                    // ./src/my_own_folder/layout/Container.js
+    }
+             * Note that all relative paths are relative to the current HTML document.
              * If not being specified, for example, <code>Other.awesome.Class</code>
-             * will simply refer to <code>./Other/awesome/Class.js</code>
+             * will simply be loaded from <code>./Other/awesome/Class.js</code>
              */
             paths: {
                 'Ext': '.'
@@ -159,28 +257,29 @@ Ext.onReady(function() {
         /**
          * Set the configuration for the loader. This should be called right after ext-core.js
          * (or ext-core-debug.js) is included in the page, i.e:
-         * <pre><code>
-         * <script type="text/javascript" src="ext-core-debug.js"></script>
-         * <script type="text/javascript">
-         *      Ext.Loader.setConfig({
-         *          enabled: true,
-         *          paths: {
-         *              'My': 'my_own_path'
-         *          }
-         *      });
-         * <script>
-         * <script type="text/javascript">
-         *      Ext.require(...);
-         *
-         *      Ext.onReady(function() {
-         *          // application code here
-         *      });
-         * </script>
-         * </code></pre>
+
+    <script type="text/javascript" src="ext-core-debug.js"></script>
+    <script type="text/javascript">
+      Ext.Loader.setConfig({
+          enabled: true,
+          paths: {
+              'My': 'my_own_path'
+          }
+      });
+    <script>
+    <script type="text/javascript">
+      Ext.require(...);
+
+      Ext.onReady(function() {
+          // application code here
+      });
+    </script>
+
          * Refer to {@link Ext.Loader#config} for the list of possible properties
          *
          * @param {Object} config The config object to override the default values in {@link Ext.Loader#config}
          * @return {Ext.Loader} this
+         * @markdown
          */
         setConfig: function(name, value) {
             if (Ext.isObject(name) && arguments.length === 1) {
@@ -209,11 +308,13 @@ Ext.onReady(function() {
         /**
          * Sets the path of a namespace.
          * For Example:
-         *   Ext.Loader.setPath('Ext', '.');
-         * Indicates that any classes with the top level object "Ext" will be found
-         * at the root basePath.
+
+    Ext.Loader.setPath('Ext', '.');
+
          * @param {String/Object} name See {@link Ext.Function#flexSetter flexSetter}
          * @param {String} path See {@link Ext.Function#flexSetter flexSetter}
+         * @return {Ext.Loader} this
+         * @markdown
          */
         setPath: flexSetter(function(name, path) {
             //<if nonBrowser>
@@ -229,17 +330,26 @@ Ext.onReady(function() {
         }),
 
         /**
-         * Translates a className to a path to load the file from by prefixing
-         * the proper prefix and converting the .'s to /'s.
-         *
-         * For example:
-         *
-         * <pre><code>
-         * ("Ext.layout.Layout" => "./src/Ext/layout/Layout.js")
-         *</code></pre>
-         *
+         * Translates a className to a path to load the file from by adding the
+         * the proper prefix and converting the .'s to /'s. For example:
+
+    Ext.Loader.setPath('My', '/path/to/My');
+
+    alert(Ext.Loader.getPath('My.awesome.Class')); // alerts '/path/to/My/awesome/Class.js'
+
+         * Note that the deeper namespace levels are always resolved first. For example:
+
+    Ext.Loader.setPath({
+        'My': '/path/to/lib',
+        'My.awesome': '/other/path/for/awesome/stuff'
+    });
+
+    alert(Ext.Loader.getPath('My.awesome.Class')); // alerts '/other/path/for/awesome/stuff/Class.js'
+    alert(Ext.Loader.getPath('My.cool.Class')); // alerts '/path/to/lib/cool/Class.js'
+
          * @param {String} className
          * @return {String} path
+         * @markdown
          */
         getPath: function(className) {
             var path = '',
@@ -316,6 +426,7 @@ Ext.onReady(function() {
         },
 
         /**
+         * Inject a script element to document's head, call onLoad and onError accordingly
          * @private
          */
         injectScriptElement: function(url, onLoad, onError, scope) {
@@ -348,6 +459,7 @@ Ext.onReady(function() {
 
         /**
          * Load a script file, supports both asynchronous and synchronous approaches
+         *
          * @param {String} url
          * @param {Function} onLoad
          * @param {Scope} scope
@@ -422,11 +534,15 @@ Ext.onReady(function() {
         },
 
         /**
-Explicitly exclude files from being loaded. Useful when used in conjunction with a broad incude expression.
-Can be chained with more `require` and `exclude` methods, eg:
+         * Explicitly exclude files from being loaded. Useful when used in conjunction with a broad include expression.
+         * Can be chained with more `require` and `exclude` methods, eg:
 
-Ext.exclude('Ext.data.*').require('*');
+    Ext.exclude('Ext.data.*').require('*');
 
+    Ext.exclude('widget.button*').require('widget.*');
+
+         * @param {Array} excludes
+         * @return {Object} object contains `require` method for chaining
          * @markdown
          */
         exclude: function(excludes) {
@@ -572,6 +688,11 @@ Ext.exclude('Ext.data.*').require('*');
             return this;
         },
 
+        /**
+         * @private
+         * @param {String} className
+         * @param {String} filePath
+         */
         onFileLoaded: function(className, filePath) {
             this.numLoadedFiles++;
 
@@ -672,6 +793,7 @@ Ext.exclude('Ext.data.*').require('*');
 
         /**
          * Add a new listener to be executed when all required scripts are fully loaded
+         *
          * @param {Function} fn The function callback to be executed
          * @param {Object} scope The execution scope (<code>this</code>) of the callback function
          * @param {Boolean} withDomReady Whether or not to wait for document dom ready as well
@@ -699,6 +821,10 @@ Ext.exclude('Ext.data.*').require('*');
             }
         },
 
+        /**
+         * @private
+         * @param {String} className
+         */
         historyPush: function(className) {
             if (className && this.requireHistory.hasOwnProperty(className)) {
                 Ext.Array.include(this.history, className);

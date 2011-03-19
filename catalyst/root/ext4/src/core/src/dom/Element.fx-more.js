@@ -97,6 +97,10 @@ Ext.core.Element.addMethods(
                     mm.center(me);
                 }
                 
+                if (!Ext.supports.IncludePaddingInWidthCalculation) {
+                    mask.setSize(me.getWidth(), me.getHeight());
+                }
+                
                 // ie will not expand full height automatically
                 if (Ext.isIE && !(Ext.isIE7 && Ext.isStrict) && me.getStyle('height') == 'auto') {
                     mask.setSize(undefined, me.getHeight());

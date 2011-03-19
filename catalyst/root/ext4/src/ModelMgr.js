@@ -119,7 +119,7 @@ Ext.define('Ext.ModelMgr', {
         
         this.types[name] = model;
         
-        Ext.override(model, {
+        model.override({
             plugins     : plugins,
             fields      : this.createFields(fields),
             associations: this.createAssociations(associations, name)
@@ -128,6 +128,7 @@ Ext.define('Ext.ModelMgr', {
         model.modelName = name;
         Ext.data.Model.setProxy.call(model, proxy || this.defaultProxyType);
         model.getProxy = model.prototype.getProxy;
+        model.prototype.self.setProxy = Ext.data.Model.prototype.self.setProxy;
         
         model.load = function() {
             Ext.data.Model.load.apply(this, arguments);

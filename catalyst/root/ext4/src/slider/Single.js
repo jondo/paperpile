@@ -20,7 +20,7 @@ new Ext.slider.Single({
 Ext.define('Ext.slider.Single', {
     extend: 'Ext.slider.Multi',
     alias: ['widget.slider', 'widget.sliderfield'],
-    alternateClassName: ['Ext.Slider', 'Ext.form.SliderField'],
+    alternateClassName: ['Ext.Slider', 'Ext.form.SliderField', 'Ext.slider.SingleSlider'],
 
     /**
      * Returns the current value of the slider

@@ -1,8 +1,15 @@
 /**
+ * @docauthor Jacky Nguyen <jacky@sencha.com>
  * @class Ext.Array
  *
- * A set of useful static methods to deal with arrays; provide missing methods for older browsers
+ * A set of useful static methods to deal with arrays; provide missing methods for older browsers. A few commonly used methods:
+
+ - {@link Ext.Array#each} iterate an array with a function callback for each item
+ - {@link Ext.Array#from} converts a value to an array if it's not already an array
+ - {@link Ext.Array#include} Push an item into the array only if the array doesn't contain it yet
+
  * @singleton
+ * @markdown
  */
 (function() {
 
@@ -21,18 +28,18 @@
          * argument is not really an array, the supplied function is called once.
          * @param {Function} fn The function to be called with each item. If the
          * supplied function returns false, iteration stops and this method returns
-         * the current <tt>index</tt>. This function is called with
+         * the current `index`. This function is called with
          * the following arguments:
-         * <ul>
-         * <li><tt>item</tt> : <i>Mixed</i> The item at the current <tt>index</tt> in the passed <tt>array</tt></li>
-         * <li><tt>index</tt> : <i>Number</i> The current index within the array</li>
-         * <li><tt>allItems</tt> : <i>Array</i> The <tt>array</tt> passed as the first
-         * argument to <tt>Ext.each</tt>.</li>
-         * </ul>
-         * @param {Object} scope The scope (<tt>this</tt> reference) in which the specified function is executed.
-         * Defaults to the <tt>item</tt> at the current <tt>index</tt>
-         * within the passed <tt>array</tt>.
+
+- `item`: {Mixed} The item at the current `index` in the passed `array`
+- `index`: {Number} The current `index` within the `array`
+- `allItems`: {Array} The `array` passed as the first argument to `Ext.each`
+
+         * @param {Object} scope The scope (`this` reference) in which the specified function is executed.
+         * Defaults to the `item` at the current `index`
+         * within the passed `array`.
          * @return {Boolean} See description for the fn parameter.
+         * @markdown
          */
         each: function(array, fn, scope) {
             if (Ext.isEmpty(array, true)) {
@@ -57,12 +64,13 @@
          * Note that this will delegate to the native forEach method in Array.prototype if the current
          * browser supports it. It doesn't support breaking out of the iteration by returning false
          * in the callback function like {@link Ext.Array#each}. Use this method when you don't need
-         * that feature for a <b>huge</b> performance boost on modern browsers
+         * that feature for a *huge* performance boost on modern browsers
          *
          * @param {Array} array The array to loop through
          * @param {Function} fn The function callback, to be invoked with three arguments: the value of the element,
          * the index of the element, and the Array object being traversed.
          * @param {Object} scope The scope (<code>this</code> reference) in which the specified function is executed.
+         * @markdown
          */
         forEach: function(array, fn, scope) {
             if (supportsForEach) {
@@ -73,13 +81,14 @@
         },
 
         /**
-         * Get the index of the provided <code>item</code> in the given <code>array</code>, a supplement for the
+         * Get the index of the provided `item` in the given `array`, a supplement for the
          * missing Array.prototype.indexOf in Internet Explorer.
          *
          * @param {Array} array The array to check
          * @param {Mixed} item The item to look for
          * @param {Number} from (Optional) The index at which to begin the search
          * @return {Number} The index of item in the array (or -1 if it is not found)
+         * @markdown
          */
         indexOf: function(array, item, from) {
             if (supportsIndexOf) {
@@ -98,11 +107,12 @@
         },
 
         /**
-         * Checks whether or not the given <code>array</code> contains the specified <code>item</code>
+         * Checks whether or not the given `array` contains the specified `item`
          *
          * @param {Array} array The array to check
          * @param {Mixed} item The item to look for
          * @return {Boolean} True if the array contains the item, false otherwise
+         * @markdown
          */
         contains: function(array, item) {
             return (Ext.Array.indexOf(array, item) !== -1);
@@ -267,9 +277,11 @@
          * @return {Array} results
          */
         filter: function(array, fn, scope) {
+            //<debug error>
             if (!fn) {
                 throw new Error("[Ext.Array.filter] fn must be a valid callback function");
             }
+            //</debug>
 
             if (supportsFilter) {
                 return array.filter(fn, scope);
@@ -289,10 +301,11 @@
         },
 
         /**
-         * Converts a value to an array if it's not already an array
+         * Converts a value to an array if it's not already an array. Note that `undefined` and `null` are ignored.
          *
          * @param {Array/Mixed} value The value to convert to an array if it is defined and not already an array.
          * @return {Array} array
+         * @markdown
          */
         from: function(value) {
             if (Ext.isIterable(value)) {
@@ -338,7 +351,7 @@
 
         /**
          * Clone a flat array without referencing the previous one. Note that this is different
-         * from Ext.clone since it doesn't handle recursive cloning. Simply a convenient, easy-to-remember method
+         * from Ext.clone since it doesn't handle recursive cloning. It's simply a convenient, easy-to-remember method
          * for Array.prototype.slice.call(array)
          *
          * @param {Array} array The array
@@ -370,10 +383,10 @@
 
             return source;
         },
-        
+
         /**
          * Merge multiple arrays into one with unique items that exist in all of the arrays.
-         * 
+         *
          * @param {Array} array,...
          * @return {Array} intersect
          */
@@ -381,11 +394,11 @@
             var intersect = [],
                 arrays = arrayPrototype.slice.call(arguments),
                 i, j, k, minArray, array, x, y, ln, arraysLn, arrayLn;
-                
+
             if (!arrays.length) {
                 return intersect;
             }
-            
+
             // Find the smallest array
             for (i = x = 0, ln = arrays.length; i < ln, array = arrays[i]; i++) {
                 if (!minArray || array.length < minArray.length) {
@@ -395,13 +408,13 @@
             }
             minArray = Ext.Array.unique(minArray);
             arrays.splice(x, 1);
-            
+
             // Use the smallest unique'd array as the anchor loop. If the other array(s) do contain
             // an item in the small array, we're likely to find it before reaching the end
             // of the inner loop and can terminate the search early.
             for (i = 0, ln = minArray.length; i < ln, x = minArray[i]; i++) {
                 var count = 0;
-                
+
                 for (j = 0, arraysLn = arrays.length; j < arraysLn, array = arrays[j]; j++) {
                     for (k = 0, arrayLn = array.length; k < arrayLn, y = array[k]; k++) {
                         if (x === y) {
@@ -410,18 +423,18 @@
                         }
                     }
                 }
-                
+
                 if (count == arraysLn) {
                     intersect.push(x);
                 }
             }
-            
+
             return intersect;
         },
-        
+
         /**
          * Perform a set difference A-B by subtracting all items in array B from array A.
-         * 
+         *
          * @param {Array} array A
          * @param {Array} array B
          * @return {Array} difference
@@ -430,7 +443,7 @@
             var clone = Ext.Array.clone(arrayA),
                 ln = clone.length,
                 i, j, lnB;
-            
+
             for (i = 0, lnB = arrayB.length; i < lnB; i++) {
                 for (j = 0; j < ln; j++) {
                     if (clone[j] === arrayB[i]) {
@@ -440,14 +453,14 @@
                     }
                 }
             }
-            
+
             return clone;
         }
     };
-    
+
     /**
      * Merge multiple arrays into one with unique items. Alias to {@link Ext.Array#merge}.
-     * 
+     *
      * @param {Array} array,...
      * @return {Array} union
      * @member Ext.Array

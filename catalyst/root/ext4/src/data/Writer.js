@@ -20,6 +20,7 @@
  */
 Ext.define('Ext.data.Writer', {
     alias: 'writer.base',
+    alternateClassName: 'Ext.data.DataWriter',
     
     /**
      * @cfg {Boolean} writeAllFields True to write all fields from the record to the server. If set to false it

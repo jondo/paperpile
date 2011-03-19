@@ -9,7 +9,7 @@
  * 22 April 2008
  */
 
-Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">Carregando...</div>';
+Ext.Updater.defaults.indicatorText = '<div class="loading-indicator">Carregando...</div>';
 
 if(Ext.View){
    Ext.View.prototype.emptyText = "";
@@ -99,7 +99,7 @@ if(Ext.util.Format){
 }
 
 if(Ext.picker.Date){
-   Ext.apply(Ext.DatePicker.prototype, {
+   Ext.apply(Ext.picker.Date.prototype, {
       todayText         : "Hoje",
       minText           : "Esta data &eacute; anterior a menor data",
       maxText           : "Esta data &eacute; posterior a maior data",
@@ -112,10 +112,15 @@ if(Ext.picker.Date){
       monthYearText     : 'Escolha um M&ecirc;s (Control+Cima/Baixo para mover entre os anos)',
       todayTip          : "{0} (Espa&ccedil;o)",
       format            : "d/m/Y",
-      okText            : "&#160;OK&#160;",
-      cancelText        : "Cancelar",
       startDay          : 0
    });
+}
+
+if(Ext.picker.Month) {
+  Ext.apply(Ext.picker.Month.prototype, {
+      okText            : "&#160;OK&#160;",
+      cancelText        : "Cancelar"
+  });
 }
 
 if(Ext.toolbar.PagingToolbar){

@@ -255,11 +255,18 @@ Ext.define('Ext.menu.Menu', {
             me.el.setWidth(newWidth);
         }
     },
-
+    
+    /**
+     * Returns whether a menu item can be activated or not.
+     * @return {Boolean}
+     */
     canActivateItem: function(item) {
         return item && !item.isDisabled() && item.isVisible() && (item.canActivate || item.getXTypes().indexOf('menuitem') < 0);
     },
-
+    
+    /**
+     * Deactivates the current active item on the menu, if one exists.
+     */
     deactivateActiveItem: function() {
         var me = this;
 
@@ -276,20 +283,31 @@ Ext.define('Ext.menu.Menu', {
             }
         }
     },
-
+    
+    // inherit docs
     getFocusEl: function() {
         return this.focusEl;
     },
 
+    // inherit docs
     hide: function() {
         this.deactivateActiveItem();
         this.callParent(arguments);
     },
-
+    
+    /**
+     * TODO: THIS SHOULD PROBABLY BE CALLED SOMETHING ELSE, OR PREFIXED WITH GET? WHAT WAS 3.3?
+     * 
+     * Returns a menu item from an {@link Ext.EventObject event} object (using {@link Ext.EventObject#getTarget getTarget}).
+     * @return {Ext.menu.Item/Ext.Button}
+     */
     itemFromEvent: function(e) {
         return this.getChildByElement(e.getTarget());
     },
-
+    
+    /**
+     * Creates an item form an object? document and possibly rename
+     */
     itemFromObject: function(cmp) {
         var me = this,
             prefix = Ext.baseCSSPrefix;
@@ -345,7 +363,10 @@ Ext.define('Ext.menu.Menu', {
         }
         return cmp;
     },
-
+    
+    /**
+     * Creates a new item from a string? rename?... and document
+     */
     itemFromString: function(cmp) {
         return (cmp == 'separator' || cmp == '-') ?
             Ext.createWidget('menuseparator')
