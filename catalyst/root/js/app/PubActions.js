@@ -2,6 +2,34 @@ Ext.define('Paperpile.app.PubActions', {
   statics: {
     getActions: function() {
       return {
+        'REMOVE_LABEL': new Ext.Action({
+          itemId: 'REMOVE_LABEL',
+          text: 'Remove a label',
+          handler: function(guid) {
+            Paperpile.app.PubActions.collectionHandler(guid, 'LABEL', 'remove');		    
+          }
+        }),
+        'ADD_LABEL': new Ext.Action({
+          itemId: 'ADD_LABEL',
+          text: 'Add a label',
+          handler: function(guid) {
+            Paperpile.app.PubActions.collectionHandler(guid, 'LABEL', 'add');
+          }
+        }),
+        'REMOVE_FOLDER': new Ext.Action({
+          itemId: 'REMOVE_FOLDER',
+          text: 'Remove a folder',
+          handler: function(guid) {
+            Paperpile.app.PubActions.collectionHandler(guid, 'FOLDER', 'remove');		    
+          }
+        }),
+        'ADD_FOLDER': new Ext.Action({
+          itemId: 'ADD_FOLDER',
+          text: 'Add a folder',
+          handler: function(guid) {
+            Paperpile.app.PubActions.collectionHandler(guid, 'FOLDER', 'add');
+          }
+        }),
         'ATTACH_PDF': new Ext.Action({
           itemId: 'ATTACH_PDF',
           text: 'Attach a PDF to this reference',
@@ -143,6 +171,62 @@ Ext.define('Paperpile.app.PubActions', {
 
           }
         }),
+        'EMAIL': new Ext.Action({
+          itemId: 'EMAIL',
+          text: 'E-mail References',
+          handler: function() {
+            var grid = Paperpile.main.getCurrentGrid();
+            var selection = grid.getSelection();
+            var n = this.getSelectionCount();
+
+            var callback = function(string) {
+              var subject = "Papers for you";
+              if (n == 1) {
+                subject = "Paper for you";
+              }
+              var body = 'I thought you might be interested in the following:';
+              var attachments = [];
+              string = string.replace(/%0A/g, "\n");
+              // The QRuntime appears capable of sending URLs of very long lengths, at least to Thunderbird.
+              // So we don't need to use as low of a cut-off threshold as before...
+              if (string.length > 1024 * 50) {
+                QRuntime.setClipboard(string);
+                var platform = Paperpile.utils.get_platform();
+                if (platform == 'osx') {
+                  string = "(Hit Command-V to paste citations here)";
+                } else if (platform == 'windows') {
+                  string = "(Hit Ctrl-V to paste citations here)";
+                } else {
+                  string = "(Use the paste command to insert citations here)";
+                }
+              }
+              var link = [
+                'mailto:?',
+                'subject=' + subject,
+                '&body=' + body + "\n\n" + string,
+                "\n\n--\nShared with Paperpile\nhttp://paperpile.com",
+                attachments.join('')].join('');
+              Paperpile.utils.openURL.defer(10, this, [link]);
+            };
+
+            Paperpile.Ajax({
+              url: '/ajax/plugins/export',
+              params: {
+                grid_id: grid.id,
+                selection: grid.getSelection(),
+                export_name: 'Bibfile',
+                export_out_format: 'EMAIL',
+                get_string: true
+              },
+              success: function(response) {
+                var json = Ext.decode(response.responseText);
+                var string = json.data.string;
+                callback.call(string);
+              }
+            });
+          }
+        }),
+
         'COPY_BIBTEX_KEY': new Ext.Action({
           itemId: 'COPY_BIBTEX_KEY',
           text: 'Copy LaTeX Citation',
@@ -332,7 +416,47 @@ Ext.define('Paperpile.app.PubActions', {
         })
       };
     },
-    deleteHandler: function(mode, deleteAll) {      
+    collectionHandler: function(guid, collectionType, mode) {
+      var grid = Paperpile.main.getCurrentGrid();
+      var count = grid.getSelectionCount();
+
+      var url;
+      if (mode == 'remove') {
+        url = '/ajax/crud/remove_from_collection';
+      } else if (mode == 'add') {
+        url = '/ajax/crud/add_to_collection';
+      }
+
+      Paperpile.Ajax({
+        url: url,
+        params: {
+          grid_id: grid.id,
+          selection: grid.getSelection(),
+          collection_guid: guid,
+          type: collectionType
+        },
+        success: function(response) {
+          var actionS = '',
+          refS = '',
+          collectionS = '';
+
+          if (count == 1) refS = 'reference';
+          if (count > 1) refS = 'references';
+
+          if (collectionType = 'LABEL') collectionS = 'Label';
+          if (collectionType = 'FOLDER') collectionS = 'Folder';
+
+          if (mode == 'remove') actionS = 'removed from';
+          if (mode == 'add') actionS = 'added to';
+
+          Paperpile.log(collectionS + ' ' + actionS + ' ' + count + ' ' + refS);
+        },
+        failure: function(response) {
+          // TODO.
+        }
+      });
+    },
+    deleteHandler: function(mode, deleteAll) {
       var grid = Paperpile.main.getCurrentGrid();
 
       var selection = grid.getSelection();
@@ -340,7 +464,7 @@ Ext.define('Paperpile.app.PubActions', {
         selection = 'ALL';
       }
       if (grid.getSelectionCount() == 0) {
-	  Paperpile.log("Delete handler called on empty selection -- something wrong?");
+        Paperpile.log("Delete handler called on empty selection -- something wrong?");
         return;
       }
 
@@ -383,8 +507,8 @@ Ext.define('Paperpile.app.PubActions', {
               msg = "1 reference moved to Trash";
             }
 
-	    Paperpile.log("Deleted!");
-	    /*
+            Paperpile.log("Deleted!");
+            /*
             Paperpile.status.updateMsg({
               msg: msg,
               action1: 'Undo',
@@ -404,13 +528,13 @@ Ext.define('Paperpile.app.PubActions', {
             });
 	    */
           } else {
-	      //            Paperpile.status.clearMsg();
+            //            Paperpile.status.clearMsg();
           }
         },
         failure: function() {
-		  // TODO: better error message.
-		  Paperpile.log("Error deleting!");
-		  grid.enable();
+          // TODO: better error message.
+          Paperpile.log("Error deleting!");
+          grid.enable();
         },
         scope: grid
       });
@@ -441,7 +565,7 @@ Ext.define('Paperpile.app.PubActions', {
           get_string: true
         },
         success: function(response) {
-          var json = Ext.util.JSON.decode(response.responseText);
+          var json = Ext.decode(response.responseText);
           var string = json.data.string;
           callback.call(grid, string);
         }

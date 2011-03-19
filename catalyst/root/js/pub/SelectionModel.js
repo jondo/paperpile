@@ -43,7 +43,7 @@ Ext.define('Paperpile.grid.SelectionModel', {
   bindComponent: function(cmp) {
     cmp.on({
       scope: this,
-      refresh: this.onRefresh,
+		refresh: this.refresh,
       rowupdated: this.onRowUpdated,
       rowremoved: this.onRemove
     });
@@ -318,7 +318,7 @@ Ext.define('Paperpile.grid.SelectionModel', {
       if (this.view.getEl()) {
         this.view.getEl().un('mousedown', this.handleMouseEvent, this);
       }
-      this.view.un('refresh', this.onRefresh, this);
+      this.view.un('refresh', this.refresh, this);
       this.view.un('rowupdated', this.onRowUpdated, this);
       this.view.un('rowremoved', this.onRemove, this);
     }
@@ -477,7 +477,8 @@ Ext.define('Paperpile.grid.SelectionModel', {
     return this.sorter;
   },
 
-  onRefresh: function() {
+  refresh: function() {
+	    // For comparison, see selection/Model.js#refresh
     this.suspendEvents();
     var ds = this.store;
     var index;
@@ -491,7 +492,6 @@ Ext.define('Paperpile.grid.SelectionModel', {
       var r = s[i];
       if ((index = ds.indexOf(r)) != -1) {
         this.selections.add(r);
-        //this.selectRow(index, true, true);
         this.view.onItemSelect(r);
       }
     }

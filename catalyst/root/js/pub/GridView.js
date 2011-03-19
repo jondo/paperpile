@@ -998,17 +998,6 @@ Ext.define('Paperpile.pub.Grid', {
     this.getFormattedText('Bibfile', 'EMAIL', myFunc);
   },
 
-  handleCopyBibtexCitation: function() {
-    this.handleCopy('Bibfile', 'BIBTEX', 'BibTeX copied');
-  },
-  handleCopyBibtexKey: function() {
-    this.handleCopy('Bibfile', 'CITEKEYS', 'LaTeX citation{s} copied');
-  },
-  handleCopyFormatted: function() {
-    this.handleCopy('Bibfile', 'CITATIONS', '{n} Citation{s} copied');
-  },
-  deleteEntry: function(mode, deleteAll) {},
-
   handleEdit: function(isNew, autoComplete) {
     var selection = this.getSingleSelection();
 
@@ -1101,11 +1090,9 @@ Ext.define('Paperpile.pub.Grid', {
         }
         pub.editing = true;
         pub.dirty = false;
-        pub.set(field, pubDataFromServer);
+        pub.set(pubDataFromServer);
         if (pub.dirty) {
-          Paperpile.log("Publication was modified from server!");
-          Paperpile.log(pub.modified);
-          store.fireEvent('update', store, record, Ext.data.Model.EDIT);
+          store.fireEvent('update', store, pub, Ext.data.Model.EDIT);
         }
       }
     }
