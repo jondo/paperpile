@@ -503,7 +503,7 @@ sub move_in_collection : Local {
 
   $self->_save_plugin($c, $plugin);
 
-  $c->stash->{data}->{collection_delta} = 1;
+  #$c->stash->{data}->{collection_delta} = 1;
 
   $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, undef, $guid );
 }
@@ -521,7 +521,7 @@ sub remove_from_collection : Local {
   $c->model('Library')->remove_from_collection( $data, $collection_guid );
 
   $self->_collect_update_data( $c, $data, [$what] );
-  $c->stash->{data}->{collection_delta} = 1;
+  #$c->stash->{data}->{collection_delta} = 1;
 
   $c->stash->{data}->{file_sync_delta} =
     $self->_get_sync_collections( $c, undef, $collection_guid );
