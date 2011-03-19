@@ -11,10 +11,16 @@ Ext.define('Paperpile.net.CollectionStore', {
         url: Paperpile.Url('/ajax/crud/list_collections'),
         timeout: 100000,
         extraParams: {
-		  type: config.collectionType
+          type: config.collectionType
         },
       })
     });
     this.callParent(arguments);
+  },
+  updateFromServer: function(data) {
+    if (data.collection_delta) {
+      Paperpile.log("Realoding!");
+      this.load();
+    }
   }
 });

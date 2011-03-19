@@ -18,9 +18,6 @@ Ext.define('Paperpile.pub.Grid', {
   extend: 'Ext.Panel',
   alias: 'widget.pubgrid',
   plugin_query: '',
-  region: 'center',
-  labelStyles: {},
-  isLocked: false,
   doAfterNextReload: [],
 
   initComponent: function() {
@@ -48,163 +45,6 @@ Ext.define('Paperpile.pub.Grid', {
     };
 
     this.actions = {
-      'EDIT': new Ext.Action({
-        text: 'Edit',
-        handler: function() {
-          this.handleEdit(false);
-        },
-        scope: this,
-        //        cls: 'x-btn-text-icon edit',
-        icon: '/images/icons/pencil.png',
-        itemId: 'EDIT',
-        triggerKey: 'e',
-        tooltip: 'Edit the selected reference'
-      }),
-      'AUTO_COMPLETE': new Ext.Action({
-        text: 'Auto-complete Data',
-        handler: this.updateMetadata,
-        scope: this,
-        //        cls: 'x-btn-text-icon edit',
-        icon: '/images/icons/reload.png',
-        itemId: 'AUTO_COMPLETE',
-        tooltip: 'Auto-complete citation with data from online resources.'
-      }),
-
-      'DELETE': new Ext.Action({
-        text: 'Move to Trash',
-        iconCls: 'pp-icon-trash',
-        handler: this.handleDelete,
-        scope: this,
-        cls: 'x-btn-text-icon',
-        itemId: 'DELETE',
-        triggerKey: 'd',
-        tooltip: 'Move selected references to Trash'
-      }),
-
-      'EXPORT': new Ext.Action({
-        text: 'Export',
-        handler: this.handleExport,
-        scope: this,
-        triggerKey: 'x',
-        itemId: 'EXPORT'
-      }),
-
-      'SELECT_ALL': new Ext.Action({
-        text: 'Select all',
-        handler: function(keyCode, event) {
-          event.stopEvent();
-          this.selectAll();
-        },
-        scope: this,
-        itemId: 'SELECT_ALL'
-      }),
-
-      'FORMAT': new Ext.Action({
-        text: 'Format',
-        handler: this.formatEntry,
-        scope: this,
-        itemId: 'FORMAT'
-      }),
-      'OPEN_PDF_FOLDER': new Ext.Action({
-        text: 'Show in folder',
-        handler: this.openPDFFolder,
-        scope: this,
-        icon: '/images/icons/folder.png',
-        itemId: 'OPEN_PDF_FOLDER',
-        tooltip: 'Show in folder',
-        disabledTooltip: 'No PDF attached to this reference'
-      }),
-      'VIEW_PDF': new Ext.Action({
-        handler: this.viewPDF,
-        scope: this,
-        iconCls: 'pp-icon-import-pdf',
-        itemId: 'VIEW_PDF',
-        text: 'View PDF',
-        triggerKey: 'v',
-        disabledTooltip: 'No PDF attached to this reference'
-      }),
-      'MORE_FROM_FIRST_AUTHOR': new Ext.Action({
-        // Note: the text of these menu items will change dynamically depending on
-        // the selected reference. See the 'updateContextMenuItem' method.
-        text: 'First Author',
-        handler: this.moreFromFirstAuthor,
-        scope: this,
-        itemId: 'MORE_FROM_FIRST_AUTHOR'
-      }),
-      'MORE_FROM_LAST_AUTHOR': new Ext.Action({
-        text: 'Last Author',
-        handler: this.moreFromLastAuthor,
-        scope: this,
-        itemId: 'MORE_FROM_LAST_AUTHOR'
-      }),
-      'MORE_FROM_JOURNAL': new Ext.Action({
-        text: 'Journal',
-        handler: this.moreFromJournal,
-        scope: this,
-        itemId: 'MORE_FROM_JOURNAL'
-      }),
-      'MORE_FROM_YEAR': new Ext.Action({
-        text: 'Year',
-        handler: this.moreFromYear,
-        scope: this,
-        itemId: 'MORE_FROM_YEAR'
-      }),
-      'LIVE_FOLDER': new Ext.Action({
-        itemId: 'LIVE_FOLDER',
-        text: 'Save as Live Folder',
-        //iconCls: 'pp-icon-glasses',
-        handler: this.handleSaveActive,
-        scope: this
-      }),
-      'RELOAD_FEED': new Ext.Action({
-        itemId: 'RELOAD_FEED',
-        text: 'Reload',
-        iconCls: 'pp-icon-reload',
-        handler: this.reloadFeed,
-        tooltip: 'Reload the content of the feed',
-        scope: this
-      }),
-      'EXPORT_VIEW': new Ext.Action({
-        itemId: 'EXPORT_VIEW',
-        text: 'All',
-        handler: this.handleExportView,
-        scope: this
-      }),
-      'EXPORT_SELECTION': new Ext.Action({
-        itemId: 'EXPORT_SELECTION',
-        text: 'Selection',
-        handler: this.handleExportSelection,
-        triggerKey: 'x',
-        scope: this
-      }),
-      'COPY_BIBTEX_KEY': new Ext.Action({
-        itemId: 'COPY_BIBTEX_KEY',
-        text: 'Copy LaTeX Citation',
-        handler: this.handleCopyBibtexKey,
-        scope: this
-      }),
-      'COPY_BIBTEX_CITATION': new Ext.Action({
-        itemId: 'COPY_BIBTEX_CITATION',
-        text: 'Copy as BibTeX',
-        handler: this.handleCopyBibtexCitation,
-        scope: this
-      }),
-      'COPY_FORMATTED': new Ext.Action({
-        itemId: 'COPY_FORMATTED',
-        text: 'Copy Citation',
-        handler: this.handleCopyFormatted,
-        scope: this
-      }),
-      'TB_SPACE': new Ext.toolbar.Spacer({
-        itemId: 'TB_SPACE',
-        width: '10px'
-      }),
-      'TB_BREAK': new Ext.toolbar.Separator({
-        itemId: 'TB_BREAK'
-      }),
-      'TB_FILL': new Ext.toolbar.Fill({
-        itemId: 'TB_FILL'
-      }),
       'TEST': new Ext.Action({
         handler: function() {
           if (this.templateKey === 'gallery') {
@@ -224,75 +64,7 @@ Ext.define('Paperpile.pub.Grid', {
         },
         scope: this
       }),
-      'SETTINGS': new Ext.Action({
-        itemId: 'SETTINGS',
-        text: 'Settings',
-        iconCls: 'pp-icon-dashboard',
-        tooltip: 'Change your settings and view library stats',
-        handler: function() {
-          Paperpile.main.tabs.showDashboardTab();
-        }
-      })
-
     };
-
-    this.actions['PDF_COMBINED_BUTTON'] = new Ext.menu.Menu({
-      itemId: 'PDF_COMBINED_BUTTON',
-      items: [
-        this.actions['VIEW_PDF'],
-        this.actions['OPEN_PDF_FOLDER']]
-    });
-    this.actions['PDF_COMBINED_BUTTON2'] = new Ext.menu.Menu({
-      itemId: 'PDF_COMBINED_BUTTON2',
-      items: [
-        this.actions['VIEW_PDF'],
-        this.actions['OPEN_PDF_FOLDER']]
-    });
-
-    this.actions['MORE_FROM_MENU'] = new Ext.menu.Item({
-      text: 'More from...',
-      itemId: 'MORE_FROM_MENU',
-      menu: {
-        items: [
-          this.actions['MORE_FROM_FIRST_AUTHOR'],
-          this.actions['MORE_FROM_LAST_AUTHOR'],
-          this.actions['MORE_FROM_JOURNAL'],
-          this.actions['MORE_FROM_YEAR']]
-      }
-    });
-
-    this.actions['EXPORT_MENU'] = new Ext.button.Split({
-      text: 'Export to File',
-      itemId: 'EXPORT_MENU',
-      handler: this.handleExportView,
-      //iconCls: 'pp-icon-save',
-      scope: this,
-      menu: {
-        items: [
-          this.actions['EXPORT_VIEW'],
-          this.actions['EXPORT_SELECTION']]
-      }
-    });
-
-    this.actions['SAVE_MENU'] = new Ext.Button({
-      itemId: 'SAVE_MENU',
-      iconCls: 'pp-icon-save',
-      cls: 'x-btn-text-icon',
-      menu: {
-        items: [{
-          text: 'Save as Live Folder',
-          iconCls: 'pp-icon-glasses',
-          handler: this.handleSaveActive,
-          scope: this
-        },
-        {
-          text: 'Export contents to file',
-          iconCls: 'pp-icon-disk',
-          handler: this.handleExport,
-          scope: this
-        }]
-      }
-    });
 
     var me = this;
     this.view = new Ext.DataView({
@@ -329,7 +101,7 @@ Ext.define('Paperpile.pub.Grid', {
     this.relayEvents(this.getSelectionModel(), ['selectionchange']);
     this.relayEvents(this.getSelectionModel(), ['afterselectionchange']);
 
-    this.pager = new Ext.PagingToolbar({
+    this.pager = new Paperpile.grid.Pager({
       dock: 'bottom',
       pageSize: this.limit,
       store: this.getStore(),
@@ -342,18 +114,8 @@ Ext.define('Paperpile.pub.Grid', {
     },
     this);
 
-    this.tbar = new Ext.toolbar.Toolbar({
-      itemId: 'toolbar',
-      dock: 'top',
-      enableOverflow: true,
-      menuBreakItemId: 'TB_BREAK',
-      items: [{
-        xtype: 'button',
-        text: 'heyo!'
-      }]
-    });
-
-    var dockItems = [this.tbar];
+    this.toolbar = this.createToolbar();
+    var dockItems = [this.pager, this.toolbar];
 
     Ext.apply(this, {
       itemId: 'grid',
@@ -364,58 +126,12 @@ Ext.define('Paperpile.pub.Grid', {
 
     this.callParent(arguments);
 
-    this.createContextMenu();
-
-    this.on({
-      // Delegate to class methods.
-      beforerender: {
-        scope: this,
-        fn: this.myBeforeRender
-      },
-      beforedestroy: {
-        scope: this,
-        fn: this.onClose
-      },
-      rowdblclick: {
-        scope: this,
-        fn: this.onDblClick
-      },
-      nodedragover: {
-        scope: this,
-        fn: this.onNodeDrag
-      }
-    });
-
+    //    this.createContextMenu();
     this.mon(this.getStore(), 'load', this.onStoreLoad, this);
     this.mon(this.getStore(), 'loadexception', function(exception, options, response, error) {
       Paperpile.main.onError(response, options);
     },
     this);
-
-    this.mon(this.getSelectionModel(), 'afterselectionchange', function() {
-
-      if (Paperpile.status.messageToHideOnClick) {
-        //        Paperpile.status.clearMessageNumber(Paperpile.status.messageToHideOnClick);
-        //        Paperpile.status.messageToHideOnClick = null;
-      }
-    },
-    this);
-
-    this.mon(this.getSelectionModel(), 'allselected', function() {
-      this.onAllSelected();
-    },
-    this);
-
-    // Auto-select the first row when the store finally loads up.
-    this.mon(this.getStore(), 'load', function() {
-      if (this.getStore().getCount() > 0) {
-        this.selectRowAndSetCursor(0);
-        //        this.afterSelectionChange(this.getSelectionModel());
-      }
-    },
-    this, {
-      single: true
-    });
 
     this.on('viewready', function() {
       this.getPluginPanel().updateView();
@@ -439,6 +155,10 @@ Ext.define('Paperpile.pub.Grid', {
   getView: function() {
     // Returns an ext.DataView
     return this.view;
+  },
+
+  refresh: function() {
+    this.getView().refresh();
   },
 
   installEvents: function() {
@@ -477,21 +197,21 @@ Ext.define('Paperpile.pub.Grid', {
   loadKeyboardShortcuts: function() {
     this.keys = new Ext.ux.KeyboardShortcuts(this.getFocusEl());
 
+    a = Paperpile.app.Actions;
+
     this.keys.bindAction('ctrl-t', this.actions['TEST']);
 
     // Standard grid shortcuts.
-    this.keys.bindAction('ctrl-q', this.actions['FONT_SIZE']);
-    this.keys.bindAction('ctrl-a', this.actions['SELECT_ALL']);
-    this.keys.bindAction('[Del,46]', this.actions['DELETE']);
-    this.keys.bindAction('[Del,8]', this.actions['DELETE']);
+    this.keys.bindAction('ctrl-a', a.get('SELECT_ALL'));
+    this.keys.bindAction('[Del,46]', a.get('TRASH'));
+    this.keys.bindAction('[Del,8]', a.get('TRASH'));
 
     // Copy shortcuts.
-    this.keys.bindAction('ctrl-c', this.actions['COPY_FORMATTED']);
-    this.keys.bindAction('ctrl-b', this.actions['COPY_BIBTEX_CITATION']);
-    this.keys.bindAction('ctrl-k', this.actions['COPY_BIBTEX_KEY']);
+    this.keys.bindAction('ctrl-c', a.get('COPY_FORMATTED'));
+    this.keys.bindAction('ctrl-b', a.get('COPY_BIBTEX_CITATION'));
+    this.keys.bindAction('ctrl-k', a.get('COPY_BIBTEX_KEY'));
 
     // Gmail-style n/p, j/k movements.
-    a = Paperpile.app.Actions;
     this.keys.bindAction('home', a.get('UP_HOME'));
     this.keys.bindAction('end', a.get('DOWN_END'));
     this.keys.bindAction('page_down', a.get('DOWN_PAGE'));
@@ -507,15 +227,26 @@ Ext.define('Paperpile.pub.Grid', {
     this.keys.bindAction('k', a.get('UP_ONE'));
     this.keys.bindAction('shift-k', a.get('UP_ONE'));
 
-    this.keys.bindAction('[End,35]', this.actions['MOVE_LAST']);
-    this.keys.bindAction('[Home,36]', this.actions['MOVE_FIRST']);
+    this.keys.bindAction('[End,35]', a.get('MOVE_LAST'));
+    this.keys.bindAction('[Home,36]', a.get('MOVE_FIRST'));
 
-    this.keys.bindAction('[/,191]', this.actions['FOCUS_SEARCH']);
-    this.keys.bindAction('ctrl-f', this.actions['FOCUS_SEARCH']);
+    this.keys.bindAction('[/,191]', a.get('FOCUS_SEARCH'));
+    this.keys.bindAction('ctrl-f', a.get('FOCUS_SEARCH'));
   },
 
   handleFocusSearch: function() {
     // To be implemented by subclasses or plugins.
+  },
+
+  clearSearch: function() {
+    if (this.filterField) {
+      this.filterField.onTrigger1Click();
+      this.filterField.getEl().focus();
+    } else if (this.searchField) {
+      this.searchField.selectText();
+      this.searchField.getEl().focus();
+      this.getEmptyBeforeSearchTemplate().overwrite(this.getView().mainBody);
+    }
   },
 
   handleClick: function(e) {
@@ -523,16 +254,6 @@ Ext.define('Paperpile.pub.Grid', {
     var el = e.getTarget();
 
     switch (el.getAttribute('action')) {
-    case 'clear-search':
-      if (this.filterField) {
-        this.filterField.onTrigger1Click();
-        this.filterField.getEl().focus();
-      } else if (this.searchField) {
-        this.searchField.selectText();
-        this.searchField.getEl().focus();
-        this.getEmptyBeforeSearchTemplate().overwrite(this.getView().mainBody);
-      }
-      break;
     case 'close-tab':
       Paperpile.main.tabs.remove(this.getPluginPanel());
       break;
@@ -757,9 +478,7 @@ Ext.define('Paperpile.pub.Grid', {
     }
   },
 
-  myBeforeRender: function(ct) {
-    this.createToolbarMenu();
-  },
+  myBeforeRender: function(ct) {},
 
   afterRender: function(ct) {
     var me = this;
@@ -843,7 +562,7 @@ Ext.define('Paperpile.pub.Grid', {
       this.getStore().isLoaded = true;
       for (var i = 0; i < this.doAfterNextReload.length; i++) {
         var fn = this.doAfterNextReload[i];
-        fn.defer(0, this);
+        Ext.defer(fn, 10, this);
       }
       this.doAfterNextReload = [];
     },
@@ -923,14 +642,12 @@ Ext.define('Paperpile.pub.Grid', {
     this.toolbarMenuItemIds.addAll([
       'TB_FILL',
       'TB_BREAK',
-      'PDF_COMBINED_BUTTON2',
       this.createSeparator('TB_VIEW_SEP'),
       'EDIT',
       'AUTO_COMPLETE',
       'SELECT_ALL',
       'DELETE',
       this.createSeparator('TB_DEL_SEP'),
-      'LIVE_FOLDER',
       'EXPORT_MENU',
       this.createSeparator('TB_SETTINGS_SEP'),
       'SETTINGS']);
@@ -942,14 +659,12 @@ Ext.define('Paperpile.pub.Grid', {
     this.contextMenuItemIds.addAll([
       'VIEW_PDF',
       'OPEN_PDF_FOLDER',
-      //				        'PDF_COMBINED_BUTTON',
       this.createContextSeparator('CONTEXT_VIEW_SEP'),
       'EDIT',
       'AUTO_COMPLETE',
       'SELECT_ALL',
       'DELETE',
       this.createContextSeparator('CONTEXT_DEL_SEP'),
-      'MORE_FROM_MENU',
       'EXPORT_SELECTION',
       this.createContextSeparator('CONTEXT_BIBTEX_SEP'),
       'COPY_FORMATTED',
@@ -972,22 +687,55 @@ Ext.define('Paperpile.pub.Grid', {
   },
 
   getTopToolbar: function() {
-    return this.tbar;
+    return this.toolbar;
   },
 
-  createToolbarMenu: function() {
-    return;
+  createToolbar: function() {
+    var toolbar = new Ext.toolbar.Toolbar({
+      enableOverflow: false
+    });
 
-    var tbar = this.getTopToolbar();
-    tbar.removeAll();
+    this.toolbarExtras = {
+      'TB_SPACE': new Ext.toolbar.Spacer({
+        itemId: 'TB_SPACE',
+        width: '10px'
+      }),
+      'TB_BREAK': new Ext.toolbar.Separator({
+        itemId: 'TB_BREAK'
+      }),
+      'TB_FILL': new Ext.toolbar.Fill({
+        itemId: 'TB_FILL'
+      }),
+      'EXPORT_MENU': new Ext.button.Split({
+        text: 'Export to File',
+        itemId: 'EXPORT_MENU',
+        handler: this.handleExportView,
+        //iconCls: 'pp-icon-save',
+        scope: this,
+        menu: {
+          items: [
+            Paperpile.app.Actions.get('EXPORT_VIEW'),
+            Paperpile.app.Actions.get('EXPORT_SELECTION')]
+        }
+      })
+    };
 
     this.initToolbarMenuItemIds();
-    var itemIds = this.toolbarMenuItemIds; // This is an Ext.util.MixedCollection.
+    var itemIds = this.toolbarMenuItemIds;
     for (var i = 0; i < itemIds.length; i++) {
       var id = itemIds.getAt(i);
-      var obj = this.actions[id];
-      tbar.insert(i, this.actions[id]);
+      Paperpile.log(id);
+      var action = Paperpile.app.Actions.get(id);
+      var cmp;
+      if (action && action instanceof Ext.Action) {
+        cmp = toolbar.add(action);
+      } else if (this.toolbarExtras[id]) {
+        cmp = toolbar.add(this.toolbarExtras[id]);
+      }
+      var index = toolbar.items.indexOf(cmp);
+      toolbar.move(index, toolbar.items.getCount());
     }
+    return toolbar;
   },
 
   getContextMenu: function() {
@@ -1007,9 +755,13 @@ Ext.define('Paperpile.pub.Grid', {
     var itemIds = this.contextMenuItemIds; // This is an Ext.util.MixedCollection.
     for (var i = 0; i < itemIds.length; i++) {
       var id = itemIds.getAt(i);
-      context.insert(i, this.actions[id]);
-      if (this.actions[id] && this.actions[id] instanceof Ext.Action) {
-        this.actions[id].addComponent(context.items.getAt(i));
+      var action = Paperpile.app.Actions.get(id);
+      if (!action) {
+        continue;
+      }
+      context.insert(i, action);
+      if (action && action instanceof Ext.Action) {
+        action.addComponent(context.items.getAt(i));
       }
     }
   },
@@ -1172,106 +924,6 @@ Ext.define('Paperpile.pub.Grid', {
     return this.getStore().getTotalCount();
   },
 
-  // Some plugins use a two-stage process for showing entries: First
-  // only minimal info is scraped from site to build list quickly
-  // without harassing the site too much. Then the details are
-  // fetched only when user clicks the entry.
-  lookupDetails: function() {
-    if (this.lookupDetailsLock) return; // Call completeEntry only for one item at a time 
-    this.lookupDetailsLock = true;
-
-    // We only look up details for a single record.
-    var sel = this.getSingleSelection();
-    if (!sel) return;
-
-    var data = sel.data;
-
-    if (!data._needs_details_lookup) {
-      Paperpile.log("Details lookup was called on a publication that apparently doesn't need it -- this is a problem!");
-    }
-
-    if (data._needs_details_lookup) {
-      var guid = data.guid;
-
-      Paperpile.status.updateMsg({
-        busy: true,
-        msg: 'Looking up bibliographic data',
-        action1: 'Cancel',
-        callback: function() {
-          Ext.Ajax.abort(this.lookupDetailsTransaction);
-          this.cancelLookupDetails();
-          Paperpile.status.clearMsg();
-          this.getSelectionModel().un('beforerowselect', blockingFunction, this);
-          this.isLocked = false;
-        },
-        scope: this
-      });
-
-      // Warn after 10 sec
-      this.timeoutWarn = (function() {
-        Paperpile.status.setMsg('This is taking longer than usual. Still looking up data.');
-      }).defer(10000, this);
-
-      // Abort after 20 sec
-      this.timeoutAbort = (function() {
-        Ext.Ajax.abort(this.lookupDetailsTransaction);
-        this.cancelLookupDetails();
-        Paperpile.status.clearMsg();
-        Paperpile.status.updateMsg({
-          msg: 'Data lookup failed. There may be problems with your network or ' + this.plugin_name + '.',
-          hideOnClick: true
-        });
-        this.lookupDetailsLock = false;
-      }).defer(20000, this);
-
-      this.lookupDetailsTransaction = Paperpile.Ajax({
-        url: '/ajax/crud/complete_entry',
-        params: {
-          selection: sel.id,
-          grid_id: this.id,
-          cancel_handle: this.id + '_lookup'
-        },
-        success: function(response, options) {
-          var json = Ext.util.JSON.decode(response.responseText);
-          this.lookupDetailsLock = false;
-
-          clearTimeout(this.timeoutWarn);
-          clearTimeout(this.timeoutAbort);
-
-          if (json.error) {
-            Paperpile.main.onError(response, options);
-            return;
-          }
-
-          Paperpile.status.clearMsg();
-          this.updateButtons();
-          this.getPluginPanel().updateDetails();
-        },
-        failure: function(response, options) {
-          this.lookupDetailsLock = false;
-          clearTimeout(this.timeoutWarn);
-          clearTimeout(this.timeoutAbort);
-        },
-        scope: this
-      });
-    }
-  },
-
-  cancelLookupDetails: function() {
-
-    clearTimeout(this.timeoutWarn);
-    clearTimeout(this.timeoutAbort);
-
-    Ext.Ajax.abort(this.lookupDetailsTransaction);
-    Paperpile.Ajax({
-      url: '/ajax/misc/cancel_request',
-      params: {
-        cancel_handle: this.id + '_lookup',
-        kill: 1
-      }
-    });
-  },
-
   updateDetail: function() {
     // Override with other plugin methods to do things necessary on detail update.
   },
@@ -1295,79 +947,8 @@ Ext.define('Paperpile.pub.Grid', {
     return visibleRows;
   },
 
-  // If trash is set entries are moved to trash, otherwise they are
-  // deleted completely
-  // mode: TRASH ... move to trash
-  //       RESTORE ... restore from trash
-  //       DELETE ... delete permanently
-  handleDelete: function() {
-    this.deleteEntry('TRASH');
-  },
-
-  handleSaveActive: function() {
-    Paperpile.main.tree.newActive();
-  },
-
-  handleExportSelection: function() {
-    selection = this.getSelection();
-    Paperpile.main.handleExport(this.id, selection);
-  },
-
   handleExportView: function() {
     Paperpile.main.handleExport(this.id, 'all');
-  },
-
-  handleCopy: function(module, format, msg) {
-    if (this.getSelectionCount() == 0) {
-      return;
-    }
-    var isMultiple = this.getSelectionCount() > 1;
-    var s = '';
-    var n = '';
-    if (isMultiple) {
-      s = 's';
-      n = this.getSelectionCount();
-    }
-    msg = msg.replace("{n}", n);
-    msg = msg.replace("{s}", s);
-
-    var myFn = function(string) {
-      if (IS_QT) {
-        QRuntime.setClipboard(string);
-        Paperpile.status.updateMsg({
-          msg: msg,
-          duration: 1.5,
-          fade: true
-        });
-      } else {
-        // Not in Qt -- use Flash if available...
-        Paperpile.status.updateMsg({
-          msg: msg,
-          duration: 1.5,
-          fade: true
-        });
-      }
-    };
-    this.getFormattedText(module, format, myFn);
-  },
-
-  getFormattedText: function(module, format, callback) {
-    Paperpile.Ajax({
-      url: '/ajax/plugins/export',
-      params: {
-        grid_id: this.id,
-        selection: this.getSelection(),
-        export_name: module,
-        export_out_format: format,
-        get_string: true
-      },
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        var string = json.data.string;
-        callback.call(this, string);
-      },
-      scope: this
-    });
   },
 
   handleViewOnline: function() {
@@ -1440,82 +1021,6 @@ Ext.define('Paperpile.pub.Grid', {
     this.handleCopy('Bibfile', 'CITATIONS', '{n} Citation{s} copied');
   },
   deleteEntry: function(mode, deleteAll) {
-
-    var selection = this.getSelection();
-    if (deleteAll) {
-      selection = 'ALL';
-    }
-
-    if (this.getSelectionCount() == 0) {
-      return;
-    }
-
-    // Find the lowest index of the current selection.
-    var firstRecord = this.getSelectionModel().getLowestSelected();
-    var firstIndex = this.getStore().indexOf(firstRecord);
-
-    this.getSelectionModel().lock();
-
-    if (mode == 'DELETE') {
-      Paperpile.status.showBusy('Deleting references from library');
-    }
-    if (mode == 'TRASH') {
-      Paperpile.status.showBusy('Moving references to Trash');
-    }
-    if (mode == 'RESTORE') {
-      Paperpile.status.showBusy('Restoring references');
-    }
-
-    Paperpile.Ajax({
-      url: '/ajax/crud/delete_entry',
-      params: {
-        selection: selection,
-        grid_id: this.id,
-        mode: mode
-      },
-      timeout: 10000000,
-      success: function(response) {
-        var data = Ext.util.JSON.decode(response.responseText);
-        var num_deleted = data.num_deleted;
-
-        // Does what it says: adds to the list of functions to call when the grid is next reloaded. This is handled in the customized 'onload' handler up at the top of the file.
-        this.getSelectionModel().unlock();
-        this.doAfterNextReload.push(function() {
-          this.selectRowAndSetCursor(firstIndex);
-        });
-        if (mode == 'TRASH') {
-          var msg = num_deleted + ' references moved to Trash';
-          if (num_deleted == 1) {
-            msg = "1 reference moved to Trash";
-          }
-
-          Paperpile.status.updateMsg({
-            msg: msg,
-            action1: 'Undo',
-            callback: function(action) {
-              // TODO: does not show up, don't know why:
-              Paperpile.status.showBusy('Undo...');
-              Paperpile.Ajax({
-                url: '/ajax/crud/undo_trash',
-                success: function(response) {
-                  Paperpile.status.clearMsg();
-                },
-                scope: this
-              });
-            },
-            scope: this,
-            hideOnClick: true
-          });
-        } else {
-          Paperpile.status.clearMsg();
-        }
-      },
-      failure: function() {
-        this.getSelectionModel().unlock();
-      },
-      scope: this
-    });
-
   },
 
   handleEdit: function(isNew, autoComplete) {
@@ -1526,31 +1031,7 @@ Ext.define('Paperpile.pub.Grid', {
       var guid = selection.data.guid;
     }
 
-    win = new Ext.Window({
-      title: isNew ? 'Add new reference' : 'Edit reference',
-      modal: true,
-      shadow: false,
-      layout: 'fit',
-      width: 800,
-      height: 600,
-      resizable: false,
-      closable: true,
-      items: [new Paperpile.MetaPanel({
-        data: isNew ? {
-          pubtype: 'ARTICLE'
-        } : this.getSingleSelection().data,
-        autoComplete: autoComplete,
-        isNew: isNew,
-        callback: function(status, data) {
-          if (status == 'SAVE') {
-            Paperpile.main.onUpdate(data);
-            Paperpile.status.clearMsg();
-          }
-          win.close();
-        },
-        scope: this
-      })]
-    });
+    win = new Paperpile.pub.EditWindow({});
     win.on('close', function() {
       Paperpile.main.focusCurrentPanel();
     });
@@ -1604,91 +1085,11 @@ Ext.define('Paperpile.pub.Grid', {
     Paperpile.main.showReferenceInLibrary(record);
   },
 
-  batchDownload: function() {
-    var selection = this.getSelection();
-    if (selection.length > 1) {
-      Paperpile.main.queueWidget.setSubmitting();
-    }
-    Paperpile.Ajax({
-      url: '/ajax/crud/batch_download',
-      params: {
-        selection: selection,
-        grid_id: this.id
-      },
-      success: function(response) {
-        // Trigger a thread to start requesting queue updates.
-        Paperpile.main.queueUpdate();
-      }
-    });
-  },
-
-  cancelDownload: function() {
-    var selected_id = this.getSingleSelection().data._search_job.id;
-    Paperpile.Ajax({
-      url: '/ajax/queue/cancel_jobs',
-      params: {
-        ids: selected_id
-      }
-    });
-  },
-
-  retryDownload: function() {
-    var selected_id = this.getSingleSelection().data._search_job.id;
-    Paperpile.Ajax({
-      url: '/ajax/queue/retry_jobs',
-      params: {
-        ids: selected_id
-      },
-      success: function(response) {
-        Paperpile.main.queueJobUpdate();
-      }
-    });
-
-    // TODO: Do a more immediate update to the record so we don't have a delay there.
-  },
-
-  clearDownload: function() {
-    var selected_id = this.getSingleSelection().data._search_job.id;
-    Paperpile.Ajax({
-      url: '/ajax/queue/remove_jobs',
-      params: {
-        ids: selected_id
-      }
-    });
-
-    // TODO: Do a more immediate update to the record so we don't have a delay there.
-  },
-
-  formatEntry: function() {
-
-    selection = this.getSelection();
-
-    Paperpile.main.tabs.add(new Paperpile.Format({
-      grid_id: this.id,
-      selection: selection
-    }));
-  },
-
-  refreshCollections: function() {
-    // Go through each record and re-render it if it has some improperly styled labels.
-    return;
-    var n = this.getStore().getCount();
-    for (var i = 0; i < n; i++) {
-      var record = this.getStore().getAt(i);
-      if (record.get('labels') || record.get('folders')) {
-        this.getStore().fireEvent('update', this.getStore(), record, Ext.data.Record.EDIT);
-      }
-    }
-
-    var overview = this.getPluginPanel().getOverviewPanel();
-    if (overview.rendered) {
-      overview.forceUpdate();
-    }
-  },
-
   // Update specific fields of specific entries to avoid complete
   // reload of everything.
-  onUpdate: function(data) {
+  updateFromServer: function(data) {
+	    Paperpile.log(data);
+	    Paperpile.log("Updating!");
     var pubs = data.pubs;
     if (!pubs) {
       pubs = [];
@@ -1773,127 +1174,8 @@ Ext.define('Paperpile.pub.Grid', {
     if (selections.length > 0) {
       return selections[0];
     } else {
+      Paperpile.log("Nothing selected -- make sure the call to getSingleSelection handles undefined!");
       return undefined;
-    }
-  },
-
-  // Return a list of whatever's selected. Could be an empty list.
-  getSelectionRecords: function() {
-    return this.getSelectionModel().getSelection();
-  },
-
-  getFirstAuthorFromSelection: function() {
-    var authors = this.getSingleSelection().data.authors || '';
-    var arr = authors.split(/\s+and\s+/);
-    var author = '';
-    if (arr.length > 0) {
-      author = arr[0];
-    }
-    return author;
-  },
-
-  getLastAuthorFromSelection: function() {
-    var authors = this.getSingleSelection().data.authors || '';
-    // Remove author entries enclosed in brackets, e.g. {et al.}
-    authors = authors.replace(/{.*}/g, "");
-    var arr = authors.split(/\s+and\s+/);
-    var author = '';
-    if (arr.length > 1) {
-      author = arr[arr.length - 1];
-    }
-    return author;
-  },
-
-  getJournalFromSelection: function() {
-    var journal = this.getSingleSelection().data.journal || '';
-    return journal;
-  },
-
-  getYearFromSelection: function() {
-    var year = this.getSingleSelection().data.year || '';
-    return year;
-  },
-
-  moreFromLastAuthor: function() {
-    var authors = this.getSingleSelection().data._authors_display || '';
-    var arr = authors.split(/,\s+/);
-    var author = '';
-    if (arr.length > 0) {
-      author = arr[arr.length - 1];
-    }
-    this.setSearchQuery('author:' + '"' + author + '"');
-  },
-
-  moreFromFirstAuthor: function() {
-    var authors = this.getSingleSelection().data._authors_display || '';
-    var arr = authors.split(/,\s+/);
-    var author = '';
-    if (arr.length > 0) {
-      author = arr[0];
-    }
-    this.setSearchQuery('author:' + '"' + author + '"');
-    /*
- 	Paperpile.main.tabs.newPluginTab('DB',
-					 {plugin_mode:'FULLTEXT',
-					 plugin_query:'author:'+'"'+first_author+'"'},
-					 first_author,
-					 '',
-					 first_author
-					);
-    */
-  },
-  moreFromYear: function() {
-    var year = this.getYearFromSelection();
-    if (year) {
-      this.setSearchQuery('year:' + '"' + year + '"');
-      /*	Paperpile.main.tabs.newPluginTab('DB',
-					 {plugin_mode:'FULLTEXT',
-					 plugin_query:'year:'+'"'+year+'"'},
-					 year,
-					 '',
-					 year
-					);
-*/
-    }
-  },
-  moreFromJournal: function() {
-    var journal = this.getJournalFromSelection();
-    if (journal) {
-      this.setSearchQuery('journal:' + '"' + journal + '"');
-      /*	Paperpile.main.tabs.newPluginTab('DB',
-					 {plugin_mode:'FULLTEXT',
-					 plugin_query:'journal:'+'"'+journal+'"'},
-					 journal,
-					 '',
-					 journal
-					);
-*/
-    }
-  },
-
-  openPDFFolder: function() {
-    var sm = this.getSelectionModel();
-    var record = this.getSingleSelection();
-    if (record.data.pdf) {
-      var pdf = record.data.pdf_name;
-      var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
-      var parts = Paperpile.utils.splitPath(path);
-      // Need to defer this call, otherwise the context menu jumps to the upper-left side of screen... no idea why but this works!
-      Paperpile.utils.openFile.defer(20, Paperpile.utils, [parts.dir]);
-    }
-  },
-
-  viewPDF: function() {
-    var sm = this.getSelectionModel();
-    var record = this.getSingleSelection();
-    if (record.data.pdf) {
-      var pdf = record.data.pdf_name;
-      var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
-      Paperpile.main.tabs.newPdfTab({
-        file: path,
-        filename: pdf
-      });
-      Paperpile.main.inc_read_counter(this.getSingleSelection().data);
     }
   },
 

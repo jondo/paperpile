@@ -110,8 +110,8 @@ Ext.define('Paperpile.pub.panel.Files', {
 
   getPdfSection: function() {
     var el = [
+      '<h2>PDF</h2>',
       '<tpl if="this.hasPdf(values) === true">',
-      '  <h2>PDF</h2>',
       '  <ul>',
       '    <li class="link-hover">',
       '      <a href="#" class="pp-textlink pp-action pp-action-open-pdf" action="VIEW_PDF" args="{grid_id},{guid}">View PDF</a>',

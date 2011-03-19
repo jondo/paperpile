@@ -419,64 +419,6 @@ Ext.define('Paperpile.pub.Overview', {
   },
 
   //
-  // Choose a file from harddisk to attach. Either it is *the* PDF of the citation or a
-  // supplementary file (given by isPDF).
-  //
-  chooseFile: function(isPDF) {
-    var callback = function(filenames) {
-      if (filenames.length > 0) {
-        for (var i = 0; i < filenames.length; i++) {
-          var file = filenames[i];
-          this.attachFile(isPDF, file);
-          if (isPDF) {
-            return;
-          }
-        }
-      }
-    };
-    var options;
-    if (isPDF) {
-      options = {
-        title: 'Choose a PDF file to attach',
-        selectionType: 'file',
-        types: ['pdf'],
-        typesDescription: 'PDF Files',
-        multiple: false,
-        nameFilters: ["PDF (*.pdf)"],
-        scope: this
-      };
-    } else {
-      options = {
-        title: 'Choose file(s) to attach',
-        selectionType: 'file',
-        types: ['*'],
-        typesDescription: 'All Files',
-        multiple: true,
-        nameFilters: ["All files (*)"],
-        scope: this
-      };
-    }
-    Paperpile.fileDialog(callback, options);
-  },
-
-  //
-  // Attach a file. Either it is *the* PDF of the citation or a
-  // supplementary file (given by isPDF).
-  //
-  attachFile: function(isPDF, path) {
-    Paperpile.Ajax({
-      url: '/ajax/crud/attach_file',
-      params: {
-        guid: this.data.guid,
-        grid_id: this.grid_id,
-        file: path,
-        is_pdf: (isPDF) ? 1 : 0
-      },
-      scope: this
-    });
-  },
-
-  //
   // Delete file. isPDF controls whether it is *the* PDF or some
   // other attached file. In the latter case the guid of the attached
   // file has to be given.

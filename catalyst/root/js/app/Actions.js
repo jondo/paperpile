@@ -25,7 +25,7 @@ Ext.define('Paperpile.app.Actions', {
       }
       this.actions = new Ext.util.MixedCollection();
       this.actions.addAll(Paperpile.app.PubActions.getActions());
-      this.actions.addAll(Paperpile.app.NavActions.getActions());
+      this.actions.addAll(Paperpile.app.GridActions.getActions());
     }
 
   }

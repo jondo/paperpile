@@ -110,10 +110,10 @@ Ext.define('Paperpile.Viewport', {
 
     var me = this;
     this.folderStore.load({
-	    scope: me,
+      scope: me,
       callback: function() {
         this.labelStore.load({
-		scope: me,
+          scope: me,
           callback: function() {
             this.feedStore.load();
           }
@@ -640,22 +640,7 @@ Ext.define('Paperpile.Viewport', {
     });
   },
 
-  attachFile: function(grid, guid, path, isPDF) {
-    Paperpile.Ajax({
-      url: '/ajax/crud/attach_file',
-      params: {
-        guid: guid,
-        grid_id: grid.id,
-        file: path,
-        is_pdf: (isPDF) ? 1 : 0
-      },
-      success: function(response) {
-        // TODO: add a status message and an undo function.
-      },
-      scope: this
-    });
-
-  },
+  attachFile: function(grid, guid, path, isPDF) {},
 
   countFilesAndTriggerExtraction: function(path) {
     // First count the PDFs
@@ -787,15 +772,14 @@ Ext.define('Paperpile.Viewport', {
 
   // Go through all the grids and update specifically the single publication.
   // Requires each grid to have an "updateData" function.
-  onUpdate: function(data) {
+  updateFromServer: function(data) {
     if (data === undefined) return;
 
-    // Update this part of the code when the new label widget is in
-    // place. Right now the label list does not get updated. There
-    // might be also a race condition when the labelStore response comas
-    // after the subsequent grid updates. 
-    if (data.collection_delta) {
-      this.labelStore.reload();
+    if (this.labelStore) {
+      this.labelStore.updateFromServer(data);
+    }
+    if (this.folderStore) {
+      this.folderStore.updateFromServer(data);
     }
 
     // update the queue widget with the current data.
@@ -805,12 +789,19 @@ Ext.define('Paperpile.Viewport', {
       this.queueUpdate();
     }
 
-    if (this.getTabs()) {
-      var tabs = this.getTabs().items.items;
+    if (this.tree) {
+	//this.tree.updateFromServer(data);
+    }
+
+    if (this.tabs) {
+      var tabs = this.tabs.items.items;
       for (var i = 0; i < tabs.length; i++) {
         var tab = tabs[i];
-        if (!tab['onUpdate']) continue;
-        tab.onUpdate(data);
+        if (!tab['updateFromServer']) {
+          continue;
+        } else {
+          tab.updateFromServer(data);
+        }
       }
     }
 
@@ -818,71 +809,6 @@ Ext.define('Paperpile.Viewport', {
     if (data.jobs) {
       this.doCallbacks(data);
     }
-
-    if (data.file_sync_delta) {
-      if (data.file_sync_delta.length > 0 && this.bibtexModeIsEnabled()) {
-        this.triggerFileSync(data.file_sync_delta);
-      }
-    }
-  },
-
-  handleExport: function(gridId, selection, sourceNode) {
-
-    var callback = function(filenames, filter) {
-
-      if (filenames.length == 0) {
-        return;
-      }
-
-      var formatsMap = {
-        'BibTeX (*.bib)': 'BIBTEX',
-        'RIS (*.ris)': 'RIS',
-      };
-
-      var format = formatsMap[filter];
-
-      var file = filenames[0];
-
-      var collection_id = null;
-      var node_id = null;
-      var grid_id = null;
-      if (sourceNode && (sourceNode.type == 'FOLDER' || sourceNode.type == 'LABEL')) {
-        collection_id = sourceNode.id;
-      } else if (sourceNode) {
-        node_id = sourceNode.id;
-      } else if (gridId) {
-        grid_id = gridId;
-      } else {
-        return;
-      }
-
-      Paperpile.status.showBusy('Exporting to ' + file + '...');
-      Paperpile.Ajax({
-        url: Paperpile.Url('/ajax/plugins/export'),
-        params: {
-          source_node: node_id,
-          collection_id: collection_id,
-          selection: selection,
-          grid_id: grid_id,
-          export_name: 'Bibfile',
-          export_out_format: format,
-          export_out_file: file
-        },
-        success: function() {
-          Paperpile.status.clearMsg();
-        },
-        scope: this
-      });
-    };
-
-    Paperpile.fileDialog(callback, {
-      'title': 'Choose file and format for export',
-      'dialogType': 'save',
-      'selectionType': 'file',
-      'nameFilters': [
-        'BibTeX (*.bib)',
-        'RIS (*.ris)']
-    });
   },
 
   bibtexModeIsEnabled: function() {
@@ -985,7 +911,7 @@ Ext.define('Paperpile.Viewport', {
       for (var i = 0; i < tabs.length; i++) {
         var tab = tabs[i];
         if (tab instanceof Paperpile.pub.View) {
-          tab.getGrid().refreshCollections();
+          tab.getGrid().refresh();
         }
       }
     }
@@ -1003,7 +929,7 @@ Ext.define('Paperpile.Viewport', {
       for (var i = 0; i < tabs.length; i++) {
         var tab = tabs[i];
         if (tab instanceof Paperpile.pub.View) {
-          tab.getGrid().refreshCollections();
+          tab.getGrid().refresh();
         }
       }
     }

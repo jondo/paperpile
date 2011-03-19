@@ -2,6 +2,44 @@ Ext.define('Paperpile.app.GridActions', {
   statics: {
     getActions: function() {
       return {
+
+        'EXPORT_VIEW': new Ext.Action({
+          itemId: 'EXPORT_VIEW',
+          text: 'All',
+          handler: function() {
+            var grid = Paperpile.main.getCurrentGrid();
+            Paperpile.app.PubActions.exportSelectionHandler(grid.id, 'all');
+
+          }
+        }),
+
+        'EXPORT_VIEW': new Ext.Action({
+          itemId: 'EXPORT_VIEW',
+          text: 'All',
+          handler: function() {
+            var grid = Paperpile.main.getCurrentGrid();
+            Paperpile.app.PubActions.exportSelectionHandler(grid.id, 'all');
+
+          }
+        }),
+        'EXPORT_SELECTION': new Ext.Action({
+          itemId: 'EXPORT_SELECTION',
+          text: 'Selection',
+          triggerKey: 'x',
+          handler: function() {
+            var grid = Paperpile.main.getCurrentGrid();
+
+          }
+        }),
+        'SHOW_SETTINGS': new Ext.Action({
+          itemId: 'SHOW_SETTINGS',
+          text: 'Settings',
+          iconCls: 'pp-icon-dashboard',
+          tooltip: 'Change your settings and view library stats',
+          handler: function() {
+            Paperpile.main.tabs.showDashboardTab();
+          }
+        }),
         'UP_HOME': new Ext.Action({
           text: 'Move the cursor to the top',
           handler: function(keyCode, event) {
@@ -92,12 +130,29 @@ Ext.define('Paperpile.app.GridActions', {
             grid.selectRowAndSetCursor(grid.getStore().getCount() - 1);
           }
         }),
+        'SELECT_ALL': new Ext.Action({
+          text: 'Select all',
+          handler: function(keyCode, event) {
+            var grid = Paperpile.main.getCurrentGrid();
+            event.stopEvent();
+            grid.selectAll();
+          },
+          scope: this,
+          itemId: 'SELECT_ALL'
+        }),
         'FOCUS_SEARCH': new Ext.Action({
           text: 'Search',
           handler: function(keyCode, event) {
             var grid = Paperpile.main.getCurrentGrid();
             grid.handleFocusSearch();
           },
+        }),
+        'CLEAR_SEARCH': new Ext.Action({
+          text: 'Clear Search Query',
+          handler: function(event) {
+            var grid = Paperpile.main.getCurrentGrid();
+
+          }
         })
       }
     }

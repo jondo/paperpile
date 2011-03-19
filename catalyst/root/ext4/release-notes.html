@@ -13,6 +13,275 @@
         <div id="releases">
             <div class="release">
                 <h1>
+                    Release Notes for Ext JS 4 PR5
+                </h1>
+                <p class="notes">
+                    Release Notes: March 18, 2011<br>
+                    Version Number: 4.0.0pr5
+                </p>
+                <h2>
+                    New In This Release
+                </h2>
+                <ul>
+                    <li>New Examples
+                        <div style="margin-left: 2em">
+                            <ul>
+                                <li>
+                                    <a href="examples/direct/named-arguments.html">Ext.Direct Named Arguments</a>
+                                </li>
+                                <li>
+                                    <a href="examples/form/registration.html">Registration Form</a>
+                                </li>
+                                <li>
+                                    <a href="examples/statusbar/statusbar-advanced.html">StatusBar</a>
+                                </li>
+                                <li>
+                                    <a href="examples/statusbar/statusbar-demo.html">Advanced StatusBar</a>
+                                </li>
+                                <li>
+                                    <a href="examples/tree/reorder.html">Tree Reporder</a>
+                                </li>
+                                <li>
+                                    <a href="examples/tree/xml-tree.html">XML Tree</a>
+                                </li>
+                                <li>
+                                    <a href="examples/tree/treegrid.html">TreeGrid</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li>Bug Fixes
+                        <ul>
+                            <li>Fix bug on FF for Mac where an initial layout of boxes causes the innerCt to scroll, and it becomes stuck at the scrollPosition. Manifesting in layout-browser example
+                            </li>
+                            <li>Fix the problem in IE where the margin-bottom of the last item was not being included in the "auto" height of its Container
+                            </li>
+                            <li>Fix issue where dragging a child to become the last child in a folder would insert it in the wrong position
+                            </li>
+                            <li>Fix an issue where the sortType was not being honored when local sorting in a grid
+                            </li>
+                            <li>Fix issue when calling setProxy on a model subclass
+                            </li>
+                            <li>Fix Ext.panel.TablePanel hideHeaders configuration option
+                            </li>
+                            <li>Fix button layout in IE7 when minWidth is set
+                            </li>
+                            <li>Fix minButtonWidth in FormPanels
+                            </li>
+                            <li>Fix bug where StoreMgr would not be able to create a Store from a store config object
+                            </li>
+                            <li>Fix layout/alignment issues in fieldset legends with IE
+                            </li>
+                            <li>Fix for IE6 repaint bug on right edge of framed panel
+                            </li>
+                            <li>Fix display of tooltip anchor arrow
+                            </li>
+                            <li>Fix scope for custom validator method
+                            </li>
+                            <li>Fix icon position of grid header when align:right
+                            </li>
+                            <li>Fix issue with dateRenderer when dealing with null values
+                            </li>
+                            <li>Fix issue with masking in IE6-9 Quirks and IE6 strict
+                            </li>
+                            <li>Fix problem with Panel's initial collapse state setting, and subsequent expansion by the Accordion layout
+                            </li>
+                            <li>Fix ComboBox setValue to handle empty values
+                            </li>
+                            <li>Fix issue with Line Series shadows which weren't refreshed when animations were not enabled on
+                            </li>
+                        </ul>
+                    </li>
+                    <li>Enhancements
+                        <ul>
+                            <li>Refactored the Tree code. Working features as of this point are Tree rendering, expanding &amp; collapsing, drag and drop, loading a tree from memory, have multiple columns, keyboard navigation and selection model
+                            </li>
+                            <li>Added support for named arguments in Ext.Direct methods
+                            </li>
+                            <li>Every Record registers itself with the ModelMgr
+                            </li>
+                            <li>Implemented Tree collapse and expand animations
+                            </li>
+                            <li>Implement loading nodes in a sorted TreeStore
+                            </li>
+                            <li>Added a lastframe event to the animation that only fires when the animation actually reaches its end
+                            </li>
+                            <li>Define getters for getting the computed height and width from an animations target to use as the from values
+                            </li>
+                            <li>Refactor Tree collapse and expand animations. This fixes quickly collapsing and expanding nodes
+                            </li>
+                            <li>Added a new transform option for Sorter
+                            </li>
+                            <li>Panel's getDockedItems now accepts a ComponentQuery selector string
+                            </li>
+                            <li>Add setSrc method to ImageComponent for changing the image src after initialization
+                            </li>
+                            <li>Added 'none' as a possible value for msgTarget, to prevent all error message rendering. Only fire errorchange event when the error message actually changes
+                            </li>
+                            <li>Add hideGroupedHeader support to Ext.grid.GroupingFeature
+                            </li>
+                            <li>FormPanel and FieldContainer both contained logic to handle the addition and removal of Labelable and Field instances within their items subtree; factored that common logic out into a FieldAncestor mixin for both to use. The new mixin also adds new events 'fieldvaliditychange' and 'fielderrorchange' that allow listening for changes at the parent container level
+                            </li>
+                            <li>Allow checkbox fields to display errors
+                            </li>
+                            <li>All the old config properties that controlled the dropdown list have been removed in favor of a single listConfig object, which gets passed along to the BoundList's config. This is much simpler and provides total control over all aspects of the list
+                            </li>
+                            <li>Implemented valueNotFoundText
+                            </li>
+                            <li>Enhanced BoundList layout to handle min/max for both width and height
+                            </li>
+                            <li>Implement ComboBox pageSize option
+                            </li>
+                            <li>elasticOut and bounceIn easing added for animations
+                            </li>
+                            <li>Added support for rootVisible. Also moved the creation of the NodeStore from TreeStore to the TreeView
+                            </li>
+                            <li>Added support for the 'root' configuration option on TreeStore. It supports the 3.3 way of specifying root and children. Automatically figures out whether to load children on expand from the server or memory. Also removed requirement to specify a proxy on a TreeStore. Removed requirement to specify store on TreePanel and support the 'root' config option on TreePanel automatically creating a TreeStore
+                            </li>
+                            <li>Modified TreeView so that it expands the root node if it's not visible
+                            </li>
+                            <li>Modified getSourceFiles to include support for writing XML documents
+                            </li>
+                            <li>Moved additional class for VML from javascript into the stylesheet
+                            </li>
+                            <li>Add in support for icon and iconCls on tree nodes
+                            </li>
+                            <li>Support loading flat json data while still loading children from the root property
+                            </li>
+                        </ul>
+                    </li>
+                    <li>API Changes
+                        <ul>
+                            <li>Refactored Tree to be able to decorate records with a Node API
+                            </li>
+                            <li>Reimplemented TreeStore and created new class called NodeStore
+                            </li>
+                            <li>Border layout is now responsible for performing a mini-collapse of a child Panel
+                            </li>
+                            <li>Panel now performs a collapse to leave its header (or a newly generated, injected header) visible. It does not perform a mini-collapse
+                            </li>
+                            <li>Renamed FlatTreeView to TreeView
+                            </li>
+                            <li>Correct getRefItems implementation in light of ComponentQuery selector being available in getDockedItems
+                            </li>
+                            <li>Add boxLabelEl as render selector for checkbox fields
+                            </li>
+                            <li>Ext.data.Model.id now assigns the new id to the record
+                            </li>
+                        </ul>
+                    </li>
+                    <li>Compatibility Changes
+                        <ul>
+                            <li>Added an alias for Ext.data.Field
+                            </li>
+                            <li>Added an alert when there are compat errors and no console
+                            </li>
+                            <li>Added compat code for GridView &amp; JsonStore
+                            </li>
+                            <li>Modified paging example to switch getRowClass to PreviewPlugin
+                            </li>
+                            <li>Added internal Ext 3 &gt; 4 class mapping utility
+                            </li>
+                        </ul>
+                    </li>
+                    <li>Documentation Refactors
+                        <ul>
+                            <li>Charting overview document
+                            </li>
+                            <li>Ext3 Legacy
+                            </li>
+                            <li>Ext.form.TextArea
+                            </li>
+                            <li>Ext.form.Checkbox
+                            </li>
+                            <li>Ext.form.Radio
+                            </li>
+                            <li>Ext.form.Field
+                            </li>
+                            <li>Ext.form.FieldContainer
+                            </li>
+                            <li>Ext.form.FieldSet
+                            </li>
+                            <li>Ext.form.FormPanel
+                            </li>
+                            <li>Ext.form.Labelable
+                            </li>
+                            <li>Ext.Base
+                            </li>
+                            <li>Ext.Button
+                            </li>
+                            <li>Ext.Component#draggable
+                            </li>
+                            <li>Ext.ComponentDragger
+                            </li>
+                            <li>Ext.Loader
+                            </li>
+                            <li>Ext.Array
+                            </li>
+                            <li>Ext.TabPanel
+                            </li>
+                            <li>Ext.TabPanel
+                            </li>
+                            <li>Ext.form.BaseField
+                            </li>
+                            <li>Ext.form.ComboBox
+                            </li>
+                            <li>Ext.form.Text
+                            </li>
+                            <li>Ext.form.Basic
+                            </li>
+                            <li>Ext.Toolbar
+                            </li>
+                            <li>Ext.data.SortTypes
+                            </li>
+                            <li>Ext.data.StoreMgr
+                            </li>
+                            <li>Ext.state.Manager
+                            </li>
+                            <li>Ext.util.Animate
+                            </li>
+                            <li>Ext.form.Date
+                            </li>
+                            <li>Ext.form.Label
+                            </li>
+                            <li>Ext.form.Number
+                            </li>
+                            <li>Ext.Viewport
+                            </li>
+                            <li>Ext.Window
+                            </li>
+                            <li>Ext.ComponentQuery
+                            </li>
+                            <li>Ext.Panel
+                            </li>
+                            <li>Ext.form.FieldAncestor
+                            </li>
+                            <li>Ext.Container
+                            </li>
+                            <li>Ext.Component
+                            </li>
+                            <li>Ext.grid.GridViewDDPlugin
+                            </li>
+                        </ul>
+                    </li>
+                    <li>Known Issues
+                        <ul>
+                            <li>Portal example not correct in IE6
+                            </li>
+                            <li>Toolbar menu overflow not styled in IE6
+                            </li>
+                            <li>Charts do not render properly in Safari 3.2
+                            </li>
+                            <li>Menu links (anchor tags) need styling
+                            </li>
+                            <li>Minor clipping of panel header text in Opera and IE6/7
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="release">
+                <h1>
                     Release Notes for Ext JS 4 Preview Release 4
                 </h1>
                 <p class="notes">
@@ -30,6 +299,9 @@
                                     <ul>
                                         <li>
                                             <a href="examples/charts/FormDashboard.html">Grid/Form/Chart Combo</a>
+                                        </li>
+                                        <li>
+                                            <a href="examples/charts/TipsChart.html">Rich tooltips (Chart/Grid)</a>
                                         </li>
                                         <li>
                                             <a href="examples/key-feed-viewer/feed-viewer.html">Accessible Feed Viewer using keyboard navigation</a>
@@ -101,7 +373,7 @@
                             </ul>
                         </div>
                     </li>
-                    <li>General Bug Fixes
+                    <li>Bug Fixes
                         <ul>
                             <li>Fix error in slideIn/slideOut when optional duration is not specified
                             </li>
@@ -231,7 +503,7 @@
                     </li>
                 </ul>
                 <ul>
-                    <li>General Enhancements
+                    <li>Enhancements
                         <ul>
                             <li>Introduced a TreePanel capable of supporting multiple headers. Abstracted shared logic between the Tree and Grid into a TablePanel class.
                             </li>
@@ -541,7 +813,7 @@
                     New In This Release
                 </h2>
                 <ul>
-                    <li>General Bug Fixes
+                    <li>Bug Fixes
                         <ul>
                             <li>Across the board documentation updates and fixes
                             </li>
@@ -659,7 +931,7 @@
                             </li>
                         </ul>
                     </li>
-                    <li>General Enhancements
+                    <li>Enhancements
                         <ul>
                             <li>A plethora of updates to the backward compatibility legacy files and guide
                             </li>
@@ -793,7 +1065,7 @@
                     New In This Release
                 </h2>
                 <ul>
-                    <li>General Bug Fixes
+                    <li>Bug Fixes
                         <ul>
                             <li>Across the board documentation updates and fixes
                             </li>
@@ -881,7 +1153,7 @@
                             </li>
                         </ul>
                     </li>
-                    <li>General Enhancements
+                    <li>Enhancements
                         <ul>
                             <li>All animations now support <a href="http://webstuff.nfshost.com/anim-timing/Overview.html">WC3 Timing control for script-based animations.</a> When available, else fall back to standard javascript timers.
                             </li>

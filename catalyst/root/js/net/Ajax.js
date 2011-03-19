@@ -9,7 +9,7 @@ Paperpile.Ajax = function(config) {
   var success = function(response) {
     var json = Ext.JSON.decode(response.responseText);
     if (json.data) {
-      Paperpile.main.onUpdate(json.data);
+      Paperpile.main.updateFromServer(json.data);
     }
     if (json.callback) {
       Paperpile.main.onCallback(json.callback);

@@ -99,74 +99,12 @@ Ext.define('Paperpile.pub.GridDB', {
 	    this.callParent(arguments);
   },
 
-  createToolbarMenu: function() {
-	    /*
-    this.filterMenu = new Ext.menu.Menu({
-      defaults: {
-        checked: false,
-        group: 'filter' + this.id,
-        checkHandler: this.toggleFilter,
-        scope: this
-      },
-      items: [{
-        text: 'All fields',
-        itemId: 'all'
-      },
-        {
-          text: 'Author',
-          itemId: 'author'
-        },
-        {
-          text: 'Title',
-          itemId: 'title'
-        },
-        {
-          text: 'Journal',
-          itemId: 'journal'
-        },
-        {
-          text: 'Abstract',
-          itemId: 'abstract'
-        },
-        {
-          text: 'Fulltext',
-          itemId: 'text'
-        },
-        {
-          text: 'Notes',
-          itemId: 'notes'
-        },
-        {
-          text: 'Year',
-          itemId: 'year'
-        }]
-    });
+  createToolbar: function() {
+	    var toolbar = this.callParent(arguments);
 
-    this.actions['FILTER_BUTTON'] = new Ext.Button({
-      itemId: 'FILTER_BUTTON',
-      icon: '/images/icons/magnifier.png',
-      tooltip: 'Choose field(s) to search',
-      menu: this.filterMenu
-    });
-    this.filterButton = this.actions['FILTER_BUTTON'];
-    this.actions['FILTER_FIELD'] = new Ext.app.FilterField({
-      itemId: 'FILTER_FIELD',
-      emptyText: 'Search References',
-      store: this.getStore(),
-      base_query: this.plugin_base_query,
-      width: 200
-    });
-    this.filterField = this.actions['FILTER_FIELD'];
+	    // Do some other stuff.
 
-    this.mon(this.filterField, 'specialkey', function(f, e) {
-      if (e.getKey() == e.ENTER) {
-        // Select the first grid row on Enter.
-        this.getSelectionModel().selectRowAndSetCursor(0);
-      }
-    },
-    this);
-    */
-	    this.callParent(arguments);
+	    return toolbar;
   },
 
   refreshCollections: function() {
