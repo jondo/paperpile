@@ -5,29 +5,10 @@ Ext.define('Paperpile.app.GridActions', {
 
         'EXPORT_VIEW': new Ext.Action({
           itemId: 'EXPORT_VIEW',
-          text: 'All',
+          text: 'Export References to File',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
             Paperpile.app.PubActions.exportSelectionHandler(grid.id, 'all');
-
-          }
-        }),
-
-        'EXPORT_VIEW': new Ext.Action({
-          itemId: 'EXPORT_VIEW',
-          text: 'All',
-          handler: function() {
-            var grid = Paperpile.main.getCurrentGrid();
-            Paperpile.app.PubActions.exportSelectionHandler(grid.id, 'all');
-
-          }
-        }),
-        'EXPORT_SELECTION': new Ext.Action({
-          itemId: 'EXPORT_SELECTION',
-          text: 'Selection',
-          triggerKey: 'x',
-          handler: function() {
-            var grid = Paperpile.main.getCurrentGrid();
 
           }
         }),

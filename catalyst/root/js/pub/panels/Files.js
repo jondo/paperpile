@@ -73,6 +73,13 @@ Ext.define('Paperpile.pub.panel.Files', {
       '</tpl>'].join("\n");
     this.singleTpl = new Ext.XTemplate(tpl,
       this.getFunctions());
+
+    this.multiTpl = new Ext.XTemplate(
+      '<div class="pp-box pp-box-style1">',
+      '  <h2>PDF</h2>',
+      '  {[Paperpile.pub.PubPanel.actionTextLink("SEARCH_PDF")]}',
+      '</div>');
+
   },
 
   getFunctions: function() {

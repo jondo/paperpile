@@ -3,7 +3,7 @@ Ext.define('Paperpile.pub.panel.OnlineResources', {
   alias: 'widget.OnlineResources',
   initComponent: function() {
     Ext.apply(this, {
-      hideOnMulti: true
+      hideOnMulti: false
     });
 
     this.callParent(arguments);
@@ -21,6 +21,7 @@ Ext.define('Paperpile.pub.panel.OnlineResources', {
       '    <tpl if="!this.hasOnlineLink(values)">',
       '      <a class="pp-action-inactive pp-action-go-inactive">No online link available</a>',
       '    </tpl>',
+      '   {[Paperpile.pub.PubPanel.actionTextLink("AUTO_COMPLETE")]}',
       '   {[Paperpile.pub.PubPanel.actionTextLink("EMAIL")]}',
       '  </div>', {
         hasOnlineLink: function(values) {
@@ -31,5 +32,12 @@ Ext.define('Paperpile.pub.panel.OnlineResources', {
           }
         }
       });
+
+    this.multiTpl = new Ext.XTemplate(
+      '<div class="pp-box pp-box-style1">',
+      '  <h2>Online Resources</h2>',
+      '  {[Paperpile.pub.PubPanel.actionTextLink("AUTO_COMPLETE")]}',
+      '  {[Paperpile.pub.PubPanel.actionTextLink("EMAIL")]}',
+      '</div>');
   }
 });

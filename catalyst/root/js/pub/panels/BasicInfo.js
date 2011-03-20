@@ -60,7 +60,10 @@ Ext.define('Paperpile.pub.panel.BasicInfo', {
       '</tpl>',
       '<tpl if="this.isAllSelected(values) === false">',
       '  {[this.getPubCount(values)]} references selected.',
-      '</tpl>', {
+      '</tpl>',
+      '{[Paperpile.pub.PubPanel.actionTextLink("TRASH")]}',
+      '{[Paperpile.pub.PubPanel.actionTextLink("COPY_FORMATTED")]}',
+      '{[Paperpile.pub.PubPanel.actionTextLink("EXPORT_SELECTION")]}', {
         isAllSelected: function(selection) {
           var grid = me.up('pubview').grid;
           return grid.isAllSelected();
@@ -70,6 +73,12 @@ Ext.define('Paperpile.pub.panel.BasicInfo', {
           return grid.getSelectionCount();
         }
       });
+
+    this.emptyTpl = new Ext.XTemplate(
+      '<div class="pp-box pp-box-style2">',
+      '  <p class="pp-inactive">No references selected.</p>',
+      '</div>'
+      );
   }
 
 });

@@ -327,7 +327,7 @@ Ext.define('Paperpile.app.PubActions', {
         }),
         'EXPORT_SELECTION': new Ext.Action({
           itemId: 'EXPORT_SELECTION',
-          text: 'Export selected references',
+          text: 'Export to File',
           triggerKey: 'x',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
@@ -574,7 +574,6 @@ Ext.define('Paperpile.app.PubActions', {
           var data = Ext.decode(response.responseText);
           var num_deleted = data.num_deleted;
 
-          // Does what it says: adds to the list of functions to call when the grid is next reloaded. This is handled in the customized 'onload' handler up at the top of the file.
           grid.enable();
           grid.doAfterNextReload.push(function() {
             grid.selectRowAndSetCursor(firstIndex);
@@ -585,28 +584,8 @@ Ext.define('Paperpile.app.PubActions', {
               msg = "1 reference moved to Trash";
             }
 
-            Paperpile.log("Deleted!");
-            /*
-            Paperpile.status.updateMsg({
-              msg: msg,
-              action1: 'Undo',
-              callback: function(action) {
-                // TODO: does not show up, don't know why:
-                Paperpile.status.showBusy('Undo...');
-                Paperpile.Ajax({
-                  url: '/ajax/crud/undo_trash',
-                  success: function(response) {
-                    Paperpile.status.clearMsg();
-                  },
-                  scope: grid
-                });
-              },
-              scope: grid,
-              hideOnClick: true
-            });
-	    */
+            Paperpile.log("Trashed!");
           } else {
-            //            Paperpile.status.clearMsg();
           }
         },
         failure: function() {
