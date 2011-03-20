@@ -771,23 +771,34 @@ sub batch_download : Local {
 
 }
 
-sub attach_file : Local {
+sub attach_files : Local {
   my ( $self, $c ) = @_;
 
   my $guid   = $c->request->params->{guid};
-  my $file   = $c->request->params->{file};
+  my $files_param   = $c->request->params->{files};
   my $is_pdf = $c->request->params->{is_pdf};
+
+  $is_pdf = 1 if ($is_pdf);
+  $is_pdf = 0 if (!$is_pdf);
+
+  my @files;
+  if ( ref($files_param) eq 'ARRAY' ) {
+    @files = @$files_param;
+  } else {
+    push @files, $files_param;
+  }
 
   my $grid_id = $c->request->params->{grid_id};
   my $plugin  = Paperpile::Utils->session($c)->{"grid_$grid_id"};
 
   my $pub = $plugin->find_guid($guid);
 
-  $c->model('Library')->attach_file( $file, $is_pdf, $pub );
+  foreach my $file (@files) {
+    $c->model('Library')->attach_file( $file, $is_pdf, $pub );
+  }
 
   $self->_collect_update_data( $c, [$pub],
     [ 'pdf', 'pdf_name', 'attachments', '_attachments_list' ] );
-
 }
 
 sub delete_file : Local {

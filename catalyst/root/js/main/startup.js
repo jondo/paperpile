@@ -30,7 +30,7 @@ Paperpile.Url = function(url) {
 
 Paperpile.log = function() {
   if (IS_QT) {
-      QRuntime.log(obj2str(arguments[0], 3));
+      QRuntime.log(obj2str(arguments[0]));
   } else if (IS_CHROME) {
     console.log(arguments[0]);
   } else if (window.console) {
@@ -40,7 +40,7 @@ Paperpile.log = function() {
 
 Paperpile.logFull = function() {
   if (IS_QT) {
-      QRuntime.log(obj2str(arguments[0], 10));
+      QRuntime.log(obj2str_full(arguments[0], 10));
   } else if (IS_CHROME) {
     console.log(arguments[0]);
   } else if (window.console) {
@@ -48,7 +48,32 @@ Paperpile.logFull = function() {
   }
 };
 
-function obj2str(o, level, maxLevel) {
+function obj2str(o) {
+
+  if (typeof o !== 'object') {
+    return o;
+  }
+
+  var pre_space = '';
+  var space = '  ';
+
+  var out;
+  if (typeof o === 'object') {
+    out = '{';
+    for (var p in o) {
+      if (!o.hasOwnProperty(p)) {
+        continue;
+      }
+      out += '\n';
+      out += space + p + ': ' + o[p];
+    }
+    out += '\n';
+    out += pre_space + '}';
+  }
+  return out;
+}
+
+function obj2str_full(o, level, maxLevel) {
   if (level === undefined) {
     level = 0
   }
@@ -78,7 +103,7 @@ function obj2str(o, level, maxLevel) {
         continue;
       }
       out += '\n';
-      out += space + p + ': ' + o[p];
+      out += space + p + ': ' + obj2str_full(o[p], level, maxLevel);
     }
     out += '\n';
     out += pre_space + '}';

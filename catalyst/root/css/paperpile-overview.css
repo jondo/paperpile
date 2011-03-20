@@ -253,3 +253,17 @@ a:hover.pp-textlink {
     /*font-weight:bold !important;*/
     color: #0015FE;
 }
+
+li.pp-attachment-list{
+    padding: 0px 20px;
+    background-repeat: no-repeat;
+}
+
+.pp-file-generic{
+    background-image: url(/ext/resources/images/default/tree/leaf.gif);
+}
+
+.pp-folder-generic {
+    background-image: url('/images/icons/folder.png');
+}
+

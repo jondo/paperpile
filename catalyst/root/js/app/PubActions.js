@@ -6,7 +6,7 @@ Ext.define('Paperpile.app.PubActions', {
           itemId: 'REMOVE_LABEL',
           text: 'Remove a label',
           handler: function(guid) {
-            Paperpile.app.PubActions.collectionHandler(guid, 'LABEL', 'remove');		    
+            Paperpile.app.PubActions.collectionHandler(guid, 'LABEL', 'remove');
           }
         }),
         'ADD_LABEL': new Ext.Action({
@@ -20,7 +20,7 @@ Ext.define('Paperpile.app.PubActions', {
           itemId: 'REMOVE_FOLDER',
           text: 'Remove a folder',
           handler: function(guid) {
-            Paperpile.app.PubActions.collectionHandler(guid, 'FOLDER', 'remove');		    
+            Paperpile.app.PubActions.collectionHandler(guid, 'FOLDER', 'remove');
           }
         }),
         'ADD_FOLDER': new Ext.Action({
@@ -44,10 +44,11 @@ Ext.define('Paperpile.app.PubActions', {
                   params: {
                     guid: pub.getId(),
                     grid_id: grid.id,
-                    file: filenames,
-                    is_pdf: (isPDF) ? 1 : 0
+                    files: filenames,
+                    is_pdf: 1
                   },
                   success: function(response) {
+                    Paperpile.log("Successfully attached PDF!");
                     // TODO: add a status message and an undo function.
                   },
                   scope: grid
@@ -64,7 +65,7 @@ Ext.define('Paperpile.app.PubActions', {
               nameFilters: ["PDF (*.pdf)"],
               scope: grid
             };
-            Paperpile.fileDialog(callback, options);
+            Paperpile.app.FileDialog.createDialog(callback, options);
           }
         }),
         'ATTACH_FILE': new Ext.Action({
@@ -82,7 +83,7 @@ Ext.define('Paperpile.app.PubActions', {
                     guid: pub.getId(),
                     grid_id: grid.id,
                     files: filenames,
-                    is_pdf: false
+                    is_pdf: 0
                   },
                   success: function(response) {
                     // TODO: add a status message and an undo function.
@@ -100,7 +101,7 @@ Ext.define('Paperpile.app.PubActions', {
               nameFilters: ["All files (*)"],
               scope: grid
             };
-            Paperpile.fileDialog(callback, options);
+            Paperpile.app.FileDialog.createDialog(callback, options);
           }
         }),
         'SEARCH_PDF': new Ext.Action({

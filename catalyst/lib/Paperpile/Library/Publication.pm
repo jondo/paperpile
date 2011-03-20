@@ -94,7 +94,7 @@ has 'pdf_name' => ( is => 'rw', default => '' );
 
 # Comma separated list of guids of other attachments
 has 'attachments' => ( is => 'rw', default=>'');
-has 'attachments_list' => ( is => 'rw', isa => 'ArrayRef', default => sub { [] } );
+has '_attachments_list' => ( is => 'rw', isa => 'ArrayRef', default => sub { [] } );
 
 # User provided annotation "Notes", formatted in HTML
 has 'annote' => ( is => 'rw', default => '' );
@@ -537,7 +537,7 @@ sub refresh_job_fields {
 sub refresh_attachments {
   ( my $self, my $model ) = @_;
 
-  $self->attachments_list( [] );
+  $self->_attachments_list( [] );
 
   if ($self->attachments && ($self->_db_connection || $model))  {
 
@@ -571,7 +571,7 @@ sub refresh_attachments {
 
     }
 
-    $self->attachments_list( \@output );
+    $self->_attachments_list( \@output );
 
     # if attachments are present and pub is not imported it is an
     # temporary database. To make sure attachments are considered
@@ -580,7 +580,7 @@ sub refresh_attachments {
       $self->_attachments_tmp( \@files );
     }
 
-    $self->attachments_list( \@output );
+    $self->_attachments_list( \@output );
 
     $model->commit_or_continue_tx($in_prev_tx);
 
@@ -796,7 +796,7 @@ sub as_hash {
       $value += 0;
     }
 
-    $hash{$key} = $value if ( $key eq 'attachments_list' );
+    $hash{$key} = $value if ( $key eq '_attachments_list' );
 
     # take only simple scalar and allowed refs
     next if ( ref($value) && $key ne '_search_job' && $key ne '_metadata_job' );

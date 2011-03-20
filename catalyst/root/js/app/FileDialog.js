@@ -14,8 +14,9 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Paperpile.FileChooser = Ext.extend(Ext.Window, {
-
+Ext.define('Paperpile.app.FileChooser', {
+  extend: 'Ext.Window',
+  alias: 'widget.filechooser',
   title: "Select file",
   selectionMode: 'FILE',
   saveMode: false,
@@ -27,9 +28,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
   filterOptions: [],
   currentFilter: 0,
 
-  callback: function(button, path) {
-    //console.log(button, path);
-  },
+  callback: function(button, path) {},
 
   initComponent: function() {
 
@@ -153,7 +152,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
       }]
     });
 
-    Paperpile.FileChooser.superclass.initComponent.call(this);
+    this.callParent(arguments);
 
     if (!this.scope) {
       this.scope = this;
@@ -333,137 +332,139 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
   }
 });
 
-Paperpile.fileDialog = function(callback, inputOptions) {
-  // Default options. 
-  var options = {
-    title: 'File Dialog',
-    // dialogType: 'load' or 'save'
-    dialogType: 'load',
-    // selectionType: 'file' or 'folder'
-    selectionType: 'file',
-    multiple: false,
-    // types: ['txt','csv']
-    types: null,
-    nameFilters: null,
-    typesDescription: null,
-    scope: null,
-    path: Paperpile.main.getSetting('user_home')
-  };
+Ext.define('Paperpile.app.FileDialog', {
+  extend: 'Ext.util.Observable',
+  statics: {
+    createDialog: function(callback, inputOptions) {
+      // Default options. 
+      var options = {
+        title: 'File Dialog',
+        // dialogType: 'load' or 'save'
+        dialogType: 'load',
+        // selectionType: 'file' or 'folder'
+        selectionType: 'file',
+        multiple: false,
+        // types: ['txt','csv']
+        types: null,
+        nameFilters: null,
+        typesDescription: null,
+        scope: null,
+        path: Paperpile.main.getSetting('user_home')
+      };
 
-  Ext.apply(options, inputOptions);
+      Ext.apply(options, inputOptions);
 
-  if (callback === undefined) {
-    callback = function(filenames) {};
-  }
+      if (callback === undefined) {
+        callback = function(filenames) {};
+      }
 
-  if (options.scope) {
-    callback = callback.createDelegate(options.scope);
-  }
+      if (options.scope) {
+	  callback = Ext.Function.bind(callback, options.scope);
+      }
 
-  if (IS_QT) {
+      if (IS_QT) {
 
-    var config={};
+        var config = {};
 
-    if (options.dialogType == 'save') {
-      config['AcceptMode'] = 'AcceptSave';
-    } else {
-      config['AcceptMode'] = 'AcceptOpen';
-    }
-
-    if (options.selectionType == 'file') {
-      config['FileMode'] = "AnyFile";
-    } else {
-      config['FileMode'] = "Directory";
-    }
-
-    if (options.multiple && options.selectionType=='file'){
-      config['FileMode'] = "ExistingFiles";
-    }
-
-    if (options.nameFilters) {
-      config['NameFilters']=options.nameFilters;
-    }
-    
-    if (options.path) {
-      config['Directory']=options.path;
-    }
-    
-    if (options.title) {
-      config['Caption']=options.title;
-    }
-
-    if (options.dontConfirmOverwrite) {
-      config['DontConfirmOverwrite']=options.dontConfirmOverwrite;
-    }
-
-    if (options.lookInLabel){
-      config['LookInLabel'] = options.lookInLabel;
-    }
-
-    if (options.fileNameLabel){
-      config['FileNameLabel'] = options.fileNameLabel;
-    }
-
-    if (options.fileTypeLabel){
-      config['FileTypeLabel'] = options.fileTypeLabel;
-    }
-
-    if (options.acceptInLabel){
-      config['AcceptLabel'] = options.acceptLabel;
-    }
-
-    if (options.rejectLabel){
-      config['RejectLabel'] = options.rejectLabel;
-    }
-
-
-    var results = QRuntime.fileDialog(config);
-    
-    if (!results.files) results.files=[];
-
-    callback(results.files, results.filter, results.answer);
-
-  } else {
-    // Create an ExtJS dialog.
-    var fileChooserOptions = {
-      currentRoot: options.path,
-      callback: function(button, path) {
-        if (button == 'OK') {
-          callback([path]);
+        if (options.dialogType == 'save') {
+          config['AcceptMode'] = 'AcceptSave';
+        } else {
+          config['AcceptMode'] = 'AcceptOpen';
         }
-      },
-    };
 
-    for (var i = 0; i < options.types.length; i++) {
-      var option = options.types[i];
-      if (option == '*') {
-        options.types[i] = '';
+        if (options.selectionType == 'file') {
+          config['FileMode'] = "AnyFile";
+        } else {
+          config['FileMode'] = "Directory";
+        }
+
+        if (options.multiple && options.selectionType == 'file') {
+          config['FileMode'] = "ExistingFiles";
+        }
+
+        if (options.nameFilters) {
+          config['NameFilters'] = options.nameFilters;
+        }
+
+        if (options.path) {
+          config['Directory'] = options.path;
+        }
+
+        if (options.title) {
+          config['Caption'] = options.title;
+        }
+
+        if (options.dontConfirmOverwrite) {
+          config['DontConfirmOverwrite'] = options.dontConfirmOverwrite;
+        }
+
+        if (options.lookInLabel) {
+          config['LookInLabel'] = options.lookInLabel;
+        }
+
+        if (options.fileNameLabel) {
+          config['FileNameLabel'] = options.fileNameLabel;
+        }
+
+        if (options.fileTypeLabel) {
+          config['FileTypeLabel'] = options.fileTypeLabel;
+        }
+
+        if (options.acceptInLabel) {
+          config['AcceptLabel'] = options.acceptLabel;
+        }
+
+        if (options.rejectLabel) {
+          config['RejectLabel'] = options.rejectLabel;
+        }
+
+        var results = QRuntime.fileDialog(config);
+
+        if (!results.files) results.files = [];
+        callback(results.files, results.filter, results.answer);
+      } else {
+        // Create an ExtJS dialog.
+        var fileChooserOptions = {
+          currentRoot: options.path,
+          callback: function(button, path) {
+            if (button == 'OK') {
+              callback([path]);
+            }
+          },
+        };
+
+        for (var i = 0; i < options.types.length; i++) {
+          var option = options.types[i];
+          if (option == '*') {
+            options.types[i] = '';
+          }
+        }
+
+        if (options.types) {
+          Ext.apply(fileChooserOptions, {
+            showFilter: true,
+            filterOptions: [{
+              text: options.typesDescription || 'Supported files (' + options.types.join(", ") + ')',
+              suffix: options.types
+            },
+            {
+              text: 'All files',
+              suffix: ""
+            }],
+          });
+        }
+        if (options.dialogType == 'save') {
+          fileChooserOptions.saveMode = true;
+        }
+        if (options.selectionType == 'file') {
+          fileChooserOptions.selectionMode = 'FILE';
+        } else {
+          fileChooserOptions.selectionMode = 'DIR';
+        }
+
+        win = new Paperpile.FileChooser(fileChooserOptions);
+        win.show();
       }
     }
-
-    if (options.types) {
-      Ext.apply(fileChooserOptions, {
-        showFilter: true,
-        filterOptions: [{
-          text: options.typesDescription || 'Supported files (' + options.types.join(", ") + ')',
-          suffix: options.types
-        },
-        {
-          text: 'All files',
-          suffix: ""
-        }],
-      });
-    }
-    if (options.dialogType == 'save') {
-      fileChooserOptions.saveMode = true;
-    }
-    if (options.selectionType == 'file') {
-      fileChooserOptions.selectionMode = 'FILE';
-    } else {
-      fileChooserOptions.selectionMode = 'DIR';
-    }
-
-    win = new Paperpile.FileChooser(fileChooserOptions);
-    win.show();
   }
-};
+});

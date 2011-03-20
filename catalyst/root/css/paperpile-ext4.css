@@ -79,6 +79,7 @@ body {
   margin-top: .1em;
 }
 
+.pp-ellipsis, 
 .pp-grid-gallery .pp-grid-title,
 .pp-grid-gallery .pp-grid-authors,
 .pp-grid-gallery .pp-grid-labels,
@@ -132,7 +133,7 @@ body {
     white-space: normal;
 }
 
-.pp-grid-title {
+pp-grid-title {
     font-weight: bold;
 }
 

@@ -14,7 +14,6 @@ Ext.define('Paperpile.pub.panel.Files', {
   update: function(data) {
     this.callParent(arguments);
 
-    Paperpile.log(data._search_job);
     if (this.isDownloadInProgress(data)) {
       this.updateProgress(data);
     }
@@ -50,7 +49,9 @@ Ext.define('Paperpile.pub.panel.Files', {
   },
 
   viewRequiresUpdate: function(data) {
-    var needsUpdate = false;
+    // Call the PubPanel's viewRequiresUpdate method, which returns true if this 
+    // pub object is marked as dirty.
+    var needsUpdate = this.callParent(arguments);
     Ext.each(this.selection, function(pub) {
       if (pub.get('_search_job')) {
         needsUpdate = true;
@@ -78,6 +79,10 @@ Ext.define('Paperpile.pub.panel.Files', {
     return {
       hasAttachments: function(values) {
         return values._attachments_list && values._attachments_list.length > 0;
+      },
+      getAttachments: function(values) {
+	    Paperpile.logFull(values._attachments_list);
+        return values._attachments_list;
       },
       hasPdf: function(values) {
         if (values.pdf && values.pdf != '') {
@@ -107,7 +112,7 @@ Ext.define('Paperpile.pub.panel.Files', {
         }
       },
       getSearchError: function(values) {
-	    return values._search_job.error;
+        return values._search_job.error;
       },
       hasCanceledSearch: function(values) {
         return values._search_job && values._search_job.error.match(/download canceled/);
@@ -132,16 +137,17 @@ Ext.define('Paperpile.pub.panel.Files', {
       '    <tpl if="this.isImported(values) || this.hasAttachments(values)">',
       '      <h2>Supplementary Material</h2>',
       '    </tpl>',
-      '      <tpl if="this.hasAttachments(_attachments_list)">',
+      '      <tpl if="this.hasAttachments(values)">',
       '        <ul class="pp-attachments">',
-      '          <tpl for="_attachments_list">',
+      '          <tpl for="this.getAttachments(values)">',
       '            <li class="pp-attachment-list pp-file-generic {cls}">',
-      '            <a href="#" class="pp-textlink" action="OPEN_ATTACHMENT" args="{path}">{file}</a>&nbsp;&nbsp;',
-      '            <a href="#" class="pp-textlink pp-second-link" action="DELETE_FILE" args="{guid}">Delete</a></li>',
+      '            <a href="#" class="pp-action pp-textlink" action="OPEN_ATTACHMENT" args="{path}">{file}</a>&nbsp;&nbsp;',
+      '            <a href="#" class="pp-action pp-textlink pp-second-link" action="DELETE_FILE" args="{guid}">Delete</a></li>',
+      '            <a href="#" class="pp-action pp-textlink pp-second-link" action="RENAME_FILE" args="{guid}">Rename</a></li>',
       '          </tpl>',
       '       </ul>',
       '    </tpl>',
-      '    <tpl if="_imported">',
+      '    <tpl if="this.isImported(values)">',
       '      <ul>',
       '        <li id="attach-file-{id}"><a href="#" class="pp-textlink pp-action pp-action-attach-file" action="ATTACH_FILE">Attach File</a></li>',
       '      </ul>',
