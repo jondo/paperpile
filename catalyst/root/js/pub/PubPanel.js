@@ -1,11 +1,89 @@
 Ext.define('Paperpile.pub.PubPanel', {
   extend: 'Ext.Component',
+  statics: {
+    textLinkTpl: function() {
+      if (!this._textlinkTpl) {
+        this._textLinkTpl = new Ext.XTemplate(
+          '<a',
+          ' class="pp-action pp-textlink"',
+          ' action="{action}"',
+          '<tpl if="args">args="{args}"</tpl>',
+          '<tpl if="tooltip">ext:qtip="{tooltip}"</tpl>',
+          '>',
+          '<tpl if="icon">',
+          '  <img src="{icon}"/>',
+          '</tpl>',
+          '{text}',
+          '</a>').compile();
+      }
+      return this._textLinkTpl;
+    },
+    hoverButtonTpl: function() {
+      if (!this._hoverButtonTpl) {
+        this._hoverButtonTpl = new Ext.XTemplate(
+          '<a',
+          ' class="pp-action pp-hoverbutton"',
+          ' action="{action}"',
+          '<tpl if="args">args="{args}"</tpl>',
+          '<tpl if="tooltip">pp:tip="{tooltip}"</tpl>',
+          '>{text}</a>').compile();
+      }
+      return this._textLinkTpl;
+    },
+    iconButtonTemplate: function() {
+
+    },
+    buttonTemplate: function() {
+
+    },
+    actionData: function(id, args, text, icon, tooltip, iconCls) {
+      var action = Paperpile.app.Actions.get(id);
+      if (action) {
+        var cfg = {
+          text: text,
+          tooltip: tooltip,
+          icon: icon,
+          iconCls: iconCls
+        };
+        var tooltip = cfg.tooltip || action.initialConfig.tooltip || '';
+        var iconCls = cfg.iconCls || action.initialConfig.iconCls || '';
+        var icon = cfg.icon || action.initialConfig.icon || '';
+        var text = cfg.text || action.initialConfig.text || id;
+        var data = {
+          action: id,
+          tooltip: tooltip,
+          iconCls: iconCls,
+          icon: icon,
+          text: text,
+          args: args
+        };
+        return data;
+      } else {
+        Paperpile.log("Can't create text link for action " + id);
+        return {
+          action: undefined,
+          tooltip: tooltip,
+          text: id + " NOT FOUND",
+          args: args
+        };
+      }
+    },
+    actionTextLink: function(id, text, tooltip, args) {
+      var str = this.textLinkTpl().apply(this.actionData(id, text, tooltip, args));
+      return str;
+    },
+    actionHoverButton: function(id, text, tooltip, args) {
+      var str = this.hoverButtonTpl().apply(this.actionData(id, text, tooltip, args));
+      return str;
+    }
+
+  },
   initComponent: function() {
 
     this.createTemplates();
 
     Ext.apply(this, {
-	    tpl: this.singleTpl,
+      tpl: this.singleTpl,
       hideOnSingle: false,
       hideOnMulti: false,
       hideOnEmpty: true

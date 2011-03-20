@@ -30,8 +30,37 @@ Ext.define('Paperpile.app.PubActions', {
             Paperpile.app.PubActions.collectionHandler(guid, 'FOLDER', 'add');
           }
         }),
+        'DELETE_PDF': new Ext.Action({
+          itemId: 'DELETE_PDF',
+          icon: '/images/icons/cross.png',
+          text: 'Delete',
+          tooltip: 'Delete the attached PDF',
+          handler: function(guid) {
+            Paperpile.log(guid);
+            Paperpile.app.PubActions.deleteFileHandler(guid, true);
+          }
+        }),
+        'DELETE_FILE': new Ext.Action({
+          itemId: 'DELETE_FILE',
+          text: 'Delete',
+          icon: '/images/icons/cross.png',
+          tooltip: 'Delete the attached file',
+          handler: function(guid) {
+            Paperpile.app.PubActions.deleteFileHandler(guid, false);
+          }
+        }),
+        'RENAME_FILE': new Ext.Action({
+          itemId: 'RENAME_FILE',
+          icon: '/images/icons/pencil.png',
+          text: 'Rename',
+          tooltip: 'Rename the attached file',
+          handler: function(guid) {
+            // TODO in backend!
+          }
+        }),
         'ATTACH_PDF': new Ext.Action({
           itemId: 'ATTACH_PDF',
+          icon: '/images/icons/folder_page_white.png',
           text: 'Attach a PDF to this reference',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
@@ -68,9 +97,19 @@ Ext.define('Paperpile.app.PubActions', {
             Paperpile.app.FileDialog.createDialog(callback, options);
           }
         }),
-        'ATTACH_FILE': new Ext.Action({
-          itemId: 'ATTACH_PDF',
-          text: 'Attach a PDF to this reference',
+        'OPEN_FILE': new Ext.Action({
+          itemId: 'OPEN_FILE',
+          text: 'Open File',
+          tooltip: 'Open the attached file',
+          handler: function(path) {
+            Ext.defer(Paperpile.utils.openFile, 20, Paperpile.utils, [path]);
+          },
+        }),
+        'ATTACH_FILES': new Ext.Action({
+          itemId: 'ATTACH_FILES',
+          icon: '/images/icons/attach.png',
+          text: 'Attach file(s)',
+          tooltip: 'Attach one or more files to this reference',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
             var pub = grid.getSingleSelection();
@@ -107,7 +146,9 @@ Ext.define('Paperpile.app.PubActions', {
         }),
         'SEARCH_PDF': new Ext.Action({
           itemId: 'SEARCH_PDF',
-          text: 'Search & download the PDF',
+          icon: '/images/icons/page_white_search.png',
+          text: 'Search & Download PDF',
+          tooltip: 'Search online to fetch a PDF of the article',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
             var selection = grid.getSelection();
@@ -173,13 +214,44 @@ Ext.define('Paperpile.app.PubActions', {
 
           }
         }),
+        'VIEW_ONLINE': new Ext.Action({
+          itemId: 'VIEW_ONLINE',
+          text: 'View Online',
+          tooltip: 'View this reference online',
+          icon: '/images/icons/world_go.png',
+          handler: function() {
+
+          },
+          handler: function() {
+            var grid = Paperpile.main.getCurrentGrid();
+            var pub = grid.getSingleSelection();
+
+            var url;
+            var data = pub.data;
+            if (data.pmid) {
+              url = 'http://www.ncbi.nlm.nih.gov/pubmed/' + data.pmid;
+            } else if (data.doi) {
+              url = 'http://dx.doi.org/' + data.doi;
+            } else if (data.eprint) {
+              url = data.eprint;
+            } else if (data.arxivid) {
+              url = 'http://arxiv.org/abs/' + data.arxivid;
+            } else if (data.url) {
+              url = data.url;
+            }
+            Paperpile.utils.openURL(url);
+          }
+        }),
         'EMAIL': new Ext.Action({
           itemId: 'EMAIL',
-          text: 'E-mail References',
+          text: 'E-mail Reference',
+          icon: '/images/icons/email.png',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
             var selection = grid.getSelection();
-            var n = this.getSelectionCount();
+            var n = grid.getSelectionCount();
+
+            var me = grid;
 
             var callback = function(string) {
               var subject = "Papers for you";
@@ -208,7 +280,7 @@ Ext.define('Paperpile.app.PubActions', {
                 '&body=' + body + "\n\n" + string,
                 "\n\n--\nShared with Paperpile\nhttp://paperpile.com",
                 attachments.join('')].join('');
-              Paperpile.utils.openURL.defer(10, this, [link]);
+              Ext.defer(Paperpile.utils.openURL, 10, this, [link]);
             };
 
             Paperpile.Ajax({
@@ -223,7 +295,7 @@ Ext.define('Paperpile.app.PubActions', {
               success: function(response) {
                 var json = Ext.decode(response.responseText);
                 var string = json.data.string;
-                callback.call(string);
+                callback.call(me, string);
               }
             });
           }
@@ -265,31 +337,28 @@ Ext.define('Paperpile.app.PubActions', {
         }),
         'TRASH': new Ext.Action({
           itemId: 'TRASH',
+          icon: '/images/icons/trash.png',
           text: 'Move to Trash',
           triggerKey: 'd',
           tooltip: 'Move selected references to Trash',
-          iconCls: 'pp-icon-trash',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
             Paperpile.app.PubActions.deleteHandler('TRASH');
           },
-          cls: 'x-btn-text-icon',
         }),
         'DELETE': new Ext.Action({
           itemId: 'DELETE',
           text: 'Delete Reference',
           triggerKey: 'd',
           tooltip: 'Permanently delete selected references',
-          iconCls: 'pp-icon-delete',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
             Paperpile.app.PubActions.deleteHandler('DELETE');
           },
-          cls: 'x-btn-text-icon',
         }),
         'EDIT': new Ext.Action({
           itemId: 'EDIT',
-          text: 'Edit',
+          text: 'Edit Reference',
           triggerKey: 'e',
           icon: '/images/icons/pencil.png',
           tooltip: 'Edit the selected reference',
@@ -297,7 +366,6 @@ Ext.define('Paperpile.app.PubActions', {
           handler: function() {
             Paperpile.log("Edit me!");
           },
-          cls: 'x-btn-text-icon edit',
         }),
         'AUTO_COMPLETE': new Ext.Action({
           itemId: 'AUTO_COMPLETE',
@@ -363,12 +431,17 @@ Ext.define('Paperpile.app.PubActions', {
               var pdf = pub.get('pdf_name');
               var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
               var parts = Paperpile.utils.splitPath(path);
-              // Need to defer this call, otherwise the context menu jumps to the upper-left side of screen...
-              Paperpile.utils.openFile.defer(20, Paperpile.utils, [parts.dir]);
+              Ext.defer(Paperpile.utils.openFile, 20, Paperpile.utils, [parts.dir]);
             }
           }
         }),
-        'VIEW_PDF': new Ext.Action({
+        'OPEN_PDF': new Ext.Action({
+          itemId: 'VIEW_PDF',
+          text: 'View PDF',
+          icon: '/images/icons/page_white_acrobat.png',
+          triggerKey: 'v',
+          tooltip: 'Open the attached PDF in Paperpile',
+          disabledTooltip: 'No PDF attached to this reference',
           handler: function(grid_id, guid) {
             var grid = Paperpile.main.getCurrentGrid();
             var pub = grid.getSingleSelection();
@@ -382,40 +455,25 @@ Ext.define('Paperpile.app.PubActions', {
               //Paperpile.main.inc_read_counter(this.getSingleSelection().data);
             }
           },
-          iconCls: 'pp-icon-import-pdf',
-          text: 'View PDF',
-          triggerKey: 'v',
-          disabledTooltip: 'No PDF attached to this reference'
         }),
-        'TRASH': new Ext.Action({
-          text: 'Move to Trash',
-          iconCls: 'pp-icon-trash',
-          scope: this,
-          cls: 'x-btn-text-icon',
-          triggerKey: 'd',
-          tooltip: 'Move selected references to Trash',
-          handler: function(grid_guid, selection) {
+        'OPEN_PDF_EXTERNAL': new Ext.Action({
+          itemId: 'OPEN_PDF_EXTERNAL',
+          text: 'Open in External Viewer',
+          icon: '/images/icons/page-external.png',
+          triggerKey: 'v',
+          tooltip: 'Open in your default PDF reader',
+          disabledTooltip: 'No PDF attached to this reference',
+          handler: function(grid_id, guid) {
             var grid = Paperpile.main.getCurrentGrid();
-            var selection = grid.getSelection();
-
-            var firstRecord = grid.getSelectionModel().getLowestSelected();
-            var firstIndex = grid.getStore().indexOf(firstRecord);
-
-            Paperpile.Ajax({
-              url: '/ajax/crud/delete_entry',
-              params: {
-                selection: selection,
-                grid_id: grid_guid,
-                mode: mode
-              },
-              timeout: 10000000,
-              success: function(response) {
-                var data = Ext.util.JSON.decode(response.responseText);
-                var num_deleted = data.num_deleted;
-              }
-            });
+            var sm = grid.getSelectionModel();
+            var pub = grid.getSingleSelection();
+            if (pub.get('pdf')) {
+              var pdf = pub.get('pdf_name');
+              var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
+              Ext.defer(Paperpile.utils.openFile, 20, Paperpile.utils, [path]);
+            }
           },
-        })
+        }),
       };
     },
     collectionHandler: function(guid, collectionType, mode) {
@@ -455,6 +513,24 @@ Ext.define('Paperpile.app.PubActions', {
         },
         failure: function(response) {
           // TODO.
+        }
+      });
+    },
+    deleteFileHandler: function(file_guid, isPdf) {
+      var grid = Paperpile.main.getCurrentGrid();
+      var pub = grid.getSingleSelection();
+
+      Paperpile.Ajax({
+        url: '/ajax/crud/delete_file',
+        params: {
+          'file_guid': file_guid,
+          'pub_guid': pub.getId(),
+          'is_pdf': isPdf ? 1 : 0,
+          'grid_id': grid.id
+        },
+        timeout: 10000000,
+        success: function(response) {
+          Paperpile.log("Deleted file " + file_guid);
         }
       });
     },

@@ -11,7 +11,7 @@ Ext.define('Paperpile.pub.panel.BasicInfo', {
     this.callParent(arguments);
 
     this.singleTpl = new Ext.XTemplate(
-      '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
+      '<div class="pp-box BasicInfo pp-box-style1">',
       '<h2>Reference Info</h2>',
       '<dl class="pp-ref-info">',
       '<tpl if="pubtype">',
@@ -34,6 +34,8 @@ Ext.define('Paperpile.pub.panel.BasicInfo', {
       '</tpl>',
       '</dl>',
       '  <div style="clear:left;"></div>',
+      '{[Paperpile.pub.PubPanel.actionTextLink("EDIT")]}',
+      '{[Paperpile.pub.PubPanel.actionTextLink("TRASH")]}',
       '</div>', {
         getPubTypeName: function(pubType, all) {
           var pt = Paperpile.main.globalSettings.pub_types[pubType];

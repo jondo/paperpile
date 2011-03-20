@@ -1060,7 +1060,7 @@ Ext.define('Paperpile.Viewport', {
     //Timed out errors come back empty otherwise fill in error
     //data from backend
     if (response.responseText) {
-      error = Ext.JSON.decode(response.responseText).error;
+      error = Ext.decode(response.responseText).error;
     } else {
       error = {
         type: "Unknown",
@@ -1072,6 +1072,8 @@ Ext.define('Paperpile.Viewport', {
         error.msg += "<br>Timeout set: " + options.timeout;
       }
     }
+
+    Paperpile.log(error);
 
     if (error.type == 'Unknown') {
 
