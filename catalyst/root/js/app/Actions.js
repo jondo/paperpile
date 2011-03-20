@@ -3,7 +3,11 @@ Ext.define('Paperpile.app.Actions', {
     execute: function(id, args) {
       var action = this.actions.get(id);
       if (action) {
-        Paperpile.log("Executing action " + id + " with args " + args);
+        if (args) {
+          Paperpile.log("Executing action " + id + " with args " + args);
+        } else {
+          Paperpile.log("Executing action " + id);
+        }
         Ext.Function.defer(action.execute, 10, action, args);
       } else {
         Paperpile.log("Action " + id + " not found!");
@@ -12,7 +16,7 @@ Ext.define('Paperpile.app.Actions', {
     get: function(id) {
       var action = this.actions.get(id);
       if (action) {
-	  return action;
+        return action;
       } else {
         Paperpile.log("Action " + id + " not found!");
       }

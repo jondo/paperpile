@@ -21,29 +21,6 @@ Ext.define('Paperpile.pub.Grid', {
   doAfterNextReload: [],
 
   initComponent: function() {
-
-    var renderIcons = function(value, p, record) {
-      record.data._notes_tip = Ext.util.Format.stripTags(record.data.annote);
-      record.data._citekey = Ext.util.Format.ellipsis(record.data.citekey, 18);
-      record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
-
-      if (record.data._imported) {
-        if (record.data.last_read) {
-          record.data._last_readPretty = 'Last read: ' + Paperpile.utils.prettyDate(record.data.last_read);
-        } else {
-          record.data._last_readPretty = 'Never read';
-        }
-      } else {
-        record.data._last_readPretty = 'Click <i>Import</i> to add file to your library.';
-      }
-
-      if (record.data.attachments) {
-        record.data._attachments_count = record.data.attachments.split(/,/).length;
-      }
-
-      return this.getIconTemplate().apply(record.data);
-    };
-
     this.actions = {
       'TEST': new Ext.Action({
         handler: function() {
@@ -72,8 +49,8 @@ Ext.define('Paperpile.pub.Grid', {
       autoheight: true,
       multiSelect: true,
       trackOver: true,
-      loadingText: null,
       // Remove the loading text to kill the loading mask.
+      loadingText: null,
       overItemCls: 'pp-grid-over',
       selectedItemCls: 'pp-grid-selected',
       store: this.getStore(),
@@ -126,14 +103,8 @@ Ext.define('Paperpile.pub.Grid', {
     this.callParent(arguments);
 
     //    this.createContextMenu();
-    this.mon(this.getStore(), 'load', this.onStoreLoad, this);
     this.mon(this.getStore(), 'loadexception', function(exception, options, response, error) {
       Paperpile.main.onError(response, options);
-    },
-    this);
-
-    this.on('viewready', function() {
-      this.getPluginPanel().updateView();
     },
     this);
 
@@ -146,10 +117,7 @@ Ext.define('Paperpile.pub.Grid', {
     var store = this.getStore();
     var limit = Paperpile.main.globalSettings['pager_limit'] || 25;
     store.pageSize = limit;
-    store.load({
-      start: 0,
-      limit: limit
-    });
+    store.load();
   },
 
   getTemplate: function() {
@@ -171,10 +139,6 @@ Ext.define('Paperpile.pub.Grid', {
 
   refresh: function() {
     this.getView().refresh();
-  },
-
-  installEvents: function() {
-    this.mon(this.el, 'click', this.handleClick, this);
   },
 
   // Overriding the default Component method.
@@ -246,46 +210,6 @@ Ext.define('Paperpile.pub.Grid', {
     this.keys.bindAction('ctrl-f', a.get('FOCUS_SEARCH'));
   },
 
-  handleFocusSearch: function() {
-    // To be implemented by subclasses or plugins.
-  },
-
-  clearSearch: function() {
-    if (this.filterField) {
-      this.filterField.onTrigger1Click();
-      this.filterField.getEl().focus();
-    } else if (this.searchField) {
-      this.searchField.selectText();
-      this.searchField.getEl().focus();
-      this.getEmptyBeforeSearchTemplate().overwrite(this.getView().mainBody);
-    }
-  },
-
-  handleClick: function(e) {
-    e.stopEvent();
-    var el = e.getTarget();
-
-    switch (el.getAttribute('action')) {
-    case 'close-tab':
-      Paperpile.main.tabs.remove(this.getPluginPanel());
-      break;
-    case 'locate-ref':
-      this.locateInLibrary();
-      break;
-    case 'import-ref':
-      this.insertEntry();
-      break;
-    case 'lookup-details':
-      this.lookupDetails();
-      break;
-    }
-  },
-
-  // Base classes should return /false/ if the base query info should be hidden.
-  showBaseQueryInfo: function() {
-    return true;
-  },
-
   fontSize: function() {
     Ext.getBody().setStyle({
       'font-size': '24px'
@@ -297,29 +221,6 @@ Ext.define('Paperpile.pub.Grid', {
     this.getStore().baseParams.limit = pageSize;
     this.pager.pageSize = pageSize;
     this.pager.doRefresh();
-  },
-
-  onNodeOver: function(nodeData, source, e, data) {
-    var dragAllowed = true;
-
-    if (data.grid) {
-      e.cancel = true;
-      dragAllowed = false;
-    } else if (data.node) {
-      e.cancel = false;
-      dragAllowed = true;
-    }
-
-    dragAllowed = this.updateDragStatus(nodeData, source, e, data);
-
-    var retVal = '';
-    if (!dragAllowed) {
-      retVal = Ext.dd.DropZone.prototype.dropNotAllowed;
-    } else {
-      retVal = Ext.dd.DropZone.prototype.dropAllowed;
-    }
-
-    return retVal;
   },
 
   allowBackgroundReload: function() {
@@ -339,57 +240,8 @@ Ext.define('Paperpile.pub.Grid', {
     });
   },
 
-  updateDragStatus: function(nodeData, source, e, data) {
-    var proxy = source.proxy;
-    if (source.dragData.node) {
-      var myType = source.dragData.node.type;
-      if (myType == 'LABEL') {
-        return true;
-        //proxy.updateTip('Apply label to reference');
-      } else if (myType == 'FOLDER') {
-        return true;
-        //proxy.updateTip('Place reference in folder');
-      } else {
-        return false;
-      }
-    } else if (source.dragData.grid) {
-      // We should never reach here -- no within-grid drag and drop!
-    }
-  },
-
-  onNodeDrop: function(target, dd, e, data) {
-    if (data.node != null) {
-      // Get the index of the node being dropped upon.
-      var r = e.getTarget(this.getView().rowSelector);
-      var index = this.getView().findRowIndex(r);
-      var record = this.getStore().getAt(index);
-      // If this node is *outside* the *selection*, then drop on the node instead of
-      // the whole selection.
-      var sel = this.getSelection();
-      if (!this.getSelectionModel().isSelected(index)) {
-        sel = record.get('guid');
-      }
-
-      var labelName = data.node.text;
-
-      if (data.node.type) {
-        var type = data.node.type;
-        if (type == 'FOLDER') {
-          Paperpile.main.tree.addFolder(this, sel, data.node);
-        } else if (type == 'LABEL') {
-          Paperpile.main.tree.addLabel(this, sel, data.node);
-        }
-      }
-      return true;
-    }
-    return false;
-  },
-
   onStoreLoad: function() {
     // Used to indicate complete loading during startup
-    if (this.getPluginPanel()) {
-      this.getPluginPanel().updateView();
-    }
   },
 
   isLoaded: function() {
@@ -475,7 +327,6 @@ Ext.define('Paperpile.pub.Grid', {
       html: '&#160;'
     });
 
-    this.installEvents();
     this.loadKeyboardShortcuts();
     this.mon(this.pager, 'beforechange', function(pager, params) {
       var lastParams = this.pager.store.lastOptions.params;
@@ -516,44 +367,31 @@ Ext.define('Paperpile.pub.Grid', {
   },
 
   getStore: function() {
-    if (this._store) {
+    if (this._store !== undefined) {
       return this._store;
     }
+    var me = this;
     this._store = new Ext.data.Store({
       autoLoad: false,
+      remoteFilter: true,
+      autoDestroy: false,
       model: 'Publication',
       proxy: new Ext.data.AjaxProxy({
-        model: 'Publication',
         url: Paperpile.Url('/ajax/plugins/resultsgrid'),
-        startParam: 'start',
-        pageParam: 'page',
-        limitParam: 'limit',
-        sortParam: 'sort',
         // We don't set timeout here but handle timeout separately in
         // specific plugins.
         timeout: 1000000,
         method: 'GET',
         extraParams: {
-          grid_id: this.id,
-          plugin_file: this.plugin_file,
-          plugin_name: this.plugin_name,
-          plugin_query: this.plugin_query,
-          plugin_mode: this.plugin_mode,
+          grid_id: me.id,
+          plugin_file: me.plugin_file,
+          plugin_name: me.plugin_name,
+          plugin_query: me.plugin_query,
+          plugin_mode: me.plugin_mode,
           plugin_order: Paperpile.main.globalSettings['sort_field']
         },
       }),
     });
-
-    // Add some callbacks to the store so we can maintain the selection between reloads.
-    this.mon(this.getStore(), 'load', function(store, options) {
-      this.getStore().isLoaded = true;
-      for (var i = 0; i < this.doAfterNextReload.length; i++) {
-        var fn = this.doAfterNextReload[i];
-        Ext.defer(fn, 10, this);
-      }
-      this.doAfterNextReload = [];
-    },
-    this);
 
     return this._store;
   },
@@ -595,14 +433,6 @@ Ext.define('Paperpile.pub.Grid', {
         kill: 1
       }
     });
-  },
-
-  getByGUID: function(guid) {
-    var index = this.getStore().find('guid', guid);
-    if (index > -1) {
-      return this.getStore().getAt(index);
-    }
-    return null;
   },
 
   gridTemplates: {},
@@ -1079,16 +909,15 @@ Ext.define('Paperpile.pub.Grid', {
       }
 
       var store = this.getStore();
-      var pub = this.getSingleSelection();
-
       for (var guid in pubs) {
         var pubDataFromServer = pubs[guid];
         var pub = store.getById(guid);
+
         if (!pub) {
           Paperpile.log("  pub not found for guid " + guid);
           continue;
         }
-        pub.editing = true;
+        //        pub.editing = true;
         pub.dirty = false;
         pub.set(pubDataFromServer);
         if (pub.dirty) {

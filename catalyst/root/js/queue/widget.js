@@ -16,9 +16,7 @@
 
 Ext.define('Paperpile.QueueWidget', {
 	extend: 'Ext.Component',
-  id: 'queue-widget',
-  itemId: 'queue-widget',
-
+	    alias: 'widget.queuewidget',
   initComponent: function() {
 
     var t = new Ext.XTemplate(

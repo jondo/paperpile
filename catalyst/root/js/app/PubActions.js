@@ -110,13 +110,13 @@ Ext.define('Paperpile.app.PubActions', {
             var grid = Paperpile.main.getCurrentGrid();
             var selection = grid.getSelection();
             if (selection.length > 1) {
-              Paperpile.main.queueWidget.setSubmitting();
+              Paperpile.main.queue.setSubmitting();
             }
             Paperpile.Ajax({
               url: '/ajax/crud/batch_download',
               params: {
                 selection: selection,
-                grid_id: this.id
+                grid_id: grid.id
               },
               success: function(response) {
                 // Trigger a thread to start requesting queue updates.

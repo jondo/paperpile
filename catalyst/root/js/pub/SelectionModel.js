@@ -1,5 +1,5 @@
 Ext.define('Paperpile.grid.SelectionModel', {
-  extend: 'Ext.selection.Model',
+  extend: 'Ext.util.Observable',
   singleSelect: false,
   selectPageBeforeAll: false,
   maintainSelectionBetweenReloads: true,
@@ -24,9 +24,14 @@ Ext.define('Paperpile.grid.SelectionModel', {
     //      Paperpile.log("Cursor to "+this.cursor);
   },
 
-  constructor: function(config) {
-    this.selections = new Ext.util.MixedCollection();
-    this.selections.getKey = function(o) {
+  constructor: function(cfg) {
+    var me = this;
+
+    cfg = cfg || {};
+    Ext.apply(me, cfg);
+
+    this.selected = new Ext.util.MixedCollection();
+    this.selected.getKey = function(o) {
       return o.getId();
     };
 
@@ -35,29 +40,114 @@ Ext.define('Paperpile.grid.SelectionModel', {
 
     this.addEvents(
       'afterselectionchange',
-      'allselected',
-      'pageselected');
-    this.callParent(arguments);
+      'allselected');
+
+    me.callParent(arguments);
   },
 
-  bindComponent: function(cmp) {
-    cmp.on({
-      scope: this,
-		refresh: this.refresh,
-      rowupdated: this.onRowUpdated,
-      rowremoved: this.onRemove
-    });
+  bind: function(store, initial) {
+    var me = this;
 
-    this.view = cmp;
-    this.bind(cmp.getStore());
+    if (!initial && me.store) {
+      if (store !== me.store && me.store.autoDestroy) {
+        me.store.destroy();
+      } else {
+        me.store.un("add", me.onStoreAdd, me);
+        me.store.un("clear", me.onStoreClear, me);
+        me.store.un("remove", me.onStoreRemove, me);
+        me.store.un("update", me.onStoreUpdate, me);
+      }
+    }
+    if (store) {
+      store = Ext.data.StoreMgr.lookup(store);
+      store.on({
+        add: me.onStoreAdd,
+        clear: me.onStoreClear,
+        remove: me.onStoreRemove,
+        update: me.onStoreUpdate,
+        scope: me
+      });
+    }
+    me.store = store;
+    if (store && !initial) {
+      me.refresh();
+    }
+  },
 
-    cmp.addListener('mousedown', this.handleMouseEvent, this, {
-      element: 'el'
-    });
+  bindComponent: function(view) {
+    var me = this,
+    eventListeners = {
+      refresh: me.refresh,
+      render: me.onViewRender,
+      scope: me,
+      el: {
+        scope: me
+      }
+    };
+
+    if (!view['focusRow']) {
+      Paperpile.log("Binding PP selection model to a Component without 'focusRow'");
+    }
+    if (!view['focus']) {
+      Paperpile.log("Binding PP selection model to a Component without 'focus'");
+    }
+
+    me.view = view;
+    me.bind(view.getStore());
+    eventListeners.el['mousedown'] = me.handleMouseEvent;
+    view.on(eventListeners);
+  },
+
+  onViewRender: function() {
+    var me = this;
+  },
+
+  // when a record is added to a store
+  onStoreAdd: function() {
+
+  },
+
+  // when a store is cleared remove all selections
+  // (if there were any)
+  onStoreClear: function() {
+    var me = this,
+    selected = this.selected;
+
+    if (selected.getCount > 0) {
+      this.clearSelections();
+      this.fireEvent('afterselectionchange', this, this.getSelections());
+    }
+  },
+
+  // prune records from the SelectionModel if
+  // they were selected at the time they were
+  // removed.
+  onStoreRemove: function(store, record) {
+    var me = this,
+    selected = me.selected;
+
+    if (me.locked || !me.pruneRemoved) {
+      return;
+    }
+
+    if (selected.remove(record)) {
+      if (me.lastSelected == record) {
+        me.lastSelected = null;
+      }
+      if (me.getLastFocused() == record) {
+        me.setLastFocused(null);
+      }
+      me.maybeFireSelectionChange(true);
+    }
+  },
+
+  // if records are updated
+  onStoreUpdate: function() {
+
   },
 
   onRemove: function(v, index, r) {
-    if (this.selections.remove(r) !== false) {
+    if (this.selected.remove(r) !== false) {
       this.fireEvent('selectionchange', this, this.getSelection());
     }
   },
@@ -68,12 +158,10 @@ Ext.define('Paperpile.grid.SelectionModel', {
     }
   },
 
-  /**
-     * Select records.
-     * @param {Array} records The records to select
-     * @param {Boolean} keepExisting (optional) <tt>true</tt> to keep existing selections
-     */
   selectRecords: function(records, keepExisting) {
+    if (this.isLocked()) {
+      return;
+    }
     if (!keepExisting) {
       this.clearSelections();
     }
@@ -83,15 +171,11 @@ Ext.define('Paperpile.grid.SelectionModel', {
     }
   },
 
-  /**
-     * Gets the number of selected rows.
-     * @return {Number}
-     */
-  getCount: function() {
-    return this.selections.getCount();
-  },
-
   selectNext: function(keepExisting) {
+    if (this.isLocked()) {
+      return;
+    }
+
     if (this.hasNext()) {
       this.selectRow(this.getCursor() + 1, keepExisting);
       this.focusToCursor();
@@ -102,8 +186,10 @@ Ext.define('Paperpile.grid.SelectionModel', {
 
   focusToCursor: function() {
     if (this.getCursor() !== null) {
-      this.view.focusRow(this.getCursor());
-      Ext.defer(this.view.focus, 10);
+      if (this.view['focusRow']) {
+        this.view.focusRow(this.getCursor());
+        Ext.defer(this.view.focus, 10);
+      }
     }
   },
 
@@ -113,6 +199,10 @@ Ext.define('Paperpile.grid.SelectionModel', {
      * @return {Boolean} <tt>true</tt> if there is a previous row, else <tt>false</tt>
      */
   selectPrevious: function(keepExisting) {
+    if (this.isLocked()) {
+      return;
+    }
+
     if (this.hasPrevious()) {
       this.selectRow(this.getCursor() - 1, keepExisting);
       this.focusToCursor();
@@ -129,13 +219,13 @@ Ext.define('Paperpile.grid.SelectionModel', {
     return !! this.getCursor();
   },
 
-	    getSelection: function() {
-	    return this.getSelections();
-	},
+  getSelection: function() {
+    return this.getSelections();
+  },
 
   getSelections: function() {
-    if (this.selections.getCount() > 0) {
-      return this.selections.getRange();
+    if (this.selected.getCount() > 0) {
+      return this.selected.getRange();
     } else {
       return[];
     }
@@ -144,18 +234,18 @@ Ext.define('Paperpile.grid.SelectionModel', {
   getSelected: function() {
     var cur = this.getCursor();
     if (cur !== null) {
-      var record = this.selections.getAt(cur);
+      var record = this.selected.getAt(cur);
       if (record !== undefined) {
         return record;
       }
     }
 
     // If there is no cursor, just give back the first selected item.
-    return this.selections.getAt(0);
+    return this.selected.getAt(0);
   },
 
   getFirstSelected: function() {
-    return this.selections.getAt(0);
+    return this.selected.getAt(0);
   },
 
   getLowestSelected: function() {
@@ -197,34 +287,41 @@ Ext.define('Paperpile.grid.SelectionModel', {
     return highestRecord;
   },
 
+  isLocked: function() {
+    return this.locked;
+  },
+
   clearSelections: function(fast) {
     if (this.isLocked()) {
       return;
     }
     if (fast !== true) {
       var ds = this.store;
-      var s = this.selections;
+      var s = this.selected;
       s.each(function(r) {
         this.deselectRow(ds.indexOfId(r.id));
       },
       this);
       s.clear();
     } else {
-      this.selections.clear();
+      this.selected.clear();
     }
     this.setCursor(null);
   },
 
   hasSelection: function() {
-    return this.selections.getCount() > 0;
+    return this.selected.getCount() > 0;
   },
 
   isSelected: function(index) {
     var r = Ext.isNumber(index) ? this.store.getAt(index) : index;
-    return (r && this.selections.indexOf(r) > -1 ? true : false);
+    return (r && this.selected.indexOf(r) > -1 ? true : false);
   },
 
   selectRows: function(rows, keepExisting) {
+    if (this.isLocked()) {
+      return;
+    }
     if (!keepExisting) {
       this.clearSelections();
     }
@@ -281,7 +378,7 @@ Ext.define('Paperpile.grid.SelectionModel', {
       if (!keepExisting) {
         this.clearSelections();
       }
-      this.selections.add(r);
+      this.selected.add(r);
       this.last = this.lastActive = index;
       if (!preventViewNotify) {
         this.view.onItemSelect(r);
@@ -297,7 +394,7 @@ Ext.define('Paperpile.grid.SelectionModel', {
     }
     var r = this.store.getAt(index);
     if (r) {
-      this.selections.remove(r);
+      this.selected.remove(r);
       if (!preventViewNotify) {
         this.view.onItemDeselect(index);
       }
@@ -319,6 +416,7 @@ Ext.define('Paperpile.grid.SelectionModel', {
         this.view.getEl().un('mousedown', this.handleMouseEvent, this);
       }
       this.view.un('refresh', this.refresh, this);
+      this.view.un('render', this.onViewRender, this);
       this.view.un('rowupdated', this.onRowUpdated, this);
       this.view.un('rowremoved', this.onRemove, this);
     }
@@ -478,7 +576,7 @@ Ext.define('Paperpile.grid.SelectionModel', {
   },
 
   refresh: function() {
-	    // For comparison, see selection/Model.js#refresh
+    // For comparison, see selection/Model.js#refresh
     this.suspendEvents();
     var ds = this.store;
     var index;
@@ -491,13 +589,13 @@ Ext.define('Paperpile.grid.SelectionModel', {
     for (var i = 0, len = s.length; i < len; i++) {
       var r = s[i];
       if ((index = ds.indexOf(r)) != -1) {
-        this.selections.add(r);
+        this.selected.add(r);
         this.view.onItemSelect(r);
       }
     }
 
     // Re-sort selections so they match up with the (possibly) new ordering.
-    this.selections.sortBy(function(a, b) {
+    this.selected.sortBy(function(a, b) {
       var ind_a = ds.indexOfId(a.id);
       var ind_b = ds.indexOfId(b.id);
       // Go to the end of list if it's gone from the grid...
@@ -511,7 +609,7 @@ Ext.define('Paperpile.grid.SelectionModel', {
     });
 
     this.resumeEvents();
-    if (s.length != this.selections.getCount()) {
+    if (s.length != this.selected.getCount()) {
       this.fireEvent('selectionchange', this, this.getSelections());
       this.fireEvent('afterselectionchange', this, this.getSelections());
     }
@@ -575,7 +673,7 @@ Ext.define('Paperpile.grid.SelectionModel', {
     if (this.fakeAllSelected) {
       return this.store.getTotalCount();
     } else {
-      return this.selections.getCount();
+      return this.selected.getCount();
     }
   },
 
@@ -599,14 +697,14 @@ Ext.define('Paperpile.grid.SelectionModel', {
     }
     if (fast !== true) {
       var ds = this.store;
-      var s = this.selections;
+      var s = this.selected;
       s.each(function(r) {
         this.deselectRow(ds.indexOf(r));
       },
       this);
       s.clear();
     } else {
-      this.selections.clear();
+      this.selected.clear();
     }
     this.last = false;
     // DO NOT fire an 'afterselectionchange' event here!

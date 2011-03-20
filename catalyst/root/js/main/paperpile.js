@@ -24,7 +24,8 @@ Ext.define('Paperpile.Viewport', {
       layout: 'border',
       enableKeyEvents: true,
       keys: {},
-      items: [this.createTree(), this.createTabs()]
+      items: [this.createTree(), this.createTabs()],
+      dockedItems: [this.createQueue()]
     });
 
     this.callParent(arguments);
@@ -65,6 +66,13 @@ Ext.define('Paperpile.Viewport', {
       flex: 5
     });
     return this.tabs;
+  },
+
+  createQueue: function() {
+    this.queue = Ext.createByAlias('widget.queuewidget', {
+      dock: 'top'
+    });
+    return this.queue;
   },
 
   createStores: function() {
@@ -787,7 +795,7 @@ Ext.define('Paperpile.Viewport', {
     }
 
     if (this.tree) {
-	//this.tree.updateFromServer(data);
+      //this.tree.updateFromServer(data);
     }
 
     if (this.tabs) {
@@ -997,7 +1005,7 @@ Ext.define('Paperpile.Viewport', {
     // re-used it did not get called a second time for some reason...
     this.queueUpdateTask = {
       run: this.queueUpdateFn,
-      interval: 1000,
+      interval: 500,
       scope: this
     };
     Ext.TaskMgr.start(this.queueUpdateTask);

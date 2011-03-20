@@ -43,9 +43,20 @@ Ext.define('Paperpile.pub.Abstract', {
       var pub = selection[0];
       this.update(pub.data);
     } else if (selection.length > 1) {
-	//this.onMulti();
+      //this.onMulti();
     } else {
-	//this.onEmpty();
+      //this.onEmpty();
+    }
+  },
+
+  updateFromServer: function(data) {
+    if (this.selection.length != 1) {
+      return;
+    }
+
+    var pub = this.selection[0];
+    if (pub.dirty) {
+      this.update(pub.data);
     }
   },
 

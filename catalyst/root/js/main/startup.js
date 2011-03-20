@@ -78,7 +78,7 @@ function obj2str(o, level, maxLevel) {
         continue;
       }
       out += '\n';
-      out += space + p + ': ' + obj2str(o[p], level + 2, maxLevel);
+      out += space + p + ': ' + o[p];
     }
     out += '\n';
     out += pre_space + '}';
