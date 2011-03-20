@@ -1,6 +1,23 @@
 Ext.define('Paperpile.pub.PubPanel', {
   extend: 'Ext.Component',
   statics: {
+    smallTextLinkTpl: function() {
+      if (!this._smallTextlinkTpl) {
+        this._smallTextLinkTpl = new Ext.XTemplate(
+          '<a',
+          ' class="pp-action pp-textlink pp-smalltextlink"',
+          ' action="{action}"',
+          '<tpl if="args">args="{args}"</tpl>',
+          '<tpl if="tooltip">ext:qtip="{tooltip}"</tpl>',
+          '>',
+          '<tpl if="icon">',
+          '  <img src="{icon}"/>',
+          '</tpl>',
+          '{text}',
+          '</a>').compile();
+      }
+      return this._smallTextLinkTpl;
+    },
     textLinkTpl: function() {
       if (!this._textlinkTpl) {
         this._textLinkTpl = new Ext.XTemplate(
@@ -72,7 +89,11 @@ Ext.define('Paperpile.pub.PubPanel', {
       var str = this.textLinkTpl().apply(this.actionData(id, text, tooltip, args));
       return str;
     },
-    actionHoverButton: function(id, text, tooltip, args) {
+    smallTextLink: function(id, text, tooltip, args) {
+      var str = this.smallTextLinkTpl().apply(this.actionData(id, text, tooltip, args));
+      return str;
+    },
+    hoverButton: function(id, text, tooltip, args) {
       var str = this.hoverButtonTpl().apply(this.actionData(id, text, tooltip, args));
       return str;
     }

@@ -30,6 +30,7 @@ body {
 .pp-grid-list {
   line-height: 1.5em;
   width: 100%;
+  padding-right: 50px;
 }
 
 
@@ -45,6 +46,7 @@ body {
 }
 
 .pp-grid-list .pp-grid-title {
+  font-weight: bold;
 }
 
 .pp-grid-list-rightside {

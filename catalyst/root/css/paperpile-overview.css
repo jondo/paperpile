@@ -49,6 +49,13 @@ div.BasicInfo {
     border-color: #D8D8D8;
 }
 
+a.pp-smalltextlink {
+    font-size: 10px;
+}
+a.pp-smalltextlink img {
+    width: 12px;
+}
+
 a.pp-textlink {
     display:block;
     cursor:pointer;

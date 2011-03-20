@@ -34,8 +34,8 @@ Ext.define('Paperpile.pub.panel.BasicInfo', {
       '</tpl>',
       '</dl>',
       '  <div style="clear:left;"></div>',
-      '{[Paperpile.pub.PubPanel.actionTextLink("EDIT")]}',
-      '{[Paperpile.pub.PubPanel.actionTextLink("TRASH")]}',
+      '{[Paperpile.pub.PubPanel.smallTextLink("EDIT")]}',
+      '{[Paperpile.pub.PubPanel.smallTextLink("TRASH")]}',
       '</div>', {
         getPubTypeName: function(pubType, all) {
           var pt = Paperpile.main.globalSettings.pub_types[pubType];

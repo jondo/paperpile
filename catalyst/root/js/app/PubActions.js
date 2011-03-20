@@ -61,7 +61,7 @@ Ext.define('Paperpile.app.PubActions', {
         'ATTACH_PDF': new Ext.Action({
           itemId: 'ATTACH_PDF',
           icon: '/images/icons/folder_page_white.png',
-          text: 'Attach a PDF to this reference',
+          text: 'Attach a PDF',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
             var pub = grid.getSingleSelection();
