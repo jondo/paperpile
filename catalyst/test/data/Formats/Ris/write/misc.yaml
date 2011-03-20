@@ -155,5 +155,66 @@ test_expected: |
   SN  - 0028-0836
   UR  - http://dx.doi.org/10.1038/471031a
   ER  - 
+---
+test_comment: 'Ris writing test for Science'
+authors: 'Hee Im, Seol and Taghert, Paul H.'
+title: 'A CRY to Rise'
+pubtype: ARTICLE
+journal: 'Science'
+year: 2011
+month: 03
+day: 18
+pages: 1394-1395
+volume: 331
+issue: 6023
+url: http://www.sciencemag.org/content/331/6023/1394.short
+test_expected: |
+  TY  - JOUR
+  T1  - A CRY to Rise
+  AU  - Hee Im, Seol
+  AU  - Taghert, Paul H.
+  Y1  - 2011/03/18
+  JF  - Science
+  JO  - Science
+  VL  - 331
+  IS  - 6023
+  SP  - 1394
+  EP  - 1395
+  UR  - http://www.sciencemag.org/content/331/6023/1394.short
+  ER  -
+---
+test_comment: 'Ris writing test for BMC Genomics'
+authors: 'Wang, Di and Pan, Yajiao and Zhao, Xiuqin and Zhu, Linghua and Fu, Binying and Li, Zhikang'
+title: 'Genome-wide Temporal-spatial Gene Expression Profiling ofDrought Responsiveness in Rice'
+pubtype: ARTICLE
+journal: 'BMC Genomics'
+year: 2011
+abstract: 'BACKGROUND:Rice is highly sensitive to drought, and the effect of drought may vary with the different ...'
+pages: 149
+volume: 12
+issue: 1
+url: http://www.biomedcentral.com/1471-2164/12/149
+issn: 1471-2164
+test_expected: |
+  TY  - JOUR
+  T1  - Genome-wide Temporal-spatial Gene Expression Profiling ofDrought Responsiveness in Rice
+  AU  - Wang, Di
+  AU  - Pan, Yajiao
+  AU  - Zhao, Xiuqin
+  AU  - Zhu, Linghua
+  AU  - Fu, Binying
+  AU  - Li, Zhikang
+  Y1  - 2011
+  AB  - BACKGROUND:Rice is highly sensitive to drought, and the effect of drought may vary with the different ...
+  JF  - BMC Genomics
+  JO  - BMC Genomics
+  VL  - 12
+  IS  - 1
+  SP  - 149
+  SN  - 1471-2164
+  UR  - http://www.biomedcentral.com/1471-2164/12/149
+  ER  - 
+
+
 
 

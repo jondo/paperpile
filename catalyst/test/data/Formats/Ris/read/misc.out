@@ -62,4 +62,28 @@ publisher: 'Nature Publishing Group, a division of Macmillan Publishers Limited.
 issn: 0028-0836
 url: http://dx.doi.org/10.1038/471031a
 doi: 10.1038/471031a
-
+---
+authors: 'Hee Im, Seol and Taghert, Paul H.'
+title: 'A CRY to Rise'
+pubtype: ARTICLE
+journal: 'Science'
+year: 2011
+month: 03
+day: 18
+pages: 1394-1395
+volume: 331
+issue: 6023
+url: http://www.sciencemag.org/content/331/6023/1394.short
+doi: 10.1126/science.1204293
+---
+authors: 'Wang, Di and Pan, Yajiao and Zhao, Xiuqin and Zhu, Linghua and Fu, Binying and Li, Zhikang'
+title: 'Genome-wide Temporal-spatial Gene Expression Profiling ofDrought Responsiveness in Rice'
+pubtype: ARTICLE
+journal: 'BMC Genomics'
+year: 2011
+abstract: 'BACKGROUND:Rice is highly sensitive to drought, and the effect of drought may vary with the different ...'
+pages: 149
+volume: 12
+issue: 1
+url: http://www.biomedcentral.com/1471-2164/12/149
+issn: 1471-2164
