@@ -20,7 +20,8 @@ Ext.define('Paperpile.pub.GridMainLibrary', {
 
 	    this.callParent(arguments);
 
-    this.actions['NEW'] = new Ext.Action({
+	    
+    this.extraActions['NEW'] = new Ext.Action({
       text: 'Create Manually',
       iconCls: 'pp-icon-add',
       handler: function() {
@@ -30,7 +31,7 @@ Ext.define('Paperpile.pub.GridMainLibrary', {
       itemId: 'new_button',
       tooltip: 'Manually create a new reference for your library'
     });
-    this.actions['FILE_IMPORT'] = new Ext.Action({
+    this.extraActions['FILE_IMPORT'] = new Ext.Action({
       text: "Open Bibliography File",
       iconCls: 'pp-icon-import-file',
       tooltip: 'Import references from EndNote, BibTeX <br/> and other bibliography files.',
@@ -39,7 +40,7 @@ Ext.define('Paperpile.pub.GridMainLibrary', {
       }
     });
 
-    this.actions['PDF_IMPORT'] = new Ext.Action({
+    this.extraActions['PDF_IMPORT'] = new Ext.Action({
       text: "Import PDFs",
       iconCls: 'pp-icon-import-pdf',
       tooltip: 'Import references from one or more PDFs',
@@ -47,15 +48,15 @@ Ext.define('Paperpile.pub.GridMainLibrary', {
         Paperpile.main.pdfExtract();
       }
     });
-    this.actions['ADD_MENU'] = {
+    this.extraActions['ADD_MENU'] = {
       text: 'Add to Library',
       itemId: 'ADD_MENU',
       iconCls: 'pp-icon-add',
       menu: {
         items: [
-          this.actions['NEW'],
-          this.actions['FILE_IMPORT'],
-          this.actions['PDF_IMPORT']]
+          this.extraActions['NEW'],
+          this.extraActions['FILE_IMPORT'],
+          this.extraActions['PDF_IMPORT']]
       }
     };
   },
@@ -63,7 +64,7 @@ Ext.define('Paperpile.pub.GridMainLibrary', {
   loadKeyboardShortcuts: function() {
 	    this.callParent(arguments);
 
-    this.keys.bindAction('ctrl-n', this.actions['NEW']);
+    this.keys.bindAction('ctrl-n', this.extraActions['NEW']);
   },
 
   initToolbarMenuItemIds: function() {

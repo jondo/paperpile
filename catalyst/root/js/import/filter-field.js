@@ -14,78 +14,50 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
+Ext.define('Paperpile.pub.FilterField', {
+  extend: 'Ext.form.Trigger',
+  alias: 'widget.filterfield',
 
-  singleField: '',
-  // Restrict query to a single field by appending it like name: knuth
   initComponent: function() {
-
-    itemId: 'filter_field',
-
     Ext.apply(this, {
       enableKeyEvents: true,
     });
+    this.callParent(arguments);
 
-    Ext.app.FilterField.superclass.initComponent.call(this);
-
+    /*
     this.on('specialkey', function(f, e) {
       if (e.getKey() == e.ENTER) {
         this.onTrigger2Click();
       }
     },
     this);
-
-    var task = new Ext.util.DelayedTask(this.onTrigger2Click, this);
+    */
+    var task = new Ext.util.DelayedTask(this.executeSearch, this);
     this.on('keydown', function(f, e) {
       task.delay(200);
     },
     this);
+
   },
 
-  afterRender: function() {
-    Ext.app.FilterField.superclass.afterRender.call(this);
+  hideTrigger: true,
 
-    // SwallowEvent code lifted from Editor.js -- causes
-    // this field to swallow key events which would otherwise
-    // be carried on to the grid (i.e. ctrl-A to select all)
-    //      this.getEl().swallowEvent([
-    //        'keypress', // *** Opera
-    //        'keydown' // *** all other browsers
-    //        ]);
+  onTriggerClick: function() {
+    this.executeSearch();
   },
 
-  validationEvent: false,
-  validateOnBlur: false,
-  trigger1Class: 'x-form-clear-trigger',
-  trigger2Class: 'x-form-search-trigger',
-  hideTrigger1: true,
-  hideTrigger2: true,
-  width: 180,
-  hasSearch: false,
-
-  onTrigger1Click: function() {
-    if (this.hasSearch) {
-      this.el.dom.value = '';
-      var o = {
-        start: 0,
-        task: 'NEW'
-      };
-      this.store.baseParams = this.store.baseParams || {};
-      this.store.baseParams.plugin_query = this.build_query('');
-      this.store.reload({
-        params: o
-      });
-      this.triggers[0].hide();
-      this.hasSearch = false;
-    }
-  },
-
-  onTrigger2Click: function() {
+  executeSearch: function() {
+    Paperpile.log("Searching");
     var v = this.getRawValue();
 
     // Reload everthing when empty
-    if (v.length < 1) {
-      this.onTrigger1Click();
+    if (v.length == 0) {
+      //      this.store.getProxy().extraParams['plugin_query'] = this.build_query('');
+      this.store.getProxy().extraParams['plugin_query'] = this.build_query('');
+      this.store.load({
+	      start: 0,
+		  filters: undefined
+	  });
       return;
     }
 
@@ -99,35 +71,23 @@ Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
       start: 0,
       task: 'NEW'
     };
-    this.store.baseParams = this.store.baseParams || {};
-
-    this.store.baseParams['plugin_query'] = this.build_query(v);
-    this.store.reload({
-      params: o
-    });
-    this.hasSearch = true;
-    this.triggers[0].show();
-
+    //    this.store.baseParams = this.store.baseParams || {};
+      this.store.baseParams = this.store.baseParams || {};
+    this.store.getProxy().extraParams['plugin_query'] = this.build_query(v);
+    this.store.getProxy().extraParams['task'] = 'NEW';
+    this.store.load();
   },
 
   build_query: function(input) {
-    if (input == '') {
-      if (this.base_query == '') {
-        return ('');
-      } else {
-        return (this.base_query);
-      }
-    } else {
-      if (this.singleField == '') {
-        return (this.base_query + " " + input);
-      } else {
-        var parts = input.split(/\s+/);
-        for (var i = 0; i < parts.length; i++) {
-          parts[i] = this.singleField + ":" + parts[i];
-        }
-        return (this.base_query + " " + parts.join(" "));
+    var els = [this.base_query, input];
+    var query_array = [];
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el != '') {
+        query_array.push(el);
       }
     }
+    return query_array.join(' ');
   }
 }
 

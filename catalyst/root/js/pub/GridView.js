@@ -21,7 +21,7 @@ Ext.define('Paperpile.pub.Grid', {
   doAfterNextReload: [],
 
   initComponent: function() {
-    this.actions = {
+    this.extraActions = {
       'TEST': new Ext.Action({
         handler: function() {
           if (this.templateKey === 'gallery') {
@@ -80,16 +80,7 @@ Ext.define('Paperpile.pub.Grid', {
     this.relayEvents(this.getSelectionModel(), ['selectionchange']);
     this.relayEvents(this.getSelectionModel(), ['afterselectionchange']);
 
-    this.pager = new Paperpile.grid.Pager({
-      dock: 'bottom',
-      store: this.getStore(),
-      displayInfo: true
-    });
-    this.pager.on('pagebutton', function(pager) {
-      this.onPageButtonClick();
-    },
-    this);
-
+    this.pager = this.createPager();
     this.toolbar = this.createToolbar();
     var dockItems = [this.pager, this.toolbar];
 
@@ -102,12 +93,25 @@ Ext.define('Paperpile.pub.Grid', {
 
     this.callParent(arguments);
 
-    //    this.createContextMenu();
+    this.createContextMenu();
     this.mon(this.getStore(), 'loadexception', function(exception, options, response, error) {
       Paperpile.main.onError(response, options);
     },
     this);
 
+  },
+
+  createPager: function() {
+    var pager = new Paperpile.grid.Pager({
+      dock: 'bottom',
+      store: this.getStore(),
+      displayInfo: true
+    });
+    pager.on('pagebutton', function(pager) {
+      this.onPageButtonClick();
+    },
+    this);
+    return pager;
   },
 
   initialLoad: function() {
@@ -175,7 +179,7 @@ Ext.define('Paperpile.pub.Grid', {
 
     a = Paperpile.app.Actions;
 
-    this.keys.bindAction('ctrl-t', this.actions['TEST']);
+    this.keys.bindAction('ctrl-t', this.getAction('TEST'));
 
     // Standard grid shortcuts.
     this.keys.bindAction('ctrl-a', a.get('SELECT_ALL'));
@@ -346,19 +350,19 @@ Ext.define('Paperpile.pub.Grid', {
   },
 
   createAuthorToolTip: function() {
-    this.authorTip = new Ext.ToolTip({
-      maxWidth: 500,
+    this.authorTip = new Ext.tip.ToolTip({
+      maxWidth: 600,
       showDelay: 0,
       hideDelay: 0,
-      target: this.getView().mainBody,
+      target: this.getEl(),
       delegate: '.pp-authortip',
       renderTo: document.body,
       listeners: {
         beforeshow: {
-          fn: function updateTipBody(tip) {
-            var rowIndex = this.getView().findRowIndex(tip.triggerElement);
-            var record = this.getStore().getAt(rowIndex);
-            tip.body.dom.innerHTML = record.data._authortip;
+          fn: function(tip) {
+            var node = this.getView().findItemByChild(tip.triggerElement);
+            var pub = this.getView().getRecord(node);
+            tip.body.dom.innerHTML = pub.data._authortip;
           },
           scope: this
         }
@@ -457,53 +461,43 @@ Ext.define('Paperpile.pub.Grid', {
   initToolbarMenuItemIds: function() {
     this.toolbarMenuItemIds = new Ext.util.MixedCollection();
     this.toolbarMenuItemIds.addAll([
-      'TB_FILL',
-      'TB_BREAK',
-      this.createSeparator('TB_VIEW_SEP'),
-      'EDIT',
-      'AUTO_COMPLETE',
-      'SELECT_ALL',
-      'DELETE',
-      this.createSeparator('TB_DEL_SEP'),
-      'EXPORT_MENU',
-      this.createSeparator('TB_SETTINGS_SEP'),
-      'SETTINGS']);
+      'EDIT', ]);
   },
 
   // Same as above, but for the context menu.
   initContextMenuItemIds: function() {
     this.contextMenuItemIds = new Ext.util.MixedCollection();
     this.contextMenuItemIds.addAll([
-      'VIEW_PDF',
+      'OPEN_PDF',
       'OPEN_PDF_FOLDER',
-      this.createContextSeparator('CONTEXT_VIEW_SEP'),
+      this.createContextSep('CONTEXT_SEP1'),
       'EDIT',
       'AUTO_COMPLETE',
       'SELECT_ALL',
-      'DELETE',
-      this.createContextSeparator('CONTEXT_DEL_SEP'),
+      'TRASH',
+      this.createContextSep('CONTEXT_SEP2'),
       'EXPORT_SELECTION',
-      this.createContextSeparator('CONTEXT_BIBTEX_SEP'),
+      this.createContextSep('CONTEXT_SEP3'),
       'COPY_FORMATTED',
       'COPY_BIBTEX_CITATION',
       'COPY_BIBTEX_KEY']);
   },
 
-  createContextSeparator: function(itemId) {
-    this.actions[itemId] = new Ext.menu.Separator({
+  createContextSep: function(itemId) {
+    this.extraActions[itemId] = new Ext.menu.Separator({
       itemId: itemId
     });
     return itemId;
   },
 
-  createSeparator: function(itemId) {
-    this.actions[itemId] = new Ext.toolbar.Separator({
+  createTbSep: function(itemId) {
+    this.extraActions[itemId] = new Ext.toolbar.Separator({
       itemId: itemId
     });
     return itemId;
   },
 
-  getTopToolbar: function() {
+  getToolbar: function() {
     return this.toolbar;
   },
 
@@ -512,7 +506,7 @@ Ext.define('Paperpile.pub.Grid', {
       enableOverflow: false
     });
 
-    this.toolbarExtras = {
+    Ext.apply(this.extraActions, {
       'TB_SPACE': new Ext.toolbar.Spacer({
         itemId: 'TB_SPACE',
         width: '10px'
@@ -535,22 +529,21 @@ Ext.define('Paperpile.pub.Grid', {
             Paperpile.app.Actions.get('EXPORT_SELECTION')]
         }
       })
-    };
+    });
 
     this.initToolbarMenuItemIds();
     var itemIds = this.toolbarMenuItemIds;
     for (var i = 0; i < itemIds.length; i++) {
       var id = itemIds.getAt(i);
-      Paperpile.log(id);
-      var action = Paperpile.app.Actions.get(id);
+      var action = this.getAction(id);
       var cmp;
-      if (action && action instanceof Ext.Action) {
+      if (action) {
         cmp = toolbar.add(action);
-      } else if (this.toolbarExtras[id]) {
-        cmp = toolbar.add(this.toolbarExtras[id]);
+        var index = toolbar.items.indexOf(cmp);
+        toolbar.move(index, toolbar.items.getCount());
+      } else {
+        Paperpile.log("No action found for " + id);
       }
-      var index = toolbar.items.indexOf(cmp);
-      toolbar.move(index, toolbar.items.getCount());
     }
     return toolbar;
   },
@@ -560,25 +553,33 @@ Ext.define('Paperpile.pub.Grid', {
   },
 
   createContextMenu: function() {
+
     this.context = new Ext.menu.Menu({
       plugins: [new Ext.ux.TDGi.MenuKeyTrigger()],
-      id: 'pp-grid-context-' + this.id,
-      itemId: 'context',
-
-      hideTooltips: true // Custom flag which hides tooltips in menu items.
+      hideTooltips: true,
+      // Custom flag which hides tooltips in menu items.
+      listeners: {
+        contextmenu: {
+          fn: function(event) {
+            event.preventDefault();
+          },
+          element: 'el'
+        }
+      }
     });
     var context = this.context;
     this.initContextMenuItemIds();
     var itemIds = this.contextMenuItemIds; // This is an Ext.util.MixedCollection.
     for (var i = 0; i < itemIds.length; i++) {
       var id = itemIds.getAt(i);
-      var action = Paperpile.app.Actions.get(id);
-      if (!action) {
-        continue;
-      }
-      context.insert(i, action);
-      if (action && action instanceof Ext.Action) {
-        action.addComponent(context.items.getAt(i));
+      var action = this.getAction(id);
+      var cmp;
+      if (action) {
+        cmp = context.add(action);
+        var index = context.items.indexOf(cmp);
+        context.move(index, context.items.getCount());
+      } else {
+        Paperpile.log("No action found for " + id);
       }
     }
   },
@@ -590,7 +591,6 @@ Ext.define('Paperpile.pub.Grid', {
       this.getSelectionModel().setCursor(index);
     }
 
-    //    this.refreshView();
     var xy = event.getXY();
     this.context.show();
     this.context.setPosition(xy[0], xy[1]);
@@ -609,8 +609,20 @@ Ext.define('Paperpile.pub.Grid', {
     return;
   },
 
+  getAction: function(id) {
+    var action = Paperpile.app.Actions.get(id);
+    if (!action) {
+      action = this.extraActions[id];
+    }
+    if (!action) {
+      Paperpile.log("Grid couldn't find any action for " + id);
+    }
+    return action;
+  },
+
   // Private. Don't override.
   updateButtons: function() {
+    return;
     var docked = this.getDockedItems();
 
     Ext.Array.forEach(docked, function(item, index, length) {
@@ -621,8 +633,8 @@ Ext.define('Paperpile.pub.Grid', {
     this.getContextMenu().items.each(function(item, index, length) {
       item.enable();
     });
-    for (var key in this.actions) {
-      var action = this.actions[key];
+    for (var key in this.extraActions) {
+      var action = this.extraActions[key];
       if (action['setDisabled']) {
         action.setDisabled(false);
       }
@@ -630,25 +642,21 @@ Ext.define('Paperpile.pub.Grid', {
 
     var selection = this.getSingleSelection();
 
-    this.actions['SELECT_ALL'].setText('Select All');
+    this.getAction('SELECT_ALL').setText('Select All');
     if (this.isAllSelected() || this.getTotalCount() == 0) {
-      this.actions['SELECT_ALL'].disable();
+      this.getAction('SELECT_ALL').disable();
     }
 
     if (!selection || selection.data.pdf == '') {
-      this.actions['VIEW_PDF'].disable();
-      this.actions['OPEN_PDF_FOLDER'].disable();
+      this.getAction('VIEW_PDF').disable();
+      this.getAction('OPEN_PDF_FOLDER').disable();
     }
 
     if (!selection) {
-      this.actions['AUTO_COMPLETE'].disable();
-      this.actions['EDIT'].disable();
-      this.actions['DELETE'].disable();
-      this.actions['COPY_FORMATTED'].disable();
-    }
-
-    if (selection) {
-      this.updateMoreFrom();
+      this.getAction('AUTO_COMPLETE').disable();
+      this.getAction('EDIT').disable();
+      this.getAction('DELETE').disable();
+      this.getAction('COPY_FORMATTED').disable();
     }
 
     //    var tbar = this.getTopToolbar();
@@ -666,9 +674,9 @@ Ext.define('Paperpile.pub.Grid', {
     }
 
     if (this.getStore().getCount() == 0) {
-      this.actions['EXPORT_MENU'].disable();
-      this.actions['EXPORT_SELECTION'].disable();
-      this.actions['EXPORT_VIEW'].disable();
+      this.getAction('EXPORT_MENU').disable();
+      this.getAction('EXPORT_SELECTION').disable();
+      this.getAction('EXPORT_VIEW').disable();
     }
   },
 

@@ -24,6 +24,16 @@ Ext.define('Paperpile.pub.GridDB', {
   plugins: [],
 
   initComponent: function() {
+
+    this.filterField = Ext.createByAlias('widget.filterfield', {
+      itemId: 'FILTER_FIELD',
+      emptyText: 'Search References',
+      store: this.getStore(),
+      base_query: this.plugin_base_query,
+      hideLabel: true,
+      width: 200
+    });
+
     this.callParent(arguments);
 
     // Replace the 'handleHdOver' with an empty function to remove the 
@@ -35,49 +45,6 @@ Ext.define('Paperpile.pub.GridDB', {
 
   loadKeyboardShortcuts: function() {
     this.callParent(arguments);
-  },
-
-  toggleFilter: function(item, checked) {
-
-    var filter_button = this.filterButton;
-
-    // Toggle 'search_pdf' option 
-    this.getStore().baseParams['plugin_search_pdf'] = 1;
-
-    // Specific fields
-    if (item.itemId != 'all') {
-      if (checked) {
-        this.filterField.singleField = item.itemId;
-        this.getStore().baseParams['plugin_search_pdf'] = 0;
-      } else {
-        if (this.filterField.singleField == item.itemId) {
-          this.filterField.singleField = "";
-        }
-      }
-    }
-
-    if (!filter_button.oldIcon) {
-      filter_button.useSetClass = false;
-      filter_button.oldIcon = filter_button.icon;
-    }
-
-    if (checked) {
-      if (item.itemId == 'all') {
-        delete filter_button.minWidth;
-        filter_button.setText(null);
-        filter_button.setIcon(filter_button.oldIcon);
-        filter_button.el.addClass('x-btn-icon');
-        filter_button.el.removeClass('x-btn-noicon');
-      } else {
-        delete filter_button.minWidth;
-        filter_button.setIcon(null);
-        filter_button.setText(item.text);
-        filter_button.el.addClass('x-btn-noicon');
-        filter_button.el.removeClass('x-btn-icon');
-      }
-      this.filterField.onTrigger2Click();
-    }
-
   },
 
   setSearchQuery: function(text) {
@@ -92,6 +59,9 @@ Ext.define('Paperpile.pub.GridDB', {
   createToolbar: function() {
     var toolbar = this.callParent(arguments);
 
+    toolbar.insert(0, this.filterField);
+    toolbar.insert(1, '->');
+
     // Do some other stuff.
     return toolbar;
   },
@@ -101,35 +71,11 @@ Ext.define('Paperpile.pub.GridDB', {
 
   },
 
-  initToolbarMenuItemIds: function() {
-    this.callParent(arguments);
-    var ids = this.toolbarMenuItemIds;
-
-    ids.insert(0, 'FILTER_FIELD');
-    ids.insert(1, 'FILTER_BUTTON');
-
-    index = ids.indexOf('SELECT_ALL');
-    ids.insert(index + 0, 'EDIT');
-    //    ids.insert(index + 1, 'EDIT');
-  },
-
-  isContextItem: function(item) {
-    if (item.ownerCt.itemId == 'context') {
-      return true;
-    }
-    return false;
-  },
-  isToolbarItem: function(item) {
-    return true;
-  },
-
   updateButtons: function() {
     this.callParent(arguments);
 
-    var tbar = this.getTopToolbar();
-
+    var tbar = this.getToolbar();
     var selectionCount = this.getSelectionModel().getCount();
-
     if (selectionCount > 1) {
       var item = tbar.getComponent('EDIT');
       if (item) {
@@ -150,7 +96,7 @@ Ext.define('Paperpile.pub.GridDB', {
 
     var markup = '<div class="pp-hint-box"><p>No results to show. <a href="#" class="pp-textlink" action="close-tab">Close tab</a>.</p></div>';
 
-    // If tab is not filtered and still empty, the whole DB must be empty and we show welcome message
+    // If tab is not filtered and still empty, the whole DB must be empty and we show welcome messae
     if (this.plugin_query == '' && this.plugin_base_query == '') {
       markup = [
         '<div class="pp-hint-box">',

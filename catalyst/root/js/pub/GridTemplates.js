@@ -9,10 +9,10 @@ Ext.define('Paperpile.grid.GridTemplates', {
           '  <div class="nosel pp-grid-item pp-grid-gallery pub" guid="{guid}" id="{guid}">',
           this.getIconSection(),
           '    <div class="pp-grid-labels">',
-	  '      <tpl for="this.getLabels(labels)">',
-	  '        <div class="pp-grid-label pp-label-style-{style}">{name}&nbsp;</div>&nbsp;',
-	  '      </tpl>',
-	  '    </div>',
+          '      <tpl for="this.getLabels(labels)">',
+          '        <div class="pp-grid-label pp-label-style-{style}">{name}&nbsp;</div>&nbsp;',
+          '      </tpl>',
+          '    </div>',
           '    <div class="pp-grid-title">{[this.formatTitle(values)]}</div>',
           '    <div class="pp-grid-authors">{[this.formatAuthors(values)]}</div>',
           '    <div class="pp-grid-year">{[this.formatYear(values)]}</div>',
@@ -21,13 +21,13 @@ Ext.define('Paperpile.grid.GridTemplates', {
           '</tpl>',
           '<div class="x-clear"></div>', {
             getLabels: function(all) {
-              return me.listLabels(all);
+              return Paperpile.grid.GridTemplates.listLabels(all);
             },
             formatTitle: function(record) {
               return record.title;
             },
-            formatAuthors: function(record) {
-              return record._authors_display;
+            formatAuthors: function(data) {
+              return Paperpile.grid.GridTemplates.formatAuthors(data);
             },
             formatJournal: function(record) {
               return record.journal;
@@ -48,11 +48,11 @@ Ext.define('Paperpile.grid.GridTemplates', {
       Ext.each(guids, function(guid) {
         if (guid) {
           var record = store.getById(guid);
-	  if (record) {
-	      data.push(record.data);
-	  } else {
-	      //Paperpile.log("No record found for GUID "+guid);
-	  }
+          if (record) {
+            data.push(record.data);
+          } else {
+            //Paperpile.log("No record found for GUID "+guid);
+          }
         }
       });
       return data;
@@ -72,12 +72,12 @@ Ext.define('Paperpile.grid.GridTemplates', {
           '    <div class="pp-grid-list-rightside">',
           '      <span class="pp-grid-title">{title}</span>',
           '      <div class="pp-grid-labels">',
-	  '        <tpl for="this.getLabels(labels)">',
-	  '          <div class="pp-grid-label pp-label-style-{style}">{name}&nbsp;</div>&nbsp;',
-	  '        </tpl>',
-	  '      </div>',
+          '        <tpl for="this.getLabels(labels)">',
+          '          <div class="pp-grid-label pp-label-style-{style}">{name}&nbsp;</div>&nbsp;',
+          '        </tpl>',
+          '      </div>',
           '      <tpl if="_authors_display">',
-          '        <p class="pp-grid-authors">{_authors_display}</p>',
+          '        <p class="pp-grid-authors">{[this.formatAuthors(values)]}</p>',
           '      </tpl>',
           '      <tpl if="_citation_display">',
           '        <p class="pp-grid-citation">{_citation_display}</p>',
@@ -89,8 +89,11 @@ Ext.define('Paperpile.grid.GridTemplates', {
           '  <div class="x-clear"></div>',
           '  </div>',
           '</tpl>', {
+            formatAuthors: function(data) {
+              return Paperpile.grid.GridTemplates.formatAuthors(data);
+            },
             getLabels: function(labels) {
-              return me.listLabels(labels);
+              return Paperpile.grid.GridTemplates.listLabels(labels);
             },
             isInactive: function(record) {
               var guids = record.labels.split(',');
@@ -146,6 +149,35 @@ Ext.define('Paperpile.grid.GridTemplates', {
         '    <div class="pp-grid-status pp-grid-status-deleted" ext:qtip="[<b>{citekey}</b>]<br>deleted {_createdPretty}"></div>',
         '  </tpl>'];
       return tpl.join('');
+    },
+    formatAuthors: function(data) {
+      var output = data._authors_display;
+      var ad = data._authors_display || '';
+      var authors_array = ad.split(",");
+
+      var n = authors_array.length;
+      var author_length_threshold = 25;
+      var author_keep_beginning = 5;
+      var author_keep_end = 5;
+      if (authors_array.length > author_length_threshold) {
+        var authors_first_five = authors_array.slice(0, author_keep_beginning);
+        var authors_middle = authors_array.slice(author_keep_beginning, n - author_keep_end);
+        var hidden_n = authors_middle.length;
+        var authors_last_five = authors_array.slice(n - author_keep_end, n);
+        output = [
+          authors_first_five.join(", "),
+          ' ... <a class="pp-authortip">',
+          '(' + hidden_n + ' more)',
+          '</a> ... ',
+          authors_last_five.join(", ")].join("");
+
+        var displayText = [
+          '<b>' + n + ' authors:</b> ',
+          authors_array.join(", ")].join("");
+        data._authortip = displayText;
+      }
+      return output;
     }
+
   }
 });

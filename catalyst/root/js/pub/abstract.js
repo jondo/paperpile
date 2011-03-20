@@ -50,7 +50,7 @@ Ext.define('Paperpile.pub.Abstract', {
   },
 
   updateFromServer: function(data) {
-    if (this.selection.length != 1) {
+    if (!this.selection || this.selection.length != 1) {
       return;
     }
 
