@@ -76,6 +76,7 @@ Ext.define('Paperpile.app.PubActions', {
             var pub = grid.getSingleSelection();
 
             var callback = function(filenames) {
+
               if (filenames.length > 0) {
                 Paperpile.Ajax({
                   url: '/ajax/crud/attach_files',

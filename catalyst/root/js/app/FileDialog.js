@@ -420,7 +420,17 @@ Ext.define('Paperpile.app.FileDialog', {
 
         var results = QRuntime.fileDialog(config);
 
-        if (!results.files) results.files = [];
+        if (!results.files){
+	    results.files = [];
+	} else {
+	    // Convert the object array into a straight array.
+	    var files = [];
+	    for (i in results.files) {
+		files.push(results.files[i]);
+	    }
+	    results.files = files;
+	}
+
         callback(results.files, results.filter, results.answer);
       } else {
         // Create an ExtJS dialog.
