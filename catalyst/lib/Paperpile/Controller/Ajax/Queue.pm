@@ -124,13 +124,15 @@ sub update  {
     }
   } else {
 
-    my $ids = $c->params->{ids} || [];
+    #my $ids = $c->params->{ids} || [];
 
-    if ( ref($ids) ne 'ARRAY' ) {
-      $ids = [$ids];
-    }
+    my @ids = $c->params->get_all('ids');
 
-    foreach my $id ( @{$ids} ) {
+    #if ( ref($ids) ne 'ARRAY' ) {
+    #  $ids = [$ids];
+    #}
+
+    foreach my $id ( @ids ) {
       my $job = Paperpile::Job->new( { id => $id } );
       if (defined $job->pub) {
         my $pub = $job->pub;

@@ -521,9 +521,9 @@ sub refresh_job_fields {
     $data->{$key} = $job->info->{$key};
   }
 
-  if ( $job->type eq 'PDF_SEARCH' ) {
+  if ( $job->job_type eq 'PDF_SEARCH' ) {
     $self->_search_job($data);
-  } elsif ( $job->type eq 'METADATA_UPDATE' ) {
+  } elsif ( $job->job_type eq 'METADATA_UPDATE' ) {
     $self->_metadata_job($data);
   }
 }

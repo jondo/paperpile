@@ -17,7 +17,6 @@ use File::Spec;
 use File::Find;
 use File::HomeDir;
 
-
 use Paperpile::App::Context;
 use Paperpile::Exceptions;
 
@@ -48,7 +47,7 @@ sub startup {
 
   $self->log("Loading Controllers.");
 
-  $self->_load_controllers;
+  $self->_prepare_controllers;
 
   $self->log_routes;
 
@@ -273,7 +272,7 @@ sub app {
 
 }
 
-sub _load_controllers {
+sub _prepare_controllers {
 
   my ($self) = @_;
 
@@ -290,11 +289,7 @@ sub _load_controllers {
 
         $class =~ s!(/|\\)!::!g;
 
-        eval "use $class;";
-
-        if ($@) {
-          die("Could not load controller $class ($@).");
-        }
+        eval("use $class;");
 
         my $route = $class;
 
@@ -316,7 +311,10 @@ sub _load_controllers {
 
 sub not_found {
 
-  my ($self) = @_;
+  my ($self, $env) = @_;
+
+  $self->log("Path". $env->{PATH_INFO}. "not found.");
+
   my $response = Plack::Response->new(404);
   return $response->finalize;
 }
@@ -363,12 +361,14 @@ sub process_templates {
 
   $path=~s!/screens/!!;
 
+  require Paperpile::Controller::Root;
+
   Paperpile::Controller::Root->templates($c, $path);
 
   my $template_file = $self->path_to("root","templates",$path.'.tt');
 
   if (!-e $template_file){
-    return $self->not_found;
+    return $self->not_found($env);
   }
 
   my $template = '';
@@ -403,11 +403,11 @@ sub process_ajax {
   $class = $self->_routes->{$class};
 
   if ( !$class ) {
-    return $self->not_found;
+    return $self->not_found($env);
   }
 
   # Run controller method
-  eval "$class->$method(\$c);";
+  eval "require $class; $class->$method(\$c);";
 
   # Handle errors
   if ($@) {

@@ -19,7 +19,7 @@
 package Paperpile::Queue;
 
 use Mouse;
-
+use Mouse::Util::TypeConstraints;
 use Paperpile::App;
 use Paperpile::Utils;
 use Paperpile::Exceptions;
@@ -30,15 +30,15 @@ use FreezeThaw qw/freeze thaw/;
 use JSON;
 use 5.010;
 
-#enum 'Status' => (
-#  'WAITING',    # No jobs to run or all jobs done
-#  'RUNNING',    # Queue is processing jobs
-#  'PAUSED'      # Queue is paused
-#);
+enum 'QueueStatus' => (
+  'WAITING',    # No jobs to run or all jobs done
+  'RUNNING',    # Queue is processing jobs
+  'PAUSED'      # Queue is paused
+);
 
 has 'status' => (
   is      => 'rw',
-#  isa     => 'Status',
+  isa     => 'QueueStatus',
   default => 'WAITING',
 );
 
@@ -170,10 +170,6 @@ sub submit {
   $self->dbh->commit;
 
 }
-
-
-
-
 
 
 ## Return list of job objects currently in the queue

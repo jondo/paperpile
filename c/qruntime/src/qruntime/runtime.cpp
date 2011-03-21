@@ -27,6 +27,13 @@ Runtime::Runtime(QWidget *window){
   updaterProcess = 0;
   saveToClose = 0;
 
+  watcher = new	QFileSystemWatcher();
+
+  watcher->addPath(QString("c:\\Users\\wash\\tmp"));
+
+  connect(watcher, SIGNAL(directoryChanged(QString)), this, SLOT(processPushUpdate(QString)));
+
+
 };
 
 
@@ -83,7 +90,7 @@ void Runtime::readyReadCatalyst(){
 
   QString string(catalystProcess->readAll());
 
-  if (string.contains("powered by Catalyst")){
+  if (string.contains("Starting Paperpile server")){
     emit catalystReady();
   }
 
@@ -109,11 +116,8 @@ QString Runtime::getCatalystDir(){
 
   QString appDir = QCoreApplication::applicationDirPath();
 
-  qDebug() << appDir;
-
   if (appDir.contains(QRegExp("c.qruntime.build"))){
     QDir path(appDir+"/../../../../catalyst/");
-    qDebug() << path.canonicalPath();
     return(path.canonicalPath());
   }
 
@@ -134,8 +138,6 @@ QString Runtime::getCatalystDir(){
 QString Runtime::getInstallationDir(){
 
   QString platform = getPlatform();
-
-  
 
   if (platform == "osx"){
     QDir path(QCoreApplication::applicationDirPath()+"/../..");
@@ -217,6 +219,12 @@ void Runtime::catalystError(QProcess::ProcessError error){
 }
 
 
+void Runtime::processPushUpdate(const QString & path){
+
+  qDebug() << "Direcotory changed" << path;
+  
+}
+
 void Runtime::updaterStart(const QString & mode){
 
   QString program;
@@ -279,10 +287,9 @@ void Runtime::catalystStart(){
   }
 
   if (platform == "win32"){
-    arguments << getCatalystDir() + "/script/win32_server.pl" << "--port" << "3210" << "--fork";
+    arguments << getCatalystDir() + "/script/server.pl" << "--port" << "3210" << "--host" <<"127.0.0.1";
     QString oldPath = env.value("PATH");
     env.insert("PATH", oldPath + ";" +getCatalystDir()+"\\perl5\\win32\\dll");
-    qDebug() << env.toStringList();
   }
 
 
@@ -308,6 +315,13 @@ void Runtime::catalystKill(){
       catalystProcess->close();
     }
   }
+}
+
+void Runtime::catalystRestart(){
+
+  catalystKill();
+  catalystStart();
+
 }
 
 // If saveToClose is false the close event is dispatched to the

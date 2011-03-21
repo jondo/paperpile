@@ -16,10 +16,32 @@ Ext.onReady(function() {
   Ext.select('a#start-ajax1').on('click',testAjax1, this);
   Ext.select('a#start-ajax2').on('click',testAjax2, this);
   Ext.select('a#start-catalyst').on('click',startCatalyst, this);
+  Ext.select('a#restart-catalyst').on('click',restartCatalyst, this);
+  Ext.select('a#kill-catalyst').on('click',killCatalyst, this);
   Ext.select('a#start-window-resize').on('click',resizeWindow, this);
   Ext.select('a#start-file-info').on('click',fileInfo, this);
   Ext.select('a#start-message-box').on('click',messageBox, this);
   Ext.select('a#start-log').on('click',log, this);
+
+    window.QRuntime.catalystExit.connect(
+        function(error){
+            Ext.select('pre#result-catalyst-status').update("Catalyst stopped.");
+        }
+    );
+
+
+    window.QRuntime.catalystReady.connect(
+        function(){
+            Ext.select('pre#result-catalyst-status').update("Catalyst started.");
+        }
+    );
+
+    window.QRuntime.catalystRead.connect(
+        function(string) {
+            Ext.select('pre#result-catalyst-output').update(string);
+        }
+    );
+
 
 });
 
@@ -184,31 +206,22 @@ testAjax2 = function(){
   });
 }
 
-update = function(string) {
-  Ext.select('pre#result-catalyst-output').update(string);
-};
 
 startCatalyst = function(){
 
-  window.QRuntime.catalystRead.connect(update);
-
-  window.QRuntime.catalystReady.connect(
-    function(){
-      //alert("Catalyst ready");
-    }
-  );
-
-  window.QRuntime.catalystExit.connect(
-    function(error){
-      //alert("Catalyst error"+error);
-    }
-  );
-  
-  
-  window.QRuntime.startCatalyst();
+    window.QRuntime.catalystStart();
 
 }
 
+killCatalyst = function(){
+    window.QRuntime.catalystKill();
+}
+
+restartCatalyst = function(){
+
+    window.QRuntime.catalystRestart();
+
+}
 
 resizeWindow = function(){
   window.QRuntime.resizeWindow(800,600);

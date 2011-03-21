@@ -19,6 +19,7 @@
 package Paperpile::Job;
 
 use Mouse;
+use Mouse::Util::TypeConstraints;
 
 use Paperpile::App;
 use Paperpile::Utils;
@@ -37,33 +38,31 @@ use File::Copy;
 use File::stat;
 use FreezeThaw;
 
+use Win32;
+use Win32::Process;
+
 use Storable qw(lock_store lock_retrieve);
 
-#enum 'Types' => (
-#  'PDF_IMPORT',         # extract metadata from PDF and match agains web resource
-#  'PDF_SEARCH',         # search PDF online
-#  'METADATA_UPDATE',    # Update the metadata for a given reference.
-#  'WEB_IMPORT',         # Import a reference that was sent from the browser
-#  'TEST_JOB'
-#);
+enum 'Types' => (
+  'PDF_IMPORT',         # extract metadata from PDF and match agains web resource
+  'PDF_SEARCH',         # search PDF online
+  'METADATA_UPDATE',    # Update the metadata for a given reference.
+  'WEB_IMPORT',         # Import a reference that was sent from the browser
+  'TEST_JOB'
+);
 
-#enum 'Status' => (
-#  'PENDING',            # job is waiting to be started
-#  'RUNNING',            # job is running
-#  'DONE',               # job is successfully finished.
-#  'ERROR'               # job finished with an error or was canceled.
-#);
+enum 'Status' => (
+  'PENDING',            # job is waiting to be started
+  'RUNNING',            # job is running
+  'DONE',               # job is successfully finished.
+  'ERROR'               # job finished with an error or was canceled.
+);
 
-#has 'type'   => ( is => 'rw', isa => 'Types' );
-#has 'status' => ( is => 'rw', isa => 'Status' );
-
-has 'type'   => ( is => 'rw' );
-has 'status' => ( is => 'rw' );
+has 'job_type'   => ( is => 'rw', isa => 'Types' );
+has 'status' => ( is => 'rw', isa => 'Status' );
 
 has 'id'    => ( is => 'rw' );    # Unique id identifying the job
 has 'error' => ( is => 'rw' );    # Error message if job failed
-
-#has 'message' => ( is => 'rw' );  # Long-winded progress message.
 
 # Field to store different job type specific information
 has 'info' => ( is => 'rw', isa => 'HashRef' );
@@ -104,8 +103,13 @@ sub BUILD {
   # if no id is given we create a new job
   if ( !$params->{id} ) {
     $self->generate_id;
+
+    if ($params->{job_type}){
+      $self->job_type($params->{job_type});
+      $self->info( { msg => $self->noun . " waiting..." } );
+    }
+
     $self->status('PENDING');
-    $self->info( { msg => $self->noun . " waiting..." } );
     $self->error('');
     $self->duration(0);
     $self->start(0);
@@ -288,43 +292,59 @@ sub run {
 
   my $pid = undef;
 
-  # fork returned undef, indicating that it failed
-  if ( !defined( $pid = fork() ) ) {
-    die "Cannot fork: $!";
-  }
+  if ($^O eq 'MSWin32') {
 
-  # fork returned 0, so this branch is child
-  elsif ( $pid == 0 ) {
+    my $paperperl = Paperpile::App->path_to('perl5','win32','bin','paperperl.exe');
+    my $worker = Paperpile::App->path_to('script','worker.pl');
 
-    close(STDOUT);
+    my $process;
+    Win32::Process::Create($process,
+                           $paperperl,
+                           "$paperperl $worker ".$self->id,
+                           0,
+                           DETACHED_PROCESS,
+                           ".")|| die(Win32::FormatMessage( Win32::GetLastError() ));
 
-    my $start_time = time;
-    $self->start($start_time);
+  } else {
 
-    $self->update_status('RUNNING');
-
-    eval { $self->_do_work; };
-
-    my $end_time = time;
-
-    # Make sure that each job takes at least 1 second to be sent once
-    # as "running" to frontend which is necessary to get updated
-    # correctly. Clearly not optimal but works for now...
-    if ( $end_time - $start_time <= 1 ) {
-      sleep(1);
+    # fork returned undef, indicating that it failed
+    if ( !defined( $pid = fork() ) ) {
+      die "Cannot fork: $!";
     }
 
-    if ($@) {
-      $self->_catch_error;
-    } else {
-      $self->duration( $end_time - $start_time );
-      $self->update_status('DONE');
+    # fork returned 0, so this branch is child
+    elsif ( $pid == 0 ) {
+
+      close(STDOUT);
+
+      my $start_time = time;
+      $self->start($start_time);
+
+      $self->update_status('RUNNING');
+
+      eval { $self->_do_work; };
+
+      my $end_time = time;
+
+      # Make sure that each job takes at least 1 second to be sent once
+      # as "running" to frontend which is necessary to get updated
+      # correctly. Clearly not optimal but works for now...
+      if ( $end_time - $start_time <= 1 ) {
+        sleep(1);
+      }
+
+      if ($@) {
+        $self->_catch_error;
+      } else {
+        $self->duration( $end_time - $start_time );
+        $self->update_status('DONE');
+      }
+
+      my $q = Paperpile::Queue->new();
+      $q->run;
+
+      exit();
     }
-
-    my $q = Paperpile::Queue->new();
-    $q->run;
-
-    exit();
   }
 }
 
@@ -338,28 +358,27 @@ sub _do_work {
 
   my $self = shift;
 
-  # if ( $self->type eq 'METADATA_UPDATE' ) {
+   if ( $self->job_type eq 'METADATA_UPDATE' ) {
 
-  #   $self->update_info( 'msg', 'Searching PDF' );
-  #   sleep(2);
-  #   $self->update_info( 'msg', 'Starting download' );
-  #   sleep(2);
-  #   $self->update_info( 'msg',  'Downloading' );
-  #   $self->update_info( 'size', 1000 );
-  #   sleep(1);
-  #   $self->update_info( 'downloaded', 200 );
-  #   sleep(1);
-  #   $self->update_info( 'downloaded', 500 );
-  #   sleep(1);
-  #   $self->update_info( 'downloaded', 800 );
-  #   sleep(1);
-  #   $self->update_info( 'downloaded', 1000 );
-  #   sleep(1);
-  #   ExtractionError->throw("Some random error") if ( rand(1) > 0.5 );
-  #   $self->update_info( 'msg', 'File successfully downloaded.' );
-  #   return;
-
-  # }
+     $self->update_info( 'msg', 'Searching PDF' );
+     sleep(2);
+     $self->update_info( 'msg', 'Starting download' );
+     sleep(2);
+     $self->update_info( 'msg',  'Downloading' );
+     $self->update_info( 'size', 1000 );
+     sleep(1);
+     $self->update_info( 'downloaded', 200 );
+     sleep(1);
+     $self->update_info( 'downloaded', 500 );
+     sleep(1);
+     $self->update_info( 'downloaded', 800 );
+     sleep(1);
+     $self->update_info( 'downloaded', 1000 );
+     sleep(1);
+     ExtractionError->throw("Some random error") if ( rand(1) > 0.5 );
+     $self->update_info( 'msg', 'File successfully downloaded.' );
+     return;
+   }
 
   $self->pub->_jobid( $self->id );
 

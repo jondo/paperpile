@@ -69,6 +69,9 @@ sub init_session  {
   # Clear session variables
   unlink( File::Spec->catfile($tmp_dir, 'local_session' ) );
 
+  # Clear log files of external processes
+  unlink( glob( File::Spec->catfile( $tmp_dir, 'worker_*.log' ) ) );
+
   my $user_dir = $c->config->{'paperpile_user_dir'};
 
   # No settings file exists in .paperpile in user's home directory

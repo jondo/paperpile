@@ -15,36 +15,46 @@
 # Paperpile.  If not, see http://www.gnu.org/licenses.
 
 use strict;
+
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 
-use Plack::Runner;
 use Paperpile::App;
+use Paperpile::Utils;
+use Paperpile::Queue;
 use Paperpile::Job;
-use Data::Dumper;
 
-use Plack::Middleware::Static;
+my $id = $ARGV[0];
 
-my $paperpile = new Paperpile::App->new();
+my $tmp = File::Spec->catfile(Paperpile::Utils->get_tmp_dir, "worker_$id.log");
 
-$paperpile->startup();
+close(STDOUT);
+open(STDERR,">$tmp");
 
-my $root = $paperpile->home_dir() . "/root/";
+my $job = Paperpile::Job->new(id => $id);
 
-my $app = sub {
-  return $paperpile->app(shift);
-};
 
-$app = Plack::Middleware::Static->wrap( $app, path => qr{^/}, root => $root, pass_through => 1 );
+my $start_time = time;
+$job->start($start_time);
 
-my $runner = Plack::Runner->new(
-  app          => $app,
-  server       => 'Custom',        # Use custom server
-  env          => 'deployment',    # Turn of various middlewares including AccessLog
-);
+$job->update_status('RUNNING');
 
-$runner->parse_options(@ARGV);
+eval { $job->_do_work; };
 
-print STDERR "Starting Paperpile server at 127.0.0.1:3210...\n";
+my $end_time = time;
 
-$runner->run;
+if ( $end_time - $start_time <= 1 ) {
+  sleep(1);
+}
+
+if ($@) {
+  $job->_catch_error;
+} else {
+  $job->duration( $end_time - $start_time );
+  $job->update_status('DONE');
+}
+
+my $q = Paperpile::Queue->new();
+$q->run;
+
+exit(0);

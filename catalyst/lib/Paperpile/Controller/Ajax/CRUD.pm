@@ -707,7 +707,7 @@ sub batch_update  {
   my @jobs = ();
   foreach my $pub (@$data) {
     my $j = Paperpile::Job->new(
-      type => 'METADATA_UPDATE',
+      job_type => 'METADATA_UPDATE',
       pub  => $pub,
     );
 
@@ -743,7 +743,7 @@ sub batch_download  {
     my $hidden = ( scalar(@$data) == 1 ) ? 1 : 0;
 
     my $j = Paperpile::Job->new(
-      type   => 'PDF_SEARCH',
+      job_type   => 'PDF_SEARCH',
       pub    => $pub,
       hidden => $hidden
     );
