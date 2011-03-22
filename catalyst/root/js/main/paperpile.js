@@ -50,7 +50,7 @@ Ext.define('Paperpile.Viewport', {
     });
 
     this.runningJobs = [];
-    //    this.loadKeys();
+    this.loadKeys();
     this.fileSyncStatus = {
       busy: false,
       collections: [],
@@ -302,7 +302,7 @@ Ext.define('Paperpile.Viewport', {
   },
 
   keyControlY: function() {
-    Paperpile.main.getTabs().newScreenTab('CatalystLog', 'catalyst-log');
+    Paperpile.main.getTabs().newScreenTab('widget.catalystlog');
   },
 
   keyControlR: function() {
@@ -802,7 +802,7 @@ Ext.define('Paperpile.Viewport', {
   // Requires each grid to have an "updateData" function.
   updateFromServer: function(data) {
     if (data === undefined) return;
-    Paperpile.logFull(data);
+    //    Paperpile.logFull(data);
 
     if (this.labelStore) {
       this.labelStore.updateFromServer(data);

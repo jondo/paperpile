@@ -5,7 +5,7 @@ Ext.define('Paperpile.app.PubActions', {
         'REMOVE_LABEL': new Ext.Action({
           itemId: 'REMOVE_LABEL',
           text: 'Remove a label',
-          handler: function(guid) {
+		    handler: function(event, guid) {
             Paperpile.app.PubActions.collectionHandler(guid, 'LABEL', 'remove');
           }
         }),
@@ -19,7 +19,7 @@ Ext.define('Paperpile.app.PubActions', {
         'ADD_LABEL': new Ext.Action({
           itemId: 'ADD_LABEL',
           text: 'Add a label',
-          handler: function(guid) {
+		    handler: function(event, guid) {
             Paperpile.app.PubActions.collectionHandler(guid, 'LABEL', 'add');
           }
         }),
