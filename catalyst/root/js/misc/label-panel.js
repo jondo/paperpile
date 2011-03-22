@@ -303,10 +303,16 @@ Ext.define('Paperpile.CollectionPopup', {
     var records = new Ext.util.MixedCollection();
     records.addAll(this.getCheckedRecords());
 
+    if (records.getCount() == 0 && this.filterField.getValue() != '') {
+      this.fireEvent('itemtrigger', this, this.filterField.getValue());
+      return;
+    }
+
     if (this.getSingleSel()) {
       records.add(this.getSingleSel());
     }
     this.fireEvent('itemtrigger', this, records.getRange());
+
   },
 
   scrollTo: function(index) {
@@ -339,7 +345,7 @@ Ext.define('Paperpile.CollectionPopup', {
     if (this.store.getCount() > 0 && this.filterField.getValue() != '') {
       this.view.getSelectionModel().select(0, false);
     } else {
-	this.view.getSelectionModel().clearSelections();
+      this.view.getSelectionModel().clearSelections();
     }
   },
 
@@ -375,16 +381,16 @@ Ext.define('Paperpile.CollectionPopup', {
     this.manageLabels.hide();
 
     if (this.store.getCount() == 0) {
-	this.viewport.hide();
+      this.viewport.hide();
     }
 
     if (checkedItems.length > 0) {
       this.applyLabels.show();
     } else if (filter != '') {
-	this.newLabel.update(['<a class="pp-textlink">',
-			      '<span style="float:right;">(Create new)</span>',
-			      '<div class="pp-ellipsis"><b>'+filter+'</b></div>',
-			      '</a>'].join(''));
+      this.newLabel.update(['<a class="pp-textlink">',
+        '<span style="float:right;">(Create new)</span>',
+        '<div class="pp-ellipsis"><b>' + filter + '</b></div>',
+        '</a>'].join(''));
       this.newLabel.show();
     } else {
       this.manageLabels.show();

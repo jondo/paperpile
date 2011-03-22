@@ -8,7 +8,9 @@ Ext.define('Paperpile.app.Actions', {
         } else {
           Paperpile.log("Executing action " + id);
         }
-        Ext.Function.defer(action.execute, 10, action, args);
+	var fn = Ext.bind(action.execute, action, args);
+	fn.call();
+        //Ext.Function.defer(action.execute, 10, action, args);
       } else {
         Paperpile.log("Action " + id + " not found!");
       }

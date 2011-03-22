@@ -64,9 +64,9 @@ Ext.define('Paperpile.Viewport', {
     if (el.hasCls('pp-action')) {
       var id = el.getAttribute('action');
       var args = el.getAttribute('args');
-      var array = undefined;
+      var array = [event];
       if (args && args !== '') {
-        array = args.split(',');
+	  array.push(args.split(','));
       }
       Paperpile.app.Actions.execute(id, array);
     }
@@ -802,6 +802,7 @@ Ext.define('Paperpile.Viewport', {
   // Requires each grid to have an "updateData" function.
   updateFromServer: function(data) {
     if (data === undefined) return;
+    Paperpile.logFull(data);
 
     if (this.labelStore) {
       this.labelStore.updateFromServer(data);

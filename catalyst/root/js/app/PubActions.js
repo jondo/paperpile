@@ -26,22 +26,46 @@ Ext.define('Paperpile.app.PubActions', {
         'ADD_LABEL_PANEL': new Ext.Action({
           itemId: 'ADD_LABEL',
           text: 'Add Label',
-          handler: function(guid) {
+          handler: function(event, guid) {
             var lp = Ext.getCmp('label-panel');
             if (!lp) {
               Paperpile.log("Creating new label panel...");
               lp = Ext.createByAlias('widget.labelpanel', {
                 id: 'label-panel',
                 collectionType: 'labels',
-		height: 100,
-		width: 120,
-		addCheckBoxes: true
+                height: 100,
+                width: 120,
+                addCheckBoxes: true,
+                dontHideOnClickNodes: function() {
+                  var dontHide = this.callParent(arguments);
+                  dontHide.push('.pp-action');
+                }
               });
               lp.on('itemtrigger', function(lp, records) {
-		      Paperpile.log(records.length);
+                if (Ext.isString(records)) {
+                  // TODO: Create new label and apply to records.
+                } else {
+                  var guids = [];
+                  Ext.each(records, function(item) {
+                    guids.push(item.getId());
+                  });
+                  Paperpile.app.PubActions.collectionHandler(guids, 'LABEL', 'add');
+                }
+                lp.hide();
               });
             }
-            lp.show();
+
+            var target = Ext.get(event.getTarget());
+            Ext.defer(function() {
+              Paperpile.log(lp.isHidden());
+              if (lp.isHidden()) {
+                lp.show();
+                lp.alignTo(target, 'tr-br');
+              } else {
+                lp.hide();
+              }
+            },
+            10);
           }
         }),
         'REMOVE_FOLDER': new Ext.Action({
@@ -512,7 +536,7 @@ Ext.define('Paperpile.app.PubActions', {
       if (mode == 'remove') {
         url = '/ajax/crud/remove_from_collection';
       } else if (mode == 'add') {
-        url = '/ajax/crud/add_to_collection';
+        url = '/ajax/crud/move_in_collection';
       }
 
       Paperpile.Ajax({

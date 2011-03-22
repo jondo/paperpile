@@ -902,13 +902,11 @@ Ext.define('Paperpile.pub.Grid', {
   // reload of everything.
   updateFromServer: function(data) {
 
-    if (data.pub_delta) {
+    if (data.pub_delta && data.pub_delta_ignore != this.id) {
       // Reload the whole store if we get a pub_delta flag.
-      if (data.pub_delta_ignore != this.id) {
-        Paperpile.log("Pub delta -- reloading grid store!");
-        this.getStore().load();
-        return;
-      }
+      Paperpile.log("  Pub delta - reloading grid store for " + this.id);
+      this.getStore().load();
+      return;
     } else {
       // Go through each record and apply updates if needed.
       var pubs = data.pubs;
@@ -918,9 +916,9 @@ Ext.define('Paperpile.pub.Grid', {
 
       var store = this.getStore();
       for (var guid in pubs) {
+        Paperpile.log(guid);
         var pubDataFromServer = pubs[guid];
         var pub = store.getById(guid);
-
         if (!pub) {
           Paperpile.log("  pub not found for guid " + guid);
           continue;
