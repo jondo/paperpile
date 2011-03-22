@@ -22,13 +22,6 @@ Ext.define('Paperpile.pub.View', {
       sidebarUpdateDelay: 100,
       layout: 'border',
       items: [this.createCenter(), this.createEast()],
-      listeners: {
-        mousedown: {
-          element: 'body',
-          fn: this.onMouseDown,
-          scope: this
-        }
-      }
     });
     this.callParent(arguments);
   },
@@ -116,19 +109,6 @@ Ext.define('Paperpile.pub.View', {
     Ext.each(panels, function(panel) {
         panel.setSelection(selections);
       });
-  },
-
-  onMouseDown: function(event, target, o) {
-    var el = Ext.fly(target);
-    if (el.hasCls('pp-action')) {
-      var id = el.getAttribute('action');
-      var args = el.getAttribute('args');
-      var array = undefined;
-      if (args && args !== '') {
-        array = args.split(',');
-      }
-      Paperpile.app.Actions.execute(id, array);
-    }
   },
 
   updateFromServer: function(data) {

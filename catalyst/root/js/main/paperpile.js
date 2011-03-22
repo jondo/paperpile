@@ -30,10 +30,19 @@ Ext.define('Paperpile.Viewport', {
 
     this.callParent(arguments);
 
+    Ext.getBody().on({
+      mousedown: {
+        element: 'body',
+        fn: this.onActionClick,
+        delegate: '.pp-action',
+        scope: this
+      }
+    });
+
     //    this.on('afterlayout', this.resizeToSplitFraction, this);
     this.mon(Ext.getBody(), 'click', function(event, target, options) {
       if (target.href) {
-        if (!target.href.match(/(app|paperpile|localhost)/i)) {
+        if (!target.href.match(/(app|paperpile|localhost|127\.0\.0\.1)/i)) {
           event.stopEvent();
           Paperpile.utils.openURL(target.href);
         }
@@ -47,6 +56,20 @@ Ext.define('Paperpile.Viewport', {
       collections: [],
       task: new Ext.util.DelayedTask(this.fireFileSync, this)
     };
+  },
+
+
+  onActionClick: function(event, target, o) {
+    var el = Ext.fly(target);
+    if (el.hasCls('pp-action')) {
+      var id = el.getAttribute('action');
+      var args = el.getAttribute('args');
+      var array = undefined;
+      if (args && args !== '') {
+        array = args.split(',');
+      }
+      Paperpile.app.Actions.execute(id, array);
+    }
   },
 
   createTree: function() {

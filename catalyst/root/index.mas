@@ -76,6 +76,8 @@
 
 <script type="text/javascript" charset="utf-8" src="js/app/FileDialog.js"></script>
 
+<script type="text/javascript" charset="utf-8" src="js/misc/label-panel.js"></script>
+
 <!-- <script type="text/javascript" charset="utf-8" src="js/main/overrides.js"></script> -->
 <!--
 <script type="text/javascript" charset="utf-8" src="js/import/base-query-info.js"></script>

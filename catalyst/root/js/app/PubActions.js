@@ -9,11 +9,39 @@ Ext.define('Paperpile.app.PubActions', {
             Paperpile.app.PubActions.collectionHandler(guid, 'LABEL', 'remove');
           }
         }),
+        'MANAGE_LABELS': new Ext.Action({
+          itemId: 'MANAGE_LABELS',
+          text: 'Manage Labels',
+          handler: function() {
+
+          }
+        }),
         'ADD_LABEL': new Ext.Action({
           itemId: 'ADD_LABEL',
           text: 'Add a label',
           handler: function(guid) {
             Paperpile.app.PubActions.collectionHandler(guid, 'LABEL', 'add');
+          }
+        }),
+        'ADD_LABEL_PANEL': new Ext.Action({
+          itemId: 'ADD_LABEL',
+          text: 'Add Label',
+          handler: function(guid) {
+            var lp = Ext.getCmp('label-panel');
+            if (!lp) {
+              Paperpile.log("Creating new label panel...");
+              lp = Ext.createByAlias('widget.labelpanel', {
+                id: 'label-panel',
+                collectionType: 'labels',
+		height: 100,
+		width: 120,
+		addCheckBoxes: true
+              });
+              lp.on('itemtrigger', function(lp, records) {
+		      Paperpile.log(records.length);
+              });
+            }
+            lp.show();
           }
         }),
         'REMOVE_FOLDER': new Ext.Action({
@@ -585,8 +613,7 @@ Ext.define('Paperpile.app.PubActions', {
             }
 
             Paperpile.log("Trashed!");
-          } else {
-          }
+          } else {}
         },
         failure: function() {
           // TODO: better error message.

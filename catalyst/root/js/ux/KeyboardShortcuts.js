@@ -37,6 +37,8 @@ Ext.define('Ext.ux.KeyboardShortcuts', {
       stopEvent = true;
     }
 
+    obj.stopEvent = stopEvent;
+
     var shortcut = new Ext.ux.KeyboardShortcut({
       action: action,
       binding: obj,
@@ -204,11 +206,14 @@ Ext.define('Ext.ux.KeyboardShortcut', {
     }
   },
   handleAction: function(keyCode, event) {
+	    if (this.stopEvent) {
+		event.stopEvent();
+	    }
     if (!this.disabled) {
       if (this.action) {
         this.action.execute(keyCode, event);
       } else if (this.handler) {
-        this.handler.call(this.scope, event);
+	  this.handler.call(this.scope, keyCode, event);
       }
     }
   },

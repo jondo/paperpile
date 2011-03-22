@@ -351,3 +351,114 @@ the right of the menu. */
 .pp-authortip:hover {
     color: black;
 }
+
+/* Label panel custom scrollbar styling. */
+.pp-collection-panel-vp::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.pp-collection-panel-vp::-webkit-scrollbar-button:start:decrement,
+.pp-collection-panel-vp::-webkit-scrollbar-button:end:increment {
+    height: 0px;
+    display: block;
+    background-color: transparent;
+}
+.pp-collection-panel-vp::-webkit-scrollbar-track-piece {
+    background-color: #D8D8D8 ;
+    -webkit-border-radius: 0px;
+}
+.pp-collection-panel-vp::-webkit-scrollbar-thumb:vertical {
+    height: 20px;
+    background-color: #C0C0C0;
+    -webkit-border-radius: 0px;
+}
+.pp-collection-panel-vp::-webkit-scrollbar-thumb:horizontal {
+    width: 20px;
+    background-color: #C0C0C0;
+    -webkit-border-radius: 0px;
+}
+
+.pp-collection-item {
+    cursor: pointer;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.pp-collection-item-name {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.pp-collection-item-count {
+    float: right;
+    color: gray;
+}
+
+.pp-collection-item input {
+    float: left;
+    margin-top: 2px;
+    margin-right: 4px;
+}
+
+.pp-collection-panel-filter {
+    background: url('/images/goog-mag.png') no-repeat;
+    background-position: right center;
+    vertical-align:middle;
+}
+
+.pp-collection-panel-check {
+    display:inline-block;
+    height: 12px;
+    width: 12px;
+    margin: 0px;
+    padding: 0px;
+    vertical-align:middle;
+}
+
+
+/* common settings checkbox and radiobutton */
+
+input[type="checkbox"] {
+  cursor:pointer;
+}
+
+input[type="checkbox"],
+input[type="radio"]
+{
+ -khtml-appearance: none;
+ background: url('/images/goog-ticks.png') no-repeat;
+ width: 12px;
+ height: 12px;
+ vertical-align: middle;
+}
+input[type="checkbox"]
+{
+ background-position-x: -48px;
+ background-position-y: 0;
+}
+input[type="radio"]
+{
+ background-position-x: -48px;
+}
+input[type="checkbox"]:hover,
+input[type="radio"]:hover
+{
+ background-position-x: -48px;
+}
+input[type="checkbox"]:checked,
+input[type="radio"]:checked
+{
+ background-position-x: -60px;
+}
+input[type="checkbox"]:checked:hover,
+input[type="radio"]:checked:hover
+{
+ background-position-x: -60px;
+}
+/* disabled settings for checkbox and radiobutton */
+input[type="radio"]:disabled,
+input[type="checkbox"]:disabled
+{
+ opacity: .6;
+}

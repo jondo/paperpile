@@ -231,7 +231,7 @@ Ext.define('Paperpile.grid.SelectionModel', {
     }
   },
 
-  getSelected: function() {
+  getSingleSelection: function() {
     var cur = this.getCursor();
     if (cur !== null) {
       var record = this.selected.getAt(cur);
@@ -318,7 +318,26 @@ Ext.define('Paperpile.grid.SelectionModel', {
     return (r && this.selected.indexOf(r) > -1 ? true : false);
   },
 
-  selectRows: function(rows, keepExisting) {
+  select: function(records, keepExisting, suppressEvents) {
+    var me = this;
+
+    if (me.isLocked()) {
+      return;
+    }
+    if (typeof records === "number") {
+      records = [me.store.getAt(records)];
+    }
+
+    var indices = [];
+    for (var i = 0; i < records.length; i++) {
+      var record = records[i];
+      var index = me.store.indexOf(record);
+      indices.push(index);
+    }
+    me.selectRows(indices, keepExisting);
+  },
+
+  selectRows: function(rows, keepExisting, preventViewNotify) {
     if (this.isLocked()) {
       return;
     }
@@ -326,7 +345,7 @@ Ext.define('Paperpile.grid.SelectionModel', {
       this.clearSelections();
     }
     for (var i = 0, len = rows.length; i < len; i++) {
-      this.selectRow(rows[i], true);
+      this.selectRow(rows[i], true, preventViewNotify);
     }
   },
 
@@ -674,15 +693,6 @@ Ext.define('Paperpile.grid.SelectionModel', {
       return this.store.getTotalCount();
     } else {
       return this.selected.getCount();
-    }
-  },
-
-  selectRows: function(rows, keepExisting) {
-    if (!keepExisting) {
-      this.clearSelections();
-    }
-    for (var i = 0, len = rows.length; i < len; i++) {
-      this.selectRow(rows[i], true);
     }
   },
 

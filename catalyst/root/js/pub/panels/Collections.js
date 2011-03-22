@@ -52,6 +52,7 @@ Ext.define('Paperpile.pub.panel.Collections', {
       '    </div>',
       '  </dd>',
       '</tpl>',
+      '<a href="#" class="pp-action pp-textlink" action="ADD_LABEL_PANEL" args="{guid}">Add Label</a>',      
       '<div style="clear:left;"></div>',
       '</div>', {
         getFoldersList: function(folders) {
