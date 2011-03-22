@@ -18,8 +18,7 @@ Ext.define('Paperpile.Tabs', {
   extend: 'Ext.tab.TabPanel',
   alias: 'widget.pp-tabs',
   initComponent: function() {
-    Ext.apply(this, {
-    });
+    Ext.apply(this, {});
 
     this.callParent(arguments);
   },
@@ -79,11 +78,11 @@ Ext.define('Paperpile.Tabs', {
     };
 
     var item = this.add({
-            xtype: 'ViewMainLibrary',
-            title: 'Library',
-            closable: true,
-	    gridParams: gridParams
-        });
+      xtype: 'ViewMainLibrary',
+      title: 'Library',
+      closable: true,
+      gridParams: gridParams
+    });
     this.setActiveTab(item);
   },
 
@@ -171,35 +170,24 @@ Ext.define('Paperpile.Tabs', {
 
   // Opens a new tab with some specialized screen. Name is either the name of a preconficured panel-class, or
   // an object specifying url and title of the tab.
-  newScreenTab: function(name, itemId) {
+  newScreenTab: function(alias, itemId) {
+    if (itemId === undefined) {
+      itemId = alias;
+    }
+
     if (this.findAndActivateOpenTab(itemId)) {
       return;
     }
 
-    var panel;
+    panel = Ext.createByAlias(alias, {
+      itemId: itemId
+    });
+    this.addAndActivate(panel);
+  },
 
-    // Pre-configured class
-    if (Paperpile[name]) {
-      panel = Paperpile.main.tabs.add(new Paperpile[name]({
-        itemId: itemId
-      }));
-
-      // Generic panel
-    } else {
-
-      panel = Paperpile.main.tabs.add(new Ext.Panel({
-        closable: true,
-        autoLoad: {
-          url: Paperpile.Url(name.url),
-          callback: this.setupFields,
-          scope: this
-        },
-        autoScroll: true,
-        title: name.title,
-        iconCls: name.iconCls ? name.iconCls : ''
-      }));
-    }
-    panel.show();
+  addAndActivate: function(cmp) {
+    this.add(cmp);
+    this.setActiveTab(cmp);
   },
 
   showDashboardTab: function() {
@@ -227,8 +215,8 @@ Ext.define('Paperpile.Tabs', {
   },
 
   getMainLibraryTab: function() {
-	    return this.getComponent('MAIN');
-	    //return this.getItem('MAIN');
+    return this.getComponent('MAIN');
+    //return this.getItem('MAIN');
   },
 
   isUniqueByItemId: function(plugin_name) {
@@ -253,9 +241,8 @@ Ext.define('Paperpile.Tabs', {
   },
 
   findAndActivateOpenTab: function(itemId) {
-	    var openTab = this.getComponent(itemId);
-	    //    var openTab = this.getItem(itemId);
-
+    var openTab = this.getComponent(itemId);
+    //    var openTab = this.getItem(itemId);
     if (!openTab) {
       // Didn't find by itemId -- search by plugin_name instead.
       var plugin_name = itemId;
@@ -278,7 +265,7 @@ Ext.define('Paperpile.Tabs', {
     }
 
     if (openTab) {
-      this.activate(openTab);
+      this.setActiveTab(openTab);
       return true;
     }
     return false;
@@ -298,7 +285,7 @@ Ext.define('Paperpile.Tabs', {
   pdfViewerCounter: 0,
   newPdfTab: function(config) {
 
-	    Paperpile.log(config);
+    Paperpile.log(config);
     if (config.filename.length > 25) {
       config.title = Ext.util.Format.ellipsis(config.filename, 25);
     } else {

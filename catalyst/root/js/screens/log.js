@@ -1,5 +1,6 @@
-Paperpile.CatalystLog = Ext.extend(Ext.Panel, {
-
+Ext.define('Paperpile.screens.CatalystLog', {
+  extend: 'Ext.panel.Panel',
+  alias: 'widget.catalystlog',
   title: 'Catalyst log',
   iconCls: 'pp-icon-console',
   id: 'log-panel',
@@ -14,16 +15,14 @@ Paperpile.CatalystLog = Ext.extend(Ext.Panel, {
     Ext.apply(this, {
       closable: true,
       autoScroll: true,
+		tpl : new Ext.XTemplate(this.markup)
     });
 
-    Paperpile.CatalystLog.superclass.initComponent.call(this);
-
-    this.tpl = new Ext.XTemplate(this.markup);
-
+    this.callParent(arguments);
   },
 
   afterRender: function() {
-    Paperpile.CatalystLog.superclass.afterRender.apply(this, arguments);
+    this.callParent(arguments);
 
     this.on('activate',
       function() {
@@ -40,14 +39,12 @@ Paperpile.CatalystLog = Ext.extend(Ext.Panel, {
     this.tpl.overwrite(this.body, {
       content: Paperpile.serverLog
     },
-    true);
+      true);
 
   },
 
   addLine: function(line) {
-
     Ext.get('catalyst-log').insertHtml('beforeEnd', line);
-
   }
 
 });
