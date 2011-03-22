@@ -435,11 +435,18 @@ sub move_in_collection : Local {
   my ( $self, $c ) = @_;
 
   my $grid_id = $c->request->params->{grid_id};
-  my $guid    = $c->request->params->{guid};
+  my $collection_guid    = $c->request->params->{collection_guid};
   my $type    = $c->request->params->{type};
   my ($plugin, $data) = $self->_get_selection($c);
 
   my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
+
+  my @guids;
+  if ( ref $collection_guid eq 'ARRAY' ) {
+    @guids = @{$collection_guid};
+  } else {
+    @guids = ($collection_guid);
+  }
 
   # First import entries that are not already in the database. Note:
   # Pushing on @to_be_imported actually copies the pub objects and
@@ -453,7 +460,6 @@ sub move_in_collection : Local {
       $data->[$i]=undef;
     }
   }
-
   if (@to_be_imported){
     $self->_complete_pubs($c, $plugin, \@to_be_imported);
     $c->model('Library')->insert_pubs( \@to_be_imported, 1 );
@@ -468,44 +474,44 @@ sub move_in_collection : Local {
     $data=\@new_data;
   }
 
-  my $dbh = $c->model('Library')->dbh;
-
-  if ( $guid ne 'FOLDER_ROOT' ) {
-    my $new_guid = $guid;
-    $c->model('Library')->add_to_collection( $data, $new_guid );
+  my @filesync;
+  foreach my $guid( @guids ) {
+    $self->_move_in_collection($c, $data, $guid);
+    my $cur_filesync = $self->_get_sync_collections( $c, undef, $guid );
+    push @filesync, @$cur_filesync;
   }
 
+  #$c->stash->{data}->{pubs} = {};
+  $self->_collect_update_data( $c, $data, [$what] );
   if (@to_be_imported) {
     $self->_update_counts($c);
-    my $pubs={};
 
     foreach my $pub (@to_be_imported) {
       my $pub_hash = $pub->as_hash;
-
       my $old_guid = $pub->guid;
-
       # Handle cases where guids have changed because it turned out to
       # be already in database after completing a partial ref
       if ($pub->_old_guid){
         $old_guid = $pub->_old_guid;
         $plugin->update_cache($pub);
       }
-
-      $pubs->{ $old_guid} = $pub_hash;
+      $c->stash->{data}->{pubs}->{$old_guid} = $pub_hash;
     }
-
-    $c->stash->{data}->{pubs} = $pubs;
-    $c->stash->{data}->{pub_delta}        = 1;
-    $c->stash->{data}->{pub_delta_ignore} = $grid_id;
-  } else {
-    $self->_collect_update_data( $c, $data, [$what] );
   }
 
   $self->_save_plugin($c, $plugin);
+  $c->stash->{data}->{file_sync_delta} = \@filesync;
+}
 
-  #$c->stash->{data}->{collection_delta} = 1;
+sub _move_in_collection {
+    my $self = shift;
+    my $c = shift;
+    my $data = shift;
+    my $guid = shift;
 
-  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, undef, $guid );
+  if ( $guid ne 'FOLDER_ROOT' ) {
+    $c->model('Library')->add_to_collection( $data, $guid );
+  }
 }
 
 sub remove_from_collection : Local {
