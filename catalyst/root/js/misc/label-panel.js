@@ -1,6 +1,6 @@
-Ext.define('Paperpile.CollectionPopup', {
+Ext.define('Paperpile.Collectionpicker', {
   extend: 'Ext.Panel',
-  alias: 'widget.labelpanel',
+  alias: 'widget.collectionpicker',
 
   // Configurable options start here.	    
   addCheckBoxes: true,
@@ -9,7 +9,7 @@ Ext.define('Paperpile.CollectionPopup', {
   height: 200,
   maxViewHeight: 200,
   layoutPadding: 4,
-  sortBy: 'count',
+  sortBy: 'sort_order',
   sortDirection: 'DESC',
   // End configurable options.
   constructor: function(cfg) {
@@ -18,7 +18,7 @@ Ext.define('Paperpile.CollectionPopup', {
 
     this.addEvents(
       'itemcheck',
-      'itemtrigger');
+      'applychanges');
 
     this.callParent(arguments);
   },
@@ -29,7 +29,7 @@ Ext.define('Paperpile.CollectionPopup', {
       this.filterField = new Ext.form.TextField({
         cls: 'pp-collection-panel-filter',
         width: '100%',
-        emptyText: 'Search Labels',
+        emptyText: 'Search ' + this.collectionType,
         hideLabel: true,
         enableKeyEvents: true,
         flex: 0
@@ -107,12 +107,22 @@ Ext.define('Paperpile.CollectionPopup', {
       items: [this.view]
     });
 
-    this.manageLabels = new Ext.Component({
+    this.manageCollection = new Ext.Component({
       height: 20,
       flex: 0,
-      html: Paperpile.pub.PubPanel.actionTextLink('MANAGE_' + Ext.util.Format.uppercase(this.collectionType))
+      html: '<a class="pp-textlink">Manage ' + this.collectionType + '</a>',
+      listeners: {
+        click: {
+          element: 'el',
+          fn: function() {
+            Paperpile.app.Actions.execute('MANAGE_' + Ext.util.Format.uppercase(this.collectionType));
+            this.hide();
+          },
+          scope: this
+        }
+      }
     });
-    this.applyLabels = new Ext.Component({
+    this.apply = new Ext.Component({
       height: 20,
       flex: 0,
       hidden: true,
@@ -127,7 +137,7 @@ Ext.define('Paperpile.CollectionPopup', {
         }
       }
     });
-    this.newLabel = new Ext.Component({
+    this.newCollection = new Ext.Component({
       height: 20,
       flex: 0,
       hidden: true,
@@ -136,6 +146,7 @@ Ext.define('Paperpile.CollectionPopup', {
         click: {
           element: 'el',
           fn: function() {
+            this.view.getSelectionModel().clearSelections();
             this.fireTrigger();
           },
           scope: this
@@ -149,7 +160,7 @@ Ext.define('Paperpile.CollectionPopup', {
     } else {
       items = [this.viewport, this.menu];
     }
-    items.push(this.applyLabels, this.manageLabels, this.newLabel);
+    items.push(this.apply, this.manageCollection, this.newCollection);
 
     Ext.apply(this, {
       hidden: true,
@@ -186,7 +197,10 @@ Ext.define('Paperpile.CollectionPopup', {
       scope: this
     });
     this.actions['FIRE_EVENT'] = new Ext.Action({
-      handler: this.fireTrigger,
+      handler: function(keyCode, event) {
+        this.fireTrigger();
+        event.stopEvent();
+      },
       scope: this
     });
 
@@ -228,7 +242,7 @@ Ext.define('Paperpile.CollectionPopup', {
           return value;
         },
         getItemNode: function(values) {
-          if (values.type == 'LABEL') {
+          if (values.type == 'LABEL' || values.type == 'FOLDER') {
             return['<div class="pp-collection-item-count">',
             values.count,
             '</div>',
@@ -240,11 +254,6 @@ Ext.define('Paperpile.CollectionPopup', {
             values.name,
             '</div>'].join('');
 	      */
-          } else if (values.type == 'FOLDER') {
-            return[
-            '<div class="pp-grid-folder">',
-            values.name,
-            '</div>'].join('');
           }
         }
       });
@@ -253,6 +262,15 @@ Ext.define('Paperpile.CollectionPopup', {
 
   getSingleSel: function() {
     return this.view.getSelectionModel().getSingleSelection();
+  },
+
+  setCheckedIds: function(ids) {
+    var store = this.store;
+    Ext.each(ids, function(id) {
+      var rec = store.getById(id);
+      rec.data.initialChecked = 1;
+      rec.data.checked = 1;
+    });
   },
 
   getCheckedRecords: function() {
@@ -300,19 +318,37 @@ Ext.define('Paperpile.CollectionPopup', {
   },
 
   fireTrigger: function() {
-    var records = new Ext.util.MixedCollection();
-    records.addAll(this.getCheckedRecords());
-
-    if (records.getCount() == 0 && this.filterField.getValue() != '') {
-      this.fireEvent('itemtrigger', this, this.filterField.getValue());
-      return;
-    }
+    var checked = new Ext.util.MixedCollection();
+    var unchecked = new Ext.util.MixedCollection();
 
     if (this.getSingleSel()) {
-      records.add(this.getSingleSel());
+      var record = this.getSingleSel();
+      if (record.data.checked) {
+        unchecked.add(this.getSingleSel());
+      } else {
+        checked.add(this.getSingleSel());
+      }
     }
-    this.fireEvent('itemtrigger', this, records.getRange());
 
+    this.store.each(function(record) {
+      if (record.data.initialChecked && !record.data.checked) {
+        unchecked.add(record);
+      }
+      if (!record.data.initialChecked && record.data.checked) {
+        checked.add(record);
+      }
+      delete record.data.initialChecked;
+      delete record.data.checked;
+    });
+
+    if (checked.getCount() > 0 || unchecked.getCount() > 0) {
+      this.fireEvent('applychanges', this, checked, unchecked);
+    } else if (this.filterField.getValue() != '') {
+      // We have a search term and no checked or selected records.
+      // Return the bare string to create a new label.
+      this.fireEvent('newitem', this, this.filterField.getValue());
+      return;
+    } else {}
   },
 
   scrollTo: function(index) {
@@ -371,29 +407,34 @@ Ext.define('Paperpile.CollectionPopup', {
   },
 
   updateButtons: function(record) {
-    var checkedItems = this.getCheckedRecords();
     var filter = this.filterField.getValue();
 
     this.viewport.show();
 
-    this.applyLabels.hide();
-    this.newLabel.hide();
-    this.manageLabels.hide();
+    this.apply.hide();
+    this.newCollection.hide();
+    this.manageCollection.hide();
 
     if (this.store.getCount() == 0) {
       this.viewport.hide();
     }
 
-    if (checkedItems.length > 0) {
-      this.applyLabels.show();
+    var hasChanges = false;
+    this.store.each(function(record) {
+      if ((record.data.checked && !record.data.initialChecked) || (record.data.initialChecked && !record.data.checked)) {
+        hasChanges = true;
+      }
+    });
+    if (hasChanges) {
+      this.apply.show();
     } else if (filter != '') {
-      this.newLabel.update(['<a class="pp-textlink">',
+      this.newCollection.update(['<a class="pp-textlink">',
         '<span style="float:right;">(Create new)</span>',
         '<div class="pp-ellipsis"><b>' + filter + '</b></div>',
         '</a>'].join(''));
-      this.newLabel.show();
+      this.newCollection.show();
     } else {
-      this.manageLabels.show();
+      this.manageCollection.show();
     }
   },
 
@@ -426,24 +467,27 @@ Ext.define('Paperpile.CollectionPopup', {
 
   show: function() {
     this.callParent(arguments);
+    this.updateButtons();
     this.mon(Ext.getDoc(), "mousedown", this.onMouseDown, this);
     if (this.filterField) {
       this.filterField.setValue('');
-      Ext.defer(this.filterField.focus, 20);
       this.updateFilterAndView();
+      this.filterField.focus();
     } else {
       Ext.defer(this.getEl().focus, 20);
     }
   },
 
   hide: function() {
-    this.callParent(arguments);
+    this.store.each(function(record) {
+      record.data.checked = false;
+    });
+
     this.mun(Ext.getDoc(), "mousedown", this.onMouseDown, this);
+    this.callParent(arguments);
   },
 
-  dontHideOnClickNodes: function() {
-    return[];
-  },
+  dontHideOnClickNodes: Ext.emptyFn,
 
   onMouseDown: function(e) {
     var dontHideOnClickNodes = ['.pp-collection-panel',

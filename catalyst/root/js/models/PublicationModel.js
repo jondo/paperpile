@@ -9,5 +9,5 @@ var displayFields = [
 var allFields = [].concat(libraryFields, sqlFields, displayFields);
 Ext.regModel('Publication', {
   fields: allFields,
-  idProperty: 'guid'
+	    idProperty: 'guid',
 });

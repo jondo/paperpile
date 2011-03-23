@@ -55,6 +55,7 @@ Ext.define('Paperpile.grid.GridTemplates', {
           }
         }
       });
+      
       return data;
     },
 

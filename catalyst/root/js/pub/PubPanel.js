@@ -32,6 +32,13 @@ Ext.define('Paperpile.pub.PubPanel', {
         this.update(pub.data);
       }
     } else if (selection.length > 1) {
+	// Convert selection items from Publication objects to the pub.data objects.
+	var newSel = [];
+	Ext.each(selection, function(pub) {
+		newSel.push(pub.data);
+	    });
+	selection = newSel;
+
       if (this.hideOnMulti) {
         this.hide();
       } else {

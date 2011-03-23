@@ -64,10 +64,12 @@ Ext.define('Paperpile.Viewport', {
     if (el.hasCls('pp-action')) {
       var id = el.getAttribute('action');
       var args = el.getAttribute('args');
-      var array = [event];
+      var array = [];
       if (args && args !== '') {
 	  array.push(args.split(','));
       }
+      var eventCopy = new Ext.EventObjectImpl(event.browserEvent);
+      Paperpile.app.Actions.lastTriggerEvent = eventCopy;
       Paperpile.app.Actions.execute(id, array);
     }
   },

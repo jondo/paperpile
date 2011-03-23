@@ -340,3 +340,24 @@ Ext.override(Ext.QuickTip, {
     }
   }
 });
+
+Ext.override('Ext.form.Text', {
+	showEmptyTextWithFocus: true,
+    applyEmptyText : function(){
+        var me = this,
+            emptyText = me.emptyText;
+
+        if (me.rendered && emptyText) {
+            if (Ext.supports.Placeholder) {
+                me.inputEl.dom.placeholder = emptyText;
+            }
+            else if (me.getRawValue().length < 1 && (!me.hasFocus || me.showEmptyTextWithFocus)) {
+                me.setRawValue(emptyText);
+                me.inputEl.addCls(me.emptyCls);
+            }
+
+            me.autoSize();
+        }
+    },
+
+    });

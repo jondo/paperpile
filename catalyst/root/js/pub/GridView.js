@@ -294,31 +294,6 @@ Ext.define('Paperpile.pub.Grid', {
     return new Ext.XTemplate(['<div class="pp-hint-box"><p>No results to show. <a href="#" class="pp-textlink" action="clear-search">Clear search</a>.</p></div>']).compile();
   },
 
-  highlightNewArticles: function() {
-    if (!this.highlightedArticles) {
-      this.highlightedArticles = [];
-    }
-
-    var s = this.getStore();
-    var v = this.getView();
-    for (var i = 0; i < s.getCount(); i++) {
-      var record = s.getAt(i);
-      var el = v.getRow(i);
-      if (record.data.created) {
-        var secondsAgo = Paperpile.utils.secondsAgo(record.data.created);
-        if (secondsAgo < 20) {
-          if (!this.highlightedArticles[record.data.guid]) {
-            this.highlightedArticles[record.data.guid] = 1;
-            Ext.get(el).highlight("ffff9c", {
-              duration: 3,
-              easing: 'easeOut'
-            });
-          }
-        }
-      }
-    }
-  },
-
   myBeforeRender: function(ct) {},
 
   afterRender: function(ct) {
@@ -717,25 +692,88 @@ Ext.define('Paperpile.pub.Grid', {
     return this.up('widget.pp-pluginpanel');
   },
 
-  getSelectionAsList: function(what) {
-    if (!what) what = 'ALL';
-    var selection = [];
-    var sels = this.getSelectionModel().getSelection();
-    for (var i = 0; i < sels.length; i++) {
-      var record = sels[i];
-      if ((what == 'ALL') || (what == 'IMPORTED' && record.get('_imported')) || (what == 'NOT_IMPORTED' && !record.get('_imported')) || (what == 'TRASHED' && record.get('trashed'))) {
-        selection.push(record.get('guid'));
-      }
+  getSelectedCollections: function(collectionType) {
+    var selection = this.getSelection();
+    var newSel = [];
+    Ext.each(selection, function(pub) {
+      newSel.push(pub.data);
+    });
+    selection = newSel;
+
+    var list = new Ext.util.MixedCollection();
+    var store = Ext.getStore(collectionType);
+    store.each(function(record) {
+      delete record.data.multiCount;
+      delete record.data.multiName;
+    });
+
+    if (this.isAllSelected()) {
+      // If all are selected, we collect all of this collectionType
+      store.each(function(record) {
+        record.data.multiCount = record.data.count;
+        list.add(record.get('guid'), record.data);
+      });
+    } else {
+      Ext.each(selection, function(data) {
+        var guids = data[collectionType].split(',');
+        for (var i = 0; i < guids.length; i++) {
+          var guid = guids[i];
+          if (guid == '') {
+            continue;
+          }
+          if (!list.containsKey(guid)) {
+            var record = store.getById(guid);
+            record.data.multiCount = 1;
+            list.add(guid, record.data);
+          } else {
+            list.get(guid).multiCount++;
+          }
+        }
+      });
     }
-    return selection;
+
+    list.each(function(item) {
+      if (item.multiCount > 1) {
+        item.multiName = item.name + " (" + item.multiCount + ")";
+      } else {
+        item.multiName = item.name;
+      }
+    });
+
+    // Sort descending by count.
+    list.sort([new Ext.util.Sorter({
+      property: 'multiCount',
+      direction: 'DESC'
+    }),
+    new Ext.util.Sorter({
+      property: 'count',
+      direction: 'DESC'
+    })]);
+    return list;
   },
 
-  // Returns list of guids for the selected entries, either ALL, IMPORTED, NOT_IMPORTED
-  getSelection: function(what) {
+  getSelectionForAjax: function() {
     if (this.isAllSelected()) {
       return 'ALL';
     } else {
-      return this.getSelectionAsList(what);
+      return this.getSelectedIds();
+    }
+  },
+
+  getSelectedIds: function() {
+    var ids = [];
+    var records = this.getSelectionModel().getSelection();
+    Ext.each(records, function(item) {
+      ids.push(item.getId());
+    });
+    return ids;
+  },
+
+  getSelection: function() {
+    if (this.isAllSelected()) {
+      return 'ALL';
+    } else {
+      return this.getSelectionModel().getSelection();
     }
   },
 
@@ -796,46 +834,6 @@ Ext.define('Paperpile.pub.Grid', {
     Paperpile.utils.openURL(url);
   },
 
-  handleEmail: function() {
-    var n = this.getSelectionCount();
-
-    var myFunc = function(string) {
-      var subject = "Papers for you";
-      if (n == 1) {
-        subject = "Paper for you";
-      }
-      var body = 'I thought you might be interested in the following:';
-
-      var attachments = [];
-
-      string = string.replace(/%0A/g, "\n");
-
-      // The QRuntime appears capable of sending URLs of very long lengths, at least to Thunderbird.
-      // So we don't need to use as low of a cut-off threshold as before...
-      if (string.length > 1024 * 50) {
-        QRuntime.setClipboard(string);
-        var platform = Paperpile.utils.get_platform();
-        if (platform == 'osx') {
-          string = "(Hit Command-V to paste citations here)";
-        } else if (platform == 'windows') {
-          string = "(Hit Ctrl-V to paste citations here)";
-        } else {
-          string = "(Use the paste command to insert citations here)";
-        }
-      }
-
-      var link = [
-        'mailto:?',
-        'subject=' + subject,
-        '&body=' + body + "\n\n" + string,
-        "\n\n--\nShared with Paperpile\nhttp://paperpile.com",
-        attachments.join('')].join('');
-      Paperpile.utils.openURL.defer(10, this, [link]);
-    };
-
-    this.getFormattedText('Bibfile', 'EMAIL', myFunc);
-  },
-
   handleEdit: function(isNew, autoComplete) {
     var selection = this.getSingleSelection();
 
@@ -849,48 +847,6 @@ Ext.define('Paperpile.pub.Grid', {
       Paperpile.main.focusCurrentPanel();
     });
     win.show(this);
-  },
-
-  updateMetadata: function() {
-    var selection = this.getSelection();
-    var selectionCount = this.getSelectionCount();
-
-    if (selectionCount == 1) {
-      this.handleEdit(false, true);
-      return;
-    }
-
-    if (selection.length > 1) {
-
-      Ext.MessageBox.buttonText.ok = "Start Update";
-
-      Ext.Msg.show({
-        title: 'Auto-complete',
-        msg: 'Data for ' + selectionCount + ' references will be matched to online resources and automatically updated. Backup copies of the old data will be copied to the Trash. Continue?',
-        animEl: 'elId',
-        icon: Ext.MessageBox.INFO,
-        buttons: Ext.Msg.OKCANCEL,
-        fn: function(btn) {
-          if (btn === 'ok') {
-            Paperpile.main.queueWidget.setSubmitting();
-            Paperpile.Ajax({
-              url: '/ajax/crud/batch_update',
-              params: {
-                selection: selection,
-                grid_id: this.id
-              },
-              success: function(response) {
-                // Trigger a thread to start requesting queue updates.
-                Paperpile.main.queueUpdate();
-              }
-            });
-          }
-          Ext.MessageBox.buttonText.ok = "Ok";
-        },
-        scope: this
-      });
-    }
-
   },
 
   locateInLibrary: function() {

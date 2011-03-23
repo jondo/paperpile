@@ -5,7 +5,7 @@ Ext.define('Paperpile.app.PubActions', {
         'REMOVE_LABEL': new Ext.Action({
           itemId: 'REMOVE_LABEL',
           text: 'Remove a label',
-		    handler: function(event, guid) {
+          handler: function(guid) {
             Paperpile.app.PubActions.collectionHandler(guid, 'LABEL', 'remove');
           }
         }),
@@ -19,68 +19,37 @@ Ext.define('Paperpile.app.PubActions', {
         'ADD_LABEL': new Ext.Action({
           itemId: 'ADD_LABEL',
           text: 'Add a label',
-		    handler: function(event, guid) {
-            Paperpile.app.PubActions.collectionHandler(guid, 'LABEL', 'add');
+          handler: function(guid) {
+            Paperpile.app.PubActions.collectionHandler(guid, 'labels', 'add');
           }
         }),
         'ADD_LABEL_PANEL': new Ext.Action({
           itemId: 'ADD_LABEL',
           text: 'Add Label',
-          handler: function(event, guid) {
-            var lp = Ext.getCmp('label-panel');
-            if (!lp) {
-              Paperpile.log("Creating new label panel...");
-              lp = Ext.createByAlias('widget.labelpanel', {
-                id: 'label-panel',
-                collectionType: 'labels',
-                height: 100,
-                width: 120,
-                addCheckBoxes: true,
-                dontHideOnClickNodes: function() {
-                  var dontHide = this.callParent(arguments);
-                  dontHide.push('.pp-action');
-                }
-              });
-              lp.on('itemtrigger', function(lp, records) {
-                if (Ext.isString(records)) {
-                  // TODO: Create new label and apply to records.
-                } else {
-                  var guids = [];
-                  Ext.each(records, function(item) {
-                    guids.push(item.getId());
-                  });
-                  Paperpile.app.PubActions.collectionHandler(guids, 'LABEL', 'add');
-                }
-                lp.hide();
-              });
-            }
-
-            var target = Ext.get(event.getTarget());
-            Ext.defer(function() {
-              Paperpile.log(lp.isHidden());
-              if (lp.isHidden()) {
-                lp.show();
-                lp.alignTo(target, 'tr-br');
-              } else {
-                lp.hide();
-              }
-            },
-            10);
-          }
+          handler: function(guid) {
+            Paperpile.app.PubActions.collectionPicker(guid, 'labels');
+          },
         }),
         'REMOVE_FOLDER': new Ext.Action({
           itemId: 'REMOVE_FOLDER',
           text: 'Remove a folder',
           handler: function(guid) {
-            Paperpile.app.PubActions.collectionHandler(guid, 'FOLDER', 'remove');
+            Paperpile.app.PubActions.collectionHandler(guid, 'folders', 'remove');
           }
         }),
         'ADD_FOLDER': new Ext.Action({
           itemId: 'ADD_FOLDER',
           text: 'Add a folder',
           handler: function(guid) {
-            Paperpile.app.PubActions.collectionHandler(guid, 'FOLDER', 'add');
+            Paperpile.app.PubActions.collectionHandler(guid, 'folders', 'add');
           }
+        }),
+        'ADD_FOLDER_PANEL': new Ext.Action({
+          itemId: 'ADD_FOLDER_PANEL',
+          text: 'Add Folder',
+          handler: function(guid) {
+            Paperpile.app.PubActions.collectionPicker(guid, 'folders');
+          },
         }),
         'DELETE_PDF': new Ext.Action({
           itemId: 'DELETE_PDF',
@@ -88,7 +57,6 @@ Ext.define('Paperpile.app.PubActions', {
           text: 'Delete',
           tooltip: 'Delete the attached PDF',
           handler: function(guid) {
-            Paperpile.log(guid);
             Paperpile.app.PubActions.deleteFileHandler(guid, true);
           }
         }),
@@ -203,7 +171,7 @@ Ext.define('Paperpile.app.PubActions', {
           tooltip: 'Search online to fetch a PDF of the article',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
-            var selection = grid.getSelection();
+            var selection = grid.getSelectionForAjax();
             if (selection.length > 1) {
               Paperpile.main.queue.setSubmitting();
             }
@@ -339,7 +307,7 @@ Ext.define('Paperpile.app.PubActions', {
               url: '/ajax/plugins/export',
               params: {
                 grid_id: grid.id,
-                selection: grid.getSelection(),
+                selection: grid.getSelectionForAjax(),
                 export_name: 'Bibfile',
                 export_out_format: 'EMAIL',
                 get_string: true
@@ -383,7 +351,7 @@ Ext.define('Paperpile.app.PubActions', {
           triggerKey: 'x',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
-            selection = grid.getSelection();
+            selection = grid.getSelectionForAjax();
             Paperpile.app.PubActions.exportSelectionHandler(grid.id, selection);
           },
         }),
@@ -528,7 +496,61 @@ Ext.define('Paperpile.app.PubActions', {
         }),
       };
     },
-    collectionHandler: function(guid, collectionType, mode) {
+    collectionPicker: function(guid, collectionType) {
+      var panelId = collectionType + '-panel';
+      var lp = Ext.getCmp(panelId);
+      if (!lp) {
+        lp = Ext.createByAlias('widget.collectionpicker', {
+          id: panelId,
+          collectionType: collectionType,
+          height: 80,
+          width: 130,
+          addCheckBoxes: true,
+          dontHideOnClickNodes: function() {
+            return['.pp-action'];
+          }
+        });
+        lp.on('applychanges', function(lp, added, removed) {
+          Paperpile.app.PubActions.collectionHandler(added.collect('guid', 'data'), collectionType, 'add');
+          Paperpile.app.PubActions.collectionHandler(removed.collect('guid', 'data'), collectionType, 'remove');
+          this.hide();
+        },
+        lp);
+        lp.on('newitem', function(lp, newName) {
+          // TODO.
+        },
+        lp);
+      }
+
+      var event = Paperpile.app.Actions.lastTriggerEvent;
+      var target = Ext.get(event.getTarget());
+      Ext.defer(function() {
+        if (lp.isHidden()) {
+          var grid = Paperpile.main.getCurrentGrid();
+          var selection = grid.getSelection();
+          var collections = grid.getSelectedCollections(collectionType);
+          lp.setCheckedIds(collections.collect('guid'));
+
+          // Collect all label GUIDs and pre-set them as checked.
+          lp.show();
+          lp.alignTo(event.getTarget(), 'tl-bl?');
+        } else {
+          lp.hide();
+        }
+      },
+      10);
+    },
+    collectionHandler: function(guids, collectionType, mode) {
+      if (guids.length == 0) {
+        Paperpile.log("Nothing to " + mode + " for " + collectionType);
+        return;
+      }
+
+      var dbType = 'LABEL';
+      if (collectionType == 'folders') {
+        dbType = 'FOLDER';
+      }
+
       var grid = Paperpile.main.getCurrentGrid();
       var count = grid.getSelectionCount();
 
@@ -543,9 +565,9 @@ Ext.define('Paperpile.app.PubActions', {
         url: url,
         params: {
           grid_id: grid.id,
-          selection: grid.getSelection(),
-          collection_guid: guid,
-          type: collectionType
+          selection: grid.getSelectionForAjax(),
+          collection_guid: guids,
+          type: dbType
         },
         success: function(response) {
           var actionS = '',
@@ -589,10 +611,7 @@ Ext.define('Paperpile.app.PubActions', {
     deleteHandler: function(mode, deleteAll) {
       var grid = Paperpile.main.getCurrentGrid();
 
-      var selection = grid.getSelection();
-      if (grid.isAllSelected()) {
-        selection = 'ALL';
-      }
+      var selection = grid.getSelectionForAjax();
       if (grid.getSelectionCount() == 0) {
         Paperpile.log("Delete handler called on empty selection -- something wrong?");
         return;
@@ -667,7 +686,7 @@ Ext.define('Paperpile.app.PubActions', {
         url: '/ajax/plugins/export',
         params: {
           grid_id: grid.id,
-          selection: grid.getSelection(),
+          selection: grid.getSelectionForAjax(),
           export_name: module,
           export_out_format: format,
           get_string: true

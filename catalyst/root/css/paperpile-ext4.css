@@ -200,16 +200,6 @@ pp-grid-title {
 .pp-label-style-24,  .pp-label-tree-style-24  a span { border-color:#BDBDBD; border-style:solid; background-color: rgb(222, 229, 242); color: rgb(90, 105, 134) !important; } 
 
 
-
-.pp-label-control *{
-    font-size:9px;
-    height: 18px;
-}
-
-.pp-label-control .x-form-trigger {
-    height: 17px;
-}
-
 .pp-label-add-link{
     float:left;
 }

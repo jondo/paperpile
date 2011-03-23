@@ -40,7 +40,7 @@ Paperpile.log = function() {
 
 Paperpile.logFull = function() {
   if (IS_QT) {
-      QRuntime.log(obj2str_full(arguments[0], 10));
+      QRuntime.log(obj2str_full(arguments[0], 5));
   } else if (IS_CHROME) {
     console.log(arguments[0]);
   } else if (window.console) {

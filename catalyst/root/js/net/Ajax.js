@@ -53,5 +53,7 @@ Paperpile.Ajax = function(config) {
     Paperpile.log(config);
   }
 
+  Paperpile.log(config.params);
+
   return Ext.Ajax.request(config);
 };

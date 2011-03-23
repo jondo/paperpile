@@ -83,5 +83,6 @@ a.pp-textlink img {
 .pp-folder-generic {
     background-image: url('/images/icons/folder.png');
     background-repeat: no-repeat;
+    padding-left: 20px;
 }
 
