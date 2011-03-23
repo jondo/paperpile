@@ -48,7 +48,11 @@ Ext.define('Paperpile.app.PubActions', {
           itemId: 'ADD_FOLDER_PANEL',
           text: 'Add Folder',
           handler: function(guid) {
-            Paperpile.app.PubActions.collectionPicker(guid, 'folders');
+            var store = Ext.getStore('folders');
+            store.sortHierarchical();
+            Paperpile.app.PubActions.collectionPicker(guid, 'folders', {
+              sortBy: 'treeOrder'
+            });
           },
         }),
         'DELETE_PDF': new Ext.Action({
@@ -496,11 +500,12 @@ Ext.define('Paperpile.app.PubActions', {
         }),
       };
     },
-    collectionPicker: function(guid, collectionType) {
+    collectionPicker: function(guid, collectionType, extraOptions) {
       var panelId = collectionType + '-panel';
       var lp = Ext.getCmp(panelId);
       if (!lp) {
-        lp = Ext.createByAlias('widget.collectionpicker', {
+        extraOptions = extraOptions || {};
+        var options = Ext.apply({
           id: panelId,
           collectionType: collectionType,
           height: 80,
@@ -509,7 +514,9 @@ Ext.define('Paperpile.app.PubActions', {
           dontHideOnClickNodes: function() {
             return['.pp-action'];
           }
-        });
+        },
+        extraOptions);
+        lp = Ext.createByAlias('widget.collectionpicker', options);
         lp.on('applychanges', function(lp, added, removed) {
           Paperpile.app.PubActions.collectionHandler(added.collect('guid', 'data'), collectionType, 'add');
           Paperpile.app.PubActions.collectionHandler(removed.collect('guid', 'data'), collectionType, 'remove');

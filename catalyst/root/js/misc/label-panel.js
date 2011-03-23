@@ -241,12 +241,19 @@ Ext.define('Paperpile.Collectionpicker', {
           }
           return value;
         },
+	getDepthSpacing: function(values) {
+	      var depth = values.treeDepth || 0;
+	      var str = '<span style="margin-left:'+depth*5+'px;"></span>';
+	      return str;
+	  },
         getItemNode: function(values) {
           if (values.type == 'LABEL' || values.type == 'FOLDER') {
-            return['<div class="pp-collection-item-count">',
+            return[
+		   '<div class="pp-collection-item-count">',
             values.count,
             '</div>',
             '<div class="pp-ellipsis pp-collection-item-name">',
+		   this.getDepthSpacing(values),
             this.highlightSearchSubset(values.name),
             '</div>', ].join('');
             /*
