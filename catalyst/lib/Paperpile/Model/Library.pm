@@ -1909,12 +1909,16 @@ sub histogram {
     }
   }
 
-  if ( $field eq 'labels' ) {
+  if ( $field eq 'labels' || $field eq 'folders' ) {
+
+      my $db_type;
+      $db_type = 'LABEL' if ($field eq 'labels');
+      $db_type = 'FOLDER' if ($field eq 'folders');
 
     my ( $guid, $label, $style );
 
     # Select all labels and initialize the histogram counts.
-    my $sth = $dbh->prepare(qq^SELECT guid,name,style FROM Collections WHERE type='LABEL';^);
+    my $sth = $dbh->prepare(qq^SELECT guid,name,style FROM Collections WHERE type='$db_type';^);
     $sth->bind_columns( \$guid, \$label, \$style );
     $sth->execute;
     while ( $sth->fetch ) {

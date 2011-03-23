@@ -524,13 +524,27 @@ sub remove_from_collection : Local {
 
   my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
 
-  $c->model('Library')->remove_from_collection( $data, $collection_guid );
+  my @guids;
+  if ( ref $collection_guid eq 'ARRAY' ) {
+    @guids = @{$collection_guid};
+  } else {
+    @guids = ($collection_guid);
+  }
+
+  foreach my $guid (@guids) {
+    $c->model('Library')->remove_from_collection( $data, $guid );
+  }
 
   $self->_collect_update_data( $c, $data, [$what] );
   #$c->stash->{data}->{collection_delta} = 1;
 
-  $c->stash->{data}->{file_sync_delta} =
-    $self->_get_sync_collections( $c, undef, $collection_guid );
+  my @filesync;
+  foreach my $guid( @guids ) {
+    my $cur_filesync = $self->_get_sync_collections( $c, undef, $guid );
+    push @filesync, @$cur_filesync;
+  }
+
+  $c->stash->{data}->{file_sync_delta} = \@filesync;
 
   $self->_save_plugin($c, $plugin);
 
@@ -651,8 +665,10 @@ sub list_collections : Local {
 
   my ($dbh, $in_prev_tx) = $model->begin_or_continue_tx;
 
-  my $hist = $model->histogram('labels');
-
+  my $hist;
+  $hist = $model->histogram('labels') if ($type eq 'LABEL');
+  $hist = $model->histogram('folders') if ($type eq 'FOLDER');
+      
   my $sth = $dbh->prepare("SELECT * FROM Collections WHERE type='$type' order by sort_order");
 
   my @data = ();
@@ -660,14 +676,10 @@ sub list_collections : Local {
   $sth->execute;
   while ( my $row = $sth->fetchrow_hashref() ) {
     my $name = $row->{name};
-    if ( length($name) >= 18 ) {
-      $name = substr($name,0,15) . '...';
-    }
 
-    push @data, {
+    my $obj = {
       guid       => $row->{guid},
       name       => $row->{name},
-      display_name => $name,
       type       => $row->{type},
       parent     => $row->{parent},
       sort_order => $row->{sort_order},
@@ -675,6 +687,9 @@ sub list_collections : Local {
       style      => $row->{style},
       count      => $hist->{ $row->{guid} }->{count}
       };
+    print STDERR $obj->{name}."  ".$obj->{count}."\n";
+    push @data, $obj;
+
   }
 
   $model->commit_or_continue_tx($in_prev_tx);
