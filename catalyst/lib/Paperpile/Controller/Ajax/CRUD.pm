@@ -24,6 +24,7 @@ use Paperpile::Job;
 use Paperpile::Queue;
 use Paperpile::FileSync;
 use Data::Dumper;
+use Data::GUID;
 use HTML::TreeBuilder;
 use HTML::FormatText;
 use File::Path;
@@ -408,27 +409,30 @@ sub update_notes : Local {
 sub new_collection : Local {
   my ( $self, $c ) = @_;
 
-  my $guid   = $c->request->params->{node_id};
-  my $parent = $c->request->params->{parent_id};
-  my $name   = $c->request->params->{text};
+  my $parent = $c->request->params->{parent_id} || 'ROOT';
+  my $name   = $c->request->params->{name};
   my $type   = $c->request->params->{type};
   my $style  = $c->request->params->{style} || '0';
 
+  my $guid = Data::GUID->new;
+  $guid = $guid->as_hex;
+  $guid =~ s/^0x//;
+
   $c->model('Library')->new_collection( $guid, $name, $type, $parent, $style );
 
-  # Reload tree representation of collections
-
-  my $tree = $c->model('Library')->get_setting('_tree');
-
-  print STDERR Dumper($tree);
-
-
-  if ($type eq 'LABEL'){
-    $c->forward( '/ajax/tree/get_subtree', [ $tree, "LABEL_ROOT" ] );
-  } else {
-    $c->forward( '/ajax/tree/get_subtree', [ $tree, "FOLDER_ROOT" ] );
+  # If we need to simultaneously apply the collection to some items, do it here.
+  my $grid_id = $c->request->params->{grid_id};
+  my ($plugin, $data) = $self->_get_selection($c);
+  if (scalar(@$data) > 0) {
+    $c->model('Library')->add_to_collection( $data, $guid );
+    my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
+    $self->_collect_update_data( $c, $data, [$what] );
   }
 
+  $self->_save_plugin($c, $plugin);
+  $c->stash->{data}->{collection_delta} = {
+      $type => 1
+  };
 }
 
 sub move_in_collection : Local {
