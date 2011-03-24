@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<extpdf>
-  <command>SEARCH</command>
-  <inFile>../test/test.pdf</inFile>
-  <term>the</term>
-</extpdf>
-

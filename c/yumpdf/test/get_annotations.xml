@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<extpdf>
-  <command>GET_ANNOTATIONS</command>
-  <page>1</page>
-  <inFile>../test/test.pdf</inFile>
-</extpdf>
