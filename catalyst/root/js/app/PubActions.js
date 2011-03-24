@@ -524,7 +524,10 @@ Ext.define('Paperpile.app.PubActions', {
         },
         lp);
         lp.on('newitem', function(lp, newName) {
-          // TODO.
+          Paperpile.app.PubActions.collectionHandler([], collectionType, 'new', {
+            name: newName
+          });
+          this.hide();
         },
         lp);
       }
@@ -547,50 +550,78 @@ Ext.define('Paperpile.app.PubActions', {
       },
       10);
     },
-    collectionHandler: function(guids, collectionType, mode) {
-      if (guids.length == 0) {
+    collectionHandler: function(guids, collectionType, mode, params) {
+      if (guids.length == 0 && mode != 'new') {
         Paperpile.log("Nothing to " + mode + " for " + collectionType);
         return;
       }
 
-      var dbType = 'LABEL';
+      params = params || {};
+
+      var dbType;
+      var singular;
       if (collectionType == 'folders') {
         dbType = 'FOLDER';
+        singular = 'folder';
+      } else if (collectionType == 'labels') {
+        dbType = 'LABEL';
+        singular = 'label';
       }
 
       var grid = Paperpile.main.getCurrentGrid();
       var count = grid.getSelectionCount();
 
       var url;
+      var statusTpl;
       if (mode == 'remove') {
         url = '/ajax/crud/remove_from_collection';
+	if (collectionType == 'folders') {
+	    statusTpl = "Removing reference{sRef} from {collType}{sColl}";
+	} else {
+	    statusTpl = "Removing {collType}{sColl} from reference{sRef}";
+	}
       } else if (mode == 'add') {
         url = '/ajax/crud/move_in_collection';
+	if (collectionType == 'folders') {
+	    statusTpl = "Adding reference{sRef} to {collType}{sColl}";
+	} else {
+	    statusTpl = "Adding {collType}{sColl} to reference{sRef}";
+	}
+      } else if (mode == 'new') {
+        url = '/ajax/crud/new_collection';
+        statusTpl = "Creating new {singularType}";
       }
+
+      var tplData = {
+        nRef: count > 1 ? count : '',
+        sRef: count > 1 ? 's' : '',
+        collType: singular,
+        sColl: guids.length > 1 ? 's' : '',
+        nColl: guids.length > 1 ? guids.length : ''
+      };
+      var status = Paperpile.main.status.createNotification({
+        icon: Paperpile.app.Status.busyIcon,
+        text: new Ext.XTemplate(statusTpl).apply(tplData),
+	delay: 1000
+      });
+
+            status.delay(4000, "Still waiting");
+            status.delay(8000, "Taking forever");
+            status.delay(12000, "argh!!!!!");
 
       Paperpile.Ajax({
         url: url,
-        params: {
+        params: Ext.apply(params, {
           grid_id: grid.id,
           selection: grid.getSelectionForAjax(),
           collection_guid: guids,
           type: dbType
-        },
+        }),
         success: function(response) {
-          var actionS = '',
-          refS = '',
-          collectionS = '';
-
-          if (count == 1) refS = 'reference';
-          if (count > 1) refS = 'references';
-
-          if (collectionType = 'LABEL') collectionS = 'Label';
-          if (collectionType = 'FOLDER') collectionS = 'Folder';
-
-          if (mode == 'remove') actionS = 'removed from';
-          if (mode == 'add') actionS = 'added to';
-
-          Paperpile.log(collectionS + ' ' + actionS + ' ' + count + ' ' + refS);
+		  status.updateStatus({
+			  reset: true,
+			  text: 'finished!'
+		      });
         },
         failure: function(response) {
           // TODO.

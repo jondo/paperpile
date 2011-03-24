@@ -86,10 +86,10 @@ Ext.define('Paperpile.grid.SelectionModel', {
     };
 
     if (!view['focusRow']) {
-      Paperpile.log("Binding PP selection model to a Component without 'focusRow'");
+      //Paperpile.log("Binding PP selection model to a Component without 'focusRow'");
     }
     if (!view['focus']) {
-      Paperpile.log("Binding PP selection model to a Component without 'focus'");
+      //Paperpile.log("Binding PP selection model to a Component without 'focus'");
     }
 
     me.view = view;

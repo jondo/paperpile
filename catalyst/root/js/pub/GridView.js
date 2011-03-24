@@ -723,8 +723,10 @@ Ext.define('Paperpile.pub.Grid', {
           }
           if (!list.containsKey(guid)) {
             var record = store.getById(guid);
-            record.data.multiCount = 1;
-            list.add(guid, record.data);
+            if (record) {
+              record.data.multiCount = 1;
+              list.add(guid, record.data);
+            }
           } else {
             list.get(guid).multiCount++;
           }

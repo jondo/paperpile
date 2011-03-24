@@ -52,7 +52,7 @@ Ext.define('Paperpile.net.CollectionStore', {
   },
 
   updateFromServer: function(data) {
-    //    Paperpile.log("Updating store from server");
+    Paperpile.log("Updating store from server");
     if (data.collection_delta) {
       this.load();
     }

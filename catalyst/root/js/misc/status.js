@@ -178,7 +178,7 @@ Ext.define('Paperpile.Status', {
         this.clearMessageNumber(num, anim);
       },
       this, {
-        single: true
+        single: true
       });
       this.messageToHideOnClick = num;
     }

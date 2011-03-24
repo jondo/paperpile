@@ -348,6 +348,11 @@ Ext.define('Paperpile.Collectionpicker', {
       delete record.data.checked;
     });
 
+    // Reset the original sort and filter states.
+    this.store.clearFilter();
+    this.store.filters = this.origFilter;
+    this.store.sort(this.origSort);
+
     if (checked.getCount() > 0 || unchecked.getCount() > 0) {
       this.fireEvent('applychanges', this, checked, unchecked);
     } else if (this.filterField.getValue() != '') {
@@ -474,6 +479,10 @@ Ext.define('Paperpile.Collectionpicker', {
 
   show: function() {
     this.callParent(arguments);
+
+    this.origSort = this.store.getSortState();
+    this.origFilter = this.store.filters;
+
     this.updateButtons();
     this.mon(Ext.getDoc(), "mousedown", this.onMouseDown, this);
     if (this.filterField) {

@@ -3,7 +3,7 @@ Ext.define('Paperpile.app.Actions', {
     execute: function(id, args) {
       var action = this.actions.get(id);
       if (action) {
-        if (args) {
+        if (args && args != '') {
           Paperpile.log("Executing action " + id + " with args " + args);
         } else {
           Paperpile.log("Executing action " + id);

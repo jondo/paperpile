@@ -24,6 +24,10 @@ Ext.define('Paperpile.pub.View', {
       items: [this.createCenter(), this.createEast()],
     });
     this.callParent(arguments);
+
+    Ext.getStore('labels').on('load', this.refresh, this);
+    Ext.getStore('folders').on('load', this.refresh, this);
+
   },
 
   createCenter: function() {
@@ -99,16 +103,29 @@ Ext.define('Paperpile.pub.View', {
     this.updateSelectionTask.delay(this.sidebarUpdateDelay, this.doUpdateSelection, this, [sm, selections]);
   },
 
-  doUpdateSelection: function(sm, selections) {
+  refresh: function() {
+	    if (!this.selection) {
+		return;
+	    }	    
+    this.grid.view.refresh();
+    var panels = [this.abstract, this.overview];
+    Ext.each(panels, function(panel) {
+      panel.setSelection(this.selection);
+    },
+    this);
+  },
+
+  doUpdateSelection: function(sm, selection) {
     var panels = [this.abstract, this.overview];
     var grid_id = this.grid.id;
     Ext.each(panels, function(panel) {
       panel.grid_id = grid_id;
     });
 
+    this.selection = selection;
     Ext.each(panels, function(panel) {
-        panel.setSelection(selections);
-      });
+      panel.setSelection(selection);
+    });
   },
 
   updateFromServer: function(data) {

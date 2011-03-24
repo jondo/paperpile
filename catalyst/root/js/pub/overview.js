@@ -68,6 +68,12 @@ Ext.define('Paperpile.pub.Overview', {
     }
   },
 
+  refresh: function() {
+    this.items.each(function(item) {
+      item.setSelection(this.selection);
+    });
+  },
+
   showLabelControls: function() {
     // Skip labels for combo which are already in list (unless we have multiple selection where this
     // does not make too much sense

@@ -20,6 +20,8 @@ Ext.define('Paperpile.Viewport', {
 
     this.createStores();
 
+    this.status = Ext.createByAlias('widget.status');
+
     Ext.apply(this, {
       layout: 'border',
       enableKeyEvents: true,
