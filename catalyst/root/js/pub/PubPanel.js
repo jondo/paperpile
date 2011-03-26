@@ -5,7 +5,7 @@ Ext.define('Paperpile.pub.PubPanel', {
     this.createTemplates();
 
     Ext.apply(this, {
-	    cls: 'pp-pubpanel',
+      cls: 'pp-pubpanel',
       tpl: this.singleTpl,
       hideOnSingle: false,
       hideOnMulti: false,
@@ -87,7 +87,6 @@ Ext.define('Paperpile.pub.PubPanel', {
           '<div',
           ' class="pp-action pp-ellipsis {cls}"',
           ' action="{action}"',
-	  ' style="display:inline-block;"',
           '<tpl if="args">args="{args}"</tpl>',
           '<tpl if="tooltip">ext:qtip="{tooltip}"</tpl>',
           '>',
@@ -125,8 +124,8 @@ Ext.define('Paperpile.pub.PubPanel', {
           '<tpl if="args"> args="{args}"</tpl>',
           '<tpl if="tooltip"> ext:qtip="{tooltip}"</tpl>',
           '>',
-	  '  <tpl if="icon"><img src="{icon}"/></tpl>',
-	  '</div>').compile();
+          '  <tpl if="icon"><img src="{icon}"/></tpl>',
+          '</div>').compile();
       }
       return this._iconButtonTpl;
     },
@@ -174,11 +173,11 @@ Ext.define('Paperpile.pub.PubPanel', {
         args: args
       }));
     },
-    link: function(id, args, text) {
+    link: function(id, args, text, cls) {
       return this._generic(id, {
         text: text,
         args: args,
-        cls: 'pp-textlink'
+        cls: 'pp-textlink' + (cls ? ' ' + cls : '')
       });
     },
     miniLink: function(id, args, text) {

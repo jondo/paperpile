@@ -221,5 +221,10 @@ Paperpile.utils = {
     if (seconds > 4730400000) return Math.round(seconds / 4730400000) + ' Centuries' + token;
 
     return date_str;
-  }
+    },
+
+
+  formatLabelName: function(string) {
+	return Ext.String.ellipsis(string, 20, true);
+    }
 };

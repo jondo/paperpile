@@ -108,6 +108,10 @@ div.BasicInfo {
     width: 14px;
 }
 
+.pp-folderlink {
+    display: block;
+}
+
 .pp-iconbutton {
     opacity: 0.5;
     display: inline-block;
