@@ -24,12 +24,28 @@
     color: #4183C4;
     width: 70px; 
     text-align: right; 
+    margin-right: .5em;
+    padding: .1em;
+    padding-bottom: 0;
 }
 
 .pp-box dd { 
     display:block;
-    margin: 0px 0px 0px 5px; 
-    padding: 0px 0px 5px 5px;
+    padding: .1em;
+}
+
+.pp-basicinfo-summary dd {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.pp-basicinfo-details dd {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.pp-basicinfo-details dd.pp-ellipsis {
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;

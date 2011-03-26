@@ -394,15 +394,15 @@ Ext.define('Paperpile.app.PubActions', {
           text: 'Copy LaTeX Citation',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
-            Paperpile.app.PubActions.handleCopy(grid, 'Bibfile', 'BIBTEX', 'BibTeX copied');
+            Paperpile.app.PubActions.copyHandler(grid, 'Bibfile', 'BIBTEX', 'BibTeX copied');
           },
         }),
         'COPY_BIBTEX_CITATION': new Ext.Action({
           itemId: 'COPY_BIBTEX_CITATION',
-          text: 'Copy as BibTeX',
+          text: 'Copy BibTeX \\cite',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
-            Paperpile.app.PubActions.handleCopy(grid, 'Bibfile', 'CITEKEYS', 'LaTeX citation{s} copied');
+            Paperpile.app.PubActions.copyHandler(grid, 'Bibfile', 'CITEKEYS', 'LaTeX citation{s} copied');
           },
         }),
         'COPY_FORMATTED': new Ext.Action({
@@ -410,7 +410,7 @@ Ext.define('Paperpile.app.PubActions', {
           text: 'Copy Citation',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
-            Paperpile.app.PubActions.handleCopy(grid, 'Bibfile', 'CITATIONS', '{n} citation{s} copied');
+            Paperpile.app.PubActions.copyHandler(grid, 'Bibfile', 'CITATIONS', '{n} citation{s} copied');
           }
         }),
         'EXPORT_SELECTION': new Ext.Action({
@@ -809,7 +809,8 @@ Ext.define('Paperpile.app.PubActions', {
 
       var callback = function(string) {
         if (IS_QT) {
-          QRuntime.setClipboard(string);
+	    QRuntime.setClipboard(string);
+	    Paperpile.log("Copied "+string);
         }
       };
       Paperpile.Ajax({
@@ -959,7 +960,7 @@ Ext.define('Paperpile.app.PubActions', {
         });
       };
 
-      Paperpile.fileDialog(callback, {
+      Paperpile.app.FileDialog.createDialog(callback, {
         'title': 'Choose file and format for export',
         'dialogType': 'save',
         'selectionType': 'file',
