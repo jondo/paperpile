@@ -16,12 +16,6 @@
 # received a copy of the GNU Affero General Public License along with
 # Paperpile.  If not, see http://www.gnu.org/licenses.
 
-
-
-BEGIN {
-  $ENV{CATALYST_DEBUG} = 0;
-}
-
 use strict;
 
 use FindBin;
@@ -43,16 +37,17 @@ my $platform = '';
 
 if ($ARGV[1]){
   $platform = $ARGV[1];
-  if (($platform ne 'osx') && ($platform ne 'linux32') && ($platform ne 'linux64')){
+  if (($platform ne 'osx') && ($platform ne 'linux32') && ($platform ne 'linux64') && ($platform ne 'win32')){
     usage();
   }
 }
+
 
 my $b = Paperpile::Build->new( {
     cat_dir  => '../catalyst',
     qt_dir   => "../qt",
     dist_dir => '../dist/data',
-    qt_sdk => '/opt/qtsdk',
+    qt_sdk => (-e '/opt/qtsdk') ? '/opt/qtsdk' : 'c:\Qt\2010.05',
     yui_jar => $ENV{HOME}.'/bin/yuicompressor-2.4.2.jar',
   }
 );
@@ -96,7 +91,7 @@ if ( $command eq 'dump_includes' ) {
 }
 
 if ( $command eq 'push_qruntime' ) {
-  $b->push_qruntime;
+  $b->push_qruntime();
   exit(0);
 }
 
@@ -119,7 +114,7 @@ sub usage{
   get_qruntime   Download Qt Runtime library files
   push_qruntime  Publish Qt Runtime library files to server
 
-  Platforms (optional): osx, linux32, linux64
+  Platforms (optional): osx, linux32, linux64, win32
 
 
 END

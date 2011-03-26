@@ -27,11 +27,9 @@ Runtime::Runtime(QWidget *window){
   updaterProcess = 0;
   saveToClose = 0;
 
-  watcher = new	QFileSystemWatcher();
-
-  watcher->addPath(QString("c:\\Users\\wash\\tmp"));
-
-  connect(watcher, SIGNAL(directoryChanged(QString)), this, SLOT(processPushUpdate(QString)));
+  //watcher = new	QFileSystemWatcher();
+  //watcher->addPath(QString("c:\\Users\\wash\\tmp"));
+  //connect(watcher, SIGNAL(directoryChanged(QString)), this, SLOT(processPushUpdate(QString)));
 
 
 };
@@ -116,8 +114,9 @@ QString Runtime::getCatalystDir(){
 
   QString appDir = QCoreApplication::applicationDirPath();
 
-  if (appDir.contains(QRegExp("c.qruntime.build"))){
-    QDir path(appDir+"/../../../../catalyst/");
+  // We are in the build directory .../c/build
+  if (appDir.contains(QRegExp("c.build"))){
+    QDir path(appDir+"/../../../catalyst/");
     return(path.canonicalPath());
   }
 
@@ -128,6 +127,20 @@ QString Runtime::getCatalystDir(){
 
   if (platform == "linux32" || platform == "linux64"){
     QDir path(QCoreApplication::applicationDirPath()+"/../catalyst/");
+    return(path.canonicalPath());
+  }
+
+  
+  if (platform == "win32"){
+
+    // We are in an uninstalled checkout in .../qt/win32
+    if (appDir.contains(QRegExp("qt.win32"))){
+      QDir path(appDir+"/../../catalyst/");
+      return(path.canonicalPath());
+    }
+    
+    // We are in a normal installation
+    QDir path(QCoreApplication::applicationDirPath()+"/catalyst/");
     return(path.canonicalPath());
   }
 

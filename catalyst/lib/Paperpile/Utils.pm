@@ -151,6 +151,11 @@ sub get_platform{
     $platform = 'osx';
   }
 
+  if ( $arch_string =~ /MSWin32/i ) {
+    $platform = 'win32';
+  }
+
+
   return $platform;
 
 }

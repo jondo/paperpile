@@ -16,7 +16,7 @@
 
 
 package Paperpile::Build;
-use Moose;
+use Mouse;
 
 use Paperpile::Model::User;
 use Paperpile::Model::Library;
@@ -30,7 +30,6 @@ use File::Path;
 use File::Find;
 use File::Spec::Functions qw(catfile);
 use File::Copy::Recursive qw(fcopy dircopy rcopy);
-use File::DirCompare;
 use File::stat;
 use File::Temp qw/tempdir /;
 use Digest::MD5;
@@ -294,6 +293,10 @@ sub dump_includes {
 
 sub create_patch {
 
+  # Only need this on the packaging machine and we don't have to
+  # bother installing it on other platforms like windows.
+  require File::DirCompare;
+
   my ( $self, $old_dir, $new_dir, $patch_dir ) = @_;
 
   my ( @listing, @modified );
@@ -368,15 +371,19 @@ sub get_qruntime {
 
   my ($self,$platform) = @_;
 
-  my $version = Paperpile->config->{app_settings}->{qruntime_version};
+  my $version = Paperpile::App->config->{app_settings}->{qruntime_version};
 
   my $tmp_dir = tempdir( CLEANUP => 1 );
+
+  # Fix for msys environment on windows
+  $tmp_dir=~s!\\!/!g;
+  $tmp_dir=~s!^c:!/c/!ig;
 
   my @platforms;
 
   if ($platform){
     if ($platform eq 'all'){
-      @platforms = ( 'linux32', 'linux64','osx' );
+      @platforms = ( 'linux32', 'linux64','osx','win32' );
     } else {
       @platforms = ($platform);
     }
@@ -418,10 +425,21 @@ sub get_qruntime {
       }
     }
 
+    if ($platform eq 'win32'){
+      if ( -e "$dest_dir/QRUNTIME-$version" ) {
+        $self->echo("QRuntime version $version already exists.");
+        next;
+      } else {
+        $self->echo("Deleting old version of QRuntime runtime.");
+        `rm -rf $dest_dir/*dll $dest_dir/plugins/*`;
+      }
+    }
+
+
     # Short-cut to pack and test locally
-    my $file='';
+    #my $file='';
     #$file = "/Users/wash/tmp/pack/" . $file_name;
-    #$file = "/home/wash/tmp/pack/" . $file_name;
+    #$file = "./$file_name";
 
     if ( !-e $file ) {
       $self->echo("Downloading runtime.");
@@ -431,7 +449,6 @@ sub get_qruntime {
         $self->echo("Could not download runtime for $platform.");
         next;
       }
-
     } else {
       `cp $file $tmp_dir`;
     }
@@ -453,6 +470,14 @@ sub get_qruntime {
       `mv $tmp_dir/$file_name/lib/* $dest_dir/lib`;
       `mv $tmp_dir/$file_name/plugins/* $dest_dir/plugins`;
     }
+
+    if ($platform eq 'win32'){
+      `mv $tmp_dir/$file_name/*dll $tmp_dir/$file_name/QRUNTIME* $dest_dir`;
+      `mv $tmp_dir/$file_name/plugins/* $dest_dir/plugins`;
+    }
+
+
+
   }
 }
 
@@ -464,7 +489,7 @@ sub push_qruntime {
 
   my $platform = Paperpile::Utils->get_platform;
 
-  my $qruntime_version = Paperpile->config->{app_settings}->{qruntime_version};
+  my $qruntime_version = Paperpile::App->config->{app_settings}->{qruntime_version};
 
   my $dest_dir = "qruntime-$qruntime_version-$platform";
 
@@ -526,16 +551,61 @@ sub push_qruntime {
     }
   }
 
+  if ($platform eq 'win32') {
+
+    mkdir "$dest_dir";
+    mkdir "$dest_dir/plugins";
+
+    $self->echo("Copying Qt libraries...");
+
+    my @qt_libs = ('QtCore4.dll','QtGui4.dll',
+                   'QtNetwork4.dll','QtWebKit4.dll','QtXml4.dll',
+                   'phonon4.dll'
+                  );
+
+    my $lib_dir = $self->qt_sdk."/qt/bin";
+
+    foreach my $lib (@qt_libs){
+      `cp -r -L $lib_dir/$lib $dest_dir`;
+    }
+
+    `touch $dest_dir/QRUNTIME-$qruntime_version`;
+
+    $self->echo("Copying Qt plugins...");
+
+    foreach my $plugin ('codecs', 'imageformats'){
+      `cp -r $lib_dir/../plugins/$plugin $dest_dir/plugins`;
+      `rm -f $dest_dir/plugins/$plugin/*a`;
+      `rm -f $dest_dir/plugins/$plugin/*d4.dll`;
+    }
+
+    $self->echo("Copying additional dlls...");
+
+    # We need additional dlls, which need to be available locally in
+    # the following hard-coded path. They have been downloaded
+    # pre-compiled from: http://www.winkde.org/pub/kde/ports/win32
+
+    my $local_lib_dir = '../../local/bin';
+
+    my @local_libs = qw/libfreetype.dll libjpeg.dll
+                        libopenjpeg.dll libpoppler-cpp.dll
+                        libpoppler.dll libzlib1.dll libiconv.dll
+                        liblcms-1.dll libpng14.dll libpoppler-qt4.dll
+                        libxml2.dll/;
+
+    foreach my $lib (@local_libs){
+      `cp -r -L "$local_lib_dir/$lib" $dest_dir`;
+    }
+  }
+
   $self->echo("Packaging...");
 
   `tar czf $dest_dir.tar.gz $dest_dir`;
 
   $self->echo("Uploading (needs ssh keys so if you're not me it won't work...)");
-
   system("scp $dest_dir.tar.gz paperpile.com:/scratch/qruntime");
 
   $self->echo("Cleaning up");
-
   `rm -rf $dest_dir $dest_dir.tar.gz`;
 
 }

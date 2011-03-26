@@ -33,8 +33,15 @@ if ( $arch_string =~ /(darwin|osx)/i ) {
   $platform = 'osx';
 }
 
+# On windows we start this with some perl that comes with mysysgit
+if ( $arch_string eq 'msys' ) {
+  $platform = 'win32';
+}
 
-$ENV{PERL5LIB}=undef;
+
+if ($ENV{PERL5LIB}){
+  $ENV{PERL5LIB}=undef;
+}
 
 $ENV{BUILD_PLATFORM}=$platform;
 
