@@ -8,6 +8,10 @@ body {
   -webkit-user-select: ignore;
 }
 
+.pp-action {
+    cursor: pointer;
+}
+
 .pp-grid-item {
   line-height: 13px;
   vertical-align: top;
@@ -451,4 +455,38 @@ input[type="radio"]:disabled,
 input[type="checkbox"]:disabled
 {
  opacity: .6;
+}
+
+
+.pp-status {
+    margin: 0px 8px;
+    font-size:11;
+    background-color:#FFF1A8;
+}
+
+.pp-progress-box-status {
+    margin: 0px 8px;
+    font-size:11;
+}
+
+.pp-status-msg {
+    font-weight: bold;
+    padding: 0px 5px;
+}
+
+.pp-status-action {
+    font-weight: bold;
+    padding: 0px 5px;
+}
+
+.pp-status-info {
+    background-color:#FFF1A8;
+}
+
+.pp-status-error {
+    background-color: #FFBABA;
+}
+
+.pp-status-error .pp-status-msg{
+    color: #D8000C;
 }

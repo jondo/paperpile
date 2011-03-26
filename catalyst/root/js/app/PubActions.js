@@ -2,11 +2,28 @@ Ext.define('Paperpile.app.PubActions', {
   statics: {
     getActions: function() {
       return {
+        'UNDO_COLLECTION': new Ext.Action({
+          itemId: 'UNDO_COLLECTION',
+          text: 'Undo',
+          handler: function(status) {
+		    Paperpile.log(status);
+		    // TODO for backend: implement a generic mechanism for undo-ing the lsat
+		    // CRUD-based action...
+		    /*
+            Paperpile.Ajax({
+              url: '/ajax/crud/undo_collection',
+              success: function(response) {
+              },
+              scope: this
+            });
+		    */
+          }
+        }),
         'REMOVE_LABEL': new Ext.Action({
           itemId: 'REMOVE_LABEL',
           text: 'Remove a label',
           handler: function(guid) {
-            Paperpile.app.PubActions.collectionHandler(guid, 'LABEL', 'remove');
+            Paperpile.app.PubActions.collectionHandler(guid, 'labels', 'remove');
           }
         }),
         'MANAGE_LABELS': new Ext.Action({
@@ -25,13 +42,23 @@ Ext.define('Paperpile.app.PubActions', {
         }),
         'ADD_LABEL_PANEL': new Ext.Action({
           itemId: 'ADD_LABEL',
+		    icon: '/images/icons/label_add.png',
           text: 'Add Label',
           handler: function(guid) {
             Paperpile.app.PubActions.collectionPicker(guid, 'labels');
           },
         }),
+        'OPEN_FOLDER': new Ext.Action({
+          itemId: 'OPEN_FOLDER',
+		    icon: '/images/icons/folder.png',
+          text: 'Open this folder',
+          handler: function(guid) {
+		    Paperpile.log("Open!");
+          }
+        }),
         'REMOVE_FOLDER': new Ext.Action({
           itemId: 'REMOVE_FOLDER',
+		    icon: '/images/icons/cancel-small-bw.png',
           text: 'Remove a folder',
           handler: function(guid) {
             Paperpile.app.PubActions.collectionHandler(guid, 'folders', 'remove');
@@ -46,6 +73,7 @@ Ext.define('Paperpile.app.PubActions', {
         }),
         'ADD_FOLDER_PANEL': new Ext.Action({
           itemId: 'ADD_FOLDER_PANEL',
+		    icon: '/images/icons/folder_add.png',
           text: 'Add Folder',
           handler: function(guid) {
             var store = Ext.getStore('folders');
@@ -57,7 +85,7 @@ Ext.define('Paperpile.app.PubActions', {
         }),
         'DELETE_PDF': new Ext.Action({
           itemId: 'DELETE_PDF',
-          icon: '/images/icons/cross.png',
+          icon: '/images/icons/cancel-small-bw.png',
           text: 'Delete',
           tooltip: 'Delete the attached PDF',
           handler: function(guid) {
@@ -67,7 +95,7 @@ Ext.define('Paperpile.app.PubActions', {
         'DELETE_FILE': new Ext.Action({
           itemId: 'DELETE_FILE',
           text: 'Delete',
-          icon: '/images/icons/cross.png',
+          icon: '/images/icons/cancel-small-bw.png',
           tooltip: 'Delete the attached file',
           handler: function(guid) {
             Paperpile.app.PubActions.deleteFileHandler(guid, false);
@@ -171,7 +199,7 @@ Ext.define('Paperpile.app.PubActions', {
         'SEARCH_PDF': new Ext.Action({
           itemId: 'SEARCH_PDF',
           icon: '/images/icons/page_white_search.png',
-          text: 'Search & Download PDF',
+          text: 'Download PDF',
           tooltip: 'Search online to fetch a PDF of the article',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
@@ -575,18 +603,18 @@ Ext.define('Paperpile.app.PubActions', {
       var statusTpl;
       if (mode == 'remove') {
         url = '/ajax/crud/remove_from_collection';
-	if (collectionType == 'folders') {
-	    statusTpl = "Removing reference{sRef} from {collType}{sColl}";
-	} else {
-	    statusTpl = "Removing {collType}{sColl} from reference{sRef}";
-	}
+        if (collectionType == 'folders') {
+          statusTpl = "Removing reference{sRef} from {collType}{sColl}";
+        } else {
+          statusTpl = "Removing {collType}{sColl} from reference{sRef}";
+        }
       } else if (mode == 'add') {
         url = '/ajax/crud/move_in_collection';
-	if (collectionType == 'folders') {
-	    statusTpl = "Adding reference{sRef} to {collType}{sColl}";
-	} else {
-	    statusTpl = "Adding {collType}{sColl} to reference{sRef}";
-	}
+        if (collectionType == 'folders') {
+          statusTpl = "Adding reference{sRef} to {collType}{sColl}";
+        } else {
+          statusTpl = "Adding {collType}{sColl} to reference{sRef}";
+        }
       } else if (mode == 'new') {
         url = '/ajax/crud/new_collection';
         statusTpl = "Creating new {singularType}";
@@ -602,12 +630,16 @@ Ext.define('Paperpile.app.PubActions', {
       var status = Paperpile.main.status.createNotification({
         icon: Paperpile.app.Status.busyIcon,
         text: new Ext.XTemplate(statusTpl).apply(tplData),
-	delay: 1000
+        delay: 1000
       });
 
-            status.delay(4000, "Still waiting");
-            status.delay(8000, "Taking forever");
-            status.delay(12000, "argh!!!!!");
+      status.delay(4000, "Still waiting");
+      status.delay(8000, "Taking forever");
+      status.delay(12000, "argh!!!!!");
+
+      Paperpile.log(collectionType);
+      var store = Ext.getStore(collectionType);
+      var record = store.getById(guids[0]);
 
       Paperpile.Ajax({
         url: url,
@@ -618,10 +650,34 @@ Ext.define('Paperpile.app.PubActions', {
           type: dbType
         }),
         success: function(response) {
-		  status.updateStatus({
-			  reset: true,
-			  text: 'finished!'
-		      });
+
+          var collString;
+          if (guids.length > 1) {
+            collString = guids.length + " " + collectionType;
+          } else {
+            collString = '"' + record.get('name') + '"';
+          }
+
+          var string;
+          if (collectionType == 'folders') {
+            var refString = (count > 1 ? 'The selected references were ' : 'The selected reference was ');
+            var verbString = (mode == 'add' ? 'added to ' : 'removed from ');
+            string = refString + verbString + collString;
+          } else if (collectionType == 'labels') {
+            var refString = (count > 1 ? ' the selected references' : 'the selected reference');
+            var verbString = (mode == 'add' ? 'added to ' : 'removed from ');
+            collString = collString + (guids.length > 1 ? ' were ' : ' was ');
+            string = collString + verbString + refString;
+          }
+
+          status.updateStatus({
+            reset: true,
+            text: string,
+            actions: [{
+              text: 'Undo',
+              action_id: 'UNDO_COLLECTION'
+            }]
+          });
         },
         failure: function(response) {
           // TODO.

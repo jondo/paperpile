@@ -11,7 +11,8 @@ Ext.define('Paperpile.app.StatusItem', {
   },
   initComponent: function() {
     Ext.apply(this, {
-      tpl: this.getTemplate()
+	    tpl: this.getTemplate(),
+		cls: 'pp-status-item'
     });
 
     this.callParent(arguments);
@@ -31,6 +32,7 @@ Ext.define('Paperpile.app.StatusItem', {
   },
 
   getTemplate: function() {
+    var me = this;
     return new Ext.XTemplate(
       '<div class="pp-status-item">',
       '  <tpl if="icon">',
@@ -38,9 +40,12 @@ Ext.define('Paperpile.app.StatusItem', {
       '  </tpl>',
       '  {text}',
       '  <tpl for="actions">',
-      '    {#}',
+      '    {[this.formatAction(values)]}',
       '  </tpl>',
       '</div>', {
+        formatAction: function(values) {
+	      return Paperpile.pub.PubPanel.link(values.action_id, me.id, values.text);
+        }
 
       });
   },
@@ -54,7 +59,6 @@ Ext.define('Paperpile.app.StatusItem', {
   delayStatus: function(delay, cfg) {
     var me = this;
     var timeout = Ext.Function.defer(function() {
-      Paperpile.log(cfg);
       me.updateStatus(cfg, false);
     },
     delay);
@@ -62,6 +66,11 @@ Ext.define('Paperpile.app.StatusItem', {
   },
 
   updateStatus: function(cfg, clearTimeouts) {
+    if (!this.active) {
+      this.active = true;
+      this.ownerCt.updateLayout();
+    }
+
     if (cfg) {
       var info = this.info;
       if (cfg.reset) {
@@ -78,7 +87,6 @@ Ext.define('Paperpile.app.StatusItem', {
   },
 
   clearTimeouts: function() {
-    Paperpile.log("Clearing timeouts!");
     Ext.each(this.delayTimeouts, function(timeout) {
       clearTimeout(timeout);
     });

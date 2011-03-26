@@ -9,9 +9,9 @@
 }
 
 .pp-box h2 {
-    font-size: 16px;
+    font-size: 14px;
     color: #4183C4;
-    margin-bottom: 4px;
+    margin-bottom: .5em;
 }
 
 .pp-box dl {
@@ -49,31 +49,86 @@ div.BasicInfo {
     border-color: #D8D8D8;
 }
 
-a.pp-smalltextlink {
-    font-size: 10px;
-}
-a.pp-smalltextlink img {
-    width: 12px;
+.pp-button {
+    display: inline-block;
+    -webkit-user-select: none;
+    margin-bottom: 2px;
+    padding: 3px 6px 3px 5px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    background: -webkit-gradient(linear,0% 40%,0% 70%,from(#F9F9F9),to(#E3E3E3));
+    border: 1px solid #BBB;
 }
 
-a.pp-textlink {
-    display:block;
+.pp-button:hover {
+    padding-left: 5px;
+    border-left: 1px solid #888;
+    border-top: 1px solid #888;
+    border-right: 1px solid #888;
+    border-bottom: 1px solid #888;
+}
+
+.pp-button:active, .pp-button-down {
+    background: -webkit-gradient(linear,0% 40%,0% 70%,to(#F9F9F9),from(#E3E3E3));
+}
+
+.pp-button img {
+    vertical-align: middle;
+    margin-right: .5em;
+}
+
+.pp-textlink, .pp-minilink {
+    display:inline-block;
     cursor:pointer;
     text-decoration:none;
     color: #0015FE;
     padding: 2px;
 }
-
-a.pp-textlink:hover {
+.pp-textlink:hover, .pp-minilink:hover {
     cursor:pointer;
     color: #0015FE;
     text-decoration: underline;
 }
 
-a.pp-textlink img {
+.pp-textlink {
+    font-size: 12px;
+}
+.pp-textlink img {
     vertical-align: middle;
     margin-right: .5em;
 }
+
+.pp-minilink {
+    font-size: 10px;
+}
+.pp-minilink img {
+    vertical-align: middle;
+    margin-right: .5em;
+    width: 14px;
+}
+
+.pp-iconbutton {
+    opacity: 0.5;
+    display: inline-block;
+    vertical-align: middle;
+    padding: 2px;
+}
+.pp-iconbutton:hover {
+    border: 1px solid #BBB;    
+    padding: 1px;
+}
+.pp-iconbutton:active {
+    border: 1px solid #333;
+    padding: 1px;
+}
+
+.pp-pubpanel:hover .pp-iconbutton,
+.pp-pubpanel:hover .pp-textlink,
+.pp-pubpanel:hover .pp-minilink {
+    opacity: 1;
+}
+
 
 .pp-file-generic{
     background-image: url(/ext/resources/images/default/tree/leaf.gif);
@@ -85,4 +140,3 @@ a.pp-textlink img {
     background-repeat: no-repeat;
     padding-left: 20px;
 }
-

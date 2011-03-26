@@ -16,14 +16,16 @@ Ext.define('Paperpile.app.Status', {
         pack: 'start',
         align: 'stretch'
       },
-      width: 200,
-      height: 30,
-*/
+      */
       cls: 'pp-status',
     });
     this.callParent(arguments);
     this.show();
-    this.setPosition(50, 50);
+  },
+
+  afterRender: function() {
+    this.callParent(arguments);
+    this.alignTo(Ext.getBody(), 't-t');
   },
 
   createNotification: function(cfg) {
@@ -71,6 +73,7 @@ Ext.define('Paperpile.app.Status', {
       }
     }
 
+    this.alignTo(Ext.getBody(), 't-t');
   },
 
   statics: {

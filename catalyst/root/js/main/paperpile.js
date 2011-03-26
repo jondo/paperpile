@@ -23,17 +23,18 @@ Ext.define('Paperpile.Viewport', {
     this.status = Ext.createByAlias('widget.status');
 
     Ext.apply(this, {
-      layout: 'border',
+      layout: {
+        type: 'border'
+      },
       enableKeyEvents: true,
       keys: {},
-      items: [this.createTree(), this.createTabs()],
-      dockedItems: [this.createQueue()]
+      items: [this.createTabs()],
     });
 
     this.callParent(arguments);
 
     Ext.getBody().on({
-      mousedown: {
+      click: {
         element: 'body',
         fn: this.onActionClick,
         delegate: '.pp-action',
@@ -60,7 +61,6 @@ Ext.define('Paperpile.Viewport', {
     };
   },
 
-
   onActionClick: function(event, target, o) {
     var el = Ext.fly(target);
     if (el.hasCls('pp-action')) {
@@ -68,7 +68,7 @@ Ext.define('Paperpile.Viewport', {
       var args = el.getAttribute('args');
       var array = [];
       if (args && args !== '') {
-	  array.push(args.split(','));
+        array.push(args.split(','));
       }
       var eventCopy = new Ext.EventObjectImpl(event.browserEvent);
       Paperpile.app.Actions.lastTriggerEvent = eventCopy;
@@ -807,7 +807,6 @@ Ext.define('Paperpile.Viewport', {
   updateFromServer: function(data) {
     if (data === undefined) return;
     //    Paperpile.logFull(data);
-
     if (this.labelStore) {
       this.labelStore.updateFromServer(data);
     }

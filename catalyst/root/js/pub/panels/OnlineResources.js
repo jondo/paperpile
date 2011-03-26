@@ -16,13 +16,13 @@ Ext.define('Paperpile.pub.panel.OnlineResources', {
       '<div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
       '<h2>Online Resources</h2>',
       '    <tpl if="this.hasOnlineLink(values)">',
-      '      {[Paperpile.pub.PubPanel.actionTextLink("VIEW_ONLINE")]}',
+      '      {[Paperpile.pub.PubPanel.button("VIEW_ONLINE")]}<br/>',
       '    </tpl>',
       '    <tpl if="!this.hasOnlineLink(values)">',
       '      <a class="pp-action-inactive pp-action-go-inactive">No online link available</a>',
       '    </tpl>',
-      '   {[Paperpile.pub.PubPanel.actionTextLink("AUTO_COMPLETE")]}',
-      '   {[Paperpile.pub.PubPanel.actionTextLink("EMAIL")]}',
+      '   {[Paperpile.pub.PubPanel.link("AUTO_COMPLETE")]}<br/>',
+      '   {[Paperpile.pub.PubPanel.link("EMAIL")]}',
       '  </div>', {
         hasOnlineLink: function(values) {
           if (values.doi || values.linkout || values.url || values.eprint || values.arxivid) {
@@ -36,8 +36,8 @@ Ext.define('Paperpile.pub.panel.OnlineResources', {
     this.multiTpl = new Ext.XTemplate(
       '<div class="pp-box pp-box-style1">',
       '  <h2>Online Resources</h2>',
-      '  {[Paperpile.pub.PubPanel.actionTextLink("AUTO_COMPLETE")]}',
-      '  {[Paperpile.pub.PubPanel.actionTextLink("EMAIL")]}',
+      '  {[Paperpile.pub.PubPanel.link("AUTO_COMPLETE")]}<br/>',
+      '  {[Paperpile.pub.PubPanel.link("EMAIL")]}<br/>',
       '</div>');
   }
 });

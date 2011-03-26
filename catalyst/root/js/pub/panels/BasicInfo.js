@@ -12,6 +12,10 @@ Ext.define('Paperpile.pub.panel.BasicInfo', {
 
     this.singleTpl = new Ext.XTemplate(
       '<div class="pp-box BasicInfo pp-box-style1">',
+      '<div style="float:right;">',
+      '  {[Paperpile.pub.PubPanel.iconButton("EDIT")]}',
+      '  {[Paperpile.pub.PubPanel.iconButton("TRASH")]}',
+      '</div>',
       '<h2>Reference Info</h2>',
       '<dl class="pp-ref-info">',
       '<tpl if="pubtype">',
@@ -34,8 +38,6 @@ Ext.define('Paperpile.pub.panel.BasicInfo', {
       '</tpl>',
       '</dl>',
       '  <div style="clear:left;"></div>',
-      '{[Paperpile.pub.PubPanel.smallTextLink("EDIT")]}',
-      '{[Paperpile.pub.PubPanel.smallTextLink("TRASH")]}',
       '</div>', {
         getPubTypeName: function(pubType, all) {
           var pt = Paperpile.main.globalSettings.pub_types[pubType];
@@ -61,9 +63,9 @@ Ext.define('Paperpile.pub.panel.BasicInfo', {
       '<tpl if="this.isAllSelected(values) === false">',
       '  {[this.getPubCount(values)]} references selected.',
       '</tpl>',
-      '{[Paperpile.pub.PubPanel.actionTextLink("TRASH")]}',
-      '{[Paperpile.pub.PubPanel.actionTextLink("COPY_FORMATTED")]}',
-      '{[Paperpile.pub.PubPanel.actionTextLink("EXPORT_SELECTION")]}', {
+      '{[Paperpile.pub.PubPanel.link("TRASH")]}',
+      '{[Paperpile.pub.PubPanel.link("COPY_FORMATTED")]}',
+      '{[Paperpile.pub.PubPanel.link("EXPORT_SELECTION")]}', {
         isAllSelected: function(selection) {
           var grid = me.up('pubview').grid;
           return grid.isAllSelected();

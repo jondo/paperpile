@@ -5,6 +5,7 @@ Ext.define('Paperpile.pub.PubPanel', {
     this.createTemplates();
 
     Ext.apply(this, {
+	    cls: 'pp-pubpanel',
       tpl: this.singleTpl,
       hideOnSingle: false,
       hideOnMulti: false,
@@ -32,12 +33,12 @@ Ext.define('Paperpile.pub.PubPanel', {
         this.update(pub.data);
       }
     } else if (selection.length > 1) {
-	// Convert selection items from Publication objects to the pub.data objects.
-	var newSel = [];
-	Ext.each(selection, function(pub) {
-		newSel.push(pub.data);
-	    });
-	selection = newSel;
+      // Convert selection items from Publication objects to the pub.data objects.
+      var newSel = [];
+      Ext.each(selection, function(pub) {
+        newSel.push(pub.data);
+      });
+      selection = newSel;
 
       if (this.hideOnMulti) {
         this.hide();
@@ -80,12 +81,13 @@ Ext.define('Paperpile.pub.PubPanel', {
   },
 
   statics: {
-    smallTextLinkTpl: function() {
-      if (!this._smallTextlinkTpl) {
-        this._smallTextLinkTpl = new Ext.XTemplate(
-          '<a',
-          ' class="pp-action pp-textlink pp-smalltextlink"',
+    linkTpl: function() {
+      if (!this._genericTpl) {
+        this._genericTpl = new Ext.XTemplate(
+          '<div',
+          ' class="pp-action pp-ellipsis {cls}"',
           ' action="{action}"',
+	  ' style="display:inline-block;"',
           '<tpl if="args">args="{args}"</tpl>',
           '<tpl if="tooltip">ext:qtip="{tooltip}"</tpl>',
           '>',
@@ -93,90 +95,111 @@ Ext.define('Paperpile.pub.PubPanel', {
           '  <img src="{icon}"/>',
           '</tpl>',
           '{text}',
-          '</a>').compile();
+          '</div>').compile();
       }
-      return this._smallTextLinkTpl;
+      return this._genericTpl;
     },
-    textLinkTpl: function() {
-      if (!this._textlinkTpl) {
-        this._textLinkTpl = new Ext.XTemplate(
-          '<a',
-          ' class="pp-action pp-textlink"',
+    buttonTpl: function() {
+      if (!this._buttonTpl) {
+        this._buttonTpl = new Ext.XTemplate(
+          '<div',
+          ' class="pp-action pp-button"',
           ' action="{action}"',
-          '<tpl if="args">args="{args}"</tpl>',
-          '<tpl if="tooltip">ext:qtip="{tooltip}"</tpl>',
+          ' role="button"',
+          ' tabindex="0"',
+          '  <tpl if="args"> args="{args}"</tpl>',
+          '  <tpl if="tooltip"> ext:qtip="{tooltip}"</tpl>',
           '>',
-          '<tpl if="icon">',
-          '  <img src="{icon}"/>',
-          '</tpl>',
-          '{text}',
-          '</a>').compile();
+          '  <tpl if="icon"><img src="{icon}"/></tpl>',
+          '  {text}',
+          '</div>').compile();
       }
-      return this._textLinkTpl;
+      return this._buttonTpl;
     },
-    hoverButtonTpl: function() {
-      if (!this._hoverButtonTpl) {
-        this._hoverButtonTpl = new Ext.XTemplate(
-          '<a',
-          ' class="pp-action pp-hoverbutton"',
+    iconButtonTpl: function() {
+      if (!this._iconButtonTpl) {
+        this._iconButtonTpl = new Ext.XTemplate(
+          '<div',
+          ' class="pp-action pp-iconbutton"',
           ' action="{action}"',
-          '<tpl if="args">args="{args}"</tpl>',
-          '<tpl if="tooltip">pp:tip="{tooltip}"</tpl>',
-          '>{text}</a>').compile();
+          '<tpl if="args"> args="{args}"</tpl>',
+          '<tpl if="tooltip"> ext:qtip="{tooltip}"</tpl>',
+          '>',
+	  '  <tpl if="icon"><img src="{icon}"/></tpl>',
+	  '</div>').compile();
       }
-      return this._textLinkTpl;
+      return this._iconButtonTpl;
     },
-    iconButtonTemplate: function() {
-
-    },
-    buttonTemplate: function() {
-
-    },
-    actionData: function(id, args, text, icon, tooltip, iconCls) {
+    actionData: function(id, cfg) {
       var action = Paperpile.app.Actions.get(id);
       if (action) {
-        var cfg = {
-          text: text,
-          tooltip: tooltip,
-          icon: icon,
-          iconCls: iconCls
-        };
+        if (!cfg) {
+          cfg = {};
+        }
         var tooltip = cfg.tooltip || action.initialConfig.tooltip || '';
         var iconCls = cfg.iconCls || action.initialConfig.iconCls || '';
+        var cls = cfg.cls || action.initialConfig.cls || '';
         var icon = cfg.icon || action.initialConfig.icon || '';
         var text = cfg.text || action.initialConfig.text || id;
+        var args = cfg.args || action.initialConfig.args || [];
         var data = {
           action: id,
           tooltip: tooltip,
           iconCls: iconCls,
           icon: icon,
           text: text,
-          args: args
+          args: args,
+          cls: cls
         };
         return data;
       } else {
         Paperpile.log("Can't create text link for action " + id);
         return {
           action: undefined,
-          tooltip: tooltip,
+          tooltip: cfg.tooltip || '',
           text: id + " NOT FOUND",
-          args: args
+          args: cfg.args || []
         };
       }
     },
-    actionTextLink: function(id, text, tooltip, args) {
-      var str = this.textLinkTpl().apply(this.actionData(id, text, tooltip, args));
+    button: function(id, args, text) {
+      var str = this.buttonTpl().apply(this.actionData(id, {
+        args: args,
+        text: text
+      }));
       return str;
     },
-    smallTextLink: function(id, text, tooltip, args) {
-      var str = this.smallTextLinkTpl().apply(this.actionData(id, text, tooltip, args));
+    iconButton: function(id, args) {
+      return this.iconButtonTpl().apply(this.actionData(id, {
+        args: args
+      }));
+    },
+    link: function(id, args, text) {
+      return this._generic(id, {
+        text: text,
+        args: args,
+        cls: 'pp-textlink'
+      });
+    },
+    miniLink: function(id, args, text) {
+      return this._generic(id, {
+        text: text,
+        args: args,
+        cls: 'pp-minilink'
+      });
+    },
+    fileLink: function(id, text, path, icon) {
+      return this._generic(id, {
+        text: text,
+        args: path,
+        cls: 'pp-filelink',
+        icon: icon
+      });
+    },
+    _generic: function(id, cfg) {
+      var str = this.linkTpl().apply(this.actionData(id, cfg));
       return str;
     },
-    hoverButton: function(id, text, tooltip, args) {
-      var str = this.hoverButtonTpl().apply(this.actionData(id, text, tooltip, args));
-      return str;
-    }
-
   },
 
 });
