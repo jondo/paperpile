@@ -743,19 +743,19 @@ sub add_to_collection {
 # $collection_guid
 
 sub remove_from_collection {
-  my ( $self, $pubs, $guid) = @_;
+  my ( $self, $pubs, $guid, $type) = @_;
 
   my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   # Figure out the type from the GUID.
-  my $sth = $dbh->prepare("SELECT * FROM Collections WHERE guid=?");
-  $sth->execute($guid);
-  my $type;
-  while ( my $row = $sth->fetchrow_hashref ) {
-    $type = $row->{type};
+  if (!defined $type) {
+    my $sth = $dbh->prepare("SELECT * FROM Collections WHERE guid=?");
+    $sth->execute($guid);
+    while ( my $row = $sth->fetchrow_hashref ) {
+      $type = $row->{type};
+    }
+    $sth->finish;
   }
-  $sth->finish;
-
   my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
 
   foreach my $pub (@$pubs) {

@@ -536,7 +536,7 @@ sub remove_from_collection : Local {
   }
 
   foreach my $guid (@guids) {
-    $c->model('Library')->remove_from_collection( $data, $guid );
+    $c->model('Library')->remove_from_collection( $data, $guid, $type );
   }
 
   $self->_collect_update_data( $c, $data, [$what] );
