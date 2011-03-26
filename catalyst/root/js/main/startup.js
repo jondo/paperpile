@@ -411,10 +411,8 @@ Paperpile.stage2 = function() {
 
   Paperpile.startupProgress(0.5);
   f = function(cmp) {
-    Paperpile.log("  rendered");
     Paperpile.main = cmp;
     Paperpile.main.loadSettings(function() {
-      Paperpile.log("  settings loaded");
       Paperpile.main.afterLoadSettings();
       Paperpile.startupProgress(0.6);
       Paperpile.stage3();

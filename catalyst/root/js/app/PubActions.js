@@ -2,14 +2,50 @@ Ext.define('Paperpile.app.PubActions', {
   statics: {
     getActions: function() {
       return {
+        'HOVER_COPY': new Ext.Action({
+          itemId: 'HOVER_COPY',
+          icon: '/images/icons/clipboard-hover.png',
+          tooltip: 'Copy text',
+          handler: function() {
+            var event = Paperpile.app.Actions.lastTriggerEvent;
+            var target = event.getTarget('.pp-copyable');
+            if (target) {
+              QRuntime.setClipboard(Ext.String.trim(target.textContent));
+            }
+          }
+        }),
+        'HOVER_LINK': new Ext.Action({
+          itemId: 'HOVER_COPY',
+          icon: '/images/icons/link-16-hover.png',
+          tooltip: 'Open link in browser',
+          handler: function() {
+            var event = Paperpile.app.Actions.lastTriggerEvent;
+            var target = Ext.get(event.getTarget('.pp-linkable'));
+            if (target) {
+              var url = Ext.fly(target).getAttribute('url');
+              Paperpile.utils.openURL(url);
+            }
+          }
+        }),
+        'OVERVIEW_DETAILS_TOGGLE': new Ext.Action({
+          itemId: 'OVERVIEW_DETAILS_TOGGLE',
+          text: 'More ...',
+          handler: function() {
+            var activeTab = Paperpile.main.getTabs().getActiveTab();
+            if (activeTab instanceof Paperpile.pub.View) {
+              var basicInfo = activeTab.overview.child('BasicInfo');
+              basicInfo.toggleDetailsMode();
+            }
+          }
+        }),
         'UNDO_COLLECTION': new Ext.Action({
           itemId: 'UNDO_COLLECTION',
           text: 'Undo',
           handler: function(status) {
-		    Paperpile.log(status);
-		    // TODO for backend: implement a generic mechanism for undo-ing the lsat
-		    // CRUD-based action...
-		    /*
+            Paperpile.log(status);
+            // TODO for backend: implement a generic mechanism for undo-ing the lsat
+            // CRUD-based action...
+            /*
             Paperpile.Ajax({
               url: '/ajax/crud/undo_collection',
               success: function(response) {
@@ -42,7 +78,7 @@ Ext.define('Paperpile.app.PubActions', {
         }),
         'ADD_LABEL_PANEL': new Ext.Action({
           itemId: 'ADD_LABEL',
-		    icon: '/images/icons/label_add.png',
+          icon: '/images/icons/label_add.png',
           text: 'Add Label',
           handler: function(guid) {
             Paperpile.app.PubActions.collectionPicker(guid, 'labels');
@@ -50,15 +86,15 @@ Ext.define('Paperpile.app.PubActions', {
         }),
         'OPEN_FOLDER': new Ext.Action({
           itemId: 'OPEN_FOLDER',
-		    icon: '/images/icons/folder.png',
+          icon: '/images/icons/folder.png',
           text: 'Open this folder',
           handler: function(guid) {
-		    Paperpile.log("Open!");
+            Paperpile.log("Open!");
           }
         }),
         'REMOVE_FOLDER': new Ext.Action({
           itemId: 'REMOVE_FOLDER',
-		    icon: '/images/icons/cancel-small-bw.png',
+          icon: '/images/icons/cancel-small-bw.png',
           text: 'Remove a folder',
           handler: function(guid) {
             Paperpile.app.PubActions.collectionHandler(guid, 'folders', 'remove');
@@ -73,7 +109,7 @@ Ext.define('Paperpile.app.PubActions', {
         }),
         'ADD_FOLDER_PANEL': new Ext.Action({
           itemId: 'ADD_FOLDER_PANEL',
-		    icon: '/images/icons/folder_add.png',
+          icon: '/images/icons/folder_add.png',
           text: 'Add Folder',
           handler: function(guid) {
             var store = Ext.getStore('folders');

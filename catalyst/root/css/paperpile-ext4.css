@@ -8,6 +8,12 @@ body {
   -webkit-user-select: ignore;
 }
 
+.pp-hoverbuttons {
+    float: left;
+    padding: 2px 2px 2px 4px;
+    background-color:#FFFEEB;
+}
+
 .pp-action {
     cursor: pointer;
 }

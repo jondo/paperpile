@@ -21,6 +21,7 @@ Ext.define('Paperpile.Viewport', {
     this.createStores();
 
     this.status = Ext.createByAlias('widget.status');
+    this.hoverButtons = Ext.createByAlias('pp-hover-copylink');
 
     Ext.apply(this, {
       layout: {
@@ -39,7 +40,7 @@ Ext.define('Paperpile.Viewport', {
         fn: this.onActionClick,
         delegate: '.pp-action',
         scope: this
-      }
+      },
     });
 
     //    this.on('afterlayout', this.resizeToSplitFraction, this);
@@ -227,16 +228,6 @@ Ext.define('Paperpile.Viewport', {
       this.loadCssFile('/css/large-fonts.css');
     } else if (fontSize == 'x-large') {
       this.loadCssFile('/css/x-large-fonts.css');
-    }
-  },
-
-  loadCssFile: function(filename) {
-    var link = document.createElement("link");
-    link.setAttribute("rel", "stylesheet");
-    link.setAttribute("type", "text/css");
-    link.setAttribute("href", filename);
-    if (typeof link != 'undefined') {
-      document.getElementsByTagName("head")[0].appendChild(link);
     }
   },
 
