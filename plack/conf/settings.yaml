@@ -1,0 +1,82 @@
+---
+name: "Paperpile"
+platform: "__PLATFORM__"
+
+paperpile_user_dir: "__PP_USER_DIR__"
+
+tmp_dir: "__PP_TMP_DIR__"
+
+user_db: "__PP_USER_DIR__/settings.db"
+queue_db: "__PP_TMP_DIR__/queue.db"
+
+app_settings:
+  platform: "__PLATFORM__"
+  version_id: 6
+  version_name: "0.5.1"
+  build_number: 0
+  settings_db_version: 2
+  library_db_version: 3
+  qruntime_version: 1
+  paperserve_url: "http://s.paperpile.com"
+
+user_settings:
+  db_version: 2
+  library_db: "__PP_USER_DIR__/paperpile.ppl"
+  user_home: "__USERHOME__"
+  file_sync: ""
+  use_proxy: ""
+  proxy: ""
+  proxy_user: ""
+  proxy_passwd: ""
+  pager_limit: 25
+  check_updates: 1
+  font_size: Normal
+  split_fraction_tree: 0.2
+  split_fraction_grid: 0.67
+
+library_settings:
+  db_version: 3
+  paper_root: "__PP_PAPER_DIR__"
+  key_pattern: "[Firstauthor][YYYY]"
+  pdf_pattern: "[key]"
+  attachment_pattern: "[key]_supplements"
+  search_seq: "PubMed,GoogleScholar"
+  sort_field: "created DESC"
+  bibtex:
+    bibtex_mode: 0
+    import_strip_tex: 1
+    export_escape: 1
+    pretty_print: 1
+    use_quotes: 0
+    cite_wrap: 1
+    double_dash: 1
+    title_quote_complete: 0 
+    title_quote_smart: 1 
+    title_quote:
+      - DNA
+      - RNA
+      - CERN
+    export_fields:
+      abstract: 0
+      affiliation: 0
+      eprint: 0
+      issn: 0
+      isbn: 0
+      pmid: 1
+      lccn: 0
+      doi: 1
+      keywords: 0 
+  _tree: ""
+
+release:
+  patch: 1
+  restart: 1
+  msg: "Several small improvements and many bug-fixes"
+  log:
+    - "Fix 'database lock' errors encountered by some users."
+    - "Fix spurious 'selectrow_array failed no such table Publications' error"
+    - "Many more minor bug fixes"
+    - "Support for additional publisher sites for automatic PDF download."
+    - "Streamlined user interface for task queue"
+    - "Improved status/progress massages for PDF downloads"
+    - "Several user interface tweaks to improve discoverability of features"

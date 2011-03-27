@@ -1,0 +1,1095 @@
+<!-- 
+ Copyright 2009-2011 Paperpile
+
+ This file is part of Paperpile
+
+ Paperpile is free software: you can redistribute it and/or modify it
+ under the terms of the GNU Affero General Public License as published
+ by the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Paperpile is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Affero General Public License for more details.  You should have
+ received a copy of the GNU Affero General Public License along with
+ Paperpile.  If not, see http://www.gnu.org/licenses.  -->
+
+<driver>
+
+<patterns>
+  <namedRegex name="meta1">!&lt;\s*meta\s*name\s*=\s*&quot;\s*citation_pdf_url\s*&quot;\s*content\s*=&quot;(\S*?)&quot;\s*/?\s*&gt;!</namedRegex>
+  <namedRegex name="meta2">!&lt;\s*meta\s*content\s*=\s*&quot;(\S*?)&quot;\s*name\s*=\s*&quot;\s*citation_pdf_url\s*&quot;\s*/?\s*&gt;!</namedRegex>
+</patterns>
+
+<site name="BMC">
+
+  <signature>
+    <body>!http://\S*/content/pdf/.*\.pdf!</body>
+    <body>!/content/pdf/.*\.pdf!</body>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!(http://\S*/content/pdf/.*?\.pdf)!</match>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!(/content/pdf/.*?\.pdf)!</match>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://dx.doi.org/10.1186/1471-2105-9-248</url>
+    <url>http://www.biomedcentral.com/1471-2105/9/248</url>
+    <url>http://genomebiology.com/2008/9/12/R168</url>
+  </test>
+
+</site>
+
+<site name="CiteSeerx">
+
+  <signature>
+    <url>!citeseerx!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(.*type=pdf)!$1!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!.*&quot;([^&quot;]+type=pdf)&quot;.*!</match>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.7924</url>
+  </test>
+
+</site>
+
+<site name="ScienceDirect">
+  <signature>
+    <url>!sciencedirect!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!window\.open\(\'(http://www.sciencedirect.com/science.*?/sdarticle.pdf)!</match>
+    </pattern>
+  </rule>
+
+  <!-- We have landed on the selection page and have to choose -->
+  <rule>
+    <pattern>
+      <match>.*action=&quot;(http.*value=&quot;\d+&quot;).*</match>
+      <rewrite>!(.*md5=[^%]+)(%.*value=%22)(\d+)(%.*)!$1&amp;dept=$3!</rewrite>
+    </pattern>
+    <pattern>
+      <match>!window\.open\(\'(http://www.sciencedirect.com/science.*?/sdarticle.pdf)!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://dx.doi.org/doi:10.1016/j.tig.2008.09.003</url>
+  </test>
+
+</site>
+
+
+<site name="ElsevierHub">
+  <signature>
+    <url>!linkinghub.elsevier.com!</url>
+  </signature>
+
+  <!-- We are directly taken to science direct -->
+  <rule>
+    <pattern>
+      <match>!window\.open\(\'(http://www.sciencedirect.com/science.*?/sdarticle.pdf)!</match>
+    </pattern>
+  </rule>
+
+  <!-- We have landed on the selection page and go for the science direct path -->
+  <rule>
+    <pattern>
+      <match>!value=&quot;(http://www\.sciencedirect\.com/science\?_ob=GatewayURL.*?)&quot;!</match>
+    </pattern>
+    <pattern>
+      <match>!window\.open\(\'(http://www.sciencedirect.com/science.*?/sdarticle.pdf)!</match>
+    </pattern>
+  </rule>
+
+  <!-- We have landed on the selection page and have to choose -->
+  <rule>
+    <pattern>
+      <match>.*action=&quot;(http.*value=&quot;\d+&quot;).*</match>
+      <rewrite>!(.*md5=[^%]+)(%.*value=%22)(\d+)(%.*)!$1&amp;dept=$3!</rewrite>
+    </pattern>
+    <pattern>
+      <match>!window\.open\(\'(http://www.sciencedirect.com/science.*?/sdarticle.pdf)!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://linkinghub.elsevier.com/retrieve/pii/S1470-2045(08)70008-1</url>
+    <url>http://linkinghub.elsevier.com/retrieve/pii/S0168-9525(08)00255-2</url>
+  </test>
+
+</site>
+
+<site name="PloS">
+
+  <signature>
+    <url>!plos!</url>
+    <body>!/article/\S*representation=PDF!</body>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!^(.*plos.*\.org/article)/(.*)$!$1/fetchObjectAttachment.action?uri=$2&amp;representation=PDF!</rewrite>
+    </pattern>
+  </rule>
+
+  <!-- old rule, don't think we need this any more, but it does not do any harm -->
+  <rule>
+    <pattern>
+      <rewrite>!(.*\.plosjournals.org/perlserv/\?request).*doi=(10\..*)/(.*)!$1=get-pdf&amp;file=$2\_$3-L.pdf!</rewrite>
+    </pattern>
+  </rule>
+  
+  <rule>
+    <pattern>
+      <match>!(/article/\S*representation=PDF)!</match>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://dx.doi.org/doi:10.1371/journal.pone.0005906</url>
+    <url>http://www.plosgenetics.org/article/info:doi/10.1371/journal.pgen.1000250</url>
+    <url>http://biology.plosjournals.org/perlserv/?request=get-document&amp;doi=10.1371/journal.pbio.0060319</url>
+  </test>
+
+</site>
+
+<site name="Wiley">
+  <signature>
+    <url>!wiley!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!name\s*=\s*&quot;citation_pdf_url&quot;\s*content\s*=\s*&quot;([^&quot;]+pdf)&quot;!</match>
+    </pattern>
+    <pattern>
+      <match>!id=&quot;pdfDocument&quot;\s+src=&quot;([^&quot;]+)&quot;!</match>
+    </pattern>
+  </rule> 
+  
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+pdf)&quot;\s*title\s*=\s*&quot;Article\sin\spdf\sformat&quot;!</match>
+    </pattern>
+    <pattern>
+      <match>!id=&quot;pdfDocument&quot;\s+src=&quot;([^&quot;]+)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+pdf)&quot;!</match>
+    </pattern>
+    <pattern>
+      <match>!id=&quot;pdfDocument&quot;\s+src=&quot;([^&quot;]+)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <!-- Old rules don't think we need this any more, but it does not do any harm -->
+  <rule>
+    <pattern>
+      <match>!(/cgi-bin/fulltext/\d+/PDFSTART)!</match>
+      <rewrite>!^.*/cgi-bin/fulltext/(\d+)/PDFSTART$!http://download.interscience.wiley.com/cgi-bin/fulltext?ID=$1&amp;PLACEBO=IE.pdf&amp;e=pdf!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!(/cgi-bin/booktext/\d+/BOOKPDFSTART)!</match>
+      <rewrite>!^.*/cgi-bin/booktext/(\d+)/BOOKPDFSTART$!http://download.interscience.wiley.com/cgi-bin/booktext?ID=$1&amp;PLACEBO=IE.pdf&amp;e=pdf!</rewrite>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://www3.interscience.wiley.com/journal/121517581/abstract</url>
+    <url>http://dx.doi.org/10.1002/9780470020036.fmatter</url>
+  </test>
+</site>
+
+<site name="Springer">
+  <signature>
+    <url>!springerlink!</url>
+    <body>!(/content/\S*fulltext\.pdf)!</body>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!(/content/\S*fulltext\.pdf)!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://dx.doi.org/doi:10.2478/s11686-008-0056-1</url>
+  </test>
+</site>
+
+<site name="NPG">
+  <signature>
+    <url>!nature\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!(/\S*\.pdf)!</match>
+    </pattern>
+  </rule>
+
+
+  <!-- Sometime we land on some strange landing page -->
+  <rule>
+    <pattern>
+      <match>!&lt;\s*a\s*href\s*=\s*&quot;\s*(\S*?)\s*&quot;\s*&gt;\s*Full\s*Text\s*&lt;/a&gt;!</match>
+    </pattern>
+    <pattern>
+      <match>!(/\S*\.pdf)!</match>
+    </pattern>
+  </rule>
+
+  <!-- Last chance, convert URL directly to PDF URL -->
+  <rule>
+    <pattern>
+      <rewrite>!(.*/journal/v\d+/n\d+/)(abs|full)(/.*\.)(html)!$1pdf$3pdf!</rewrite>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://dx.doi.org/doi:10.1038/456842a</url>
+    <url>http://www.nature.com/emboj/journal/v27/n24/abs/emboj2008242a.html</url>
+    <url>http://www.nature.com/nmeth/journal/v5/n12/abs/nmeth.1266.html</url>
+    <url>http://www.nature.com/doifinder/10.1038/ng1108-1262</url>
+    <url>http://www.nature.com/nbt/journal/v28/n1/abs/nbt0110-13.html</url>
+  </test>
+</site>
+
+<site name="Science">
+  <signature>
+    <url>!sciencemag\.org!</url>
+  </signature>
+  
+  <rule>
+    <pattern>
+      <match>!content\s*=\s*&quot;([^&quot;]+)&quot;\s*name\s*=\s*&quot;citation_pdf_url&quot;!</match>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!(/cgi/reprint/\S*\.pdf)!</match>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://dx.doi.org/doi:10.1126/science.322.5909.1768</url>
+    <url>http://stke.sciencemag.org/cgi/content/abstract/1/50/mr2</url>
+  </test>
+</site>
+
+<site name="PMC">
+  <signature>
+    <url>!pubmedcentral\.nih\.gov!</url>
+    <url>!ncbi\.nlm\.nih\.gov\/pmc!</url>
+    <url>!ukpmc\.ac\.uk!</url>
+    <url>!pubmedcentralcanada\.ca!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!(/picrender\.fcgi\S*blobtype=pdf)!</match>
+    </pattern>
+  </rule>
+  
+  <rule>
+    <pattern>
+      <match>!&quot;(\S+pdf)&quot;>PDF!</match>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]+pdf=render)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]+blobtype=pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.pubmedcentral.nih.gov/articlerender.fcgi?tool=pubmed&amp;pubmedid=18577231</url>
+    <url>http://dx.doi.org/doi:10.1186/1742-6405-6-4</url>
+    <url>http://ukpmc.ac.uk/abstract/MED/21139677</url>
+  </test>
+</site>
+
+<site name="Atypon">
+  <signature>
+    <url>atypon</url>
+    <url>acs\.org/doi/(abs|full|pdf)</url>
+    <url>annualreviews\.org/doi/(abs|full|pdf)</url>
+    <url>liebertonline\.com/doi/(abs|full|pdf)</url>
+    <url>mitpressjournals\.org/doi/(abs|full|pdf)</url>
+    <url>esajournals.org/doi/(abs|full|pdf)</url>
+    <body>atypon\.com</body>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(doi/abs|doi/full|doi/pdf)!doi/pdf!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]*cgi/reprint/[^&quot;]+)&quot;.*\(PDF\)!</match>
+      <rewrite>!(.*)!$1.pdf!</rewrite>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://dx.doi.org/doi:10.1021/bi702132e</url>
+    <url>http://arjournals.annualreviews.org/doi/full/10.1146/annurev.genet.40.110405.090511</url>
+    <url>http://www.liebertonline.com/doi/abs/10.1089/cmb.2006.0137</url>
+    <url>http://www.molbiolcell.org/cgi/content/full/9/12/3273</url>
+  </test>
+</site>
+
+
+<site name="AllenPress">
+  <signature>
+    <url>!allenpress\.com!</url>
+    <body>!href=&quot;/doi/pdf/\d\d.\d{4}/[^&quot;]+&quot;!</body>
+    <body>!(/pdfserv/\S*)&quot;!</body>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!(/pdfserv/\S*)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <rewrite>!(doi/abs|doi/full|doi/pdf)!doi/pdf!</rewrite>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://www.chelonianjournals.org/doi/abs/10.2744/CCB-0833.1</url>
+    <url>http://www.archivesofpathology.org/doi/abs/10.1043/2010-0048-OAR.1</url>
+    <url>http://www.angle.org.pinnacle.allenpress.com/doi/full/10.2319/090709-506.1</url>
+  </test>
+</site>
+
+
+<site name="deGruyter">
+  <signature>
+    <url>!reference-global\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!(/doi/pdf/\S*?)&quot;!</match>
+    </pattern>
+    <pattern>
+      <match>!(/production/\S*?\.pdf\S*?)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://www.reference-global.com/doi/abs/10.1515/BC.2008.016</url>
+  </test>
+</site>
+
+
+<site name="JStage">
+  <signature>
+    <url>!jst\.go\.jp!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!(/article/\S*?/_pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  <rule>
+    <pattern>
+      <match>!(/jnlpdf.php\S*?)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://www.jstage.jst.go.jp/article/jibirinsuppl/124/0/124_43/_article</url>
+    <url>http://www.journalarchive.jst.go.jp/english/jnlabstract_en.php?cdjournal=bbb1961&amp;cdvol=55&amp;noissue=12&amp;startpage=3059</url>
+  </test>
+</site>
+
+<site name="Landes">
+  <signature>
+    <url>!landesbioscience\.com!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!&quot;(\S*?/\S*?\.pdf)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://www.landesbioscience.com/journals/cc/article/8887/</url>
+  </test>
+</site>
+
+<site name="Metapress">
+  <signature>
+    <url>!metapress\.com!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!(/content/\S*?/fulltext.pdf)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://versita.metapress.com/content/np2145348566n664/</url>
+  </test>
+</site>
+
+<site name="Medknown">
+  <signature>
+    <url>!article.asp\?issn=\S*?aulast=\S*!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <rewrite>!(.*)!$1;type=2!</rewrite>
+    </pattern>
+    <pattern>
+      <match>!(temp/\S*?\.pdf)!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://www.indianjcancer.com/article.asp?issn=0019-509X;year=2007;volume=44;issue=1;spage=36;epage=37;aulast=Agrawal</url>
+  </test>
+</site>
+
+<site name="Scitation">
+  <signature>
+    <body>!/getpdf/servlet/GetPDFServlet!</body>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!(/getpdf/servlet/GetPDFServlet\?filetype=pdf\S*&quot;)!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://dx.doi.org/doi:10.1063/1.3109691</url>
+  </test>
+</site>
+
+<site name="eProceedings">
+  <signature>
+    <url>!eproceedings\.worldscinet\.com!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!&quot;(\.\/preserved-docs\/\S+\.pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://dx.doi.org/10.1142/9789812704313_0004</url>
+  </test>
+</site>
+
+<site name="Hindawi">
+  <signature>
+    <url>!hindawi\.com!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!&quot;(\S+downloads\S+\.pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://dx.doi.org/10.1142/9789812704313_0004</url>
+  </test>
+</site>
+
+<site name="ACM">
+  <signature>
+    <url>!portal\.acm\.org!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!&quot;(\S+type=pdf\S+)&quot;!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://doi.acm.org/10.1145/1186562.1015800</url>
+  </test>
+</site>
+
+<site name="WorldScientific">
+  <signature>
+    <url>!worldscinet\.com!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!&quot;(\S+pdf)&quot;>Full!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://dx.doi.org/10.1142/S0219720009003947</url>
+  </test>
+</site>
+
+<site name="TheScientificWorld">
+  <signature>
+    <url>!thescientificworld\.co\.uk!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!&quot;(\S+pdf)&quot;>\[Full!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://dx.doi.org/10.1100/tsw.2008.140</url>
+  </test>
+</site>
+
+<site name="AmericanPhysicalSociety">
+  <signature>
+    <url>!aps\.org!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <rewrite>!(abstract|showrefs|forward)(\/\w+\/v\d+\/i\d+)!pdf$2!</rewrite>
+    </pattern>
+  </rule>
+  <rule>
+    <pattern>
+      <match>!&quot;(\S+)&quot;>PDF!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://dx.doi.org/10.1103/PhysRevLett.97.186803</url>
+  </test>
+</site>
+
+<site name="BerkeleyElectronicPress">
+  <signature>
+    <url>!bepress\.com!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!bepress_citation_pdf_url&quot;\scontent=&quot;([^&quot;]+)&quot;>!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://www.bepress.com/jioe/vol4/iss1/art2/</url>
+  </test>
+</site>
+
+<site name="FutureMedicine">
+  <signature>
+    <url>!futuremedicine\.com!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <rewrite>!(.*doi/)(abs|full)(/10.*)!$1pdf$3!</rewrite>
+    </pattern>
+  </rule>
+  <rule>
+    <pattern>
+      <match>!href=&quot;(/doi/pdf[^&quot;]+)&quot;\s!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://www.futuremedicine.com/doi/full/10.2217/bmm.10.15</url>
+  </test>
+</site>
+
+<site name="ImpactJournals">
+  <signature>
+    <url>!impactaging\.com!</url>
+    <url>!impactjournals\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.impactjournals.com/oncotarget/papers/v1/n1/html/100513.html</url>
+    <url>http://www.impactaging.com/papers/v1/n9/full/100086.html</url>
+  </test>
+</site>
+
+<site name="AcademicJournals">
+  <signature>
+    <url>!academicjournals\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+pdf)&quot;>Reprint!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.academicjournals.org/ERR2/abstracts/abstract2010/Jun/Harrington.htm</url>
+  </test>
+</site>
+
+<site name="EGU">
+  <signature>
+    <url>!atmos-chem-phys\.net!</url>
+    <url>!biogeosciences\.net!</url>
+    <body>!www\.egu\.eu!</body>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+pdf)&quot;\s*>\s*Final\sRevised\sPaper!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.biogeosciences.net/7/1877/2010/bg-7-1877-2010.html</url>
+  </test>
+</site>
+
+<site name="LApress">
+  <signature>
+    <url>!la-press\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+fileType=pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://la-press.com/effect-of-diet-supplementation-on-the-expression-of-bovine-genes--asso-a1970</url>
+  </test>
+</site>
+
+<site name="BioTechniques">
+  <signature>
+    <url>!biotechniques\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+multimedia/[^&quot;]+\.pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.biotechniques.com/BiotechniquesJournal/2010/July/Design-of-an-in-vivo-cleavable-disulfide-linker-in-recombinant-fusion-proteins/biotechniques-296954.html</url>
+  </test>
+</site>
+
+
+<site name="JBSD">
+  <signature>
+    <url>!jbsdonline\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*'([^']+category[^']+\.pdf)'!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.jbsdonline.com/c3035/c4276/Nucleosome-DNA-Bendability-Matrix-C-elegans-p-403-411-p17018.html</url>
+  </test>
+</site>
+
+<site name="InformaWorld">
+  <signature>
+    <url>!informaworld\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]+frm=content)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://dx.doi.org/10.1080/15257770802260741 </url>
+  </test>
+</site>
+
+<site name="TheScientificWorldJOURNAL">
+
+  <signature>
+    <url>!thescientificworld\.co\.uk!</url>
+    <url>!thescientificworld\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(.*ArticleId=)(\d+)$!http://www.thescientificworld.com/TSW/TOC/DownloadPdf.asp?ArticleId=$2!i</rewrite>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!(http://www.thescientificworld.com/TSW/TOC/DownloadPdf.asp?ArticleId=\d+)!i</match>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://www.thescientificworld.com/TSW/toc/TSWJ_ArticleLanding.asp?jid=141&amp;ArticleId=2738</url>
+  </test>
+
+</site>
+
+<site name="CambridgeJournals">
+  <signature>
+    <url>!journals\.cambridge\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]+)&quot;\s*title\s*=\s*&quot;View\sPDF&quot;!</match>
+    </pattern>
+    <pattern>
+      <match>!iframe\s*src=\s*&quot;(/action/displayFulltext\?[^&quot;]+)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://journals.cambridge.org/action/displayAbstract?fromPage=online&amp;aid=7118840</url>
+  </test>
+</site>
+
+<site name="IngentaConnect">
+  <signature>
+    <url>!ingentaconnect\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href=&quot;(/search/download[^&quot;]+mimetype=application%2fpdf[^&quot;]+)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.ingentaconnect.com/content/scs/chimia/2010/00000064/00000004/art00004</url>
+  </test>
+</site>
+
+<site name="IUCrJournals">
+  <signature>
+    <url>!iucr\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]+pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://dx.doi.org/10.1107/S0021889810030256</url>
+  </test>
+</site>
+
+<site name="BiochemicalJournal">
+  <signature>
+    <url>!biochemj\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]+\.pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.biochemj.org/bj/320/0697/bj3200697.htm</url>
+  </test>
+</site>
+
+<site name="Ivyspring">
+  <signature>
+    <url>!biolsci\.org!</url>
+    <url>!medsci\.org!</url>
+    <url>!jcancer\.org!</url>
+    <url>!thno\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*(?:'|&quot;)([^&quot;']+\.pdf)(?:'|&quot;)!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.biolsci.org/v07p0028</url>
+  </test>
+</site>
+
+<site name="JournalsOnTheWeb">
+  <signature>
+    <url>!journals\.prous\.com/journals!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(http.*)(xml_summary_pr)(.*)!$1xml_article_pr$3&amp;p_ispdf=Y!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://journals.prous.com/journals/servlet/xmlxsl/pk_journals.xml_summary_pr?p_JournalId=3&amp;p_RefId=1395253&amp;p_IsPs=N</url>
+  </test>
+</site>
+
+<site name="ScientificResearchPublishing">
+  <signature>
+    <url>!scirp\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]*PaperDownload\.aspx[^&quot;]*)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.scirp.org/journal/PaperInformation.aspx?paperID=3478#abstract</url>
+  </test>
+</site>
+
+<site name="VariousPreprintArchives:HAL">
+  <signature>
+    <url>!hal\.archives-ouvertes\.fr!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]*/docs/[^&quot;]*\.pdf)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://hal.archives-ouvertes.fr/hal-00411440/</url>
+  </test>
+</site>
+
+<site name="VariousPreprintArchives:Handle">
+  <signature>
+    <url>!hdl\.handle\.net!</url>
+    <url>!\.[a-z]{2,3}/handle!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]*bitstream[^&quot;]*\.pdf[^&quot;]*)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://boa.unimib.it/handle/10281/7891</url>
+    <url>http://www.econstor.eu/handle/10419/39434</url>
+    <url>http://hdl.handle.net/1805/665</url>
+  </test>
+</site>
+
+<site name="ADS">
+  <signature>
+    <url>!adsabs\.harvard\.edu!</url>
+    <url>!cdsads\.u-strasbg\.fr!</url>
+    <url>!ukads\.nottingham\.ac\.uk!</url>
+    <url>!ads\.(iucaa|bao|nao|on|astro|mao|inasan|ari|eso)\.!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(.*)(/full/|/abs/)(.*)!$1/cgi-bin/nph-iarticle_query?$3&amp;defaultprint=YES&amp;filetype=.pdf!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>frame\s+src\s*=\s*&quot;([^&quot;]*/record/[^&quot;]*)&quot;</match>
+    </pattern>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]*filetype=.pdf)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://adsabs.harvard.edu/full/1975LPSC....6.1539W</url>
+    <url>http://adsabs.harvard.edu/abs/1975LPSC....6.1539W</url>
+    <url>http://cdsads.u-strasbg.fr/abs/1983ApJ...269..423R</url>
+    <url>http://ukads.nottingham.ac.uk/abs/1999A%26A...349..389V</url>
+  </test>
+</site>
+
+<site name="AdisOnline">
+  <signature>
+    <url>!adisonline\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>ArticleAsPDF&quot;\s+href\s*=\s*&quot;([^&quot;]+)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://adisonline.com/druginvestigation/pages/articleviewer.aspx?year=2010&amp;issue=30010&amp;article=00006&amp;type=abstract</url>
+  </test>
+</site>
+
+<site name="BenthamDirect">
+  <!-- There is still a cookie problem with this site driver -->
+  <signature>
+    <url>!benthamdirect\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(.*/)([A-Z\d]+)(\.[A-Z]{3})$!http://www.benthamdirect.org/pages/gencorp.php?file=$2.pdf!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.benthamdirect.org/pages/content.php?CHAMC/2008/00000006/00000003/004AE.SGM</url>
+  </test>
+</site>
+
+<site name="CellPress">
+  <signature>
+    <url>!cell.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(.*cell\.com/)([^/]+)(/.*pii/)(.*)!http://download.cell.com/$2/pdf/PII$4.pdf!</rewrite>
+    </pattern>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]+(?:CellDownload|GatewayURL)[^&quot;]+)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <rule>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]+/pdf/[^&quot;]+.pdf)&quot;</match>
+    </pattern>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]+(?:CellDownload|GatewayURL)[^&quot;]+)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <rule>
+    <pattern>
+      <rewrite>!(.*)!$1?script=true!</rewrite>
+    </pattern>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]+/pdf/[^&quot;]+.pdf)&quot;</match>
+    </pattern>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]+(?:CellDownload|GatewayURL)[^&quot;]+)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.cell.com/biophysj/retrieve/pii/S0006349592819586</url>
+    <url>http://www.cell.com/biophysj/cgi/content/abstract/73/6/3122</url>
+    <url>http://www.cell.com/neuron/abstract/S0896-6273(10)00993-1</url>
+  </test>
+</site>
+
+
+<site name="DovePress">
+  <signature>
+    <url>!dovepress\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*'(getfile[^']+)'</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.dovepress.com/computational-internal-sequence-repeats-analysis-of-accelerated-evolut-peer-reviewed-article-OAB</url>
+  </test>
+</site>
+
+<site name="Meta">
+  <signature>
+    <body namedRegex="meta1"/>
+    <body namedRegex="meta2"/>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match namedRegex="meta1"/>
+    </pattern>
+  </rule>
+  
+  <rule>
+    <pattern>
+      <match namedRegex="meta2"/>
+    </pattern>
+  </rule>
+
+  <test>
+    <!-- Old and new Highwire sites -->
+    <url>http://genome.cshlp.org/content/17/6/852</url>
+    <url>http://dx.doi.org/doi:10.1101/gad.1717309</url>
+    <url>http://www.pnas.org/content/105/50/19587.abstract</url>
+    <url>http://bloodjournal.hematologylibrary.org/cgi/content/full/111/9/4617</url>
+    <url>http://nar.oxfordjournals.org/cgi/content/full/34/suppl_1/D135</url>
+    <url>http://bioinformatics.oxfordjournals.org/cgi/reprint/btp064v2</url>
+  </test>
+</site>
+
+
+<!-- 
+
+- IEEE eg, http://doi.ieeecomputersociety.org/10.1109/TVCG.2006.196
+
+
+- http://www.informapharmascience.com
+- old Highwire without meta tags: http://www.jleukbio.org/cgi/content/full/84/6/1492
+- 'fastpdf' preprints maybe Highwire: http://ijo.sagepub.com/cgi/rapidpdf/0306624X08322373v1
+- http://meta.wkhealth.com/pt/pt-core/template-journal/lwwgateway/media/landingpage.htm?issn=0891-3668&volume=27&issue=8&spage=760
+- http://www.jci.org/articles/view/33189 ??
+- http://content.karger.com/produktedb/produkte.asp?typ=fulltext&file=000184701
+
+-->
+
+
+</driver>

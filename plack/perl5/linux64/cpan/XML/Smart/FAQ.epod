@@ -1,0 +1,165 @@
+=> NAME
+XML::Smart::FAQ - Frequently Asked Questions about XML::Smart.
+
+=> SYNOPSIS
+This is the Frequently Asked Questions list for XML::Smart. 
+
+=> QUESTIONS
+
+B<For new questions send an e-mail to the author, but please, read first all the F.A.Q.>
+
+==> Do I need to install XML::Parser to can use XML::Smart?
+
+No! XML::Smart already comes with 2 independent parsers, XML::Smart::Parser and XML::Smart::HTMLParser.
+
+If L<XML::Parser> is found XML::Smart will use it by default, and the 2nd options will be XML::Smart::Parser.
+
+Note that for complex parsing L<XML::Parser> is recommended, but XML::Smart::Parser will work fine too.
+
+==> What is the best version of XML::Smart to install?
+
+Is always the last! Always take a look for new versions before aks for help on XML::Smart.
+
+Note that internally XML::Smart is complex, since the main idea of it is to remove the complexity from the hand of the programmer.
+Actually the idea is to enable the Perl programmer to use and create XML data without really know the XML format.
+
+==> Where can I learn about XML?
+http://www.xml.com
+
+==> How to apply a DTD to a XML::Smart object tree?
+
+Take a look in the method I<apply_dtd()>. Example of use:
+
+  $xml->apply_dtd(q`
+  <!DOCTYPE cds [
+  <!ELEMENT cds (album+)>
+  <!ATTLIST cds
+            creator  CDATA
+            date     CDATA #REQUIRED
+  >
+  <!ELEMENT album (artist , tracks+)>
+  <!ELEMENT artist (#PCDATA)>
+  <!ELEMENT tracks (#PCDATA)>
+  ]>
+  `);
+
+This will format automatically elements, attributes, etc...
+
+==> How XML::Smart works?
+
+To create I<XML::Smart>, first I have created the module L<Object::MultiType>.
+With it you can have an object that works at the same time as a HASH, ARRAY, SCALAR,
+CODE & GLOB. So you can do things like this with the same object:
+
+  $obj = Object::MultiType->new() ;
+  
+  $obj->{key} ;
+  $obj->[0] ;
+  $obj->method ;  
+  
+  @l = @{$obj} ;
+  %h = %{$obj} ;
+  
+  &$obj(args) ;
+  
+  print $obj "send data\n" ;
+
+Seems to be crazy, and can be more if you use tie() inside it, and this is what I<XML::Smart> does.
+
+For I<XML::Smart>, the access in the Hash and Array way paste through tie(). In other words, you have a tied HASH
+and tied ARRAY inside it. This tied Hash and Array work together, soo B<you can access a Hash key
+as the index 0 of an Array, or access an index 0 as the Hash key>:
+
+  %hash = (
+  key => ['a','b','c']
+  ) ;
+  
+  $hash->{key}    ## return $hash{key}[0]
+  $hash->{key}[0] ## return $hash{key}[0]  
+  $hash->{key}[1] ## return $hash{key}[1]
+  
+  ## Inverse:
+  
+  %hash = ( key => 'a' ) ;
+  
+  $hash->{key}    ## return $hash{key}
+  $hash->{key}[0] ## return $hash{key}
+  $hash->{key}[1] ## return undef
+
+The best thing of this new resource is to avoid wrong access to the data and warnings when you try to
+access a Hash having an Array (and the inverse). Thing that generally make the script die().
+
+Once having an easy access to the data, you can use the same resource to B<create> data!
+For example:
+
+  ## Previous data:
+  <hosts>
+    <server address="192.168.2.100" os="linux" type="conectiva" version="9.0"/>
+  </hosts>
+  
+  ## Now you have {address} as a normal key with a string inside:
+  $XML->{hosts}{server}{address}
+  
+  ## And to add a new address, the key {address} need to be an ARRAY ref!
+  ## So, XML::Smart make the convertion: ;-P
+  $XML->{hosts}{server}{address}[1] = '192.168.2.101' ;
+  
+  ## Adding to a list that you don't know the size:
+  push(@{$XML->{hosts}{server}{address}} , '192.168.2.102') ;
+  
+  ## The data now:
+  <hosts>
+    <server os="linux" type="conectiva" version="9.0"/>
+      <address>192.168.2.100</address>
+      <address>192.168.2.101</address>
+      <address>192.168.2.102</address>
+    </server>
+  </hosts>
+
+Than after changing your XML tree using the Hash and Array resources you just
+get the data remade (through the Hash tree inside the object):
+
+  my $xmldata = $XML->data ;
+
+B<But note that I<XML::Smart> always return an object>! Even when you get a final
+key. So this actually returns another object, pointhing (inside it) to the key:
+
+  $addr = $XML->{hosts}{server}{address}[0] ;
+  
+  ## Since $addr is an object you can TRY to access more data:
+  $addr->{foo}{bar} ; ## This doens't make warnings! just return UNDEF.
+
+  ## But you can use it like a normal SCALAR too:
+
+  print "$addr\n" ;
+
+  $addr .= ':80' ; ## After this $addr isn't an object any more, just a SCALAR!
+
+
+==> When I generate the XML data new lines (\n) are added to the content!
+
+You should use the options for the method data() and save() to not add identation to the generated data:
+
+  $XML->data( noident => 1 ) ;
+
+  ## or better:
+
+  $XML->data( nospace => 1 ) ;
+
+
+==> Your question is not here?
+
+Just send me an e-mail. ;-P
+
+=> AUTHOR
+
+Graciliano M. P. <gm@virtuasites.com.br>
+
+I will appreciate any type of feedback (include your opinions and/or suggestions). ;-P
+
+Enjoy and thanks for who are enjoying this tool and have sent e-mails! ;-P
+
+=> ePod
+
+This document was written in L<ePod> (easy-POD), than converted to POD, and from here you know the way.
+

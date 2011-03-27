@@ -1,0 +1,920 @@
+<!-- 
+ Copyright 2009-2011 Paperpile
+
+ This file is part of Paperpile
+
+ Paperpile is free software: you can redistribute it and/or modify it
+ under the terms of the GNU Affero General Public License as published
+ by the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Paperpile is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Affero General Public License for more details.  You should have
+ received a copy of the GNU Affero General Public License along with
+ Paperpile.  If not, see http://www.gnu.org/licenses.  -->
+
+<driver>
+
+<site name="BMC">
+
+  <!-- Ideally match url directly; if not possible match content of
+       page; make sure to find good tradeoff of
+       sensitivity/specificity -->
+
+  <signature>
+    <url>!biomedcentral\.com!</url>
+    <url>!chemistrycentral\.com!</url>
+    <url>!physmathcentral\.com!</url>
+    <body>!href=&quot;(\S*/citation)&quot;&gt;Download citation\(s\)!</body>
+  </signature>
+
+
+  <!-- Example of simple rewrite; preferable option whenever possible;
+       We rewrite the url to the Bibtex download link and the content
+       of this link is dispatched to the Bibtex subclass -->
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(http:/.*central\.com/\d+-\d+/\d+/\d+)!$1/citation?action=submit&amp;format=bibtex&amp;include=cit!</rewrite>
+    </pattern>
+  </rule>
+
+  <!-- Same as above, but we now add on intermediate step and first
+       find the download link in the page and rewrite this link
+       instead of the original url; -->
+
+  <rule target="Bibtex">
+    <pattern>
+      <match>!href=&quot;(\S*/citation)&quot;&gt;Download citation\(s\)!</match>
+      <rewrite>!^(.*/citation)!$1?action=submit&amp;format=bibtex&amp;include=cit!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule target="Pubmed">
+    <match>!pubmed/\d+$!</match>
+  </rule>
+  
+  <!-- Directly dispatch the content of the url to the "Metatags"
+       subclass where the data is read from the meta-tags; -->
+
+  <rule target="Metatags">
+  </rule>
+
+  <!-- Add at least two tests for each site. The content of the
+       tags <journal>, <title>, ...  will be compared to the
+       corresponding fields in the final Publication objects. You can
+       all or only a subset of available fields for testing. -->
+
+
+  <test>
+    <page url="http://dx.doi.org/10.1186/1471-2105-9-248">
+      <journal>BMC Bioinformatics</journal>
+      <title>Dinucleotide controlled null models for comparative RNA gene prediction</title>
+    </page>
+    <page url="http://genomebiology.com/2008/9/12/R168">
+      <journal>Genome Biology</journal>
+      <title>Assaying the regulatory potential of mammalian conserved non-coding sequences in human cells</title>
+    </page>
+  </test>
+
+</site>
+
+<site name="JSTOR">
+
+  <signature>
+    <url>!jstor\.org!</url>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(http://www.jstor.org/pss/)(\d+)!http://www.jstor.org/action/downloadSingleCitation?format=bibtex&amp;direct=true&amp;singleCitation=true&amp;suffix=$2!</rewrite>
+    </pattern>
+  </rule>
+
+ <test>
+   <page url="http://www.jstor.org/pss/1935784">
+     <journal>The Review of Economics and Statistics</journal>
+     <title>The Casual Causal Relationship Between Money and Income: Some Caveats for Time Series Analysis</title>
+   </page>
+ </test>
+
+</site>
+
+<site name="GoogleBooks">
+
+  <signature>
+    <url>!books\.google\.com!</url>
+  </signature>
+
+  <rule target="GoogleBooks">
+    <pattern>
+      <rewrite>!(.*&amp;?\??id=)([\w|-]+)(&amp;.*)!http://books.google.com/books?id=$2&amp;hl=en&amp;source=gbs_navlinks_s!</rewrite>
+    </pattern>
+  </rule>
+
+ <test>
+ </test>
+
+</site>
+
+
+<site name="AIP">
+
+  <signature>
+    <url>!scitation\.aip\.org!</url>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*id=)(JESOAN[A-Z\d]+)(&amp;.*)!http://scitation.aip.org/getabs/servlet/GetCitation?SelectCheck=$2&amp;source=scitation&amp;PrefType=ARTICLE&amp;PrefAction=Add%20Selected&amp;downloadcitation=%20Go%20&amp;fn=view_bibtex2!</rewrite>
+    </pattern>
+  </rule>
+
+ <test>
+   <page url="http://dx.doi.org/10.1149/1.2085889">
+     <journal>Journal of The Electrochemical Society</journal>
+     <title>An Electrochemical Method to Determine Small Amounts of Palladium in Aqueous Solution</title>
+   </page>
+ </test>
+
+</site>
+
+
+
+
+<site name="AmericanPhysicalSociety">
+  <signature>
+    <url>!aps\.org!</url>
+  </signature>
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*.aps.org/)(abstract/)(.*)!$1export/$3?type=bibtex!</rewrite>
+    </pattern>
+  </rule>
+  <test>
+    <page url="http://prd.aps.org/abstract/PRD/v71/i10/e103508">
+      <journal>Phys. Rev. D</journal>
+      <title>Scaling of multitension cosmic superstring networks</title>
+    </page>
+    <page url="http://dx.doi.org/10.1103/PhysRevLett.97.186803">
+      <journal>Phys. Rev. Lett.</journal>
+      <title>Detecting Non-Abelian Statistics with an Electronic Mach-Zehnder Interferometer</title>
+    </page>
+     <page url="http://prola.aps.org/abstract/PR/v52/i8/p768_1">
+      <journal>Phys. Rev.</journal>
+      <title>Neutron-Induced Radioactivity of Long Life in Cobalt</title>
+    </page>
+  </test>
+</site>
+
+<site name="Plos">
+  <signature>
+    <url>!plos!</url>
+  </signature>
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*article/)(info.*)!$1getBibTexCitation.action?articleURI=$2!</rewrite>
+    </pattern>
+  </rule>
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*/)(perlserv.*doi=)(10.*)!$1article/getBibTexCitation.action?articleURI=info:doi/$3!</rewrite>
+    </pattern>
+  </rule>
+  <test>
+    <page url="http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124">
+      <journal>PLoS Med</journal>
+      <title>Why Most Published Research Findings Are False</title>
+    </page>
+    <page url="http://dx.doi.org/doi:10.1371/journal.pone.0005906">
+      <journal>PLoS ONE</journal>
+      <title>Fine Mapping of Gene Regions Regulating Neurodegeneration</title>
+    </page>
+    <page url="http://biology.plosjournals.org/perlserv/?request=get-document&amp;doi=10.1371/journal.pbio.1000344">
+      <journal>PLoS Biol</journal>
+      <title>Publication Bias in Reports of Animal Stroke Studies Leads to Major Overstatement of Efficacy</title> 
+    </page>
+  </test>
+</site>
+
+<site name="IOP">
+  <signature>
+    <url>!iop\.org!</url>
+  </signature>
+
+  <rule target="IOP">
+  </rule>
+
+  <test>
+    <page url="http://iopscience.iop.org/0143-0807/1/3/004">
+      <journal>European Journal of Physics</journal>
+      <title>Rayleigh’s electrified water drops</title>
+    </page>
+    <page url="http://iopscience.iop.org/0143-0807/1/3/004">
+      <journal>European Journal of Physics</journal>
+      <title>Rayleigh’s electrified water drops</title>
+    </page>
+  </test>
+    <!-- <page url="http://dx.doi.org/10.1088/0964-1726/19/5/055025">
+      <journal>Smart Materials and Structures</journal>
+      <title>Self-priming dielectric elastomer generators</title>
+    </page> -->
+</site>
+
+<site name="Atypon">
+  <signature>
+    <url>atypon</url>
+    <url>acs\.org/doi/(abs|full)</url>
+    <url>annualreviews\.org/doi/(abs|full)</url>
+    <url>liebertonline\.com/doi/(abs|full)</url>
+    <url>mitpressjournals\.org/doi/(abs|full)</url>
+    <url>reference-global\.com</url>
+    <url>informahealthcare\.com</url>
+    <url>avma\.org</url>
+    <url>ametsoc\.org</url>
+    <url>bioone\.org</url>
+    <url>uchicago\.edu</url>
+    <body>atypon\.com</body>
+  </signature>
+  
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*/)(doi/\w+/)(10.*)(\?.*)!$1action/downloadCitation?doi=$3&amp;include=abs&amp;format=bibtex!</rewrite>
+    </pattern>
+  </rule>
+  
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*/)(doi/\w+/)(10.*)!$1action/downloadCitation?doi=$3&amp;include=abs&amp;format=bibtex!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://dx.doi.org/10.1021/cb900282e">
+      <journal>ACS Chemical Biology</journal>
+      <title>Rescue of Glaucoma-Causing Mutant Myocilin Thermal Stability by Chemical Chaperones</title>
+    </page>
+    <page url="http://journals.ametsoc.org/doi/abs/10.1175/2009JPO4127.1">
+      <journal>Journal of Physical Oceanography</journal>
+      <title>Airborne Observations of Fetch-Limited Waves in the Gulf of Tehuantepec</title>
+    </page>  
+    <page url="http://arjournals.annualreviews.org/doi/full/10.1146/annurev.genet.40.110405.090511">
+      <journal>Annual Review of Genetics</journal>
+      <title>Mendelian Genetics of Apomixis in Plants</title>
+    </page>
+    <page url="http://www.liebertonline.com/doi/abs/10.1089/cmb.2006.0137?ai=rz&amp;mi=cjwv&amp;af=R">
+      <journal>Journal of Computational Biology</journal>
+      <title>A Decomposition Theory for Phylogenetic Networks and Incompatible Characters</title>
+    </page>
+    <page url="http://www.mitpressjournals.org/doi/abs/10.1162/evco.2010.18.1.18101?url_ver=Z39.88-2003&amp;rfr_id=ori:rid:crossref.org&amp;rfr_dat=cr_pub%3Dncbi.nlm.nih.gov">
+      <journal>Evolutionary Computation</journal>
+      <title>Analysis of an Asymmetric Mutation Operator</title>
+    </page>
+    <page url="http://www.reference-global.com/doi/abs/10.1515/BC.2008.016">
+      <journal>Biological Chemistry</journal>
+      <title>Secreted human apolipoprotein(a) kringle IV-10 and kringle V inhibit angiogenesis and xenografted tumor growth</title>
+    </page>
+    <page url="http://informahealthcare.com/doi/abs/10.3109/02713680903528345">
+      <journal>Current Eye Research</journal>
+      <title>The Effect of Curcumin on Corneal Neovascularization in Rabbit Eyes</title>
+    </page>
+    <page url="http://avmajournals.avma.org/doi/full/10.2460/javma.236.6.636">
+      <journal>Journal of the American Veterinary Medical Association</journal>
+      <title>What Is The Evidence?</title>
+    </page>
+    <page url="http://www.journals.uchicago.edu/doi/abs/10.1086/651273">
+      <journal>The Journal of Geology</journal>
+      <title>Scale Dependence of Lithological Control on Topography: Bedrock Channel Geometry and Catchment Morphometry in Western Scotland</title>
+    </page>
+  </test>
+</site>
+
+<site name="JStage">
+  <signature>
+    <url>!jst\.go\.jp!</url>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*)(/article/)(.*)(_article)!$1/download/$3_bib!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://www.jstage.jst.go.jp/article/otoljpn/19/1/19_41/_article">
+      <journal>Otology Japan</journal>
+      <title>Clinical Aspects of Unilateral Hearing Loss Due To Isolated Cochlear Nerve Aplasia</title>
+    </page>
+    <page url="http://dx.doi.org/10.2208/jsceseee.26.47s">
+      <journal>STRUCTURAL ENGINEERING / EARTHQUAKE ENGINEERING</journal>
+      <title>HYBRID TIME AND FREQUENCY DOMAIN TECHNIQUE ON MODAL IDENTIFICATION USING AMBIENT VIBRATION TESTS</title>
+    </page>
+  </test>
+</site>
+
+<site name="AGU">
+  <signature>
+    <url>!agu\.org!</url>
+  </signature>
+
+  <rule target="Ris">
+    <pattern>
+      <rewrite>!(.*crossref/)(\d+)(/)(.*)(\.shtml)!http://www.agu.org/journals/includes/download2.php?id=$4&amp;year=$2!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule target="Ris">
+    <pattern>
+      <match>!.*"([^"]+includes/download2\.php[^"]+)".*!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://www.agu.org/pubs/crossref/2010/2009GB003621.shtml">
+      <journal>Global Biogeochem. Cycles</journal>
+      <title>Carbon cost of plant nitrogen acquisition: A mechanistic, globally applicable model of plant nitrogen uptake, retranslocation, and fixation</title>
+    </page>
+    <page url="http://dx.doi.org/10.1029/2009SW000487">
+      <journal>Space Weather</journal>
+      <title>Geomagnetic influence on aircraft radiation exposure during a solar energetic particle event in October 2003</title>
+    </page>
+  </test>
+</site>
+
+<site name="EGU">
+  <signature>
+    <url>!atmos-chem-phys\.net!</url>
+    <url>!biogeosciences\.net!</url>
+    <body>!www\.egu\.eu!</body>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!html$!bib!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://www.atmos-chem-phys.net/10/1473/2010/acp-10-1473-2010.html">
+      <journal>Atmospheric Chemistry and Physics</journal>
+      <title>Aerosol distribution around Svalbard during intense easterly winds</title>
+    </page>
+    <page url="http://www.solid-earth.net/1/1/2010/se-1-1-2010.html">
+      <journal>Solid Earth</journal>
+      <title>The Eons of Chaos and Hades</title>
+    </page>
+  </test>
+</site>
+
+<site name="Pion">
+  <signature>
+    <url>!envplan\.com!</url>
+    <url>!perceptionweb\.com!</url>
+  </signature>
+
+  <rule target="Ris">
+    <pattern>
+      <rewrite>!abstract\.cgi!ris\.cgi!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://www.perceptionweb.com/abstract.cgi?id=p6252">
+      <journal>Perception</journal>
+      <title>Perceptual artifacts in random-dot stereograms</title>
+    </page>
+    <page url="http://dx.doi.org/10.1068/c08130">
+      <journal>Environment and Planning C: Government and Policy</journal>
+      <title>The consideration of emergency management issues in spatial planning practices</title>
+    </page>
+  </test>
+</site>
+
+<site name="IUCr">
+  <signature>
+    <url>!iucr\.org!</url>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*)(paper\?)([0-9a-zA-Z]+)!$1biblio?Action=download&amp;cnor=$3&amp;saveas=BIBTeX!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://dx.doi.org/10.1107/S0907444909034106">
+      <journal>Acta Crystallographica Section D</journal>
+      <title>Dwelling in the dark: procedures for the crystallography of phytochromes and other photochromic proteins</title>
+    </page>
+  </test>
+</site>
+
+<site name="Highwire">
+  <signature>
+    <url>!sagepub\.com!</url>
+    <url>!cshlp\.org!</url>
+    <url>!pnas\.org!</url>
+    <url>!sciencemag\.org!</url>
+    <url>!oxfordjournals\.org!</url>
+    <url>!bmj\.com!</url>
+    <url>!bmjjournals\.com!</url>
+    <url>!ajhp\.org!</url>
+    <url>!uwpress\.org!</url>
+    <url>!geoscienceworld\.org!</url>
+    <url>!hematologylibrary\.org!</url>
+    <url>!iovs\.org!</url>
+    <url>!physiology\.org!</url>
+    <url>!aphapublications\.org!</url>
+    <url>!amjpathol\.org!</url>
+    <url>!dukejournals\.org!</url>
+    <url>!psychonomic-journals\.org!</url>
+    <url>!ama-assn\.org!</url>
+    <url>!ctsnetjournals\.org!</url>
+    <url>!birjournals\.org!</url>
+    <url>!aacrjournals\.org!</url>
+    <url>!ctsnetbooks\.org!</url>
+    <url>!jwatch\.org!</url>
+    <url>!diabetesjournals\.org!</url>
+    <url>!chestpubs\.org!</url>
+    <url>!rsmjournals\.com!</url>
+    <url>!ahajournals\.org!</url>
+    <url>!biologists\.org!</url>
+    <url>!lyellcollection\.org!</url>
+    <url>!royalsocietypublishing\.org!</url>
+    <url>!highwire\.org!</url>
+    <body>!a\shref=&quot;(\S+citmgr\S+)&quot;!</body>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!^(.*citmgr.*)!$1&amp;type=bibtex!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule target="Bibtex">
+    <pattern>
+      <match>!a\shref=&quot;(\S+citmgr\S+)&quot;!</match>
+      <rewrite>!^(.*citmgr.*)!$1&amp;type=bibtex!</rewrite>
+    </pattern>
+  </rule>
+ 
+  <test>
+    <page url="http://sth.sagepub.com/cgi/content/refs/28/1/5">
+      <journal>Science Technology Human Values</journal>
+      <title>Editorial</title>
+    </page>
+    <page url="http://online.sagepub.com/cgi/citmgr?gca=spsth;28/1/5">
+      <journal>Science Technology Human Values</journal>
+      <title>Editorial</title>
+    </page>
+    <page url="http://rnajournal.cshlp.org/content/16/4/664.abstract">
+      <journal>RNA</journal>
+      <title>The small nucleolar ribonucleoprotein (snoRNP) database</title>
+    </page>
+    <page url="http://www.pnas.org/content/107/14/6121.extract">
+      <journal>Proceedings of the National Academy of Sciences</journal>
+      <title>Nuclear envelope and lamin B2 function in the central nervous system</title>
+    </page>
+    <page url="http://www.sciencemag.org/cgi/content/summary/328/5975/153">
+      <journal>Science</journal>
+      <title>Cancer Gene Patents Ruled Invalid</title>
+    </page>
+    <page url="http://bioinformatics.oxfordjournals.org/cgi/content/full/24/1/11">
+      <journal>Bioinformatics</journal>
+      <title>Determination and validation of principal gene products</title>
+    </page>
+    <page url="http://www.bmj.com/cgi/content/full/330/7506/0-g?ehom">
+      <journal>BMJ</journal>
+      <title>Performance matters</title>
+    </page>
+    <page url="http://www.ajhp.org/cgi/content/full/62/3/239">
+      <journal>Am J Health Syst Pharm</journal>
+      <title>Nation is unprepared for bioterrorism threat, study finds</title>
+    </page>
+    <page url="http://dx.doi.org/10.1098/rsbl.2009.0820">
+      <journal>Biology Letters</journal>
+      <title>Organisms on the move: ecology and evolution of dispersal</title>
+    </page>   
+  </test>
+</site>
+
+<site name="IPAP">
+  <signature>
+    <url>!ipap\.jp!</url>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*)(link\?)([A-Z]+)(/)(\d+)(/)(\d+)(/)!$1cgi-bin/dumparticle?journal=$3&amp;volume=$5&amp;page=$7&amp;mode=bibtex!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://apex.ipap.jp/link?APEX/3/046601/">
+      <journal>Applied Physics Express</journal>
+      <title>Realization of a High-Performance Point-Focusing Monochromator for X-ray Studies</title>
+    </page>
+  </test>
+</site>
+
+<site name="MDPI">
+
+  <signature>
+    <url>!mdpi\.com!</url>
+  </signature>
+
+  <rule target="Metatags">
+  </rule>
+
+  <test>
+    <page url="http://mdpi.com/1424-8220/10/4/3655/">
+      <journal>Sensors</journal>
+      <title>Localization of Mobile Robots Using Odometry and an External Vision Sensor</title>
+    </page>
+    <page url="http://dx.doi.org/10.3390/g1010034">
+      <journal>Games</journal>
+      <title>The Influence of Priming on Reference States</title>
+    </page>
+  </test>
+
+</site>
+
+<site name="IEEE">
+
+  <signature>
+    <url>!ieeexplore\.ieee\.org!</url>
+  </signature>
+
+  <rule target="IEEE">
+  </rule>
+
+  <!--<rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*arnumber=)(\d+)(.*)!http://ieeexplore.ieee.org/xpl/downloadCitations?recordIds=$2&amp;fromPageName=searchabstract&amp;citations-format=citation-abstract&amp;download-format=download-bibtex!</rewrite>
+    </pattern>
+  </rule>-->
+   
+  <test>
+    <page url="http://ieeexplore.ieee.org/search/srchabstract.jsp?tp=&amp;arnumber=5429842&amp;queryText%3Dcuda%26openedRefinements%3D*%26searchField%3DSearch+All">
+      <title>Accelerating high performance applications with CUDA and MPI</title>
+    </page>
+    <page url="http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=5433179">
+      <title>A performance prediction model for the CUDA GPGPU platform</title>
+    </page>
+    <page url="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?reload=true&amp;arnumber=1639535">
+      <title>Phylogenetic models of rate heterogeneity: a high performance computing perspective</title>
+    </page>
+  </test>
+
+</site>
+
+<site name="CSDL">
+
+  <signature>
+    <url>!computer\.org!</url>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*)(doi.*)$!http://www.computer.org/plugins/dl/citation/abs/bibtex/description/$2.bib!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule target="Bibtex">
+    <pattern>
+      <match>!href=&quot;(\S*\.bib)&quot;&gt;BibTex!</match>
+    </pattern>
+  </rule>
+   
+  <test>
+    <page url="http://www.computer.org/portal/web/csdl/doi?doc=doi/10.1109/TSC.2009.23">
+      <title>From Web Service Artifact to a Readable and Verifiable Model</title>
+      <journal>IEEE Transactions on Services Computing</journal>
+    </page>
+  </test>
+
+</site>
+
+
+<site name="Cell">
+
+  <signature>
+    <url>!cell\.com!</url>
+  </signature>
+
+  <rule target="Ris">
+    <pattern>
+      <rewrite>!(.*)!$1?script=true!</rewrite>
+    </pattern>
+    <pattern>
+      <match>!.*href=&quot;([^&quot;]+citationexport?[^quot;]+)&quot;.*</match>
+    </pattern>
+    <pattern>
+      <rewrite>!([^&quot;]+)!$1&amp;format=cite-abs&amp;citation-type=RIS&amp;action=download!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://www.cell.com/abstract/S0092-8674%2810%2900194-7">
+      <title>Recombination Proteins Mediate Meiotic Spatial Chromosome Organization and Pairing</title>
+    </page>
+  </test>
+
+</site>
+
+<site name="SpringerLink">
+
+  <signature>
+    <url>!springerlink!</url>
+  </signature>
+
+  <rule target="SpringerLink">
+    <!--<pattern>
+      <rewrite>!(.*)(index|content)(/\w+)(.*)!http://www.springerlink.com/content$3!</rewrite>
+    </pattern> -->
+  </rule>
+  
+  <test>
+    <page url="http://www.springerlink.com/content/317768865g818420">
+      <title>Simple Power Analysis on Exponentiation Revisited</title>
+    </page>
+    <!-- <page url="https://commerce.metapress.com/content/hv37805027832375/resource-secured/?target=fulltext.html&amp;sid=vmnexvq2m1xrtm45kf1chr45&amp;sh=springerlink.metapress.com">
+      <title>Sperm, Eggs and Hunks: Biological Origins and Identity</title>
+    </page> -->
+    <page url="http://springerlink.metapress.com/content/x648r38004010r84/?p=6cf8b2f9e89840089cf9f03fe1647a0a&amp;pi=0">
+      <title>High Security Pairing-Based Cryptography Revisited</title>
+    </page>
+  </test>
+
+</site>
+
+<site name="Nature">
+
+  <signature>
+    <url>!nature\.com!</url>
+  </signature>
+
+  <rule target="Nature">
+  </rule>
+  
+  <test>
+    <page url="http://www.nature.com/nature/journal/vaop/ncurrent/full/nature08961.html">
+      <title>Olfactory pattern classification by discrete neuronal network states</title>
+      <journal>Nature</journal>
+    </page>
+  </test>
+
+</site>
+
+<site name="ScienceDirect">
+
+  <signature>
+    <url>!sciencedirect\.com/science!</url>
+  </signature>
+
+  <rule target="ScienceDirect">
+  </rule>
+
+  <test>
+    <page url="http://www.sciencedirect.com/science/article/B757H-489YK2W-2F/2/383788addfc05d519d441101045dc278">
+      <title>Bathymetry of the MODE-I region</title>
+      <journal>Deep Sea Research and Oceanographic Abstracts</journal>
+    </page>
+    <page url="http://www.sciencedirect.com/science/article/B8NS1-4X7HPCP-3/2/0ea6e5ea798d1dbd368e74dadeb4c296">
+      <title>Evaluating Internal Classroom Training</title>
+    </page>
+  </test>
+
+</site>
+
+<site name="Pubmed">
+
+  <signature>
+    <url>!ncbi\.nlm\.nih\.gov!</url>
+    <url>!ukpmc\.ac\.uk!</url>
+  </signature>
+
+  <rule target="Pubmed">
+  </rule>
+
+  <test>
+    <page url="http://www.ncbi.nlm.nih.gov/pubmed/20373265">
+      <title>Transcriptional gene silencing through epigenetic changes mediated by non-coding RNAs</title>
+      <journal>Curr Opin Mol Ther</journal>
+    </page>
+  </test>
+</site>
+
+<site name="LandesBioScience">
+
+  <signature>
+    <url>!landesbioscience\.com!</url>
+  </signature>
+
+  <rule target="LandesBioScience">
+  </rule>
+
+  <test>
+    <page url="http://www.landesbioscience.com/journals/cc/article/10508">
+      <title>Regulation of Akt signaling activation by ubiquitination</title>
+      <journal>Cell Cycle</journal>
+    </page>
+  </test>
+
+</site>
+
+<site name="Emerald">
+
+  <signature>
+    <url>!emeraldinsight\.com!</url>
+  </signature>
+
+  <rule target="Emerald">
+  </rule>
+
+  <test>
+    <page url="http://www.emeraldinsight.com/Insight/viewContentItem.do?contentType=Book&amp;contentId=1793045">
+      <title>Acquisition as a growth strategy for young IPO firms</title>
+      <series>Advances in Entrepreneurship, Firm Emergence and Growth</series>
+    </page>
+    <page url="http://www.emeraldinsight.com/10.1108/07358549610129622">
+      <title>The effects of aggressive policing: the Dayton traffic enforcement experiment</title>
+      <journal>American Journal of Police</journal>
+    </page>
+  </test>
+
+</site>
+
+<site name="DovePress">
+
+  <signature>
+    <url>!dovepress\.com!</url>
+  </signature>
+
+  <rule target="DovePress">
+  </rule>
+  
+  <test>
+    <page url="http://www.dovepress.com/medical-complications-in-patients-with-stroke-data-validity-in-a-strok-peer-reviewed-article-CLEP">
+      <title>Medical complications in patients with stroke: data validity in a stroke registry and a hospital discharge registry</title>
+      <journal>Clinical Epidemiology</journal>
+    </page>
+    <page url="http://www.dovepress.com/nurse-stress-at-two-different-organizational-settings-in-alexandria-peer-reviewed-article-JMDH">
+      <title>Nurse stress at two different organizational settings in Alexandria</title>
+      <journal>Journal of Multidisciplinary Healthcare</journal>
+    </page>
+  </test>
+
+</site>
+
+<site name="LAPress">
+
+  <signature>
+    <url>!la-press\.com!</url>
+  </signature>
+
+  <rule target="Ris">
+    <pattern>
+      <match>!.*(bibliography.php\S+)'.*!</match>
+    </pattern>
+  </rule>
+
+  <rule target="LAPress">
+  </rule>
+  
+  <test>
+    <page url="http://la-press.com/effect-of-diet-supplementation-on-the-expression-of-bovine-genes--asso-a1970">
+      <title>Effect of Diet Supplementation on the Expression of Bovine Genes  Associated with Fatty Acid Synthesis and Metabolism</title>
+      <journal>Bioinformatics and Biology Insights</journal>
+    </page>
+    <page url="http://la-press.com/gender-ratios-in-autism-asperger-syndrome-and-autism-spectrum-disorder-a1900">
+      <title>Gender Ratios in Autism, Asperger Syndrome and Autism Spectrum Disorder</title>
+      <journal>Autism Insights</journal>
+    </page>
+  </test>
+
+</site>
+
+<site name="Lancet">
+
+  <signature>
+    <url>!thelancet\.com!</url>
+  </signature>
+
+  <rule target="Lancet">
+  </rule>
+  
+  <test>
+    <page url="http://www.thelancet.com/journals/laneur/article/PIIS1474-4422%2810%2970083-1/abstract">
+      <title>Mitochondrial DNA haplogroups and risk of transient ischaemic attack and ischaemic stroke: a genetic association study</title>
+      <journal>The Lancet Neurology</journal>
+    </page>
+    <page url="http://www.thelancet.com/journals/lancet/article/PIIS0140-6736%2800%2988194-5/fulltext.">
+      <title>OPHTHALMIA NEONATORUM</title>
+      <journal>The Lancet</journal>
+    </page>
+  </test>
+
+</site>
+
+
+<site name="Wiley">
+
+  <signature>
+    <url>!onlinelibrary\.wiley\.com!</url>
+  </signature>
+
+  <rule target="Wiley">
+  </rule>
+
+</site>
+
+<site name="LWW">
+
+  <signature>
+    <url>!journals\.lww\.com!</url>
+  </signature>
+
+  <rule target="LWW">
+  </rule>
+
+</site>
+
+
+<site name="AFS">
+
+  <signature>
+    <url>!afsjournals\.org!</url>
+  </signature>
+
+  <rule target="AFS">
+  </rule>
+
+</site>
+
+<site name="IngentaConnect">
+
+  <signature>
+    <url>!ingentaconnect\.com!</url>
+  </signature>
+  
+  <rule target="Bibtex">
+    <pattern>
+      <match>!href=&quot;(http:\S*format=bib)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://www.ingentaconnect.com/content/iop/jphyscm/2010/00000022/00000033/art334202">
+      <title>Thermal enhancement of chemical doping in graphene: a Raman spectroscopy study</title>
+      <journal>Journal of Physics: Condensed Matter</journal>
+    </page>
+  </test>
+  
+</site>
+
+<site name="TheScientificWorldJOURNAL">
+
+  <signature>
+    <url>!thescientificworld\.co\.uk!</url>
+    <url>!thescientificworld\.com!</url>
+  </signature>
+
+  <rule target="Ris">
+    <pattern>
+      <rewrite>!(.*ArticleID=)(\d+)!http://www.thescientificworld.co.uk/TSW/support/export.asp?format=endnote&amp;articleID=$2!i</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://www.thescientificworld.co.uk/TSW/toc/TSWJ_ArticleLanding.asp?ArticleId=3419">
+      <title>Long Noncoding RNAs, Chromatin, and Development</title>
+    </page>
+  </test>
+
+</site>
+
+<site name="Default">
+
+  <signature>
+    <body>!.*!</body>
+  </signature>
+
+  <rule target="Default"></rule>
+  <test>
+    <page url="http://ccsenet.org/journal/index.php/ijb/article/view/3582">
+      <title>Environmental Estrogens Stimulate Gene Transcription in the Prolactin Promoter</title>
+      <journal>International Journal of Biology</journal>
+    </page>
+    <page url="http://www.socialmedicine.info/index.php/socialmedicine/article/view/430">
+      <title>Health Care Reform: a Socialist Vision</title>
+      <journal>Social Medicine</journal>
+    </page>
+  </test>
+</site> 
+
+</driver>
+
+

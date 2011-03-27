@@ -1,0 +1,95 @@
+<table class="pp-patterns">
+
+<tr>
+<td>
+  <div class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:140;width:400;">
+
+    <h3>Paperpile database <span id="library_db_tooltip" class="pp-tooltip-link">?</span></h3>
+    <div id="library_db">
+      <div class="pp-settings-textfield" id="library_db_textfield"></div>
+      <div id="library_db_button"></div>
+    </div>
+    
+    <h3>PDF folder <span id="paper_root_tooltip" class="pp-tooltip-link">?</span></h3>
+    <div id="paper_root">
+      <div id="paper_root_textfield" class="pp-settings-textfield"></div>
+      <div id="paper_root_button"></div>
+    </div>
+
+  </div>
+</td>
+</tr>
+
+<tr>
+<td>
+  <div class="pp-box pp-box-style1 pp-box-bottom pp-box-settings" style="height:380;width:400;">
+    <h3>Citation key pattern <span id="key_pattern_tooltip" class="pp-tooltip-link">?</span></h3>
+
+    <div id="key_pattern">
+      <div class="pp-settings-textfield" id="key_pattern_textfield"></div>
+      <div class="pp-settings-example">Example: <code id="key_pattern_example"></code></div>
+    </div>
+
+    <div class="pp-vspace" style="height:15px;"></div>
+
+
+    <h3>PDF file pattern <span id="pdf_pattern_tooltip" class="pp-tooltip-link">?</span></h3>
+    
+    <div id="pdf_pattern">
+      <div id="pdf_pattern_textfield" class="pp-settings-textfield"><span>.pdf<span></div>
+      <div class="pp-settings-example">Example: <code id="pdf_pattern_example"></code></div>
+    </div>
+
+    <div class="pp-vspace" style="height:15px;"></div>
+
+    <h3>Attachment pattern <span id="attachment_pattern_tooltip" class="pp-tooltip-link">?</span></h3>
+
+    <div id="attachment_pattern">
+      <div id="attachment_pattern_textfield" class="pp-settings-textfield"></div>
+      <div class="pp-settings-example">Example: <code id="attachment_pattern_example"></code></div>
+    </div>
+  </div>
+</td>
+
+<td>
+  <div class="pp-box pp-box-style2" style="height:380; width: 340px;">
+    <h2>Patterns</h2>
+    <p>You can use the following keywords in your pattern:</p>
+    <dl class="pp-pattern-help">
+      <dt> <b>[firstauthor]</b> </dt> <dd>Name of first author  </dd>
+      <dt> <b>[lastauthor]</b> </dt> <dd>Name of last author  </dd>
+      <dt> <b>[authors]</b> </dt><dd>Names of all authors  </dd>   
+      <dt> <b>[YYYY]</b></dt> <dd>Publication year (four digits)</dd>
+      <dt> <b>[YY]</b></dt> <dd>Publication year (two digits)</dd>
+      <dt> <b>[title]</b></dt> <dd>Title of paper </dd>
+      <dt> <b>[journal]</b></dt> <dd>Journal name</dd> 
+    </dl>
+    <p> Uppercase/lowercase variants and abbreviations:</p>
+    <dl class="pp-pattern-help">
+      <dt> <b>[firstauthor]</b> </dt> <dd> knuth  </dd>
+      <dt> <b>[Firstauthor]</b> </dt> <dd> Knuth  </dd>
+      <dt> <b>[FIRSTAUTHOR]</b> </dt> <dd> KNUTH </dd>   
+      <dt> <b>[FIRSTAUTHOR:1]</b> </dt> <dd> K</dd>   
+      <dt> <b>[FIRSTAUTHOR:3]</b> </dt> <dd> KNU</dd>   
+    </dl>
+  </div>
+</td>
+</tr>
+<tr>
+<td>
+<center>
+<div style="width:190;">
+<div id="patterns-save-button" class="pp-save-button"></div>
+<div id="patterns-cancel-button" class="pp-cancel-button"></div>
+</div>
+</center>
+</td>
+
+<td>
+</td>
+</tr>
+
+</table>
+
+
+

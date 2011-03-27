@@ -1,0 +1,1210 @@
+=head2 Wed May  5 19:55:43 2010: C<Module> L<Template|Template>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.22>
+
+=item *
+
+C<EXE_FILES: bin/tpage bin/ttree>
+
+=back
+
+=head2 Wed May  5 19:56:22 2010: C<Module> L<DBD::SQLite|DBD::SQLite>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.29>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 19:56:26 2010: C<Module> L<Params::Util|Params::Util>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.01>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 19:56:32 2010: C<Module> L<Storable|Storable>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.21>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 19:56:40 2010: C<Module> L<YAML::Syck|YAML::Syck>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.07>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 19:56:45 2010: C<Module> L<MooseX::Role::WithOverloading|MooseX::Role::WithOverloading>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.05>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 19:57:29 2010: C<Module> L<Encode|Encode>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.39>
+
+=item *
+
+C<EXE_FILES: bin/enc2xs bin/piconv>
+
+=back
+
+=head2 Wed May  5 19:57:47 2010: C<Module> L<Crypt::SSLeay|Crypt::SSLeay>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.57>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 19:59:07 2010: C<Module> L<Moose|Moose>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.02>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 19:59:10 2010: C<Module> L<Digest::MD5|Digest::MD5>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.39>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 19:59:12 2010: C<Module> L<Digest::SHA1|Digest::SHA1>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.12>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 19:59:20 2010: C<Module> L<HTML::Parser|HTML::Parser>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 3.65>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 19:59:22 2010: C<Module> L<MIME::Base64|MIME::Base64>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 3.09>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 19:59:47 2010: C<Module> L<IO|IO>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.25>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 19:59:52 2010: C<Module> L<List::Util|List::Util>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.23>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 19:59:55 2010: C<Module> L<Devel::DProf|Devel::DProf>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 19990108>
+
+=item *
+
+C<EXE_FILES: dprofpp>
+
+=back
+
+=head2 Wed May  5 20:00:01 2010: C<Module> L<threads|threads>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.77>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:00:04 2010: C<Module> L<threads::shared|threads::shared>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.33>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:00:34 2010: C<Module> L<Time::HiRes|Time::HiRes>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.9721>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:00:42 2010: C<Module> L<Text::Soundex|Text::Soundex>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 3.03>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:00:55 2010: C<Module> L<Devel::PPPort|Devel::PPPort>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 3.19>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:00:58 2010: C<Module> L<IPC::SysV|IPC::SysV>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.02>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:01:08 2010: C<Module> L<JSON::XS|JSON::XS>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.29>
+
+=item *
+
+C<EXE_FILES: bin/json_xs>
+
+=back
+
+=head2 Wed May  5 20:01:12 2010: C<Module> L<Time::Piece|Time::Piece>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.20>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:01:17 2010: C<Module> L<XML::Parser|XML::Parser>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.36>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:01:23 2010: C<Module> L<Digest::SHA|Digest::SHA>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 5.48>
+
+=item *
+
+C<EXE_FILES: shasum>
+
+=back
+
+=head2 Wed May  5 20:01:24 2010: C<Module> L<Devel::GlobalDestruction|Devel::GlobalDestruction>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.02>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:01:34 2010: C<Module> L<Compress::Raw::Bzip2|Compress::Raw::Bzip2>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.027>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:01:43 2010: C<Module> L<Compress::Raw::Zlib|Compress::Raw::Zlib>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.027>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:01:49 2010: C<Module> L<DB_File|DB_File>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.820>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:01:56 2010: C<Module> L<Filter|Filter>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.37>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:01:59 2010: C<Module> L<Devel::Caller|Devel::Caller>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.05>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:02:01 2010: C<Module> L<Sub::Identify|Sub::Identify>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.04>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:02:03 2010: C<Module> L<PadWalker|PadWalker>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.9>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:02:09 2010: C<Module> L<Unicode::Normalize|Unicode::Normalize>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.06>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:02:15 2010: C<Module> L<Sys::Syslog|Sys::Syslog>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.27>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:02:21 2010: C<Module> L<Data::Dumper|Data::Dumper>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.126>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:02:24 2010: C<Module> L<Cwd|Cwd>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 3.31>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:02:38 2010: C<Module> L<Class::MOP|Class::MOP>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.00>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:02:44 2010: C<Module> L<Math::BigInt::FastCalc|Math::BigInt::FastCalc>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.19>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:03:52 2010: C<Module> L<DBI|DBI>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.611>
+
+=item *
+
+C<EXE_FILES: dbiproxy dbiprof dbilogstrip>
+
+=back
+
+=head2 Wed May  5 20:03:57 2010: C<Module> L<List::MoreUtils|List::MoreUtils>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.22>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:04:03 2010: C<Module> L<Variable::Magic|Variable::Magic>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.41>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 20:04:04 2010: C<Module> L<Sub::Name|Sub::Name>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.04>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 21:17:19 2010: C<Module> L<JSON|JSON>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.21>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Wed May  5 21:49:13 2010: C<Module> L<Catalyst::View::JSON|Catalyst::View::JSON>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.30>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sun Sep  5 01:42:10 2010: C<Module> L<FCGI|FCGI>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.71>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sun Sep  5 01:43:57 2010: C<Module> L<FCGI::ProcManager|FCGI::ProcManager>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.19>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sun Oct 31 22:25:16 2010: C<Module> L<BibTeX::Parser|BibTeX::Parser>
+
+=over 4
+
+=item *
+
+C<installed into: ../../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.4>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sat Dec 11 11:31:58 2010: C<Module> L<Crypt::SSLeay|Crypt::SSLeay>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.58>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jan 18 21:14:42 2011: C<Module> L<Test::Harness|Test::Harness>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 3.22>
+
+=item *
+
+C<EXE_FILES: bin/prove>
+
+=back
+
+=head2 Tue Jan 18 21:16:32 2011: C<Module> L<File::Slurp|File::Slurp>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 9999.13>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jan 18 21:16:35 2011: C<Module> L<XML::Generator|XML::Generator>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.03>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jan 18 21:16:54 2011: C<Module> L<Algorithm::Diff|Algorithm::Diff>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.1902>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jan 18 21:17:07 2011: C<Module> L<Class::Field|Class::Field>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.15>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+

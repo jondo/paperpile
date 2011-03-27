@@ -1,0 +1,3 @@
+---
+test_comment: '\textbf'
+title: 'The next word is \textbf{bold}'

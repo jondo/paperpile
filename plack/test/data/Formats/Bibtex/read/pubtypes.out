@@ -1,0 +1,36 @@
+---
+test_comment: ARTICLE
+pubtype: ARTICLE
+---
+test_comment: INBOOK
+pubtype: INBOOK
+---
+test_comment: BOOK
+pubtype: BOOK
+---
+test_comment: INCOLLECTION
+pubtype: INCOLLECTION
+---
+test_comment: MANUAL
+pubtype: MANUAL
+---
+test_comment: MASTERTHESIS
+pubtype: MASTERSTHESIS
+---
+test_comment: MISC
+pubtype: MISC
+---
+test_comment: INPROCEEDINGS
+pubtype: INPROCEEDINGS
+---
+test_comment: PROCEEDINGS
+pubtype: PROCEEDINGS
+---
+test_comment: PHDTHESIS
+pubtype: PHDTHESIS
+---
+test_comment: TECHREPORT
+pubtype: TECHREPORT
+---
+test_comment: UNPUBLISHED
+pubtype: UNPUBLISHED

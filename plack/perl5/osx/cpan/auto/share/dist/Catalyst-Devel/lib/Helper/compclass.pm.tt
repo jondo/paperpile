@@ -1,0 +1,44 @@
+package [% class %];
+use Moose;
+use namespace::autoclean;
+
+[% IF long_type == 'Controller' %]BEGIN {[% END %]extends 'Catalyst::[% long_type %]';[% IF long_type == 'Controller' %] }[% END %]
+
+=head1 NAME
+
+[% class %] - Catalyst [% long_type %]
+
+=head1 DESCRIPTION
+
+Catalyst [% long_type %].
+[% IF long_type == 'Controller' %]
+=head1 METHODS
+
+=cut
+
+
+=head2 index
+
+=cut
+
+sub index :Path :Args(0) {
+    my ( $self, $c ) = @_;
+
+    $c->response->body('Matched [% class %] in [%name%].');
+}
+
+[% END %]
+=head1 AUTHOR
+
+[%author%]
+
+=head1 LICENSE
+
+This library is free software. You can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
+
+__PACKAGE__->meta->make_immutable;
+
+1;

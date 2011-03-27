@@ -1,0 +1,47 @@
+---
+authors: 'Altschul, S. F. and Erickson, B. W.'
+journal: Mol. Biol. Evol.
+month: November
+number: 6
+pages: 526-538
+pmid: 3870875
+arxivid: 0902.3768
+guid: E7DB80521DD311E0BC8B1DC049FF2D75
+pubtype: ARTICLE
+title: 'Significance of nucleotide sequence alignments: a method for random sequence permutation that preserves dinucleotide and codon usage.'
+volume: 2
+year: 1985
+abstract: |
+ The similarity of two nucleotide sequences is often expressed in
+ terms of evolutionary distance, a measure of the amount of change
+ needed to transform one sequence into the other. Given two sequences
+ with a small distance between them, can their similarity be explained
+ by their base composition alone? The nucleotide order of these
+ sequences contributes to their similarity if the distance is much
+ smaller than their average permutation distance, which is obtained by
+ calculating the distances for many random permutations of these
+ sequences. To determine whether their similarity can be explained by
+ their dinucleotide and codon usage, random sequences must be chosen
+ from the set of permuted sequences that preserve dinucleotide and
+ codon usage. The problem of choosing random dinucleotide and
+ codon-preserving permutations can be expressed in the language of
+ graph theory as the problem of generating random Eulerian walks on a
+ directed multigraph. An efficient algorithm for generating such walks
+ is described. This algorithm can be used to choose random sequence
+ permutations that preserve (1) dinucleotide usage, (2) dinucleotide
+ and trinucleotide usage, or (3) dinucleotide and codon usage. For
+ example, the similarity of two 60-nucleotide DNA segments from the
+ human beta-1 interferon gene (nucleotides 196-255 and 499-558) is not
+ just the result of their nonrandom dinucleotide and codon usage.
+---
+doi: 10.1038/nature06340
+year: 2011
+pages: 526-538
+title: Simon "the saint" Templar
+publisher: Culinary Expert Series
+annote: comment goes here
+month: September
+---
+doi: 10.1038/nature06340
+year: 2011
+title: A bunch of braces in title

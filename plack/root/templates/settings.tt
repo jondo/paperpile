@@ -1,0 +1,74 @@
+<table>
+<tr>
+
+<td>
+
+  <div id="ui-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:270; width:350">
+    <h2>General settings</h2>
+    <table class="pp-settings-table">
+      <tr>
+        <td><div class="pp-settings-checkbox" id="check_updates_checkbox"></div></td>
+        <td class="pp-settings-label">Automatically check for updates <span id="settings-check-updates-tooltip" class="pp-tooltip-link">?</span></td> 
+      </tr>
+    </table>
+    <h4>References per page <span id="settings-pager-limit-tooltip" class="pp-tooltip-link">?</span></h4>
+    <div class="pp-settings-textfield" id="pager_limit_combo"></div>
+<!--    
+    <h4>User interface font size <span id="settings-font-size-tooltip" class="pp-tooltip-link">?</span></h4>
+    <div class="pp-settings-textfield" id="font_size_combo"></div>
+-->
+    <h4>Sort references by <span id="settings-sort-field-tooltip" class="pp-tooltip-link">?</span></h4>
+    <div class="pp-settings-textfield" id="sort_field_combo"></div>
+  </div>
+</td>
+
+<td>
+  <div id="proxy-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:270; width:300">
+    <div id="proxy_checkbox" style="float:left;margin: 12px 0px 12px 8px"></div>
+    <h2 style="margin:8 20;">Proxy</h2>
+
+    <h4>Address  <span id="settings-proxy-address-tooltip" class="pp-tooltip-link">?</span></h4>
+    <div class="pp-settings-textfield" id="proxy_textfield"></div>
+    <h4>User name <span id="settings-proxy-user-tooltip" class="pp-tooltip-link">?</span></h4>
+    <div class="pp-settings-textfield" id="proxy_user_textfield"></div>
+    <h4>Password <span id="settings-proxy-pass-tooltip" class="pp-tooltip-link">?</span></h4>
+    <div class="pp-settings-textfield" id="proxy_passwd_textfield"></div>
+    
+    <table>
+      <tr>
+        <td>
+          <div id="proxy_test_button" style="margin:20 8;"></div>
+        </td>
+        <td>
+          <div id="proxy_test_status" style="width:16px;height:16px;"></div>
+        </td>
+      </tr>
+    </table>
+  </div>
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+  <div id="plugin-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:250; width:350">
+    <h2>Searching and Matching</h2>
+    <div class="pp-pluginlist-widget" id="plugin_order_panel"></div>
+  </div>
+</td>
+<td></td>
+
+</tr>
+
+<tr><td colspan="2">
+    <div style="width:190; margin-left:auto; margin-right:auto;">
+      <div id="settings-save-button" class="pp-save-button"></div>
+      <div id="settings-cancel-button" class="pp-cancel-button"></div>
+    </div>
+</td></tr>
+
+
+</tr>
+
+

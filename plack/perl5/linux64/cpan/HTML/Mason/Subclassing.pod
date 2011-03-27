@@ -1,0 +1,304 @@
+=pod
+
+=head1 NAME
+
+HTML::Mason::Subclassing - Documentation on Subclassing Internal Mason classes
+
+=head1 DESCRIPTION
+
+This is the deep voodoo guide, for folks who want to create their own
+custom subclasses for parts of Mason, such as the Request or Interp
+objects.
+
+=head1 Class::Container
+
+A number of modules in Mason are subclasses of C<Class::Container>.
+This module was originally part of the Mason core as
+C<HTML::Mason::Container>, but Ken Williams decided to release it separately on CPAN.
+
+It was created to encapsulate some common behaviors for Mason objects
+such as parameter validation and the creation of "contained" objects.
+
+Basically, any Mason object which takes parameters to its constructor
+B<must> inherit from this module.  Of course, since all of the classes
+that you might consider subclassing already inherit from
+C<Class::Container>, you won't need to inherit from it directly.
+However, you may need to use some of its methods.
+
+So before you go further we highly recommend familiarizing yourself
+with C<Class::Container> and its methods.  Also feel free to look at
+some of the Mason core modules to see how C<Class::Container> is used
+within Mason itself.
+
+=head1 SUBCLASSABLE CLASSES
+
+The following classes have been designed with subclassing in mind:
+
+=over 4
+
+=item * HTML::Mason::Request
+
+This object is your old friend C<$m>.  The request contains
+information about the current request context, and provides methods
+for calling other components.
+
+=item * HTML::Mason::Resolver
+
+The resolver's job is to translate a component paths into an actual
+component.  Mason comes with a single Resolver subclass,
+C<HTML::Mason::Resolver::File>, which is used to translate component
+paths into filesystem paths.
+
+=item * HTML::Mason::ComponentSource
+
+An object of this class represents a component's source.  These
+objects are instantiated by the resolver when it finds a component
+matching a given path.
+
+=item * HTML::Mason::Lexer
+
+The lexer is responsible for parsing a component.  Creating a new
+lexer would allow you to change Mason's component syntax.
+
+=item * HTML::Mason::Compiler
+
+The compiler takes the parsed chunks from the lexer and gives them
+meaning.  The default compiler, C<HTML::Mason::Compiler::ToObject>,
+turns a Mason component into a Mason "object file", which contains
+actual Perl code.
+
+=item * HTML::Mason::ApacheHandler
+
+The ApacheHandler class is the bridge between the mod_perl world and
+Mason, primarily Mason's Interp class.
+
+It also provides its own C<HTML::Mason::Request> and
+C<HTML::Resolver::File> subclasses which implement some mod_perl
+specific behaviors and features.
+
+=item * HTML::Mason::Interp
+
+The Interp is the core of Mason, and is primarily responsible for
+making all the other objects do their jobs.
+
+=back
+
+=head1 CONSTRUCTORS
+
+If you choose to override the constructor, which is always C<new> with
+Mason objects, that you make sure to call the superclass's constructor
+and that you use the object returned by it.  A good boilerplate for an
+overridden constructor looks something like this:
+
+  sub new
+  {
+      my $class = shift;
+
+      my $self = $class->SUPER::new(@_);
+
+      $self->_do_some_init;
+
+      return $self;
+  }
+
+=head1 Request
+
+=head2 What to Subclass?
+
+One important thing to know about this class is that it is actually
+several classes.  The first, C<HTML::Mason::Request>, is used when
+ApacheHandler is not loaded.  The other,
+C<HTML::Mason::Request::ApacheHandler>, is loaded by ApacheHandler and
+used to provide some mod_perl specific features.  Similar, the
+CGIHandler class provides its own request subclass,
+C<HTML::Mason::Request::CGIHandler>.
+
+It is impossible to know which one of these to subclass at compile
+time, since it is possible that your subclass will be loaded before
+either ApacheHandler or CGIHandler.
+
+To handle this, simply call the C<alter_superclass()> method in your
+constructor, like this:
+
+  sub new
+  {
+      my $class = shift;
+
+      $class->alter_superclass( $HTML::Mason::ApacheHandler::VERSION ?
+                                'HTML::Mason::Request::ApacheHandler' :
+                                $HTML::Mason::CGIHandler::VERSION ?
+                                'HTML::Mason::Request::CGI' :
+                                'HTML::Mason::Request' );
+
+      my $self = $class->SUPER::new(@_);
+
+      ...
+
+      return $self;
+  }
+
+It is quite important that you do this as these handler-specific
+subclasses provide important functionality.  The C<alter_superclass()>
+method is implemented in the
+L<C<HTML::Mason::Request>|HTML::Mason::Request> base class, and will
+do the right thing even in cases of multiple inheritance.  It also
+cooperates with C<Class::Container> to make sure that it sees changes
+to the inheritance hierarchy.
+
+=head2 The exec() method
+
+The C<exec> method is called in order to execute a request, and is the
+method that you are most likely to want to override.
+
+However, if you do override it we suggest that you make sure to call
+the parent class's C<exec> method to implement the actual component
+execution and there is no need for you to re-implement them.
+
+Since the C<exec()> method is scalar/list context-sensitive, your
+C<exec> method will need to preserve that.  Here is a boilerplate:
+
+  sub exec
+  {
+      my $self = shift;
+
+      ... # do something cool
+
+      my @r;
+      if (wantarray)
+      {
+          @r = $self->SUPER::exec(@_);
+      }
+      else
+      {
+          $r[0] = $self->SUPER::exec(@_);
+      }
+
+      ... # maybe do some cleanup
+
+      return wantarray ? @r : $r[0];
+  }
+
+=head2 Subrequests
+
+Your custom request class will also be used to implement subrequests,
+which are implemented by calling C<exec> just like any other method.
+If you only want to do certain things in C<exec> for the first
+request, you can simply check the value of C<< $self->is_subrequest >>.
+
+=head2 Examples
+
+See the C<MasonX::Request::WithApacheSession> module on CPAN.
+
+=head1 Resolver and ComponentSource
+
+The resolver takes a component path and figures out what component
+that path corresponds to.
+
+All resolver classes must implement two methods, C<get_info> and
+C<glob_path>.  The first takes a component path and returns a new
+C<HTML::Mason::ComponentSource> object.  This object contains
+information about the component, such as its last modified time and
+its source.  See the
+L<C<HTML::Mason::ComponentSource>|HTML::Mason::ComponentSource>
+documentation for more details.
+
+You may choose to provide your own ComponentSource subclass as well,
+if your resolver implementation can take advantage of it.
+
+The C<glob_path> method is responsible for translating a component
+path like F</foo/*/bar> into a list of component paths that match that
+glob pattern.
+
+=head1 Lexer
+
+The rationale for providing your own lexer would be to extend or
+replace Mason's syntax.
+
+The lexer is called by the compiler via its C<lex> method.  The
+arguments it receives are the component name, source, and the compiler
+object.  See the L<Compiler class|HTML::Mason::Compiler> documentation
+for details on what methods the lexer can call.
+
+=head1 Compiler
+
+See the L<Compiler class|HTML::Mason::Compiler> documentation for
+details on what methods a subclass of this class needs to provide.
+
+If you simply want to tweak Mason's existing behavior, you will
+probably want to subclass C<HTML::Mason::Compiler::ToObject>, which is
+the default Compiler class.  For example, if you wanted to do
+something like make attributes dynamic, you could override the
+C<_flags_or_attr()> method in ToObject.
+
+If you want to drastically change the behavior, you can subclass
+C<HTML::Mason::Compiler> instead.  An example of this would be
+creating a compiler that generates C<EmbPerl> or C<Apache::ASP> as
+output.
+
+=head1 ApacheHandler
+
+The methods that you are most likely to want to subclass are
+documented in the L<C<ApacheHandler class>|HTML::Mason::ApacheHandler>
+documentation.
+
+Providing an ApacheHandler subclass gives you a chance to do your own
+client parameter parsing, as well as the capability of providing a
+different way of handling requests.
+
+=head1 CGIHandler
+
+Like the ApacheHandler, you could subclass this module in order to
+provide your own argument processing or to step in and provide a
+different way to handle requests.
+
+=head1 USING SUBCLASSES
+
+When using your custom subclasses, we recommend that you take
+advantage of Mason's ability to construct subclassed object on the
+fly.
+
+For example, if you're subclassed the Interp object, you can still let
+the ApacheHandler object create the Interp object for you, as long as
+you give it the appropriate L<interp_class|HTML::Mason::Params/interp_class> parameter.  This is
+important because Mason may internally set up certain defaults for
+contained objects.  For example, the ApacheHandler, by default, will
+tell the Interp object to use the
+C<HTML::Mason::Request::ApacheHandler> Request subclass.  If you
+create an Interp object manually and you want to use that Interp
+object with ApacheHandler, you'll have to specify the same Request
+class.
+
+For example:
+
+  my $interp =
+      My::Interp->new
+          ( request_class  => 'HTML::Mason::Request::ApacheHandler',
+            my_new_interp_param => 42,
+          );
+
+  my $ah = HTML::Mason::ApacheHandler->new( interp => $interp );
+
+It is far easier to simply do this:
+
+  my $ah =
+      HTML::Mason::ApacheHandler->new
+          ( interp_class => 'My::Interp',
+            my_new_interp_param => 42,
+          );
+
+Your new parameter, C<my_new_interp_param>, will still be passed to
+the C<My::Interp> constructor, but this also gives ApacheHandler a
+chance to set various parameters for the Interp object.  Of course,
+you can still override these defaults explicitly:
+
+  my $ah =
+      HTML::Mason::ApacheHandler->new
+          ( interp_class => 'My::Interp',
+            resolver_class => 'My::Resolver'.
+            my_new_interp_param => 42,
+          );
+
+If you need access to the interp object's methods directly, it will be
+always be available via C<< $ah->interp >>.
+
+=cut
