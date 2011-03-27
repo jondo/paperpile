@@ -72,6 +72,15 @@ sub test_connect_page {
         push @observed, $pub;
       }
     }
+    elsif ( defined $entry->{file} ) {
+      $plugin->file( $entry->{file} );
+      my $nr_hits = $plugin->connect();
+      my $pubs = $plugin->page( 0, 25 );
+      foreach my $pub ( @{$pubs} ) {
+        push @observed, $pub;
+      }
+    }
+
   }
 
   my @expected = YAML::LoadFile("$outfile");
