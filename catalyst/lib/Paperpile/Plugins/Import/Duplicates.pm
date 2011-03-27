@@ -35,6 +35,8 @@ has '_data'                 => ( is => 'rw', isa => 'ArrayRef' );
 has 'clear_duplicate_cache' => ( is => 'rw' );
 has 'shash'                 => ( is => 'rw', isa => 'Str' );
 has 'index'                 => ( is => 'rw', isa => 'HashRef' );
+has 'charshash'             => ( is => 'rw', isa => 'HashRef' );
+has 'charsregexp'           => ( is => 'rw', isa => 'Regexp' );
 
 sub BUILD {
   my $self = shift;
@@ -42,6 +44,63 @@ sub BUILD {
   $self->index( { words => {}, lengths => {}, pubs => {} } );
 
   $self->plugin_name('Duplicates');
+
+  my %tmphash = (
+    chr(0x03b1) => 'alpha',
+    chr(0x03b2) => 'beta',
+    chr(0x03b3) => 'gamma',
+    chr(0x03b4) => 'delta',
+    chr(0x03b5) => 'epsilon',
+    chr(0x03b6) => 'zeta',
+    chr(0x03b7) => 'eta',
+    chr(0x03b8) => 'theta',
+    chr(0x03b9) => 'iota',
+    chr(0x03ba) => 'kappa',
+    chr(0x03bb) => 'lambda',
+    chr(0x03bc) => 'mu',
+    chr(0x03bd) => 'nu',
+    chr(0x03be) => 'xi',
+    chr(0x03bf) => 'o',
+    chr(0x03c0) => 'pi',
+    chr(0x03c1) => 'rho',
+    chr(0x03c3) => 'sigma',
+    chr(0x03c4) => 'tau',
+    chr(0x03c5) => 'upsilon',
+    chr(0x03c6) => 'phi',
+    chr(0x03c7) => 'chi',
+    chr(0x03c8) => 'psi',
+    chr(0x03c9) => 'omega',
+    chr(0x0391) => 'alpha',
+    chr(0x0392) => 'beta',
+    chr(0x0393) => 'gamma',
+    chr(0x0394) => 'delta',
+    chr(0x0395) => 'epsilon',
+    chr(0x0396) => 'zeta',
+    chr(0x0397) => 'eta',
+    chr(0x0398) => 'theta',
+    chr(0x0399) => 'iota',
+    chr(0x039a) => 'kappa',
+    chr(0x039b) => 'lambda',
+    chr(0x039c) => 'mu',
+    chr(0x039d) => 'nu',
+    chr(0x039e) => 'xi',
+    chr(0x039f) => 'o',
+    chr(0x03a0) => 'pi',
+    chr(0x03a1) => 'rho',
+    chr(0x03a3) => 'sigma',
+    chr(0x03a4) => 'tau',
+    chr(0x03a5) => 'upsilon',
+    chr(0x03a6) => 'phi',
+    chr(0x03a7) => 'chi',
+    chr(0x03a8) => 'psi',
+    chr(0x03a9) => 'omega'
+  );
+
+  my $charsjoined = join( '', sort keys %tmphash );
+  $charsjoined = qr{ [$charsjoined] }x;
+
+  $self->charshash( \%tmphash );
+  $self->charsregexp($charsjoined);
 }
 
 sub get_model {
@@ -94,8 +153,8 @@ sub connect {
     foreach my $i ( 0 .. $N - 1 ) {
       $comparison_hash{$i} = [];
       my $tmptitle = 'dummy';
-      if ( $self->index->{pubs}->[$i]->{title} ) {
-        $tmptitle = $self->index->{pubs}->[$i]->{title};
+      if ( $self->index->{pubs}->[$i]->{normtitle} ) {
+        $tmptitle = $self->index->{pubs}->[$i]->{normtitle};
       }
       $tmptitle =~ s/\n//g;
       push @tmp_lengths, length($tmptitle);
@@ -185,7 +244,7 @@ sub connect {
     next if ( exists $dupl_keys->{$guid_i} );
 
     my @words_i  = keys %{ $self->index->{words}->{$guid_i} };
-    my $title_i  = $self->index->{pubs}->[$i]->{title};
+    my $title_i  = $self->index->{pubs}->[$i]->{normtitle};
     my $length_i = $self->index->{lengths}->{$guid_i};
 
     # 1/3 of words may mismatch
@@ -314,9 +373,10 @@ sub build_index {
   foreach my $i ( 0 .. $#all_pubs ) {
 
     my $guid = $all_pubs[$i]->{guid};
+    $all_pubs[$i]->{normtitle} = $self->_normalize_title($all_pubs[$i]->{title});
 
     $index{$guid} = {};
-    my @words = split( /\s+/, lc( $all_pubs[$i]->{title} ) );
+    my @words = split( /\s+/, lc( $all_pubs[$i]->{normtitle} ) );
     $lengths{$guid} = scalar @words;
     foreach my $word (@words) {
       $index{$guid}->{$word} = 1;
@@ -333,6 +393,29 @@ sub build_index {
   $self->index->{lengths} = \%lengths;
 
 }
+
+sub _normalize_title {
+  my $self   = shift;
+  my $string = $_[0];
+
+  my $charsregexp = $self->charsregexp();
+  my %charshash   = %{ $self->charshash() };
+
+  $string =~ s{ ($charsregexp)([\sa-zA-Z]?)}
+              { my $encoded  = $charshash{$1};
+                my $nextchar = $2;
+                my $sepchars = "";
+                if ($nextchar and substr($encoded, -1) =~ /[a-zA-Z]/) {
+                    $sepchars = ($nextchar =~ /\s/) ? '{}' : '';
+                }
+                "$encoded$sepchars$nextchar" }gxe;
+
+  $string =~ s/(\(|\)|\{|\}|\[|\]|-|\+|\.|,|:|;|\?|!)/ /g;
+  $string =~ s/\s+/ /g;
+
+  return $string;
+}
+
 
 # Compare two publications. The first is given by the index number in
 # $self->index->{pubs}, the second is given by length of tiltle, list
@@ -376,7 +459,7 @@ sub _compare_pubs {
       return 1;
 
       # Try distance comparison
-    } elsif ( $self->_match_title( lc($title_i), lc( $self->index->{pubs}->[$j]->{title} ) ) ) {
+    } elsif ( $self->_match_title( lc($title_i), lc( $self->index->{pubs}->[$j]->{normtitle} ) ) ) {
       return 1;
     }
 
