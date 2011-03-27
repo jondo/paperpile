@@ -49,10 +49,10 @@ my %ignore = (
   all => [
     qr([~#]),                qr{/tmp/},
     qr{catalyst/test/},      qr{\.gitignore},
-    qr{base/CORE/},          qr{base/pods?/},
-    qr{(base|cpan)/CPAN},    qr{(base|cpan)/Test},
+    qr{(base|lib)/CORE/},    qr{(base|lib)/pods?/},
+    qr{(base|lib|cpan)/CPAN},qr{(base|lib|cpan)/Test},
     qr{Devel/Cover},
-    qr{base/unicore/.*txt$},
+    qr{(base|lib)/unicore/.*txt$},
     qr{ext/examples},       qr{ext/src},
     qr{journals.list},
     qr{ext-all\.js}, # we use the debug version of extjs for now
