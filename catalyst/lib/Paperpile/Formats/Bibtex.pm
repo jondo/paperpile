@@ -129,7 +129,8 @@ sub read {
           # Normalize doi to just something like 10.1038/nature06340
           # without urls or anything else.
           $content =~ s/^doi:\s*//i;
-          $content =~ s!^(http://)?dx.doi.org/!!;
+          $content =~ s!^(http://)?dx\.doi\.org/!!;
+          $content =~ s!^(http://)?doi\.acm\.org/!!;
         }
         if ( $field eq 'year' ) {
           $content =~ s/(.*)(\d{4})$/$2/;

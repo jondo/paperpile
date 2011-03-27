@@ -896,6 +896,32 @@
 
 </site>
 
+<site name="ACM">
+
+  <signature>
+    <url>!portal\.acm\.org!</url>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <match>!.*tab_abstract\.cfm\?id=(\d+)\D.*!</match>
+      <rewrite>!(.*\/)(\d+)$!http://portal.acm.org/exportformats.cfm?id=$2&amp;expformat=bibtex!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule target="Default"></rule>
+
+  <test>
+    <page url="http://dx.doi.org/10.1155/2008/939567">
+      <title>Fast nonnegative matrix factorization algorithms using projected gradient approaches for large-scale problems</title>
+    </page>
+    <page url="http://portal.acm.org/citation.cfm?id=1139327.1139329">
+      <title>Pivoting for structured matrices and rational tangential interpolation</title>
+    </page>
+  </test>
+
+</site>
+
 <site name="Default">
 
   <signature>
