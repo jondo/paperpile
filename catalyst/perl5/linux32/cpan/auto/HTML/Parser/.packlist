@@ -1,9 +1,0 @@
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/HTML/Entities.pm relocate_as=../../../HTML/Entities.pm
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/HTML/Filter.pm relocate_as=../../../HTML/Filter.pm
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/HTML/HeadParser.pm relocate_as=../../../HTML/HeadParser.pm
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/HTML/LinkExtor.pm relocate_as=../../../HTML/LinkExtor.pm
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/HTML/Parser.pm relocate_as=../../../HTML/Parser.pm
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/HTML/PullParser.pm relocate_as=../../../HTML/PullParser.pm
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/HTML/TokeParser.pm relocate_as=../../../HTML/TokeParser.pm
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/auto/HTML/Parser/Parser.bs relocate_as=Parser.bs
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/auto/HTML/Parser/Parser.so relocate_as=Parser.so

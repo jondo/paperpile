@@ -1,9 +1,0 @@
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Crypt/SSLeay.pm relocate_as=../../../Crypt/SSLeay.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Crypt/SSLeay/CTX.pm relocate_as=../../../Crypt/SSLeay/CTX.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Crypt/SSLeay/Conn.pm relocate_as=../../../Crypt/SSLeay/Conn.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Crypt/SSLeay/Err.pm relocate_as=../../../Crypt/SSLeay/Err.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Crypt/SSLeay/MainContext.pm relocate_as=../../../Crypt/SSLeay/MainContext.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Crypt/SSLeay/X509.pm relocate_as=../../../Crypt/SSLeay/X509.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/SSL.pm relocate_as=../../../Net/SSL.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/auto/Crypt/SSLeay/SSLeay.bs relocate_as=SSLeay.bs
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/auto/Crypt/SSLeay/SSLeay.so relocate_as=SSLeay.so

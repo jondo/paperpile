@@ -34,7 +34,7 @@ MainWindow::MainWindow(){
   RuntimePage* page = new RuntimePage();
 
   RuntimeNetworkAccessManager* proxy = new RuntimeNetworkAccessManager();
-  proxy->catalystDir = runtime->getCatalystDir();
+  proxy->plackDir = runtime->getPlackDir();
   page->setNetworkAccessManager( proxy );
   
   if (isDebugMode()){
@@ -52,15 +52,15 @@ MainWindow::MainWindow(){
   connect(page->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()), this, SLOT(exportRuntime()));
 
   if (runtime->getPlatform() != "osx"){
-    QApplication::setWindowIcon(QIcon(runtime->getCatalystDir()+"/root/images/app_icon.svg"));
+    QApplication::setWindowIcon(QIcon(runtime->getPlackDir()+"/root/images/app_icon.svg"));
     setWindowTitle("Paperpile");
   }
 
   if (QCoreApplication::arguments().contains("--test")){
-    qDebug() << runtime->getCatalystDir()+"/root/runtime.html";
-    view->load(QUrl::fromLocalFile(runtime->getCatalystDir()+"/root/runtime.html"));
+    qDebug() << runtime->getPlackDir()+"/root/runtime.html";
+    view->load(QUrl::fromLocalFile(runtime->getPlackDir()+"/root/runtime.html"));
   } else {
-    view->load(QUrl::fromLocalFile(runtime->getCatalystDir()+"/root/index.html"));
+    view->load(QUrl::fromLocalFile(runtime->getPlackDir()+"/root/index.html"));
   }
 
   QCoreApplication::setOrganizationName("Paperpile");

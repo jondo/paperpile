@@ -1,3 +1,0 @@
-/home/wash/play/paperpile/catalyst/perl5/linux64/bin/scandeps.pl relocate_as=../../../../bin/scandeps.pl
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Module/ScanDeps.pm relocate_as=../../../Module/ScanDeps.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Module/ScanDeps/DataFeed.pm relocate_as=../../../Module/ScanDeps/DataFeed.pm

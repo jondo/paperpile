@@ -1,6 +1,0 @@
-/Users/wash/play/paperpile/catalyst/perl5/osx/cpan/JSON/Syck.pm relocate_as=../../../JSON/Syck.pm
-/Users/wash/play/paperpile/catalyst/perl5/osx/cpan/YAML/Dumper/Syck.pm relocate_as=../../../YAML/Dumper/Syck.pm
-/Users/wash/play/paperpile/catalyst/perl5/osx/cpan/YAML/Loader/Syck.pm relocate_as=../../../YAML/Loader/Syck.pm
-/Users/wash/play/paperpile/catalyst/perl5/osx/cpan/YAML/Syck.pm relocate_as=../../../YAML/Syck.pm
-/Users/wash/play/paperpile/catalyst/perl5/osx/cpan/auto/YAML/Syck/Syck.bs relocate_as=Syck.bs
-/Users/wash/play/paperpile/catalyst/perl5/osx/cpan/auto/YAML/Syck/Syck.bundle relocate_as=Syck.bundle

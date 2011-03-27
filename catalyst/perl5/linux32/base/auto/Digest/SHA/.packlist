@@ -1,5 +1,0 @@
- relocate_as=../../../../../../../../../.cpan/build/Digest-SHA-5.47-lBPy9y
-/home/wash/play/paperpile/catalyst/perl5/linux32/base/Digest/SHA.pm relocate_as=../../../Digest/SHA.pm
-/home/wash/play/paperpile/catalyst/perl5/linux32/base/auto/Digest/SHA/SHA.bs relocate_as=SHA.bs
-/home/wash/play/paperpile/catalyst/perl5/linux32/base/auto/Digest/SHA/SHA.so relocate_as=SHA.so
-blib/man1/shasum relocate_as=../../../../../../../../../.cpan/build/Digest-SHA-5.47-lBPy9y/blib/man1/shasum

@@ -15,12 +15,12 @@ class Runtime : public QObject{
   Q_INVOKABLE void openFolder( const QString & folder);
   Q_INVOKABLE QString getClipboard();
   Q_INVOKABLE QString getPlatform();
-  Q_INVOKABLE QString getCatalystDir();
+  Q_INVOKABLE QString getPlackDir();
   Q_INVOKABLE QString getInstallationDir();
   Q_INVOKABLE void setClipboard( const QString & text);
-  Q_INVOKABLE void catalystStart();
-  Q_INVOKABLE void catalystRestart();
-  Q_INVOKABLE void catalystKill();
+  Q_INVOKABLE void plackStart();
+  Q_INVOKABLE void plackRestart();
+  Q_INVOKABLE void plackKill();
   Q_INVOKABLE void updaterStart(const QString & mode);
   Q_INVOKABLE void closeApp();
   Q_INVOKABLE void setSaveToClose(const bool & state);
@@ -36,9 +36,9 @@ class Runtime : public QObject{
 
   
  signals:
-  void catalystReady();
-  void catalystRead(QString data);
-  void catalystExit(QString error);
+  void plackReady();
+  void plackRead(QString data);
+  void plackExit(QString error);
   void updaterReadLine(QString data);
   void updaterExit(QString error);
   void pushUpdate(QString data);
@@ -46,16 +46,16 @@ class Runtime : public QObject{
 
   
  private slots:
-  void readyReadCatalyst();
+  void readyReadPlack();
   void readyReadUpdater();
-  void catalystStateChanged(QProcess::ProcessState newState);
+  void plackStateChanged(QProcess::ProcessState newState);
   void updaterStateChanged(QProcess::ProcessState newState);
-  void catalystError(QProcess::ProcessError error);
+  void plackError(QProcess::ProcessError error);
   void processPushUpdate(const QString & path);
   
  private:
   QWidget *mainWindow;
-  QProcess *catalystProcess;
+  QProcess *plackProcess;
   QProcess *updaterProcess; 
   QFileSystemWatcher* watcher; 
   

@@ -1,9 +1,0 @@
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/HTML/AsSubs.pm relocate_as=../../HTML/AsSubs.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/HTML/Element.pm relocate_as=../../HTML/Element.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/HTML/Element/traverse.pm relocate_as=../../HTML/Element/traverse.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/HTML/Parse.pm relocate_as=../../HTML/Parse.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/HTML/Tree.pm relocate_as=../../HTML/Tree.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/HTML/Tree/AboutObjects.pod relocate_as=../../HTML/Tree/AboutObjects.pod
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/HTML/Tree/AboutTrees.pod relocate_as=../../HTML/Tree/AboutTrees.pod
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/HTML/Tree/Scanning.pod relocate_as=../../HTML/Tree/Scanning.pod
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/HTML/TreeBuilder.pm relocate_as=../../HTML/TreeBuilder.pm

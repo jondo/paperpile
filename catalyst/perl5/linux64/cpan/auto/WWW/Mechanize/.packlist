@@ -1,7 +1,0 @@
-/home/wash/play/paperpile/catalyst/perl5/linux64/bin/mech-dump relocate_as=../../../../bin/mech-dump
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/WWW/Mechanize.pm relocate_as=../../../WWW/Mechanize.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/WWW/Mechanize/Cookbook.pod relocate_as=../../../WWW/Mechanize/Cookbook.pod
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/WWW/Mechanize/Examples.pod relocate_as=../../../WWW/Mechanize/Examples.pod
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/WWW/Mechanize/FAQ.pod relocate_as=../../../WWW/Mechanize/FAQ.pod
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/WWW/Mechanize/Image.pm relocate_as=../../../WWW/Mechanize/Image.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/WWW/Mechanize/Link.pm relocate_as=../../../WWW/Mechanize/Link.pm

@@ -1,6 +1,0 @@
-/home/wash/play/paperpile/catalyst/perl5/linux32/base/IPC/Msg.pm relocate_as=../../../IPC/Msg.pm
-/home/wash/play/paperpile/catalyst/perl5/linux32/base/IPC/Semaphore.pm relocate_as=../../../IPC/Semaphore.pm
-/home/wash/play/paperpile/catalyst/perl5/linux32/base/IPC/SharedMem.pm relocate_as=../../../IPC/SharedMem.pm
-/home/wash/play/paperpile/catalyst/perl5/linux32/base/IPC/SysV.pm relocate_as=../../../IPC/SysV.pm
-/home/wash/play/paperpile/catalyst/perl5/linux32/base/auto/IPC/SysV/SysV.bs relocate_as=SysV.bs
-/home/wash/play/paperpile/catalyst/perl5/linux32/base/auto/IPC/SysV/SysV.so relocate_as=SysV.so

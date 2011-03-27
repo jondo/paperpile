@@ -1,5 +1,0 @@
-/home/wash/play/paperpile/catalyst/perl5/linux64/bin/ptar relocate_as=../../../../bin/ptar
-/home/wash/play/paperpile/catalyst/perl5/linux64/bin/ptardiff relocate_as=../../../../bin/ptardiff
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Tar.pm relocate_as=../../../Archive/Tar.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Tar/Constant.pm relocate_as=../../../Archive/Tar/Constant.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Tar/File.pm relocate_as=../../../Archive/Tar/File.pm

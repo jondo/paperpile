@@ -23,7 +23,7 @@
 Runtime::Runtime(QWidget *window){
 
   mainWindow = window;
-  catalystProcess = 0;
+  plackProcess = 0;
   updaterProcess = 0;
   saveToClose = 0;
 
@@ -84,15 +84,15 @@ void Runtime::setClipboard(const QString & text = QString()){
 }
 
 
-void Runtime::readyReadCatalyst(){
+void Runtime::readyReadPlack(){
 
-  QString string(catalystProcess->readAll());
+  QString string(plackProcess->readAll());
 
   if (string.contains("Starting Paperpile server")){
-    emit catalystReady();
+    emit plackReady();
   }
 
-  emit catalystRead(string);
+  emit plackRead(string);
 
 }
 
@@ -108,7 +108,7 @@ void Runtime::readyReadUpdater(){
 
 
 
-QString Runtime::getCatalystDir(){
+QString Runtime::getPlackDir(){
 
   QString platform = getPlatform();
 
@@ -116,17 +116,17 @@ QString Runtime::getCatalystDir(){
 
   // We are in the build directory .../c/build
   if (appDir.contains(QRegExp("c.build"))){
-    QDir path(appDir+"/../../../catalyst/");
+    QDir path(appDir+"/../../../plack/");
     return(path.canonicalPath());
   }
 
   if (platform == "osx"){
-    QDir path(QCoreApplication::applicationDirPath()+"/../Resources/catalyst/");
+    QDir path(QCoreApplication::applicationDirPath()+"/../Resources/plack/");
     return(path.canonicalPath());
   }
 
   if (platform == "linux32" || platform == "linux64"){
-    QDir path(QCoreApplication::applicationDirPath()+"/../catalyst/");
+    QDir path(QCoreApplication::applicationDirPath()+"/../plack/");
     return(path.canonicalPath());
   }
 
@@ -135,12 +135,12 @@ QString Runtime::getCatalystDir(){
 
     // We are in an uninstalled checkout in .../qt/win32
     if (appDir.contains(QRegExp("qt.win32"))){
-      QDir path(appDir+"/../../catalyst/");
+      QDir path(appDir+"/../../plack/");
       return(path.canonicalPath());
     }
     
     // We are in a normal installation
-    QDir path(QCoreApplication::applicationDirPath()+"/catalyst/");
+    QDir path(QCoreApplication::applicationDirPath()+"/plack/");
     return(path.canonicalPath());
   }
 
@@ -194,25 +194,25 @@ void Runtime::resizeWindow(int w, int h){
 
 }
 
-void Runtime::catalystStateChanged(QProcess::ProcessState newState){
+void Runtime::plackStateChanged(QProcess::ProcessState newState){
 
   QString msg;
 
   if (newState == QProcess::NotRunning){
-    emit catalystExit(QString("State changed to 'Not Running'"));
+    emit plackExit(QString("State changed to 'Not Running'"));
     msg="'Not Running'";
   }
 
   if (newState == QProcess::Starting) msg ="'Starting'";
   if (newState == QProcess::Running) msg ="'Running'";
 
-  msg.prepend("Catalyst process status changed to ");
+  msg.prepend("Plack process status changed to ");
 
   log(msg);
 
 }
 
-void Runtime::catalystError(QProcess::ProcessError error){
+void Runtime::plackError(QProcess::ProcessError error){
   
   QString msg;
 
@@ -223,11 +223,11 @@ void Runtime::catalystError(QProcess::ProcessError error){
   if (error == QProcess::ReadError)	msg="Read Error";
   if (error == QProcess::UnknownError)	msg="Unknown Error";
 
-  msg.prepend("Catalyst process: ");
+  msg.prepend("Plack process: ");
 
   log(msg);
 
-  emit catalystExit(msg);
+  emit plackExit(msg);
   
 }
 
@@ -245,9 +245,9 @@ void Runtime::updaterStart(const QString & mode){
 
   QString platform = getPlatform();
 
-  program = getCatalystDir() + "/" + "/perl5/" + platform + "/bin/paperperl";
+  program = getPlackDir() + "/" + "/perl5/" + platform + "/bin/paperperl";
 
-  arguments << getCatalystDir() + "/script/updater.pl" << "--" + mode;
+  arguments << getPlackDir() + "/script/updater.pl" << "--" + mode;
 
   updaterProcess = new QProcess;
 
@@ -279,7 +279,7 @@ void Runtime::updaterStateChanged(QProcess::ProcessState newState){
   log(msg);
 }
 
-void Runtime::catalystStart(){
+void Runtime::plackStart(){
 
   QString program;
   QStringList arguments;
@@ -289,51 +289,51 @@ void Runtime::catalystStart(){
   QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
   env.remove("PERL5LIB");
 
-  program = getCatalystDir() + "/" + "/perl5/" + platform + "/bin/paperperl";
+  program = getPlackDir() + "/" + "/perl5/" + platform + "/bin/paperperl";
   
   if (platform == "osx"){
-    arguments << getCatalystDir() + "/script/osx_server.pl" << "--port" << "3210" << "--fork";
+    arguments << getPlackDir() + "/script/osx_server.pl" << "--port" << "3210" << "--fork";
   }
 
   if (platform == "linux32" || platform == "linux64"){
-    arguments << getCatalystDir() + "/script/paperpile_server.pl" << "-fork";
+    arguments << getPlackDir() + "/script/paperpile_server.pl" << "-fork";
   }
 
   if (platform == "win32"){
-    arguments << getCatalystDir() + "/script/server.pl" << "--port" << "3210" << "--host" <<"127.0.0.1";
+    arguments << getPlackDir() + "/script/server.pl" << "--port" << "3210" << "--host" <<"127.0.0.1";
     QString oldPath = env.value("PATH");
-    env.insert("PATH", oldPath + ";" +getCatalystDir()+"\\perl5\\win32\\dll");
+    env.insert("PATH", oldPath + ";" +getPlackDir()+"\\perl5\\win32\\dll");
   }
 
 
-  catalystProcess = new QProcess;
+  plackProcess = new QProcess;
 
-  catalystProcess->setProcessEnvironment(env);
+  plackProcess->setProcessEnvironment(env);
 
-  catalystProcess->setReadChannel(QProcess::StandardError);
+  plackProcess->setReadChannel(QProcess::StandardError);
 
-  connect(catalystProcess, SIGNAL(readyRead()), this, SLOT(readyReadCatalyst()));
-  connect(catalystProcess, SIGNAL(error(QProcess::ProcessError)), this, SLOT(catalystError(QProcess::ProcessError)));
-  connect(catalystProcess, SIGNAL(stateChanged(QProcess::ProcessState)), this, SLOT(catalystStateChanged(QProcess::ProcessState)));
+  connect(plackProcess, SIGNAL(readyRead()), this, SLOT(readyReadPlack()));
+  connect(plackProcess, SIGNAL(error(QProcess::ProcessError)), this, SLOT(plackError(QProcess::ProcessError)));
+  connect(plackProcess, SIGNAL(stateChanged(QProcess::ProcessState)), this, SLOT(plackStateChanged(QProcess::ProcessState)));
 
-  catalystProcess->start(program, arguments);
+  plackProcess->start(program, arguments);
 
 }
 
 
-void Runtime::catalystKill(){
+void Runtime::plackKill(){
 
-  if (catalystProcess !=0){
-    if (catalystProcess->state() == QProcess::Running){
-      catalystProcess->close();
+  if (plackProcess !=0){
+    if (plackProcess->state() == QProcess::Running){
+      plackProcess->close();
     }
   }
 }
 
-void Runtime::catalystRestart(){
+void Runtime::plackRestart(){
 
-  catalystKill();
-  catalystStart();
+  plackKill();
+  plackStart();
 
 }
 
@@ -479,7 +479,7 @@ bool Runtime::isDebugMode(){
 void Runtime::closeEvent(QCloseEvent* event){
 
   if (saveToClose){
-    catalystKill();
+    plackKill();
   } else {
     event->ignore();
     emit appExit();

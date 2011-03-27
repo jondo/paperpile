@@ -1,5 +1,0 @@
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/DBD/SQLite.pm relocate_as=../../../DBD/SQLite.pm
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/DBD/SQLite/Amalgamation.pm relocate_as=../../../DBD/SQLite/Amalgamation.pm
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/DBD/SQLite/Cookbook.pod relocate_as=../../../DBD/SQLite/Cookbook.pod
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/auto/DBD/SQLite/SQLite.bs relocate_as=SQLite.bs
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/auto/DBD/SQLite/SQLite.so relocate_as=SQLite.so

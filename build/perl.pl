@@ -45,5 +45,5 @@ if ($ENV{PERL5LIB}){
 
 $ENV{BUILD_PLATFORM}=$platform;
 
-exec("../catalyst/perl5/$platform/bin/paperperl " . join(" ",@ARGV));
+exec("../plack/perl5/$platform/bin/paperperl " . join(" ",@ARGV));
 

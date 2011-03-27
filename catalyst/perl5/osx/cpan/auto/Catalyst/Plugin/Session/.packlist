@@ -1,6 +1,0 @@
-/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Catalyst/Plugin/Session.pm relocate_as=../../../../Catalyst/Plugin/Session.pm
-/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Catalyst/Plugin/Session/State.pm relocate_as=../../../../Catalyst/Plugin/Session/State.pm
-/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Catalyst/Plugin/Session/Store.pm relocate_as=../../../../Catalyst/Plugin/Session/Store.pm
-/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Catalyst/Plugin/Session/Store/Dummy.pm relocate_as=../../../../Catalyst/Plugin/Session/Store/Dummy.pm
-/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Catalyst/Plugin/Session/Test/Store.pm relocate_as=../../../../Catalyst/Plugin/Session/Test/Store.pm
-/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Catalyst/Plugin/Session/Tutorial.pod relocate_as=../../../../Catalyst/Plugin/Session/Tutorial.pod

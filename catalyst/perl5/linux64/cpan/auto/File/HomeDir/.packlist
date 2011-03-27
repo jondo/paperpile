@@ -1,6 +1,0 @@
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/File/HomeDir.pm relocate_as=../../../File/HomeDir.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/File/HomeDir/Darwin.pm relocate_as=../../../File/HomeDir/Darwin.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/File/HomeDir/Driver.pm relocate_as=../../../File/HomeDir/Driver.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/File/HomeDir/MacOS9.pm relocate_as=../../../File/HomeDir/MacOS9.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/File/HomeDir/Unix.pm relocate_as=../../../File/HomeDir/Unix.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/File/HomeDir/Windows.pm relocate_as=../../../File/HomeDir/Windows.pm

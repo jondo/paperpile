@@ -1,4 +1,0 @@
-/home/wash/play/paperpile/catalyst/perl5/linux32/bin/dprofpp relocate_as=../../../../bin/dprofpp
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/Devel/DProf.pm relocate_as=../../../Devel/DProf.pm
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/auto/Devel/DProf/DProf.bs relocate_as=DProf.bs
-/home/wash/play/paperpile/catalyst/perl5/linux32/cpan/auto/Devel/DProf/DProf.so relocate_as=DProf.so

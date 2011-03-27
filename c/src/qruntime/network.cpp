@@ -27,7 +27,7 @@ QNetworkReply *RuntimeNetworkAccessManager::createRequest( Operation op,
                                                              const QNetworkRequest &req,
                                                              QIODevice *outgoingData ){
 
-  QString root = catalystDir+"/root";
+  QString root = plackDir+"/root";
 
   QNetworkRequest myReq( req );
 

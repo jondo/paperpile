@@ -5,7 +5,7 @@ class RuntimeNetworkAccessManager : public QNetworkAccessManager{
     Q_OBJECT
 public:
     explicit RuntimeNetworkAccessManager( QObject *parent = 0 );
-    QString catalystDir; 
+    QString plackDir; 
 
 protected:
     QNetworkReply *createRequest( Operation op,

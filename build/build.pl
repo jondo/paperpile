@@ -19,7 +19,7 @@
 use strict;
 
 use FindBin;
-use lib "$FindBin::Bin/../catalyst/lib";
+use lib "$FindBin::Bin/../plack/lib";
 
 use Paperpile;
 use Paperpile::Build;
@@ -44,7 +44,7 @@ if ($ARGV[1]){
 
 
 my $b = Paperpile::Build->new( {
-    cat_dir  => '../catalyst',
+    plack_dir  => '../plack',
     qt_dir   => "../qt",
     dist_dir => '../dist/data',
     qt_sdk => (-e '/opt/qtsdk') ? '/opt/qtsdk' : 'c:\Qt\2010.05',

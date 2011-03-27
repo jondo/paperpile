@@ -1,4 +1,0 @@
-/home/wash/play/paperpile/catalyst/perl5/linux64/bin/shasum relocate_as=../../../../bin/shasum
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Digest/SHA.pm relocate_as=../../../Digest/SHA.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/auto/Digest/SHA/SHA.bs relocate_as=SHA.bs
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/auto/Digest/SHA/SHA.so relocate_as=SHA.so

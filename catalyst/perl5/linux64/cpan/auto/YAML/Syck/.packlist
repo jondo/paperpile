@@ -1,6 +1,0 @@
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/JSON/Syck.pm relocate_as=../../../JSON/Syck.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/YAML/Dumper/Syck.pm relocate_as=../../../YAML/Dumper/Syck.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/YAML/Loader/Syck.pm relocate_as=../../../YAML/Loader/Syck.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/YAML/Syck.pm relocate_as=../../../YAML/Syck.pm
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/auto/YAML/Syck/Syck.bs relocate_as=Syck.bs
-/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/auto/YAML/Syck/Syck.so relocate_as=Syck.so
