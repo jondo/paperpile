@@ -67,7 +67,7 @@ my %ignore = (
   linux64 => [qr{/(perl5|bin)/(linux32|osx|win32)}],
   linux32 => [qr{/(perl5|bin)/(linux64|osx|win32)}],
   osx => [qr{/(perl5|bin)/(linux32|linux64|win32)}, qr{Contents/runtime}],
-
+  win32 => [qr{/(perl5|bin)/(linux32|linux64|osx)}],
 );
 
 sub echo {
@@ -437,7 +437,7 @@ sub get_qruntime {
 
 
     # Short-cut to pack and test locally
-    #my $file='';
+    my $file='';
     #$file = "/Users/wash/tmp/pack/" . $file_name;
     #$file = "./$file_name";
 
