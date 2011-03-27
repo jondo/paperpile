@@ -410,7 +410,8 @@ Ext.define('Paperpile.app.PubActions', {
           text: 'Copy Citation',
           handler: function() {
             var grid = Paperpile.main.getCurrentGrid();
-            Paperpile.app.PubActions.copyHandler(grid, 'Bibfile', 'CITATIONS', '{n} citation{s} copied');
+            selection = grid.getSelection();	    
+	    var str = Paperpile.csl.CSLWrapper.getFormattedCitation(selection);
           }
         }),
         'EXPORT_SELECTION': new Ext.Action({
@@ -960,7 +961,7 @@ Ext.define('Paperpile.app.PubActions', {
         });
       };
 
-      Paperpile.app.FileDialog.createDialog(callback, {
+       Paperpile.app.FileDialog.createDialog(callback, {
         'title': 'Choose file and format for export',
         'dialogType': 'save',
         'selectionType': 'file',
