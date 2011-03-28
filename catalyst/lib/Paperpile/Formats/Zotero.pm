@@ -527,7 +527,7 @@ sub read {
     $pub->annote($note)               if $note;
     $pub->linkout($url)               if $url;
     $pub->labels_tmp($labels)         if $labels;
-    $pub->folders_tmp($folders)       if $folders;
+    #$pub->folders_tmp($folders)       if $folders;
 
     # add PDFs and other attachements
     foreach my $i ( 0 .. $#pdfs ) {
