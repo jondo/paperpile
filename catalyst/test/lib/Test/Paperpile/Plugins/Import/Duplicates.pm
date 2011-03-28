@@ -18,7 +18,7 @@ sub startup : Tests(startup => 1) {
 
 # Add test functions here
 
-sub connect_page : Tests(3) {
+sub connect_page : Tests(9) {
 
   my ($self) = @_;
 

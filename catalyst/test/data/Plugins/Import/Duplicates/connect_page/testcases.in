@@ -1,3 +1,12 @@
 ---
 file: data/Plugins/Import/Duplicates/connect_page/duplicatetest1.ppl
-
+switchthreshold: 500
+---
+file: data/Plugins/Import/Duplicates/connect_page/duplicatetest1.ppl
+switchthreshold: 500
+---
+file: data/Plugins/Import/Duplicates/connect_page/duplicatetest2.ppl
+switchthreshold: 500
+---
+file: data/Plugins/Import/Duplicates/connect_page/duplicatetest2.ppl
+switchthreshold: 500

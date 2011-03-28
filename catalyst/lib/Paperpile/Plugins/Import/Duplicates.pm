@@ -112,6 +112,19 @@ sub get_model {
 sub connect {
   my $self = shift;
 
+  # switchthreshold gets only a different value when
+  # debugging, profiling and unit testing
+  #
+  # It controls the database size at which we swtich from
+  # simple N*N/2 comparisons to the simhash method
+  #
+  # I benchmarked it on my computer; and binary key
+  # calculations and sorting come with some overhead
+  # Below a library size of 500, we stick to the
+  # old approach and do all pairwise comparisons
+
+  my $switchthreshold = ( defined $_[0] ) ? $_[0] : 500;
+
   $self->_db_file( $self->file );
   $self->_data( [] );
 
@@ -131,11 +144,7 @@ sub connect {
   my $N               = @{ $self->index->{pubs} };
   my %comparison_hash = ();
 
-  # I benchmarked it on my computer; and binary key
-  # calculations and sorting come with some overhead
-  # Below a library size of 500, we stick to the
-  # old approach and do all pairwise comparisons
-  if ( $N < 500 ) {
+  if ( $N < $switchthreshold ) {
     foreach my $i ( 0 .. $N - 2 ) {
       $comparison_hash{$i} = [];
       foreach my $j ( $i + 1 .. $N - 1 ) {
@@ -237,11 +246,31 @@ sub connect {
 
   # now do regular pairwise comparisons on the selected
   # candidates
+  my %seen_dois    = ();
+  my %seen_pmid    = ();
+  my %seen_arxivid = ();
   foreach my $i ( 0 .. $N - 1 ) {
-    next if ( $#{ $comparison_hash{$i} } == -1 );
 
     my $guid_i = $self->index->{pubs}->[$i]->{guid};
     next if ( exists $dupl_keys->{$guid_i} );
+
+    if ( defined $self->index->{pubs}->[$i]->{doi} ) {
+      my $doi_i = $self->index->{pubs}->[$i]->{doi};
+      $seen_dois{$doi_i} = [] if ( not defined $seen_dois{$doi_i} );
+      push @{ $seen_dois{$doi_i} }, $i;
+    }
+    if ( defined $self->index->{pubs}->[$i]->{pmid} ) {
+      my $pmid_i = $self->index->{pubs}->[$i]->{pmid};
+      $seen_pmid{$pmid_i} = [] if ( not defined $seen_pmid{$pmid_i} );
+      push @{ $seen_pmid{$pmid_i} }, $i;
+    }
+    if ( defined $self->index->{pubs}->[$i]->{arxivid} ) {
+      my $arxivid_i = $self->index->{pubs}->[$i]->{arxivid};
+      $seen_arxivid{$arxivid_i} = [] if ( not defined $seen_arxivid{$arxivid_i} );
+      push @{ $seen_arxivid{$arxivid_i} }, $i;
+    }
+
+    next if ( $#{ $comparison_hash{$i} } == -1 );
 
     my @words_i  = keys %{ $self->index->{words}->{$guid_i} };
     my $title_i  = $self->index->{pubs}->[$i]->{normtitle};
@@ -259,23 +288,35 @@ sub connect {
       next if ( exists $dupl_keys->{$guid_j} );
 
       if ( $self->_compare_pubs( $j, $length_i, \@words_i, $title_i, $max_mismatch ) ) {
-        my $i_pub = $self->index->{pubs}->[$i];
-        my $j_pub = $self->index->{pubs}->[$j];
-        $dupl_partners->{ $i_pub->{guid} } = $j_pub;
-        $dupl_partners->{ $j_pub->{guid} } = $i_pub;
-
-        # remember the i.th publication
-        if ( !defined $dupl_keys->{ $i_pub->{guid} } ) {
-          push @{ $self->_data }, Paperpile::Library::Publication->new($i_pub);
-          $dupl_keys->{ $i_pub->{guid} } = $i;
-        }
-
-        # remember the j.th publication
-        if ( !defined $dupl_keys->{ $j_pub->{guid} } ) {
-          push @{ $self->_data }, Paperpile::Library::Publication->new($j_pub);
-          $dupl_keys->{ $j_pub->{guid} } = $i;
-        }
+        $self->_add_a_pair( $dupl_keys, $dupl_partners, $i, $j );
       }
+    }
+  }
+
+  # check for duplicated DOI entries
+  foreach my $key ( keys %seen_dois ) {
+    if ( $#{ $seen_dois{$key} } == 1 ) {
+      $self->_add_a_pair( $dupl_keys, $dupl_partners, $seen_dois{$key}->[0],
+        $seen_dois{$key}->[1] );
+    }
+  }
+
+  # check for duplicated PMID entries
+  foreach my $key ( keys %seen_pmid ) {
+    if ( $#{ $seen_pmid{$key} } == 1 ) {
+      $self->_add_a_pair( $dupl_keys, $dupl_partners, $seen_pmid{$key}->[0],
+        $seen_pmid{$key}->[1] );
+    }
+  }
+
+  # check for duplicated Arxivid entries
+  foreach my $key ( keys %seen_arxivid ) {
+    if ( $#{ $seen_arxivid{$key} } == 1 ) {
+      $self->_add_a_pair(
+        $dupl_keys, $dupl_partners,
+        $seen_arxivid{$key}->[0],
+        $seen_arxivid{$key}->[1]
+      );
     }
   }
 
@@ -317,6 +358,33 @@ sub connect {
 
   return $self->total_entries;
 }
+
+sub _add_a_pair {
+  my $self          = shift;
+  my $dupl_keys     = $_[0];
+  my $dupl_partners = $_[1];
+  my $i             = $_[2];
+  my $j             = $_[3];
+
+  my $i_pub = $self->index->{pubs}->[$i];
+  my $j_pub = $self->index->{pubs}->[$j];
+  $dupl_partners->{ $i_pub->{guid} } = $j_pub;
+  $dupl_partners->{ $j_pub->{guid} } = $i_pub;
+
+  # remember the i.th publication
+  if ( !defined $dupl_keys->{ $i_pub->{guid} } ) {
+    push @{ $self->_data }, Paperpile::Library::Publication->new($i_pub);
+    $dupl_keys->{ $i_pub->{guid} } = $i;
+  }
+
+  # remember the j.th publication
+  if ( !defined $dupl_keys->{ $j_pub->{guid} } ) {
+    push @{ $self->_data }, Paperpile::Library::Publication->new($j_pub);
+    $dupl_keys->{ $j_pub->{guid} } = $i;
+  }
+  return;
+}
+
 
 sub page {
   ( my $self, my $offset, my $limit ) = @_;

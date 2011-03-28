@@ -74,7 +74,7 @@ sub test_connect_page {
     }
     elsif ( defined $entry->{file} ) {
       $plugin->file( $entry->{file} );
-      my $nr_hits = $plugin->connect();
+      my $nr_hits = $plugin->connect($entry->{switchthreshold});
       my $pubs = $plugin->page( 0, 25 );
       foreach my $pub ( @{$pubs} ) {
         push @observed, $pub;
