@@ -75,6 +75,7 @@ QVariantMap PDF::info(){
 // Not in use. Qt4 function "text" does not render text in a useful
 // way neither with PhysicalLayout nor RawOrderLayout 
 
+/*
 QString PDF::text(){
 
   QString text;
@@ -87,12 +88,13 @@ QString PDF::text(){
       exit(1);
     }
  
-    text.append(pdfPage->text(QRect(0,0,0,0), Poppler::Page::PhysicalLayout));
+    //text.append(pdfPage->text(QRect(0,0,0,0), Poppler::Page::PhysicalLayout));
    
     delete pdfPage;
   }
   return text;
 }
+*/
 
 // Dumps the whole text of the document to stdout
 void PDF::dumpText(){

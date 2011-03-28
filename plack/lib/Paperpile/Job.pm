@@ -38,9 +38,6 @@ use File::Copy;
 use File::stat;
 use FreezeThaw;
 
-use Win32;
-use Win32::Process;
-
 use Storable qw(lock_store lock_retrieve);
 
 enum 'Types' => (
@@ -294,16 +291,20 @@ sub run {
 
   if ($^O eq 'MSWin32') {
 
-    my $paperperl = Paperpile::App->path_to('perl5','win32','bin','paperperl.exe');
-    my $worker = Paperpile::App->path_to('script','worker.pl');
+    # require 'Win32';
+    # require 'Win32::Process';
 
-    my $process;
-    Win32::Process::Create($process,
-                           $paperperl,
-                           "$paperperl $worker ".$self->id,
-                           0,
-                           DETACHED_PROCESS,
-                           ".")|| die(Win32::FormatMessage( Win32::GetLastError() ));
+
+    # my $paperperl = Paperpile::App->path_to('perl5','win32','bin','paperperl.exe');
+    # my $worker = Paperpile::App->path_to('script','worker.pl');
+
+    # my $process;
+    # Win32::Process::Create($process,
+    #                        $paperperl,
+    #                        "$paperperl $worker ".$self->id,
+    #                        0,
+    #                        Win32::DETACHED_PROCESS,
+    #                        ".")|| die(Win32::FormatMessage( Win32::GetLastError() ));
 
   } else {
 

@@ -21,7 +21,7 @@
 #include <QProcess>
 #include <qwebview.h>
 
-#include <poppler-qt4.h>
+#include <poppler/qt4/poppler-qt4.h>
 
 int main(int argc, char * argv[]){
   QApplication app(argc, argv);

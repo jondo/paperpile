@@ -31,7 +31,6 @@ Runtime::Runtime(QWidget *window){
   //watcher->addPath(QString("c:\\Users\\wash\\tmp"));
   //connect(watcher, SIGNAL(directoryChanged(QString)), this, SLOT(processPushUpdate(QString)));
 
-
 };
 
 
@@ -291,16 +290,9 @@ void Runtime::plackStart(){
 
   program = getPlackDir() + "/" + "/perl5/" + platform + "/bin/paperperl";
   
-  if (platform == "osx"){
-    arguments << getPlackDir() + "/script/osx_server.pl" << "--port" << "3210" << "--fork";
-  }
-
-  if (platform == "linux32" || platform == "linux64"){
-    arguments << getPlackDir() + "/script/paperpile_server.pl" << "-fork";
-  }
+  arguments << getPlackDir() + "/script/server.pl" << "--port" << "3210" << "--host" <<"127.0.0.1";
 
   if (platform == "win32"){
-    arguments << getPlackDir() + "/script/server.pl" << "--port" << "3210" << "--host" <<"127.0.0.1";
     QString oldPath = env.value("PATH");
     env.insert("PATH", oldPath + ";" +getPlackDir()+"\\perl5\\win32\\dll");
   }
@@ -349,12 +341,13 @@ void Runtime::setSaveToClose(const bool & state){
 
 void Runtime::closeApp(){
 
+  plackKill();
+
   mainWindow->close();
 
 }
 
 QVariantMap Runtime::fileDialog(const QVariantMap & config){
-
 
   QString caption;
 
@@ -479,7 +472,7 @@ bool Runtime::isDebugMode(){
 void Runtime::closeEvent(QCloseEvent* event){
 
   if (saveToClose){
-    plackKill();
+    //plackKill();
   } else {
     event->ignore();
     emit appExit();
