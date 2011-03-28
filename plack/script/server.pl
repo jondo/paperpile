@@ -45,6 +45,8 @@ my $runner = Plack::Runner->new(
 
 $runner->parse_options(@ARGV);
 
+print STDERR join("\n", keys %INC);
+
 print STDERR "Starting Paperpile server at 127.0.0.1:3210...\n";
 
 $runner->run;
