@@ -1,239 +1,299 @@
-
 Ext.define('Paperpile.pub.EditForm', {
-	extend: 'Ext.form.FormPanel',
-	    alias:'widget.pp-metapanel',
-  // Extends the network timeout for this FormPanel.
-  // Sometimes auto-update takes a long time...
-  timeout: 30,
-
+  extend: 'Ext.form.FormPanel',
+  alias: 'widget.editform',
   initComponent: function() {
+    this.fields = {};
+    var fields = this.fields;
 
-    this.inputs = {};
-
-    // This is the combobox of the publication type which is always
-    // shown
-    var typeComboLine = {
-      tag: 'tbody',
-      children: [{
-        tag: 'tr',
-        children: [{
-          tag: 'td',
-          cls: 'label',
-          html: 'Type'
-        },
-        {
-          tag: 'td',
-          id: 'type-combo',
-          cls: 'field',
-          colspan: 3
-        },
-        {
-          tag: 'td',
-          children: [{
-            tag: 'div',
-            children: [{
-              tag: 'div',
-              id: 'lookup-field',
-              style: 'float:left;',
-            },
-            {
-              tag: 'div',
-              cls: 'pp-tooltip-link',
-              id: 'lookup-tooltip',
-              html: '?'
-            },
-            ],
-          },
-          {
-            tag: 'div',
-            id: 'lookup-status',
-            cls: 'pp-lookup-status',
-            style: "float:left;",
-            hidden: true,
-          }],
-          colspan: 2
-        },
-        ]
-      }],
-    };
-
-    var tableContent = [typeComboLine];
-
-    // If we are editing the data for new PDF, we show information on
-    // the PDF in the caption of the table
-    if (this.data.match_job) {
-      tableContent.unshift({
-        tag: 'caption',
-        cls: 'notice',
-        html: '<b>Add data for</b> ' + this.data._pdf_tmp + '<div style="float:right;"><a href="#" id="pdf-view-button" class="pp-textlink">View PDF</a></div>',
-      });
-    }
-
-    Ext.apply(this, {
-      // The form is a table that consists of several tbody
-      // elements to group specific blocks; the first tbody is
-      // the selection list for the publication type and is
-      // always present
-      html: [{
-        tag: 'table',
-        cls: 'pp-meta-form',
-        id: "form-table",
-        children: tableContent
-      },
-      ],
-      bbar: [{
-        xtype: 'tbfill'
-      },
-        new Ext.Button({
-          id: 'save_button',
-          text: 'Save',
-          cls: 'x-btn-text-icon save',
-          disabled: (this.data.title) ? false : true,
-          listeners: {
-            click: {
-              fn: this.onSave,
-              scope: this
-            }
-          },
-        }),
-        new Ext.Button({
-          id: 'cancel_button',
-          text: 'Cancel',
-          cls: 'x-btn-text-icon cancel',
-          listeners: {
-            click: {
-              fn: this.onCancel,
-              scope: this
-            }
-          },
-        }), ],
-      autoScroll: true,
-      border: false,
-      bodyBorder: false,
-      bodyStyle: {
-        background: '#ffffff',
-        padding: '20px'
-      },
+    fields['pubtype'] = this.createPubTypeCombo();
+    fields['lookup'] = Ext.widget('button', {
+      fieldLabel: 'Online Lookup',
+      text: 'Lookup Data',
+      width: 190,
+      handler: this.onLookup
     });
 
-    // It is essential here to use initialConfig to make sure that
-    // timeout is set in form object
-    //Ext.apply(this, Ext.apply(this.initialConfig, config));
+    this.firstRow = this.createRow([fields.pubtype, this.emptyCmp(), fields.lookup, this.emptyCmp()], [.5, .1, .2, .2]);
 
-    Paperpile.MetaPanel.superclass.initComponent.call(this);
-
-    this.on('afterrender',
-      function() {
-        this.initForm(this.data['pubtype']);
-
-        if (this.autoComplete) {
-          this.onLookup();
-        }
-
-        var window = this.ownerCt;
-        window.on('show', function() {
-          Ext.getCmp('title-input').focus(false, 10);
-	}, this);
+    Ext.apply(this, {
+      autoScroll: false,
+      bodyStyle: 'padding:20px;',
+      defaults: {
+        padding: 5
       },
-      this);
+      bodyBorder: 0,
+      fieldDefaults: {
+        labelWidth: 70,
+        labelAlign: 'right'
+      },
+      items: [],
+      buttons: [{
+        text: 'Save',
+      },
+      {
+        text: 'Cancel'
+      }]
+    });
+
+    this.callParent(arguments);
   },
 
+  setPublication: function(pub) {
+    this.pub = pub;
+    this.data = pub.data;
 
-  // Creates type selection combo box, renders the form for the
-  // initial publication type and sets up event listeners
-  initForm: function(pubType) {
-    var pubTypes = Paperpile.main.globalSettings.pub_types;
+    var pubType = pub.get('pubtype');
 
-    var list = ['ARTICLE', 'BOOK', 'INCOLLECTION', 'INBOOK',
-      'PROCEEDINGS', 'INPROCEEDINGS',
-      'MASTERSTHESIS', 'PHDTHESIS',
-      'MANUAL', 'TECHREPORT', 'UNPUBLISHED', 'MISC'];
+    var me = this;
+    var doInit = function() {
+      me.layoutForm(pubType);
+      me.applyData(pub.data);
 
-    var t = [];
-    for (var i = 0; i < list.length; i++) {
-      t.push([list[i], pubTypes[list[i]].name, pubTypes[list[i]].info]);
+      if (me.autoComplete) {
+        me.onLookup();
+      }
+
+    };
+
+    if (this.rendered) {
+      doInit();
+    } else {
+      this.on('afterrender', doInit, this);
     }
 
-    var cb = new Ext.form.ComboBox({
-      id: 'type-input',
-      renderTo: 'type-combo',
-      width: 300,
+  },
+
+  emptyCmp: function() {
+    return {
+      xtype: 'component',
+      html: '&nbsp;'
+    };
+  },
+
+  createRow: function(items, widths) {
+    Ext.each(items, function(item, index) {
+      if (!widths[index] || widths[index] == 0) {
+        return;
+      }
+      if (widths[index] <= 1) {
+        Ext.apply(item, {
+          columnWidth: widths[index]
+        });
+      } else {
+        Ext.apply(item, {
+          width: widths[index]
+        });
+      }
+    });
+    return {
+      xtype: 'container',
+      layout: 'column',
+      items: items
+    };
+  },
+
+  createPubTypeCombo: function() {
+    var combo = Ext.widget('combo', {
+      fieldLabel: 'Type',
       editable: false,
-      displayField: 'name',
-      valueField: 'id',
       forceSelection: true,
       triggerAction: 'all',
       disableKeyFilter: true,
-      mode: 'local',
-      hiddenName: 'pubtype',
-      value: pubType,
-      renderTo: 'type-combo',
-      store: new Ext.data.ArrayStore({
-        idIndex: 0,
-        fields: ['id', 'name', 'info'],
-        data: t
-      }),
-      tpl: new Ext.XTemplate(
-        '<tpl for="."><div class="x-combo-list-item">{name}<br><span style="color:gray;">{info}</span></div></tpl>'),
+      store: this.getPubTypesStore(),
+      queryMode: 'local',
+      itemSelector: '.x-combo-list-item',
+      displayField: 'name',
+      valueField: 'type',
+      listConfig: {
+        getInnerTpl: function(displayField) {
+          return[
+          '  <div class="x-combo-list-item">{name}',
+          '    <br><span style="color:gray;">{info}</span>',
+          '  </div>'].join('');
+        }
+      },
       listeners: {
+        click: {
+          // Allow clicks in the input area to toggle the combo open/closed.
+          fn: function(event) {
+            var target = Ext.fly(event.target);
+            if (!target.is('input')) {
+              // Ignore clicks on the trigger DIV.
+              return;
+            }
+            var combo = this.fields['pubtype'];
+            if (combo.isExpanded) {
+              combo.collapse();
+            } else {
+              combo.expand();
+            }
+          },
+          element: 'el',
+          scope: this
+        },
         select: {
-          fn: function(combo, record, index) {
-            this.data.pubtype = record['id'];
-            this.renderForm(record['id']);
+          fn: function(combo, data, index) {
+            Paperpile.log(data);
           },
           scope: this,
         }
       },
     });
+    return combo;
+  },
 
-    this.inputs['pubtype'] = cb;
-
-    cb.on('focus', this.onFocus, this);
-    cb.on('blur', this.onBlur, this);
-    if (Ext.get('pdf-view-button')) {
-      this.mon(Ext.get('pdf-view-button'), 'click', function() {
-        var path;
-
-        // Set path depending on wheter PDF was already imported or not
-        if (this.data.guid) {
-          path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, this.data.pdf_name);
-        } else {
-          path = this.data._pdf_tmp;
-        }
-        Paperpile.utils.openFile(path);
-      },
-      this);
+  getPubTypesStore: function() {
+    var existingStore = Ext.getStore('pubtypes');
+    if (existingStore) {
+      return existingStore;
     }
 
-    var b = new Ext.Button({
-      id: 'lookup_button',
-      cls: 'x-btn-text-icon lookup',
-      width: 190,
-      renderTo: 'lookup-field',
-      listeners: {
-        click: {
-          fn: this.onLookup,
-          scope: this
+    Ext.regModel('PubType', {
+      fields: ['type', 'name', 'info', 'tooltips', 'labels', 'fields'],
+      idProperty: 'type'
+    });
+    var pubTypes = Paperpile.main.globalSettings.pub_types;
+    var orderedTypes = ['ARTICLE', 'BOOK', 'INCOLLECTION', 'INBOOK',
+      'PROCEEDINGS', 'INPROCEEDINGS',
+      'MASTERSTHESIS', 'PHDTHESIS',
+      'MANUAL', 'TECHREPORT', 'UNPUBLISHED', 'MISC'];
+    var types = [];
+    for (var i = 0; i < orderedTypes.length; i++) {
+      var type = orderedTypes[i];
+      var data = pubTypes[type];
+      data['type'] = type;
+      types.push(data);
+    }
+    var store = new Ext.data.Store({
+      model: 'PubType',
+      data: types,
+      storeId: 'pubtypes'
+    });
+    return store;
+  },
+
+  onPubTypeSelect: function(cb, record) {
+    Paperpile.log(record.data);
+  },
+
+  createJournalCombo: function() {
+    Ext.regModel('Journal', {
+      fields: ['short', 'long'],
+      idProperty: 'short'
+    });
+    var combo = Ext.widget('combo', {
+      displayField: 'short',
+      valueField: 'long',
+      store: new Ext.data.Store({
+        model: 'Journal',
+        proxy: {
+          type: 'ajax',
+          url: Paperpile.Url('/ajax/misc/journal_list'),
+          reader: {
+            type: 'json',
+            root: 'data'
+          }
         }
-      },
-    });
+      }),
+    })
+    return combo;
+  },
 
-    this.lookupToolTip = new Ext.ToolTip({
-      target: 'lookup-tooltip',
-      minWidth: 50,
-      maxWidth: 300,
-      html: 'Find complete reference for Title and Author(s). To lookup a DOI, Pubmed ID or ArXiv ID click "Add identifier" first.',
-      anchor: 'left',
-      showDelay: 0,
-      hideDelay: 0
-    });
+  // Creates type selection combo box, renders the form for the
+  // initial publication type and sets up event listeners
+  layoutForm: function(pubType) {
+    var pubTypeObj = this.getPubTypesStore().getById(pubType).data;
+    var names = Paperpile.main.globalSettings.pub_fields;
+    Ext.apply(names, pubTypeObj.labels); // Apply the custom labels for this pubtype
+    var tooltips = Paperpile.main.globalSettings.pub_tooltips;
+    tooltips['lookup'] = 'Find complete reference for Title and Author(s). To lookup a DOI, Pubmed ID or ArXiv ID click "Add identifier" first.';
+    Ext.apply(tooltips, pubTypeObj.tooltips); // Apply the custom tooltips for this pubtype
+    var fieldLayout = pubTypeObj.fields;
 
-    this.renderForm(pubType);
+    this.items.clear();
 
-    this.updateLookupButton();
+    // Add the pre-set first row, no matter what the pub type.
+    this.add(this.firstRow);
 
-    this.mon(Ext.get('form-table'), 'click', this.onClick, this);
+    for (var i = 0; i < fieldLayout.length; i++) {
+      var row = fieldLayout[i];
 
+      var rowItems = [],
+      rowWidths = [];
+      for (var j = 0; j < row.length; j++) {
+        var cell = row[j];
+        if (cell == '-') {
+          var cmp = this.emptyCmp();
+          cmp.height = 10;
+          rowItems.push(cmp);
+          rowWidths.push(1);
+        } else if (cell == ' ' || cell == '') {
+          rowItems.push(this.emptyCmp());
+          rowWidths.push(2 / 6);
+        } else {
+          var toks = cell.split(':');
+          var key = toks[0];
+          var fieldObj = this.getFieldObject(key);
+
+          if (fieldObj.rendered) {
+            fieldObj.setLabel(names[key]);
+          } else {
+            fieldObj.fieldLabel = names[key];
+          }
+
+          rowItems.push(fieldObj);
+          rowWidths.push(toks[1] / 6);
+        }
+      }
+      this.add(this.createRow(rowItems, rowWidths));
+    }
+  },
+
+  applyData: function(pubData) {
+    var keys = [];
+    for (i in pubData) if (pubData.hasOwnProperty(i)) {
+      keys.push(i);
+    }
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      //Paperpile.log(key+"  "+pubData[key]);
+      if (this.fields[key]) {
+        if (key == 'journal') {
+          this.fields[key].setRawValue(pubData[key]);
+        } else {
+          this.fields[key].setValue(pubData[key]);
+        }
+      }
+    }
+  },
+
+  getFieldObject: function(key) {
+    if (this.fields[key] !== undefined) {
+      return this.fields[key];
+    } else {
+      var field;
+
+      if (key == 'journal') {
+        this.fields[key] = this.createJournalCombo();
+        return this.fields[key];
+      } else if (key == 'abstract') {
+        field = {
+          xtype: 'textarea',
+          grow: false,
+          height: 50
+        };
+      } else if (key == ' ') {
+        field = this.emptyCmp();
+      } else {
+        field = {
+          xtype: 'textfield'
+        };
+      }
+
+      var cmp = Ext.ComponentMgr.create(field);
+      this.fields[key] = cmp;
+      return cmp;
+    }
   },
 
   // Creates the table structure of the form and renders the input
@@ -271,7 +331,7 @@ Ext.define('Paperpile.pub.EditForm', {
     // list, but this does not seem to work in Safari/Chrome. So
     // we loop over the entries and append them manually
     for (var i = 0; i < tbodies.length; i++) {
-      Ext.DomHelper.append('form-table', tbodies[i]);
+      Ext.core.DomHelper.append('form-table', tbodies[i]);
     }
 
     this.createInputs(pubType);
@@ -306,7 +366,7 @@ Ext.define('Paperpile.pub.EditForm', {
       };
 
       if (field === 'abstract') {
-        Ext.DomHelper.append(field + '-field', {
+        Ext.core.DomHelper.append(field + '-field', {
           tag: 'a',
           href: "#",
           cls: 'pp-textlink',
@@ -318,33 +378,6 @@ Ext.define('Paperpile.pub.EditForm', {
 
       if (field === 'journal') {
 
-        Ext.apply(config, {
-          displayField: 'short',
-          valueField: 'short',
-          minListWidth: w,
-          store: new Ext.data.Store({
-            proxy: new Ext.data.HttpProxy({
-              url: Paperpile.Url('/ajax/misc/journal_list')
-            }),
-            reader: new Ext.data.JsonReader({
-              root: 'data',
-              id: 'short',
-              fields: ['short', 'long'],
-
-            },
-            [{
-              name: 'short',
-              mapping: 'short'
-            },
-            {
-              name: 'long',
-              mapping: 'long'
-            },
-            ])
-          }),
-          tpl: new Ext.XTemplate(
-            '<tpl for="."><div class="x-combo-list-item"><b>{short}</b><br>{long}</div></tpl>'),
-        });
       }
 
       var input = null;
@@ -406,7 +439,7 @@ Ext.define('Paperpile.pub.EditForm', {
           }
         }
 
-        Ext.DomHelper.append(field + '-field', {
+        Ext.core.DomHelper.append(field + '-field', {
           tag: 'div',
           cls: 'pp-tooltip-link',
           id: field + '-tooltip',
@@ -608,30 +641,14 @@ Ext.define('Paperpile.pub.EditForm', {
 
   // Returns true if the passed field is the last one in the form.
   isLastField: function(field) {
-      var lastFieldId = 'month-input';
-      if (this.activeIdentifiers.length > 0) {
-	lastFieldId = this.activeIdentifiers[this.activeIdentifiers.length-1] + '-input';
-      }
-      if (field.id == lastFieldId) {
-	  return true;
-      }
-      return false;
-  },
-
-  onFocus: function(field) {
-    var f = field.el.findParent('td.field', 3, true);
-    f.addClass("active");
-    f.prev().addClass("active");
-  },
-
-  onBlur: function(field) {
-    var f = field.el.findParent('td.field', 3, true);
-    f.removeClass("active");
-    f.prev().removeClass("active");
-    if (this.isLastField(field)) {
-	var typeField = Ext.getCmp('type-input');
-	typeField.focus(10);
+    var lastFieldId = 'month-input';
+    if (this.activeIdentifiers.length > 0) {
+      lastFieldId = this.activeIdentifiers[this.activeIdentifiers.length - 1] + '-input';
     }
+    if (field.id == lastFieldId) {
+      return true;
+    }
+    return false;
   },
 
   onChange: function(field) {
@@ -650,7 +667,7 @@ Ext.define('Paperpile.pub.EditForm', {
       var field = m[1];
       Ext.get('identifier-group').remove();
       this.activeIdentifiers.push(field);
-      Ext.DomHelper.append('form-table', this.renderIdentifiers());
+      Ext.core.DomHelper.append('form-table', this.renderIdentifiers());
       this.createInputs(this.data.pubtype);
       Ext.get(field + '-input').focus();
       return;
@@ -671,7 +688,7 @@ Ext.define('Paperpile.pub.EditForm', {
 
     var button = Ext.getCmp('lookup_button');
 
-    Ext.DomHelper.overwrite('lookup-status', '');
+    Ext.core.DomHelper.overwrite('lookup-status', '');
 
     var title = Ext.getCmp('title-input').getValue();
     var authors = Ext.getCmp('authors-input').getValue();
@@ -718,7 +735,7 @@ Ext.define('Paperpile.pub.EditForm', {
     Ext.get('lookup-status').show();
 
     Ext.get('lookup-status').removeClass(['pp-lookup-status-failed', 'pp-lookup-status-success']);
-    Ext.DomHelper.overwrite('lookup-status', 'Searching online...')
+    Ext.core.DomHelper.overwrite('lookup-status', 'Searching online...')
 
     this.getForm().submit({
       url: Paperpile.Url('/ajax/crud/lookup_entry'),
@@ -736,7 +753,7 @@ Ext.define('Paperpile.pub.EditForm', {
         // have cancel for now)
         if (!action.response.responseText) {
           Ext.get('lookup-status').replaceClass('pp-lookup-status-success', 'pp-lookup-status-failed');
-          Ext.DomHelper.overwrite('lookup-status', 'Network error. Make sure you are online and try again later.')
+          Ext.core.DomHelper.overwrite('lookup-status', 'Network error. Make sure you are online and try again later.')
         } else {
           Paperpile.main.onError(action.response);
         }
@@ -774,7 +791,7 @@ Ext.define('Paperpile.pub.EditForm', {
       this.renderForm(this.data['pubtype']);
       this.updateLookupButton();
       Ext.getCmp('save_button').setDisabled(this.data['title'] == '');
-      Ext.DomHelper.overwrite('lookup-status', 'Found reference on ' + success_plugin + ".");
+      Ext.core.DomHelper.overwrite('lookup-status', 'Found reference on ' + success_plugin + ".");
       Ext.get('lookup-status').replaceClass('pp-lookup-status-failed', 'pp-lookup-status-success');
       this.addWhatChangedToolTip('lookup-status', dataDiff);
     } else {
@@ -782,7 +799,7 @@ Ext.define('Paperpile.pub.EditForm', {
 
       var msg = json.error || 'Could not find reference online.';
 
-      Ext.DomHelper.overwrite('lookup-status', msg);
+      Ext.core.DomHelper.overwrite('lookup-status', msg);
     }
     this.setDisabledInputs(false);
   },
@@ -816,7 +833,7 @@ Ext.define('Paperpile.pub.EditForm', {
     if (itemArray.length > 0) {
       var listHTML = '<ul style="">' + itemArray.join('') + '</ul>';
       var linkHTML = '<br/><a id="what-changed" href="#">(what changed?)</a>';
-      Ext.DomHelper.append(id, linkHTML);
+      Ext.core.DomHelper.append(id, linkHTML);
       this.whatChangedToolTip = new Ext.ToolTip({
         target: 'what-changed',
         minWidth: 50,
@@ -828,7 +845,7 @@ Ext.define('Paperpile.pub.EditForm', {
         hideDelay: 0
       });
     } else {
-      Ext.DomHelper.append(id, " Nothing to update.");
+      Ext.core.DomHelper.append(id, " Nothing to update.");
     }
   },
 
@@ -910,13 +927,15 @@ Ext.define('Paperpile.pub.EditForm', {
     var json = Ext.util.JSON.decode(action.response.responseText);
 
     this.cleanUp();
-    this.callback.createDelegate(this.scope, ['SAVE', json.data])();
+    var f = Ext.bind(this.callback, this.scope, ['SAVE', json.data]);
+    f();
     this.cleanUp();
   },
 
   onCancel: function() {
+    var f = Ext.bind(this.callback, this.scope, ['CANCEL']);
+    f();
     this.cleanUp();
-    this.callback.createDelegate(this.scope, ['CANCEL'])();
   },
 
   // Deletes all input objects which would live on after cancel or save otherwise.
@@ -936,7 +955,7 @@ Ext.define('Paperpile.pub.EditForm', {
     if (this.whatChangedToolTip) {
       this.whatChangedToolTip.destroy();
     }
-    Paperpile.MetaPanel.superclass.destroy.call(this);
+    this.callParent(arguments);
   },
 
   setDisabledInputs: function(disabled) {
