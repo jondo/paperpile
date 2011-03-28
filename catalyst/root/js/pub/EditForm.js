@@ -7,8 +7,10 @@ Ext.define('Paperpile.pub.EditForm', {
 
     fields['pubtype'] = this.createPubTypeCombo();
     fields['lookup'] = Ext.widget('button', {
+      itemId: 'lookup',
       fieldLabel: 'Online Lookup',
       text: 'Lookup Data',
+      icon: '/images/icons/reload.png',
       width: 190,
       handler: this.onLookup
     });
@@ -16,38 +18,141 @@ Ext.define('Paperpile.pub.EditForm', {
     this.firstRow = this.createRow([fields.pubtype, this.emptyCmp(), fields.lookup, this.emptyCmp()], [.5, .1, .2, .2]);
 
     Ext.apply(this, {
-      autoScroll: false,
+      cls: 'pp-edit',
+      autoScroll: true,
       bodyStyle: 'padding:20px;',
-      defaults: {
-        padding: 5
-      },
       bodyBorder: 0,
       fieldDefaults: {
         labelWidth: 70,
         labelAlign: 'right'
       },
-      items: [],
-      buttons: [{
-        text: 'Save',
-      },
-      {
-        text: 'Cancel'
+      dockedItems: [{
+        xtype: 'toolbar',
+        border: 0,
+        dock: 'bottom',
+        items: [{
+          id: 'prev',
+          text: 'Previous',
+        },
+        {
+          id: 'next',
+          text: 'Next',
+        },
+          '->', {
+            id: 'save',
+            itemId: 'save',
+            text: 'Save',
+            icon: '/images/icons/accept.png',
+            formBind: true
+          },
+          {
+            itemId: 'cancel',
+            text: 'Cancel'
+          }]
       }]
     });
 
     this.callParent(arguments);
+
+    this.getForm().on('dirtychange', this.onStateChange, this);
+  },
+
+  onRender: function(ownerCt) {
+    this.callParent(arguments);
+    this.createToolTip();
+  },
+
+  onStateChange: function(form, dirty) {
+    var save = this.getDockedItems()[0].getComponent('save');
+    save.enable();
+
+    if (!this.getForm().isDirty()) {
+      save.disable();
+    }
+
+    if (!this.getForm().isValid()) {
+      save.disable();
+    }
+  },
+
+  onFieldChange: function() {
+    // Update the lookup button: if a title or ID field exists and is non-null, allow
+    // a lookup.
+    var lookup = this.getFieldContainer('lookup');
+
+    var form = this.getForm();
+    var origState = !lookup.isDisabled();
+    var idFields = this.getLookupEnableFields();
+    var hasId = false;
+    Ext.each(idFields, function(key) {
+      var field = this.getFieldObject(key);
+      if (field.getValue() != '') {
+        hasId = true;
+      }
+    },
+    this);
+
+    if (hasId) {
+      lookup.enable();
+      if (origState == false) {
+        // TODO: Show something flashy here so the user knows that they can now lookup
+        // data online. Maybe pop-up a tooltip?
+      }
+    } else {
+      this.getFieldContainer('lookup').disable();
+    }
+  },
+
+  getLookupEnableFields: function() {
+    return['title', 'doi', 'pmid', 'arxivid'];
+  },
+
+  createToolTip: function() {
+    var me = this;
+    this.toolTip = new Ext.tip.ToolTip({
+      maxWidth: 200,
+      showDelay: 0,
+      hideDelay: 0,
+      target: this.getEl(),
+      delegate: '.pp-qmark',
+      constrainPosition: true,
+      constrain: true,
+      renderTo: document.body,
+      listeners: {
+        beforeshow: {
+          fn: function(tip) {
+            var el = Ext.fly(tip.triggerElement);
+            var field = el.getAttribute('field');
+            var str = this.tooltips[field];
+            if (str) {
+		//tip.body.dom.innerHTML = str;
+		tip.update(str);
+            }
+            //tip.doLayout();
+          },
+          scope: this
+        },
+      }
+    });
+  },
+
+  onFocus: function(field) {
+    field.getEl().addCls('focused');
+  },
+
+  onBlur: function(field) {
+    field.getEl().removeCls('focused');
   },
 
   setPublication: function(pub) {
     this.pub = pub;
     this.data = pub.data;
-
     var pubType = pub.get('pubtype');
-
     var me = this;
     var doInit = function() {
-      me.layoutForm(pubType);
-      me.applyData(pub.data);
+      me.layoutForm(pubType, pub.data);
+      me.getForm().trackResetOnLoad = true;
+      me.getForm().loadRecord(pub);
 
       if (me.autoComplete) {
         me.onLookup();
@@ -133,7 +238,7 @@ Ext.define('Paperpile.pub.EditForm', {
         },
         select: {
           fn: function(combo, data, index) {
-            Paperpile.log(data);
+            this.layoutForm(combo.getValue());
           },
           scope: this,
         }
@@ -173,7 +278,7 @@ Ext.define('Paperpile.pub.EditForm', {
   },
 
   onPubTypeSelect: function(cb, record) {
-    Paperpile.log(record.data);
+    Paperpile.log(record[0].data);
   },
 
   createJournalCombo: function() {
@@ -201,16 +306,17 @@ Ext.define('Paperpile.pub.EditForm', {
 
   // Creates type selection combo box, renders the form for the
   // initial publication type and sets up event listeners
-  layoutForm: function(pubType) {
+  layoutForm: function(pubType, pubData) {
     var pubTypeObj = this.getPubTypesStore().getById(pubType).data;
+    var idFields = Paperpile.main.globalSettings.pub_identifiers;
     var names = Paperpile.main.globalSettings.pub_fields;
     Ext.apply(names, pubTypeObj.labels); // Apply the custom labels for this pubtype
-    var tooltips = Paperpile.main.globalSettings.pub_tooltips;
-    tooltips['lookup'] = 'Find complete reference for Title and Author(s). To lookup a DOI, Pubmed ID or ArXiv ID click "Add identifier" first.';
-    Ext.apply(tooltips, pubTypeObj.tooltips); // Apply the custom tooltips for this pubtype
+    this.tooltips = Paperpile.main.globalSettings.pub_tooltips;
+    this.tooltips['lookup'] = 'Find complete reference for Title and Author(s). To lookup a DOI, Pubmed ID or ArXiv ID click "Add identifier" first.';
+    Ext.apply(this.tooltips, pubTypeObj.tooltips); // Apply the custom tooltips for this pubtype
     var fieldLayout = pubTypeObj.fields;
 
-    this.items.clear();
+    this.removeAll(false);
 
     // Add the pre-set first row, no matter what the pub type.
     this.add(this.firstRow);
@@ -233,66 +339,103 @@ Ext.define('Paperpile.pub.EditForm', {
         } else {
           var toks = cell.split(':');
           var key = toks[0];
+          var fieldContainer = this.getFieldContainer(key);
           var fieldObj = this.getFieldObject(key);
 
-          if (fieldObj.rendered) {
-            fieldObj.setLabel(names[key]);
-          } else {
-            fieldObj.fieldLabel = names[key];
-          }
+          this.setLabel(fieldObj, names[key]);
 
-          rowItems.push(fieldObj);
+          rowItems.push(fieldContainer);
           rowWidths.push(toks[1] / 6);
         }
       }
       this.add(this.createRow(rowItems, rowWidths));
     }
+
+    //this.add(this.createRow([this.emptyCmp()], [1]));
+    // Add filled-in fields for IDs that already exist
+    for (var i = 0; i < idFields.length; i++) {
+      var key = idFields[i];
+      if (pubData[key]) {
+        var fieldContainer = this.getFieldContainer(key);
+        var fieldObj = this.getFieldObject(key);
+        this.setLabel(fieldObj, names[key]);
+        this.add(this.createRow([fieldContainer], [1]));
+      }
+    }
+
   },
 
-  applyData: function(pubData) {
-    var keys = [];
-    for (i in pubData) if (pubData.hasOwnProperty(i)) {
-      keys.push(i);
-    }
-    for (var i = 0; i < keys.length; i++) {
-      var key = keys[i];
-      //Paperpile.log(key+"  "+pubData[key]);
-      if (this.fields[key]) {
-        if (key == 'journal') {
-          this.fields[key].setRawValue(pubData[key]);
-        } else {
-          this.fields[key].setValue(pubData[key]);
-        }
-      }
+  setLabel: function(fieldObj, label) {
+    if (fieldObj.rendered) {
+      fieldObj.labelEl.update(label + fieldObj.labelSeparator);
+    } else {
+      fieldObj.fieldLabel = label;
     }
   },
 
   getFieldObject: function(key) {
+    var fieldContainer = this.getFieldContainer(key);
+    if (! (fieldContainer instanceof Ext.form.BaseField)) {
+      var fieldChild = fieldContainer.items.getAt(0);
+      return fieldChild;
+    } else {
+      Paperpile.log("No tooltip, just the field.");
+      return fieldContainer;
+    }
+  },
+
+  getFieldContainer: function(key) {
     if (this.fields[key] !== undefined) {
       return this.fields[key];
     } else {
-      var field;
+      var cfg;
 
       if (key == 'journal') {
         this.fields[key] = this.createJournalCombo();
         return this.fields[key];
       } else if (key == 'abstract') {
-        field = {
+        cfg = {
           xtype: 'textarea',
           grow: false,
           height: 50
         };
       } else if (key == ' ') {
-        field = this.emptyCmp();
+        cfg = this.emptyCmp();
       } else {
-        field = {
+        cfg = {
           xtype: 'textfield'
         };
       }
 
-      var cmp = Ext.ComponentMgr.create(field);
-      this.fields[key] = cmp;
-      return cmp;
+      cfg.name = key;
+
+      var fieldObj;
+      var layoutObj;
+      if (this.tooltips[key]) {
+        cfg.columnWidth = '1';
+        var containerConfig = {
+          xtype: 'container',
+          layout: 'column',
+          items: [
+            cfg, {
+              xtype: 'component',
+              html: '<div class="pp-qmark" field="' + key + '">?</div>'
+            }]
+        };
+
+        layoutObj = Ext.ComponentMgr.create(containerConfig);
+        fieldObj = layoutObj.items.getAt(0);
+      } else {
+        fieldObj = Ext.ComponentMgr.create(field);
+        layoutObj = fieldObj;
+      }
+
+      this.fields[key] = layoutObj;
+      this.mon(fieldObj, 'focus', this.onFocus, this);
+      this.mon(fieldObj, 'blur', this.onBlur, this);
+      this.mon(fieldObj, 'change', this.onFieldChange, this);
+
+      return layoutObj;
     }
   },
 

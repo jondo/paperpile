@@ -496,3 +496,28 @@ input[type="checkbox"]:disabled
 .pp-status-error .pp-status-msg{
     color: #D8000C;
 }
+
+.pp-edit .x-form-item {
+    padding-top: .5em;
+    padding-bottom: .5em;
+}
+
+.pp-edit .x-form-item-label {
+    font-weight: bold;
+}
+
+.pp-edit .focused {
+    background-color: #FFF1A8;
+}
+
+.pp-edit .x-form-dirty {
+    background-color: #EEE;
+}
+
+.pp-edit .pp-qmark {
+    padding-top: .5em;
+    padding-bottom: .5em;
+    margin-left: .5em;
+    width: 15;
+    color: gray;
+}
