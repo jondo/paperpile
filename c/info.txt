@@ -10,17 +10,16 @@ Set make file type on Windows
 
 cmake -G "MSYS Makefiles" ../src
 
-
-Specify debug/release mode
-==========================
-
-cmake -D CMAKE_BUILD_TYPE="Debug" ../src
-cmake -D CMAKE_BUILD_TYPE="Release" ../src
-
 Make individual targets
-
 =======================
+
 make paperpile
 make extpdf
+make shash
 
+Copy executables after build to their destinations
+==================================================
+
+cmake -D CMAKE_BUILD_TYPE="Release" ../src
+cmake
 
