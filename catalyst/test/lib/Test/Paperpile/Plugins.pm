@@ -34,6 +34,7 @@ sub test_match {
     foreach my $key ( keys %{$entry} ) {
       $pub->doi( $entry->{$key} )     if ( $key eq 'doi' );
       $pub->pmid( $entry->{$key} )    if ( $key eq 'pmid' );
+      $pub->arxivid( $entry->{$key} ) if ( $key eq 'arxivid' );
       $pub->title( $entry->{$key} )   if ( $key eq 'title' );
       $pub->authors( $entry->{$key} ) if ( $key eq 'authors' );
     }
