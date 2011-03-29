@@ -22,4 +22,27 @@ pubtype: ARTICLE
 title: Detection of a Thermal Spectral Component in the Prompt Emission of GRB 100724B
 volume: 727
 year: 2011
-
+---
+abstract: |2
+    Observations of GRB 100724B with the Fermi Gamma-Ray Burst Monitor (GBM) find
+  that the spectrum is dominated by the typical Band functional form, which is
+  usually taken to represent a non-thermal emission component, but also includes
+  a statistically highly significant thermal spectral contribution. The
+  simultaneous observation of the thermal and non-thermal components allows us to
+  confidently identify the two emission components. The fact that these seem to
+  vary independently favors the idea that the thermal component is of
+  photospheric origin while the dominant non-thermal emission occurs at larger
+  radii. Our results imply either a very high efficiency for the non-thermal
+  process, or a very small size of the region at the base of the flow, both quite
+  challenging for the standard fireball model. These problems are resolved if the
+  jet is initially highly magnetized and has a substantial Poynting flux.
+arxivid: arXiv:1010.4601v2
+authors: 'Guiriec, Sylvain and Connaughton, Valerie and Briggs, Michael S. and Burgess, Michael and Ryde, Felix and Daigne, Frédéric and Mészáros, Peter and Goldstein, Adam and McEnery, Julie and Omodei, Nicola and Bhat, P. N. and Bissaldi, Elisabetta and Camero-Arranz, Ascensión and Chaplin, Vandiver and Diehl, Roland and Fishman, Gerald and Foley, Suzanne and Gibby, Melissa and Giles, Misty M. and Greiner, Jochen and Gruber, David and von Kienlin, Andreas and Kippen, Marc and Kouveliotou, Chryssa and McBreen, Sheila and Meegan, Charles A. and Paciesas, William and Preece, Robert and Rau, Arne and Tierney, Dave and van der Horst, Alexander J. and Wilson-Hodge, Colleen'
+doi: 10.1088/2041-8205/727/2/L33
+journal: ApJ
+linkout: http://arxiv.org/abs/1010.4601v2
+pages: 33
+pubtype: ARTICLE
+title: Detection of a Thermal Spectral Component in the Prompt Emission of GRB 100724B
+volume: 727
+year: 2011

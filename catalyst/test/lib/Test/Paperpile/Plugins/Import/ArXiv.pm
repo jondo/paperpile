@@ -18,7 +18,7 @@ sub startup : Tests(startup => 1) {
 
 # Add test functions here
 
-sub match : Tests(12) {
+sub match : Tests(23) {
 
   my ($self) = @_;
 
