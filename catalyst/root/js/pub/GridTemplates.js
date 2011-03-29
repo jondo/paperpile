@@ -107,8 +107,9 @@ Ext.define('Paperpile.grid.GridTemplates', {
                 }
               });
               return inactive;
-            }
-          }).compile();
+	      },
+	      compiled: true
+          });
       }
       return this._list;
     },

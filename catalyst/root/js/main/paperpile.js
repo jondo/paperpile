@@ -28,6 +28,7 @@ Ext.define('Paperpile.Viewport', {
         type: 'border'
       },
       enableKeyEvents: true,
+		autoScroll: false,
       keys: {},
       items: [this.createTabs()],
     });

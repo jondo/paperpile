@@ -52024,6 +52024,7 @@ Ext.define('Ext.form.Basic', {
                 field.setValue(val);
                 if (me.trackResetOnLoad) {
                     field.resetOriginalValue();
+		    field.checkDirtyChange();
                 }
             }
         }

@@ -1,5 +1,6 @@
 ---
 pub_fields:
+  guid:          "GUID"
   pubtype:       "Type"
   citekey:       "Citation key"
   sortkey:       "Name used for sorting"
@@ -89,7 +90,7 @@ pub_tooltips:
   note:          "Note"
 
 
-pub_identifiers: ["doi", "issn", "isbn", "pmid", "lccn", "arxivid", "eprint"]
+pub_identifiers: ["doi", "pmid", "arxivid", "issn", "isbn",  "lccn", "eprint"]
 
 pub_types:
   ARTICLE:
