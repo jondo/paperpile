@@ -214,7 +214,79 @@ test_expected: |
   SN  - 1471-2164
   UR  - http://www.biomedcentral.com/1471-2164/12/149
   ER  - 
-
-
-
+---
+test_comment: 'Ris writing test for BOOK'
+authors: 'Smith,K.M.'
+title: 'Porphyrins and metalloporphyrins'
+pubtype: BOOK
+year: 1975
+keywords: 'Porphyrins;Metalloporphyrins;Spectrophotometry [methods];spectroscopy'
+publisher: 'Elsevier Scientific Publishing Company'
+address: 'Amsterdam'
+test_expected: |
+  TY  - BOOK
+  T1  - Porphyrins and metalloporphyrins
+  AU  - Smith,K.M.
+  Y1  - 1975
+  KW  - Porphyrins
+  KW  - Metalloporphyrins
+  KW  - Spectrophotometry [methods]
+  KW  - spectroscopy
+  CY  - Amsterdam
+  PB  - Elsevier Scientific Publishing Company
+  ER  - 
+---
+test_comment: 'Ris writing test for BOOK and series'
+authors: 'Baum, U.'
+title: 'Anatomie und Physiologie'
+pubtype: BOOK
+authors: 'Baum, U.'
+isbn: '9783930192625'
+series: 'Weisse Reihe'
+url: http://books.google.de/books?id=k3jZfDSSDDcC
+year: 2004
+publisher: 'Elsevier, Urban und Fischer'
+test_expected: |
+  TY  - BOOK
+  T1  - Anatomie und Physiologie
+  T3  - Weisse Reihe
+  AU  - Baum, U.
+  Y1  - 2004
+  PB  - Elsevier, Urban und Fischer
+  SN  - 9783930192625
+  UR  - http://books.google.de/books?id=k3jZfDSSDDcC
+  ER  - 
+---
+test_comment: 'Ris writing test for CHAP'
+authors: 'Lewicki,J.A. and Protter,A.A.'
+title: 'Physiological studies of the natriuretic peptide family - Hypertension: Pathophysiology, Diagnosis, and Management'
+pubtype: INBOOK
+year: 1995
+keywords: 'natriuretic;ANF;ANP'
+pages: 1029-1053
+volume: 2
+booktitle: 'Hypertension: Pathophysiology, Diagnosis, and Management'
+editors: 'Laragh,J.H. and Brenner,B.M.'
+issue: 61
+address: 'New York'
+publisher: 'Raven Press, Ltd.'
+test_expected: |
+  TY  - CHAP
+  T1  - Physiological studies of the natriuretic peptide family - Hypertension: Pathophysiology, Diagnosis, and Management
+  BT  - Hypertension: Pathophysiology, Diagnosis, and Management
+  AU  - Lewicki,J.A.
+  AU  - Protter,A.A.
+  ED  - Laragh,J.H.
+  ED  - Brenner,B.M.
+  Y1  - 1995
+  KW  - natriuretic
+  KW  - ANF
+  KW  - ANP
+  VL  - 2
+  IS  - 61
+  SP  - 1029
+  EP  - 1053
+  CY  - New York
+  PB  - Raven Press, Ltd.
+  ER  - 
 

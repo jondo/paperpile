@@ -120,8 +120,45 @@ UR  - http://www.biomedcentral.com/1471-2164/12/149
 VL  - 12
 SN  - 1471-2164
 N2  - BACKGROUND:Rice is highly sensitive to drought, and the effect of drought may vary with the different ...
-
 ER  - 
 
+TY  - BOOK
+T1  - Porphyrins and metalloporphyrins
+A1  - Smith,K.M.
+Y1  - 1975///
+KW  - Porphyrins
+KW  - Metalloporphyrins
+KW  - Spectrophotometry [methods]
+KW  - spectroscopy
+CY  - Amsterdam
+PB  - Elsevier Scientific Publishing Company
+ER  - 
 
+TY  - CHAP
+T1  - Physiological studies of the natriuretic peptide family
+A1  - Lewicki,J.A.
+A1  - Protter,A.A.
+Y1  - 1995///
+KW  - natriuretic
+KW  - ANF
+KW  - ANP
+SP  - 1029
+EP  - 1053
+VL  - 2
+T2  - Hypertension: Pathophysiology, Diagnosis, and Management
+A2  - Laragh,J.H.
+A2  - Brenner,B.M.
+IS  - 61
+CY  - New York
+PB  - Raven Press, Ltd.
+ER  - 
 
+TY  - BOOK
+T1  - Anatomie und Physiologie
+A1  - Baum, U.
+SN  - 9783930192625
+T3  - Weisse Reihe
+UR  - http://books.google.de/books?id=k3jZfDSSDDcC
+Y1  - 2004
+PB  - Elsevier, Urban und Fischer
+ER  - 

@@ -87,3 +87,33 @@ volume: 12
 issue: 1
 url: http://www.biomedcentral.com/1471-2164/12/149
 issn: 1471-2164
+---
+authors: 'Smith,K.M.'
+title: 'Porphyrins and metalloporphyrins'
+pubtype: BOOK
+year: 1975
+keywords: 'Porphyrins;Metalloporphyrins;Spectrophotometry [methods];spectroscopy'
+publisher: 'Elsevier Scientific Publishing Company'
+address: 'Amsterdam'
+---
+authors: 'Lewicki,J.A. and Protter,A.A.'
+title: 'Physiological studies of the natriuretic peptide family - Hypertension: Pathophysiology, Diagnosis, and Management'
+pubtype: INBOOK
+year: 1995
+keywords: 'natriuretic;ANF;ANP'
+pages: 1029-1053
+volume: 2
+booktitle: 'Hypertension: Pathophysiology, Diagnosis, and Management'
+editors: 'Laragh,J.H. and Brenner,B.M.'
+issue: 61
+address: 'New York'
+publisher: 'Raven Press, Ltd.'
+---
+authors: 'Baum, U.'
+title: 'Anatomie und Physiologie'
+authors: 'Baum, U.'
+isbn: '9783930192625'
+series: 'Weisse Reihe'
+url: http://books.google.de/books?id=k3jZfDSSDDcC
+year: 2004
+publisher: 'Elsevier, Urban und Fischer'

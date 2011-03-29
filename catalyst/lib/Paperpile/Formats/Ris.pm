@@ -105,6 +105,7 @@ sub read {
     my ( $journal_full_name, $journal_short_name );
 
     foreach my $tag ( @{$ref} ) {
+
       # tags have actually length 2
       # however, we have seen longer ones, e.g. DOI in real life data
       $tag =~ /^(\S+)\s+\-\s(.+)/;
@@ -140,6 +141,10 @@ sub read {
             $data->{title} = $d;
           } else {
             $data->{title} .= " - " . $d;
+          }
+
+          if ( $data->{pubtype} eq 'INBOOK' || $data->{pubtype} eq 'BOOK' ) {
+            $data->{booktitle} = $d;
           }
         }
         case 'T3' {    # series title
@@ -392,15 +397,15 @@ sub write {
       if ( $pub->{pubtype} && exists $types{ $pub->{pubtype} } );
 
     # title
-    push @output, [ 'T1', $pub->{title}  ]
+    push @output, [ 'T1', $pub->{title} ]
       if ( $pub->{title} );
 
-    # booktitle
-    push @output, [ 'BT', $pub->{booktitle}  ]
+    # booktitle instead of T2
+    push @output, [ 'BT', $pub->{booktitle} ]
       if ( $pub->{booktitle} );
 
     # series title
-    push @output, [ 'T3', $pub->{series}  ]
+    push @output, [ 'T3', $pub->{series} ]
       if ( $pub->{series} );
 
     # authors
@@ -430,7 +435,7 @@ sub write {
     push @output, [ 'N1', $pub->{note} ] if ( $pub->{note} );
 
     # abstract
-    push @output, [ 'AB', $pub->{abstract}  ] if ( $pub->{abstract} );
+    push @output, [ 'AB', $pub->{abstract} ] if ( $pub->{abstract} );
 
     # keywords
     if ( $pub->{keywords} ) {
@@ -447,15 +452,15 @@ sub write {
     # however, e.g. science exports both fields (JF and JO) at once
     # I don't know why
     if ( $pub->{journal} ) {
-      push @output, [ 'JF', $pub->{journal}  ];
-      push @output, [ 'JO', $pub->{journal}  ];
+      push @output, [ 'JF', $pub->{journal} ];
+      push @output, [ 'JO', $pub->{journal} ];
     }
 
     # volume
     push @output, [ 'VL', $pub->{volume} ] if ( $pub->{volume} );
 
     #issue
-    push @output, [ 'IS', $pub->{issue}  ] if ( $pub->{issue} );
+    push @output, [ 'IS', $pub->{issue} ] if ( $pub->{issue} );
 
     # pages
     if ( $pub->{pages} =~ /(.+)--*(.+)/ ) {    # start and end
@@ -466,15 +471,23 @@ sub write {
       push @output, [ 'SP', $pub->{pages} ] if ( $pub->{pages} );
     }
 
-    #address, TODO: don't know how to distinguish between address and city
-    push @output, [ 'AD', $pub->{address}  ] if ( $pub->{address} );
+    # since paperpile publication objects do not have a city field
+    # we can only parse the address tag.
+    # in case of books ect, we should actually output CY (=city) instead of AD
+    if ( $pub->{address} ) {
+      if ( $pub->{pubtype} eq 'BOOK' || $pub->{pubtype} eq 'INBOOK' ) {
+        push @output, [ 'CY', $pub->{address} ];
+      } else {
+        push @output, [ 'AD', $pub->{address} ];
+      }
+    }
 
     # publisher
-    push @output, [ 'PB', $pub->{publisher}  ] if ( $pub->{publisher} );
+    push @output, [ 'PB', $pub->{publisher} ] if ( $pub->{publisher} );
 
     # issn/isbn
-    push @output, [ 'SN', $pub->{issn}  ] if ( $pub->{issn} );
-    push @output, [ 'SN', $pub->{isbn}  ] if ( $pub->{isbn} );
+    push @output, [ 'SN', $pub->{issn} ] if ( $pub->{issn} );
+    push @output, [ 'SN', $pub->{isbn} ] if ( $pub->{isbn} );
 
     # url
     push @output, [ 'UR', $pub->{url} ] if ( $pub->{url} );
