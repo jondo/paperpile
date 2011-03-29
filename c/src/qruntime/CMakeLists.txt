@@ -32,7 +32,16 @@ link_directories (${LOCAL_TREE}/lib)
 
 add_executable(paperpile ${SOURCES} ${MOC_SRCS})
 
-target_link_libraries( paperpile ${QT_LIBRARIES} ${LOCAL_TREE}/lib/libpoppler-qt4.a ${LOCAL_TREE}/lib/libpoppler.a )
+if(WIN32)
+  set(SUFFIX "dll.a")
+else()
+  set(SUFFIX "a")
+endif()
+
+target_link_libraries( 
+  paperpile ${QT_LIBRARIES} 
+  ${LOCAL_TREE}/lib/libpoppler-qt4.${SUFFIX} 
+  ${LOCAL_TREE}/lib/libpoppler.${SUFFIX} )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
 
