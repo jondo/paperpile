@@ -3,6 +3,7 @@ package Test::Paperpile::Plugins;
 use Test::More;
 use Data::Dumper;
 use YAML;
+use Config;
 
 use Paperpile::Library::Publication;
 use Paperpile::Plugins::Import::PubMed;
@@ -58,6 +59,21 @@ sub test_connect_page {
 
   my ( $self, $msg, $infile, $outfile ) = @_;
 
+  # duplicate search uses the shash executable
+  # we need to dtermien the architecture and
+  # set the path to shash
+
+  my $platform    = '';
+  my $arch_string = $Config{archname};
+
+  if ( $arch_string =~ /linux/i ) {
+    $platform = ( $arch_string =~ /64/ ) ? 'linux64' : 'linux32';
+  }
+
+  if ( $arch_string =~ /(darwin|osx)/i ) {
+    $platform = 'osx';
+  }
+
   my $plugin = $self->class->new();
 
   my @in = YAML::LoadFile("$infile");
@@ -72,10 +88,10 @@ sub test_connect_page {
       foreach my $pub ( @{$pubs} ) {
         push @observed, $pub;
       }
-    }
-    elsif ( defined $entry->{file} ) {
+    } elsif ( defined $entry->{file} ) {
       $plugin->file( $entry->{file} );
-      my $nr_hits = $plugin->connect($entry->{switchthreshold});
+      $plugin->shash("../bin/$platform/shash");
+      my $nr_hits = $plugin->connect( $entry->{switchthreshold} );
       my $pubs = $plugin->page( 0, 25 );
       foreach my $pub ( @{$pubs} ) {
         push @observed, $pub;
