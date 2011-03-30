@@ -1208,3 +1208,465 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Tue Mar 29 21:41:43 2011: C<Module> L<Test::Requires|Test::Requires>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.06>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:41:45 2011: C<Module> L<Hash::MultiValue|Hash::MultiValue>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.08>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:41:47 2011: C<Module> L<Devel::StackTrace|Devel::StackTrace>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.27>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:42:11 2011: C<Module> L<Test::Tester|Test::Tester>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.107>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:42:20 2011: C<Module> L<HTTP::Body|HTTP::Body>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.12>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:42:32 2011: C<Module> L<Test::SharedFork|Test::SharedFork>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.16>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:42:40 2011: C<Module> L<Filesys::Notify::Simple|Filesys::Notify::Simple>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.07>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:42:58 2011: C<Module> L<Test::Simple|Test::Simple>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.98>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:43:11 2011: C<Module> L<Test::TCP|Test::TCP>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.12>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:43:14 2011: C<Module> L<Devel::StackTrace::AsHTML|Devel::StackTrace::AsHTML>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.11>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:43:32 2011: C<Module> L<Plack|Plack>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.9974>
+
+=item *
+
+C<EXE_FILES: scripts/plackup>
+
+=back
+
+=head2 Tue Mar 29 21:43:59 2011: C<Module> L<ExtUtils::ParseXS|ExtUtils::ParseXS>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.2206>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:44:26 2011: C<Module> L<Mouse|Mouse>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.91>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:52:42 2011: C<Module> L<YAML::LibYAML|YAML::LibYAML>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.34>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:55:27 2011: C<Module> L<Capture::Tiny|Capture::Tiny>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.10>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:55:28 2011: C<Module> L<Template::Tiny|Template::Tiny>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.11>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:56:19 2011: C<Module> L<IPC::Run3|IPC::Run3>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.044>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:56:20 2011: C<Module> L<Test::Script|Test::Script>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.07>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:56:22 2011: C<Module> L<File::Which|File::Which>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.09>
+
+=item *
+
+C<EXE_FILES: script/pwhich>
+
+=back
+
+=head2 Tue Mar 29 21:56:28 2011: C<Module> L<Mac::SystemDirectory|Mac::SystemDirectory>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.06>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Mar 29 21:56:29 2011: C<Module> L<File::HomeDir|File::HomeDir>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../plack/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.97>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+

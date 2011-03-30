@@ -17,7 +17,7 @@ sub _carp {
     return warn @_, " at $file line $line\n";
 }
 
-our $VERSION = '0.92';
+our $VERSION = '0.98';
 $VERSION = eval $VERSION;    ## no critic (BuiltinFunctions::ProhibitStringyEval)
 
 use Test::Builder::Module;
@@ -33,6 +33,7 @@ our @EXPORT = qw(ok use_ok require_ok
   done_testing
   can_ok isa_ok new_ok
   diag note explain
+  subtest
   BAIL_OUT
 );
 
@@ -243,7 +244,6 @@ exponential".
 All test functions take a name argument.  It's optional, but highly
 suggested that you use it.
 
-
 =head2 I'm ok, you're not ok.
 
 The basic purpose of this module is to print out either "ok #" or "not
@@ -316,6 +316,11 @@ are similar to these:
 
     ok( ultimate_answer() eq 42,        "Meaning of Life" );
     ok( $foo ne '',     "Got some foo" );
+
+C<undef> will only ever match C<undef>.  So you can test a value
+agains C<undef> like this:
+
+    is($not_defined, undef, "undefined as expected");
 
 (Mnemonic:  "This is that."  "This isn't that.")
 
@@ -596,6 +601,7 @@ sub isa_ok ($$;$) {
             }
             elsif( $error =~ /Can't call method "isa" without a package/ ) {
                 # It's something that can't even be a class
+                $obj_name = 'The thing' unless defined $obj_name;
                 $diag = "$obj_name isn't a class or reference";
             }
             else {
@@ -670,6 +676,75 @@ sub new_ok {
     }
 
     return $obj;
+}
+
+=item B<subtest>
+
+    subtest $name => \&code;
+
+subtest() runs the &code as its own little test with its own plan and
+its own result.  The main test counts this as a single test using the
+result of the whole subtest to determine if its ok or not ok.
+
+For example...
+
+  use Test::More tests => 3;
+ 
+  pass("First test");
+
+  subtest 'An example subtest' => sub {
+      plan tests => 2;
+
+      pass("This is a subtest");
+      pass("So is this");
+  };
+
+  pass("Third test");
+
+This would produce.
+
+  1..3
+  ok 1 - First test
+      1..2
+      ok 1 - This is a subtest
+      ok 2 - So is this
+  ok 2 - An example subtest
+  ok 3 - Third test
+
+A subtest may call "skip_all".  No tests will be run, but the subtest is
+considered a skip.
+
+  subtest 'skippy' => sub {
+      plan skip_all => 'cuz I said so';
+      pass('this test will never be run');
+  };
+
+Returns true if the subtest passed, false otherwise.
+
+Due to how subtests work, you may omit a plan if you desire.  This adds an
+implicit C<done_testing()> to the end of your subtest.  The following two
+subtests are equivalent:
+
+  subtest 'subtest with implicit done_testing()', sub {
+      ok 1, 'subtests with an implicit done testing should work';
+      ok 1, '... and support more than one test';
+      ok 1, '... no matter how many tests are run';
+  };
+
+  subtest 'subtest with explicit done_testing()', sub {
+      ok 1, 'subtests with an explicit done testing should work';
+      ok 1, '... and support more than one test';
+      ok 1, '... no matter how many tests are run';
+      done_testing();
+  };
+
+=cut
+
+sub subtest {
+    my ($name, $subtests) = @_;
+
+    my $tb = Test::More->builder;
+    return $tb->subtest(@_);
 }
 
 =item B<pass>
@@ -749,6 +824,11 @@ because the notion of "compile-time" is relative.  Instead, you want:
   BEGIN { use_ok('Some::Module') }
   BEGIN { ...some code that depends on the use... }
 
+If you want the equivalent of C<use Foo ()>, use a module but not
+import anything, use C<require_ok>.
+
+  BEGIN { require_ok "Foo" }
+
 
 =cut
 
@@ -827,7 +907,7 @@ sub require_ok ($) {
 
     my $pack = caller;
 
-    # Try to deterine if we've been given a module name or file.
+    # Try to determine if we've been given a module name or file.
     # Module names must be barewords, files not.
     $module = qq['$module'] unless _is_module_name($module);
 
@@ -996,7 +1076,7 @@ sub _type {
 
     return '' if !ref $thing;
 
-    for my $type (qw(ARRAY HASH REF SCALAR GLOB CODE Regexp)) {
+    for my $type (qw(Regexp ARRAY HASH REF SCALAR GLOB CODE)) {
         return $type if UNIVERSAL::isa( $thing, $type );
     }
 
@@ -1213,9 +1293,6 @@ and you'll know immediately when they're fixed.
 Once a todo test starts succeeding, simply move it outside the block.
 When the block is empty, delete it.
 
-B<NOTE>: TODO tests require a Test::Harness upgrade else it will
-treat it as a normal failure.  See L<CAVEATS and NOTES>).
-
 
 =item B<todo_skip>
 
@@ -1280,7 +1357,7 @@ but want to put tests in your testing script (always a good idea).
     BAIL_OUT($reason);
 
 Indicates to the harness that things are going so badly all testing
-should terminate.  This includes the running any additional test scripts.
+should terminate.  This includes the running of any additional test scripts.
 
 This is typically used when testing cannot continue such as a critical
 module failing to compile or a necessary external utility not being
@@ -1353,6 +1430,8 @@ sub _eq_array {
         my $e1 = $_ > $#$a1 ? $DNE : $a1->[$_];
         my $e2 = $_ > $#$a2 ? $DNE : $a2->[$_];
 
+        next if _equal_nonrefs($e1, $e2);
+
         push @Data_Stack, { type => 'ARRAY', idx => $_, vals => [ $e1, $e2 ] };
         $ok = _deep_check( $e1, $e2 );
         pop @Data_Stack if $ok;
@@ -1361,6 +1440,21 @@ sub _eq_array {
     }
 
     return $ok;
+}
+
+sub _equal_nonrefs {
+    my( $e1, $e2 ) = @_;
+
+    return if ref $e1 or ref $e2;
+
+    if ( defined $e1 ) {
+        return 1 if defined $e2 and $e1 eq $e2;
+    }
+    else {
+        return 1 if !defined $e2;
+    }
+
+    return;
 }
 
 sub _deep_check {
@@ -1375,9 +1469,6 @@ sub _deep_check {
     local %Refs_Seen = %Refs_Seen;
 
     {
-        # Quiet uninitialized value warnings when comparing undefs.
-        no warnings 'uninitialized';
-
         $tb->_unoverload_str( \$e1, \$e2 );
 
         # Either they're both references or both not.
@@ -1388,7 +1479,7 @@ sub _deep_check {
             $ok = 0;
         }
         elsif( !defined $e1 and !defined $e2 ) {
-            # Shortcut if they're both defined.
+            # Shortcut if they're both undefined.
             $ok = 1;
         }
         elsif( _dne($e1) xor _dne($e2) ) {
@@ -1484,6 +1575,8 @@ sub _eq_hash {
     foreach my $k ( keys %$bigger ) {
         my $e1 = exists $a1->{$k} ? $a1->{$k} : $DNE;
         my $e2 = exists $a2->{$k} ? $a2->{$k} : $DNE;
+
+        next if _equal_nonrefs($e1, $e2);
 
         push @Data_Stack, { type => 'HASH', idx => $k, vals => [ $e1, $e2 ] };
         $ok = _deep_check( $e1, $e2 );
@@ -1648,17 +1741,6 @@ This may cause problems:
     use threads;
 
 5.8.1 and above are supported.  Anything below that has too many bugs.
-
-
-=item Test::Harness upgrade
-
-no_plan, todo and done_testing() depend on new Test::Harness features
-and fixes.  If you're going to distribute tests that use no_plan or
-todo your end-users will have to upgrade Test::Harness to the latest
-one on CPAN.  If you avoid no_plan and TODO tests, the stock
-Test::Harness will work fine.
-
-Installing Test::More should also upgrade Test::Harness.
 
 =back
 

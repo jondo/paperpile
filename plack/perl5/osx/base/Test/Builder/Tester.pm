@@ -1,7 +1,7 @@
 package Test::Builder::Tester;
 
 use strict;
-our $VERSION = "1.18";
+our $VERSION = "1.22";
 
 use Test::Builder;
 use Symbol;
@@ -59,18 +59,6 @@ our @ISA = qw(Exporter);
 
 our @EXPORT = qw(test_out test_err test_fail test_diag test_test line_num);
 
-# _export_to_level and import stolen directly from Test::More.  I am
-# the king of cargo cult programming ;-)
-
-# 5.004's Exporter doesn't have export_to_level.
-sub _export_to_level {
-    my $pkg   = shift;
-    my $level = shift;
-    (undef) = shift;    # XXX redundant arg
-    my $callpkg = caller($level);
-    $pkg->export( $callpkg, @_ );
-}
-
 sub import {
     my $class = shift;
     my(@plan) = @_;
@@ -88,7 +76,7 @@ sub import {
         }
     }
 
-    __PACKAGE__->_export_to_level( 1, __PACKAGE__, @imports );
+    __PACKAGE__->export_to_level( 1, __PACKAGE__, @imports );
 }
 
 ###
@@ -136,13 +124,13 @@ sub _start_testing {
     # switch out to our own handles
     $t->output($output_handle);
     $t->failure_output($error_handle);
-    $t->todo_output($error_handle);
+    $t->todo_output($output_handle);
 
     # clear the expected list
     $out->reset();
     $err->reset();
 
-    # remeber that we're testing
+    # remember that we're testing
     $testing     = 1;
     $testing_num = $t->current_test;
     $t->current_test(0);
@@ -177,8 +165,8 @@ which is even the same as
    test_out("ok 2");
 
 Once C<test_out> or C<test_err> (or C<test_fail> or C<test_diag>) have
-been called once all further output from B<Test::Builder> will be
-captured by B<Test::Builder::Tester>.  This means that your will not
+been called, all further output from B<Test::Builder> will be
+captured by B<Test::Builder::Tester>.  This means that you will not
 be able perform further tests to the normal output in the normal way
 until you call C<test_test> (well, unless you manually meddle with the
 output filehandles)
@@ -203,7 +191,7 @@ sub test_err {
 
 Because the standard failure message that B<Test::Builder> produces
 whenever a test fails will be a common occurrence in your test error
-output, and because has changed between Test::Builder versions, rather
+output, and because it has changed between Test::Builder versions, rather
 than forcing you to call C<test_err> with the string all the time like
 so
 
@@ -241,7 +229,7 @@ sub test_fail {
 
 As most of the remaining expected output to the error stream will be
 created by Test::Builder's C<diag> function, B<Test::Builder::Tester>
-provides a convience function C<test_diag> that you can use instead of
+provides a convenience function C<test_diag> that you can use instead of
 C<test_err>.
 
 The C<test_diag> function prepends comment hashes and spacing to the
@@ -305,7 +293,7 @@ declared with C<test_err>.
 
 =back
 
-As a convience, if only one argument is passed then this argument
+As a convenience, if only one argument is passed then this argument
 is assumed to be the name of the test (as in the above examples.)
 
 Once C<test_test> has been run test output will be redirected back to
@@ -316,7 +304,7 @@ will function normally and cause success/errors for B<Test::Harness>.
 =cut
 
 sub test_test {
-    # decode the arguements as described in the pod
+    # decode the arguments as described in the pod
     my $mess;
     my %args;
     if( @_ == 1 ) {
@@ -382,7 +370,7 @@ sub line_num {
 
 =back
 
-In addition to the six exported functions there there exists one
+In addition to the six exported functions there exists one
 function that can only be accessed with a fully qualified function
 call.
 
@@ -399,13 +387,11 @@ your original tests.  Also, it may be hard to spot things like
 extraneous whitespace at the end of lines that may cause your test to
 fail even though the output looks similar.
 
-To assist you, if you have the B<Term::ANSIColor> module installed
-(which you should do by default from perl 5.005 onwards), C<test_test>
-can colour the background of the debug information to disambiguate the
-different types of output. The debug output will have it's background
-coloured green and red.  The green part represents the text which is
-the same between the executed and actual output, the red shows which
-part differs.
+To assist you C<test_test> can colour the background of the debug
+information to disambiguate the different types of output. The debug
+output will have its background coloured green and red.  The green
+part represents the text which is the same between the executed and
+actual output, the red shows which part differs.
 
 The C<color> function determines if colouring should occur or not.
 Passing it a true or false value will enable or disable colouring
@@ -438,8 +424,8 @@ This is needed as otherwise it will trip out because we've run more
 tests than we strictly should have and it'll register any failures we
 had that we were testing for as real failures.
 
-The color function doesn't work unless B<Term::ANSIColor> is installed
-and is compatible with your terminal.
+The color function doesn't work unless B<Term::ANSIColor> is
+compatible with your terminal.
 
 Bugs (and requests for new features) can be reported to the author
 though the CPAN RT system:
@@ -458,9 +444,6 @@ This program is free software; you can redistribute it
 and/or modify it under the same terms as Perl itself.
 
 =head1 NOTES
-
-This code has been tested explicitly on the following versions
-of perl: 5.7.3, 5.6.1, 5.6.0, 5.005_03, 5.004_05 and 5.004.
 
 Thanks to Richard Clamp E<lt>richardc@unixbeard.netE<gt> for letting
 me use his testing system to try this module out on.
