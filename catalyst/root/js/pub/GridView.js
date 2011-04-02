@@ -119,7 +119,7 @@ Ext.define('Paperpile.pub.Grid', {
       Paperpile.log("Calling initialLoad on an already loaded store -- for shame...");
     }
     var store = this.getStore();
-    var limit = Paperpile.main.globalSettings['pager_limit'] || 25;
+    var limit = Paperpile.Settings.get('pager_limit') || 25;
     store.pageSize = limit;
     store.load();
   },
@@ -367,7 +367,7 @@ Ext.define('Paperpile.pub.Grid', {
           plugin_name: me.plugin_name,
           plugin_query: me.plugin_query,
           plugin_mode: me.plugin_mode,
-          plugin_order: Paperpile.main.globalSettings['sort_field']
+          plugin_order: Paperpile.Settings.get('sort_field')
         },
       }),
     });
@@ -639,7 +639,7 @@ Ext.define('Paperpile.pub.Grid', {
 
     context.getComponent('EXPORT_SELECTION').setText("Export Selection...");
 
-    var settings = Paperpile.main.globalSettings['bibtex'];
+    var settings = Paperpile.Settings.get('bibtex');
     if (settings.bibtex_mode == 1) {
       this.getContextByItemId('COPY_BIBTEX_CITATION').show();
       this.getContextByItemId('COPY_BIBTEX_KEY').show();

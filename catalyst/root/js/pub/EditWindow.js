@@ -23,13 +23,20 @@ Ext.define('Paperpile.pub.EditWindow', {
       minHeight: 300,
       resizable: true,
       closable: true,
-      items: [this.form]
+      closeAction: 'hide',
+      defaultFocus: 'title',
+      items: [this.form],
+      keys: [{
+        key: [Ext.EventObject.ENTER],
+        scope: this,
+        fn: function(key, event) {
+          
+        }
+      }]
     });
 
-    /*
-      var window = me.ownerCt;
-      window.on('show', function() {
-        Ext.getCmp('title-input').focus(false, 10);
+      me.on('show', function() {
+	      //        Ext.getCmp('title-input').focus(false, 10);
       },
       me);
 
@@ -48,9 +55,6 @@ Ext.define('Paperpile.pub.EditWindow', {
       },
       this);
     }
-
-    */
-
 
     this.callParent(arguments);
   },

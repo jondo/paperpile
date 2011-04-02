@@ -1,6 +1,7 @@
 Ext.define('Paperpile.pub.EditForm', {
   extend: 'Ext.form.FormPanel',
   alias: 'widget.editform',
+	    pubTemplates: [],
   initComponent: function() {
     this._fcs = {};
 
@@ -9,10 +10,6 @@ Ext.define('Paperpile.pub.EditForm', {
       autoScroll: true,
       bodyStyle: 'padding:20px;',
       bodyBorder: 0,
-      fieldDefaults: {
-        labelWidth: 70,
-        labelAlign: 'right'
-      },
       dockedItems: [{
         xtype: 'toolbar',
         border: 0,
@@ -40,14 +37,15 @@ Ext.define('Paperpile.pub.EditForm', {
     });
 
     this.callParent(arguments);
+    //    this.getForm().on('dirtychange', this.onStateChange, this);
+    this.initFields();
 
-    this.getForm().on('dirtychange', this.onStateChange, this);
+    this.on('resize', this.onResize, this);
   },
 
   createLookupButton: function() {
     this.lookupButton = Ext.widget('button', {
       itemId: 'lookup',
-      fieldLabel: 'Online Lookup',
       text: 'Lookup Data',
       icon: '/images/icons/reload.png',
       width: 190,
@@ -83,17 +81,19 @@ Ext.define('Paperpile.pub.EditForm', {
   onRender: function(ownerCt) {
     this.callParent(arguments);
     this.createToolTip();
+
+    Paperpile.log(this.tpl);
   },
 
   onStateChange: function(form, dirty) {
     var save = this.getDockedItems()[0].getComponent('save');
     var cancel = this.getDockedItems()[0].getComponent('cancel');
-    Paperpile.log("Enabledd!");
+    //Paperpile.log("Enabledd!");
     save.enable();
     cancel.setText('Cancel');
 
     if (!this.getForm().isDirty()) {
-      Paperpile.log("Disabled!");
+      //Paperpile.log("Disabled!");
       save.disable();
       cancel.setText('Close');
     }
@@ -175,11 +175,12 @@ Ext.define('Paperpile.pub.EditForm', {
   setPublication: function(pub) {
     this.pub = pub;
     this.data = pub.data;
-    var pubType = pub.get('pubtype');
+    var pubtype = pub.get('pubtype');
     var me = this;
     var doInit = function() {
       me.getForm().trackResetOnLoad = true;
-      me.layoutForm(pubType, pub.data);
+      //me.layoutForm(pubType, pub.data);
+      this.layoutTable(pubtype, pub.data);
 
       if (me.autoComplete) {
         me.onLookup();
@@ -220,14 +221,12 @@ Ext.define('Paperpile.pub.EditForm', {
     });
     return {
       xtype: 'container',
-      layout: 'column',
       items: items
     };
   },
 
   createPubTypeCombo: function() {
-    var combo = Ext.widget('combo', {
-      fieldLabel: 'Type',
+    var combo = Ext.widget('combo', Ext.apply(this.fieldDefaults, {
       name: 'pubtype',
       editable: false,
       forceSelection: true,
@@ -247,7 +246,7 @@ Ext.define('Paperpile.pub.EditForm', {
         }
       },
       listeners: {
-        click: {
+        mousedown: {
           // Allow clicks in the input area to toggle the combo open/closed.
           fn: function(event) {
             var target = Ext.fly(event.target);
@@ -255,11 +254,12 @@ Ext.define('Paperpile.pub.EditForm', {
               // Ignore clicks on the trigger DIV.
               return;
             }
-            var combo = this._fcs['pubtype'];
+            var combo = this.pubFields['pubtype'];
+	    event.stopEvent();
             if (combo.isExpanded) {
               combo.collapse();
             } else {
-              combo.expand();
+		combo.expand();
             }
           },
           element: 'el',
@@ -272,7 +272,8 @@ Ext.define('Paperpile.pub.EditForm', {
             }
             var pubtype = combo.getValue();
             Ext.defer(function() {
-              this.layoutForm(pubtype, this.data);
+              this.data.pubtype = pubtype;
+              this.layoutTable(pubtype, this.data);
             },
             10,
             this);
@@ -280,7 +281,7 @@ Ext.define('Paperpile.pub.EditForm', {
           scope: this,
         }
       },
-    });
+    }));
     return combo;
   },
 
@@ -294,7 +295,7 @@ Ext.define('Paperpile.pub.EditForm', {
       fields: ['type', 'name', 'info', 'tooltips', 'labels', 'fields'],
       idProperty: 'type'
     });
-    var pubTypes = Paperpile.main.globalSettings.pub_types;
+    var pubTypes = Paperpile.Settings.get('pub_types');
     var orderedTypes = ['ARTICLE', 'BOOK', 'INCOLLECTION', 'INBOOK',
       'PROCEEDINGS', 'INPROCEEDINGS',
       'MASTERSTHESIS', 'PHDTHESIS',
@@ -319,7 +320,7 @@ Ext.define('Paperpile.pub.EditForm', {
       fields: ['short', 'long'],
       idProperty: 'short'
     });
-    var combo = Ext.widget('textfield', {
+    var combo = Ext.widget('textfield', Ext.apply(this.fieldDefaults, {
       name: 'journal',
       /*
       // TODO: Once ExtJS' combobox doesn't suck, update this to become an auto-complete
@@ -338,19 +339,190 @@ Ext.define('Paperpile.pub.EditForm', {
         }
       }),
       */
-    })
+    }));
     return combo;
+  },
+
+  initFields: function() {
+    if (this.pubFields) {
+      for (var key in this.pubFields) {
+        var field = this.pubFields[key];
+        field.destroy();
+        delete this.pubFields[key];
+      }
+    }
+    this.pubFields = {};
+
+    var names = Paperpile.Settings.get('pub_fields');
+    names['lookup'] = 'Lookup Online';
+    this.pubFields = {};
+    this.getForm()._fields = new Ext.util.MixedCollection();
+    for (var key in names) {
+      var field = this.createField(key, names[key]);
+      this.pubFields[key] = field;
+      if (field instanceof Ext.form.BaseField) {
+	  //        this.getForm()._fields.add(field);
+      }
+    }
+  },
+
+  layoutTable: function(pubtype, data) {
+
+    if (!this.pubTemplates[pubtype]) {
+
+    var pubTypeObj = this.getPubTypesStore().getById(pubtype).data;
+    var idFields = Paperpile.Settings.get('pub_identifiers');
+    var names = Paperpile.Settings.get('pub_fields');
+    Ext.apply(names, pubTypeObj.labels); // Apply the custom labels for this pubtype
+    this.tooltips = Paperpile.Settings.get('pub_tooltips');
+    this.tooltips = {};
+    this.tooltips['lookup'] = 'Find complete reference for Title and Author(s). To lookup a DOI, Pubmed ID or ArXiv ID click "Add identifier" first.';
+    Ext.apply(this.tooltips, pubTypeObj.tooltips); // Apply the custom tooltips for this pubtype
+    var fieldLayout = Ext.clone(pubTypeObj.fields);
+
+    fieldLayout.unshift(['pubtype:3', '.', 'lookup:2']);
+
+    var usedFields = [];
+    var rows = [];
+    for (var i = 0; i < fieldLayout.length; i++) {
+      var row = fieldLayout[i];
+      var rowItems = [];
+      var rowWidths = [];
+      for (var j = 0; j < row.length; j++) {
+        var cell = row[j];
+        if (cell == '-') {
+	  rowItems.push('');
+          rowWidths.push(6);
+        } else if (cell == ' ' || cell == '') {
+          rowItems.push('');
+          rowWidths.push(2);
+        } else if (cell == '.') {
+          rowItems.push('');
+          rowWidths.push(1);
+        } else {
+          var toks = cell.split(':');
+          var key = toks[0];
+
+          usedFields.push(key);
+          var div = ['<div class="pp-field-label" id="pp-'+key+'-label">',
+		     '</div>',
+		     '<div class="pp-field" id="pp-' + key + '">',
+		     '</div>'].join('');
+          if (this.tooltips[key]) {
+            //            div += '<span class="pp-qmark" field="' + key + '">?</span>';
+          }
+          rowItems.push(div);
+          rowWidths.push(toks[1]);
+        }
+      }
+      var tr = this.createTableRow(rowItems, rowWidths);
+      rows.push(tr);
+    }
+
+    var str = ['<table width="100%" border="1"><tbody>',
+      rows.join("\n"),
+      '</tbody></table>'].join('');
+
+        var tpl = new Ext.XTemplate(str, {
+		compiled: true,
+		usedFields: usedFields,
+		names: names
+        });
+	this.pubTemplates[pubtype] = tpl;
+    } else {
+
+    }
+
+      this.tpl = this.pubTemplates[pubtype];
+      this.tpl.overwrite(this.body, {});
+
+      var usedFields = this.tpl.usedFields;
+      var names = this.tpl.names;
+    for (var i = 0; i < usedFields.length; i++) {
+      var key = usedFields[i];
+      var field = this.pubFields[key];
+      var lblEl = this.getEl().down('#pp-'+key+'-label');
+      lblEl.update(names[key]);
+      var el = this.getEl().down('#pp-' + key);
+      if (field.rendered) {
+	          field.getEl().replace(el);
+	if (field instanceof Ext.form.BaseField) {
+	    //field.inputEl.dom.value = data[key];
+	    	    field.originalValue = data[key];
+		    field.setValue(data[key]);
+	}
+      } else {
+        field.render(el);
+      }
+    }
+
+    this.onResize();
+    //this.getForm().setValues(data);
+    this.onStateChange();
+  },
+
+  onResize: function() {
+    for (var key in this.pubFields) {
+      var field = this.pubFields[key];
+      if (field.rendered && field instanceof Ext.form.BaseField) {
+	  var cell = field.el.up('td');
+	  Paperpile.log(cell.getWidth());
+	  field.setWidth(cell.getWidth() - 80 - 25);
+      }
+    }
+  },
+
+  createTableRow: function(items, widths) {
+    var str = '<tr>';
+
+    for (var i = 0; i < items.length; i++) {
+      var cols = widths[i];
+      var width = cols / 6 * 100;
+      str += '<td colspan="' + widths[i] + '" width="' + width + '%">';
+      str += items[i];
+      str += '</td>';
+    }
+    str += '</tr>';
+    Paperpile.log(str);
+    return str;
+  },
+
+  createField: function(key, label) {
+    switch (key) {
+    case 'journal':
+      return this.createJournalCombo();
+      break;
+    case 'pubtype':
+      return this.createPubTypeCombo();
+      break;
+    case 'lookup':
+      return Ext.create('Ext.container.Container', {
+        items: [
+          this.createLookupButton(), this.createLookupStatus()]
+      });
+      break;
+    default:
+      var field = Ext.create('Ext.form.Text', Ext.apply(this.fieldDefaults, {
+        name: key,
+        hideLabel: true,
+	preventMark: true,
+	autoFitErrors: false
+      }));
+      return field;
+      break;
+    };
   },
 
   layoutForm: function(pubType, pubData) {
 
     var pubTypeObj = this.getPubTypesStore().getById(pubType).data;
-    var idFields = Paperpile.main.globalSettings.pub_identifiers;
-    var names = Paperpile.main.globalSettings.pub_fields;
-    Ext.apply(names, pubTypeObj.labels); // Apply the custom labels for this pubtype
-    this.tooltips = Paperpile.main.globalSettings.pub_tooltips;
-    this.tooltips['lookup'] = 'Find complete reference for Title and Author(s). To lookup a DOI, Pubmed ID or ArXiv ID click "Add identifier" first.';
-    Ext.apply(this.tooltips, pubTypeObj.tooltips); // Apply the custom tooltips for this pubtype
+    var idFields = Paperpile.Settings.get('pub_identifiers');
+    var names = Paperpile.Settings.get('pub_fields');
+    //    Ext.apply(names, pubTypeObj.labels); // Apply the custom labels for this pubtype
+    //this.tooltips = Paperpile.Settings.get('pub_tooltips');
+    this.tooltips = {};
+    //    this.tooltips['lookup'] = 'Find complete reference for Title and Author(s). To lookup a DOI, Pubmed ID or ArXiv ID click "Add identifier" first.';
+    //    Ext.apply(this.tooltips, pubTypeObj.tooltips); // Apply the custom tooltips for this pubtype
     var fieldLayout = pubTypeObj.fields;
 
     // Remove all field objects without destroying.
@@ -362,7 +534,7 @@ Ext.define('Paperpile.pub.EditForm', {
     for (var key in this._fcs) {
       var layoutItem = this.getFieldContainer(key);
       var field = this.getFieldObject(key);
-      if (keepFields[key] && layoutItem.ownerCt) {
+      if (layoutItem.ownerCt) {
         var owner = layoutItem.ownerCt;
         owner.doRemove(layoutItem, false);
       } else {
@@ -405,7 +577,7 @@ Ext.define('Paperpile.pub.EditForm', {
           fieldContainer.show();
           var fieldObj = this.getFieldObject(key);
           fieldObj.show();
-          this.setLabel(fieldObj, names[key]);
+          //          this.setLabel(fieldObj, names[key]);
           delete remainingFields[key];
 
           rowItems.push(fieldContainer);
@@ -426,7 +598,7 @@ Ext.define('Paperpile.pub.EditForm', {
       } else {
         fieldContainer.hide();
       }
-      this.setLabel(fieldObj, names[key]);
+      //      this.setLabel(fieldObj, names[key]);
       rowsToAdd.push(this.createRow([fieldContainer], [1]));
     }
 
@@ -442,7 +614,6 @@ Ext.define('Paperpile.pub.EditForm', {
     this.add(rowsToAdd);
 
     this.getForm().setValues(pubData);
-
     this.onStateChange();
 
   },
@@ -536,7 +707,6 @@ Ext.define('Paperpile.pub.EditForm', {
         cfg.columnWidth = '1';
         var containerConfig = {
           xtype: 'container',
-          layout: 'column',
           items: [
             cfg, {
               xtype: 'component',
@@ -597,7 +767,7 @@ Ext.define('Paperpile.pub.EditForm', {
       params: oldData,
       success: function(response) {
         this.enable();
-	this.lookupButton.enable();
+        this.lookupButton.enable();
         var json = Ext.decode(response.responseText);
         var data = json.data;
 
@@ -642,7 +812,7 @@ Ext.define('Paperpile.pub.EditForm', {
       },
       failure: function(response) {
         this.enable();
-	this.lookupButton.enable();
+        this.lookupButton.enable();
         // Explicitly handle timeout (e.g. network hangs in the backend; we don't
         // have cancel for now)
         if (!response.responseText) {
