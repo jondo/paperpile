@@ -115,7 +115,13 @@ QString Runtime::getPlackDir(){
 
   // We are in the build directory .../c/build
   if (appDir.contains(QRegExp("c.build"))){
-    QDir path(appDir+"/../../../plack/");
+    QDir path;
+    path.setPath(appDir+"/../../../plack/");
+
+    if (platform == "osx"){
+      path.setPath(appDir+"/../../../../../../plack/");
+    }
+
     return(path.canonicalPath());
   }
 
