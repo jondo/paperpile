@@ -30,4 +30,14 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
       COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/shash ${BIN_DIR}
       COMMENT "Copying shash to ${BIN_DIR}")
   endif()
+
+  if(APPLE)
+    set(BIN_DIR "${PROJECT_BINARY_DIR}/../../../plack/bin/osx")
+    add_custom_command(
+      TARGET shash
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/shash ${BIN_DIR}
+      COMMENT "Copying shash to ${BIN_DIR}")
+  endif()
+
 endif()
