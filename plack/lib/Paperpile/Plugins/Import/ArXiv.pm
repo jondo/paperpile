@@ -723,7 +723,7 @@ sub _find_best_hit {
     # let's get rid of words that contain none ASCII chars
     # and other bad stuff (often PDF utf-8 issues)
     my @words = ();
-    ( my $tmp_orig_title = $orig_pub->title ) =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
+    ( my $tmp_orig_title = lc($orig_pub->title) ) =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
     $tmp_orig_title =~ s/\s+/ /g;
     foreach my $word ( split( /\s+/, $tmp_orig_title ) ) {
       next if ( $word =~ m/([^[:ascii:]])/ );
@@ -738,7 +738,7 @@ sub _find_best_hit {
 
       # some preprocessing again
       my @words2    = ();
-      my $tmp_title = $hits[$i]->title;
+      my $tmp_title = lc($hits[$i]->title);
       $tmp_title =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
       $tmp_title =~ s/\s+/ /g;
       foreach my $word ( split( /\s+/, $tmp_title ) ) {

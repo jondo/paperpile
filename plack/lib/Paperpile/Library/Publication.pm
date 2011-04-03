@@ -29,7 +29,7 @@ use Paperpile::Exceptions;
 use Paperpile::Formats;
 use Encode qw(encode_utf8);
 use Text::Unidecode;
-use YAML::XS qw(LoadFile);
+use YAML::XS qw(LoadFile Dump);
 use File::Spec;
 use File::Path;
 use 5.010;
@@ -109,6 +109,11 @@ has 'labels_tmp' => ( is => 'rw', default => '' );
 
 # Comma separated list of folders
 has 'folders' => ( is => 'rw', default => '' );
+
+# Temporary field to handle folders which are not imported into the
+# user's library.
+#has 'folders_tmp' => ( is => 'rw', default => '' );
+
 
 ### Fields from the config file
 
@@ -806,6 +811,29 @@ sub as_hash {
 
   return {%hash};
 
+}
+
+# returns fields that store bibliographic data in YAML format
+
+sub as_YAML {
+
+  ( my $self ) = @_;
+
+  my %hash = ( );
+
+  foreach my $key ( $self->meta->get_attribute_list ) {
+    my $value = $self->$key;
+    next if ( not defined $value );
+    next if ( $value eq '' );
+    next if ( $key =~ m/^_/ );
+    next if ( $key =~ m/sha1/ );
+    next if ( $key =~ m/times_read/ );
+    next if ( $key =~ m/trashed/ );
+
+    $hash{$key} = $value;
+  }
+
+  return Dump \%hash;
 }
 
 

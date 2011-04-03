@@ -6,4 +6,114 @@ pubtype: ARTICLE
 title: 'RNA secondary structure: A complete mathematical analysis'
 volume: 42
 year: 1978
-
+---
+authors: 'Stillman, David E. and Grimm, Robert E.'
+title: 'Radar penetrates only the youngest geological units on Mars'
+journal: 'J. Geophys. Res.'
+day: 03
+month: 03
+year: 2011
+volume: 116
+issue: E3
+pages: E03001
+issn: 0148-0227
+abstract: 'Signals from the Shallow Radar were intended to penetrate hundreds of meters or more into Mars...'
+url: http://dx.doi.org/10.1029/2010JE003661
+doi: 10.1029/2010JE003661
+publisher: AGU
+---
+authors: 'Spotorno, S and Faure, S'
+title: 'Change detection in complex scenes: Hemispheric contribution and the role of perceptual and semantic factors'
+journal: 'Perception'
+year: 2011
+volume: 40
+pages: 5-22
+issue: 1
+abstract: 'Signals from the Shallow Radar were intended to penetrate hundreds of meters or more into Mars...'
+url: http://www.perceptionweb.com/abstract.cgi?id=p6524
+publisher: Pion Ltd
+---
+authors: 'Hanahan, Douglas and Weinberg, Robert A.'
+title: 'Hallmarks of Cancer: The Next Generation'
+year: 2011
+month: 03
+day: 04
+journal: 'Cell'
+volume: 144
+issue: 5
+pages: 646-674
+publisher: 'Cell Press'
+pubtype: ARTICLE
+issn: 0092-8674
+url: http://linkinghub.elsevier.com/retrieve/pii/S0092867411001279
+doi: 10.1016/j.cell.2011.02.013
+---
+authors: 'Toulmin, Camilla'
+title: 'Agriculture: A bowl half full'
+pubtype: ARTICLE
+journal: 'Nature'
+year: 2011
+month: 03
+day: 03
+volume: 471
+issue: 7336
+pages: 31-32
+publisher: 'Nature Publishing Group, a division of Macmillan Publishers Limited. All Rights Reserved.'
+issn: 0028-0836
+url: http://dx.doi.org/10.1038/471031a
+doi: 10.1038/471031a
+---
+authors: 'Hee Im, Seol and Taghert, Paul H.'
+title: 'A CRY to Rise'
+pubtype: ARTICLE
+journal: 'Science'
+year: 2011
+month: 03
+day: 18
+pages: 1394-1395
+volume: 331
+issue: 6023
+url: http://www.sciencemag.org/content/331/6023/1394.short
+doi: 10.1126/science.1204293
+---
+authors: 'Wang, Di and Pan, Yajiao and Zhao, Xiuqin and Zhu, Linghua and Fu, Binying and Li, Zhikang'
+title: 'Genome-wide Temporal-spatial Gene Expression Profiling ofDrought Responsiveness in Rice'
+pubtype: ARTICLE
+journal: 'BMC Genomics'
+year: 2011
+abstract: 'BACKGROUND:Rice is highly sensitive to drought, and the effect of drought may vary with the different ...'
+pages: 149
+volume: 12
+issue: 1
+url: http://www.biomedcentral.com/1471-2164/12/149
+issn: 1471-2164
+---
+authors: 'Smith,K.M.'
+title: 'Porphyrins and metalloporphyrins'
+pubtype: BOOK
+year: 1975
+keywords: 'Porphyrins;Metalloporphyrins;Spectrophotometry [methods];spectroscopy'
+publisher: 'Elsevier Scientific Publishing Company'
+address: 'Amsterdam'
+---
+authors: 'Lewicki,J.A. and Protter,A.A.'
+title: 'Physiological studies of the natriuretic peptide family - Hypertension: Pathophysiology, Diagnosis, and Management'
+pubtype: INBOOK
+year: 1995
+keywords: 'natriuretic;ANF;ANP'
+pages: 1029-1053
+volume: 2
+booktitle: 'Hypertension: Pathophysiology, Diagnosis, and Management'
+editors: 'Laragh,J.H. and Brenner,B.M.'
+issue: 61
+address: 'New York'
+publisher: 'Raven Press, Ltd.'
+---
+authors: 'Baum, U.'
+title: 'Anatomie und Physiologie'
+authors: 'Baum, U.'
+isbn: '9783930192625'
+series: 'Weisse Reihe'
+url: http://books.google.de/books?id=k3jZfDSSDDcC
+year: 2004
+publisher: 'Elsevier, Urban und Fischer'

@@ -1047,6 +1047,71 @@
   </test>
 </site>
 
+<site name="OMICS">
+  <signature>
+    <url>!omicsonline\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]+\.pdf)&quot;[^&gt;]+&gt;[^&lt;]*PDF</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://dx.doi.org/10.4172/jpb.1000138</url>
+  </test>
+</site>
+
+<site name="OpticsInfoBase">
+  <signature>
+    <url>!opticsinfobase\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*&quot;(viewmedia\.cfm[^&quot;]+)&quot;[^&gt;]+&gt;[^&lt;]*PDF</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://dx.doi.org/10.1364/OE.19.003258</url>
+  </test>
+</site>
+
+<site name="AmericanMathematicalSociety">
+  <signature>
+    <url>!ams\.org!</url>
+  </signature>
+
+  <rule>
+   <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]+\.pdf)&quot;\s*&gt;[^&lt;]*PDF</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://dx.doi.org/10.1090/S0002-9904-1939-07067-5</url>
+  </test>
+</site>
+
+<site name="JournalOfClinicalInvestigation">
+  <signature>
+    <url>!jci\.org!</url>
+  </signature>
+
+  <rule>
+   <pattern>
+      <rewrite>!(.*/view/\d+)!$1/files/pdf\?disposition=attachment!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://dx.doi.org/10.1172/JCI26022</url>
+  </test>
+</site>
+
+
 <site name="Meta">
   <signature>
     <body namedRegex="meta1"/>

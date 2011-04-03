@@ -60,8 +60,8 @@ sub read {
   # Decode data. Not the most efficient way in terms of memory but
   # passing the whole data at once increases the chances to guess the
   # right encoding.
-  my $decoded_data = Paperpile::Utils->decode_data(join('',@data));
-  @data = split(/\n/,$decoded_data);
+  my $decoded_data = Paperpile::Utils->decode_data( join( '', @data ) );
+  @data = split( /\n/, $decoded_data );
 
   for ( my $i = 0 ; $i <= $#data ; $i++ ) {
     $data[$i] =~ s/\s+$//g;
@@ -71,7 +71,7 @@ sub read {
       push @ris, [@tmp];   # store previous ref
       @tmp  = ();
       $line = '';
-    } elsif ( $data[$i] =~ /^\S+\s+\-\s/ ) {
+    } elsif ( $data[$i] =~ /^\S+\s+\-\s*/ ) {
       if ( $line eq '' ) {
         $line = $data[$i];    # initialise/read tag
       } else {
@@ -143,8 +143,12 @@ sub read {
           } else {
             $data->{title} .= " - " . $d;
           }
+
+          if ( $data->{pubtype} eq 'INBOOK' || $data->{pubtype} eq 'BOOK' ) {
+            $data->{booktitle} = $d;
+          }
         }
-        when ('T3') {    # series title
+        case 'T3' {    # series title
           $data->{series} = $d;
         }
         when ( 'A1') {    # primary author
@@ -291,23 +295,23 @@ sub read {
 
         # this are non-standard tags
         # which we unfortunately have been seen in real live data
-        when ( 'DOI') {
-          if ( _is_doi($d) ) {
-            $data->{doi} = $d;
-          } else {
-            print STDERR "Warning: could not parse field '$t', content='$d'!\n";
-          }
+        when 'DOI' {
+          _set_doi( $data, $d, $t );
         }
 
-        default {
+        when 'DO' {
+          _set_doi( $data, $d, $t );
+        }
+
+       default {
           print STDERR "Warning: field '$t' ignored, content='$d'!\n";
         }
       }
     }
 
-    $data->{authors}  = join( ' and ', @authors )   if (@authors);
-    $data->{editors}  = join( ' and ', @editors )   if (@editors);
-    $data->{keywords} = join( ';',     @keywords )  if (@keywords);
+    $data->{authors}  = join( ' and ', @authors )  if (@authors);
+    $data->{editors}  = join( ' and ', @editors )  if (@editors);
+    $data->{keywords} = join( ';',     @keywords ) if (@keywords);
 
     # set journal, try to keep full name, otherwise short name
     if ($journal_full_name) {
@@ -315,7 +319,7 @@ sub read {
     } elsif ($journal_short_name) {
       $data->{journal} = $journal_short_name;
     }
-    if (defined $data->{journal}) {
+    if ( defined $data->{journal} ) {
       $data->{journal} =~ s/\s+$//g;
       $data->{journal} = $data->{journal};
     }
@@ -394,15 +398,15 @@ sub write {
       if ( $pub->{pubtype} && exists $types{ $pub->{pubtype} } );
 
     # title
-    push @output, [ 'T1', $pub->{title}  ]
+    push @output, [ 'T1', $pub->{title} ]
       if ( $pub->{title} );
 
-    # booktitle
-    push @output, [ 'BT', $pub->{booktitle}  ]
+    # booktitle instead of T2
+    push @output, [ 'BT', $pub->{booktitle} ]
       if ( $pub->{booktitle} );
 
     # series title
-    push @output, [ 'T3', $pub->{series}  ]
+    push @output, [ 'T3', $pub->{series} ]
       if ( $pub->{series} );
 
     # authors
@@ -432,7 +436,7 @@ sub write {
     push @output, [ 'N1', $pub->{note} ] if ( $pub->{note} );
 
     # abstract
-    push @output, [ 'AB', $pub->{abstract}  ] if ( $pub->{abstract} );
+    push @output, [ 'AB', $pub->{abstract} ] if ( $pub->{abstract} );
 
     # keywords
     if ( $pub->{keywords} ) {
@@ -449,15 +453,15 @@ sub write {
     # however, e.g. science exports both fields (JF and JO) at once
     # I don't know why
     if ( $pub->{journal} ) {
-      push @output, [ 'JF', $pub->{journal}  ];
-      push @output, [ 'JO', $pub->{journal}  ];
+      push @output, [ 'JF', $pub->{journal} ];
+      push @output, [ 'JO', $pub->{journal} ];
     }
 
     # volume
     push @output, [ 'VL', $pub->{volume} ] if ( $pub->{volume} );
 
     #issue
-    push @output, [ 'IS', $pub->{issue}  ] if ( $pub->{issue} );
+    push @output, [ 'IS', $pub->{issue} ] if ( $pub->{issue} );
 
     # pages
     if ( $pub->{pages} =~ /(.+)--*(.+)/ ) {    # start and end
@@ -468,15 +472,23 @@ sub write {
       push @output, [ 'SP', $pub->{pages} ] if ( $pub->{pages} );
     }
 
-    #address, TODO: don't know how to distinguish between address and city
-    push @output, [ 'AD', $pub->{address}  ] if ( $pub->{address} );
+    # since paperpile publication objects do not have a city field
+    # we can only parse the address tag.
+    # in case of books ect, we should actually output CY (=city) instead of AD
+    if ( $pub->{address} ) {
+      if ( $pub->{pubtype} eq 'BOOK' || $pub->{pubtype} eq 'INBOOK' ) {
+        push @output, [ 'CY', $pub->{address} ];
+      } else {
+        push @output, [ 'AD', $pub->{address} ];
+      }
+    }
 
     # publisher
-    push @output, [ 'PB', $pub->{publisher}  ] if ( $pub->{publisher} );
+    push @output, [ 'PB', $pub->{publisher} ] if ( $pub->{publisher} );
 
     # issn/isbn
-    push @output, [ 'SN', $pub->{issn}  ] if ( $pub->{issn} );
-    push @output, [ 'SN', $pub->{isbn}  ] if ( $pub->{isbn} );
+    push @output, [ 'SN', $pub->{issn} ] if ( $pub->{issn} );
+    push @output, [ 'SN', $pub->{isbn} ] if ( $pub->{isbn} );
 
     # url
     push @output, [ 'UR', $pub->{url} ] if ( $pub->{url} );
@@ -492,6 +504,19 @@ sub write {
   }
 
   close OUT;
+}
+
+# helper to handle alternative Ris-DOI tags
+sub _set_doi {
+  my $data_ptr = shift;
+  my $doi      = shift;
+  my $field    = shift;
+
+  if ( _is_doi($doi) ) {
+    $data_ptr->{doi} = $doi;
+  } else {
+    print STDERR "Warning: could not parse field '$field', content='$doi'!\n";
+  }
 }
 
 # dates are "complicated", since we have different date tags in ris

@@ -1,0 +1,123 @@
+---
+annote: '<p><strong>Welcome to Zotero!</strong></p><p>View the Quick Start Guide to learn how to begin collecting, managing, citing, and sharing your research sources.</p><p>Thanks for installing Zotero.</p><br />'
+howpublished: Webpage
+linkout: http://zotero.org/support/quick_start_guide
+pubtype: MISC
+title: Zotero Quick Start Guide
+---
+authors: 'Berg JM, Tymoczko JL and Berg JM, Tymoczko JL, Stryer L, Clarke ND, '
+folders_tmp: collection1/subcollection1
+isbn: 0-7167-3051-0
+pubtype: BOOK
+title: Biochemistry
+year: 2002
+---
+authors: 'McCulloch SD, Kunkel TA'
+doi: 10.1038/cr.2008.4
+folders_tmp: collection1
+issue: 1
+journal: Cell Research
+month: 01
+pages: 148–61
+pubtype: ARTICLE
+title: The fidelity of DNA synthesis by eukaryotic replicative and translesion synthesis polymerases
+volume: 18
+year: 2008
+---
+authors: 'Weigel C, Schmidt A and Weigel C, Schmidt A, Rückert B, Lurz R, Messer W, '
+doi: 10.1093/emboj/16.21.6574
+folders_tmp: 'collection1/subcollection1/subsubcollection1,collection2'
+issue: 21
+journal: The EMBO Journal
+linkout: http://www.pubmedcentral.nih.gov/articlerender.fcgi?tool=pmcentrez&artid=1170261
+month: 11
+pages: 6574–83
+pubtype: ARTICLE
+title: 'DnaA protein binding to individual DnaA boxes in the Escherichia coli replication origin, oriC'
+volume: 16
+year: 1997
+---
+authors: 'Lodish H, Berk A and Lodish H, Berk A, Zipursky LS, Matsudaira P, Baltimore D, Darnell J, '
+isbn: 0-7167-3136-3
+pubtype: BOOK
+title: Molecular Cell Biology
+year: 2000
+---
+authors: 'Pursell, Z. F. et al and Pursell, Z.F. et al., '
+doi: 10.1126/science.1144067
+issue: 5834
+journal: Science
+linkout: http://www.pubmedcentral.nih.gov/articlerender.fcgi?tool=pmcentrez&artid=2233713
+pages: 127–130
+pubtype: ARTICLE
+title: Yeast DNA Polymerase ε Participates in Leading-Strand DNA Replication
+volume: 317
+year: 2007
+---
+authors: 'Kunkel, Scott D McCulloch; Thomas A and Scott D McCulloch; Thomas A Kunkel, '
+doi: 10.1038/cr.2008.4
+issue: 1
+journal: Cell Research
+pages: 148–161
+pubtype: ARTICLE
+title: The fidelity of DNA synthesis by eukaryotic replicative and translesion synthesis polymerases
+volume: 18
+year: 2008
+---
+authors: 'Bell, Elizabeth R. Barry; Stephen D. and Elizabeth R. Barry; Stephen D. Bell, '
+doi: 10.1128/MMBR.00029-06
+issue: 4
+journal: Microbiology and Molecular Biology Reviews
+linkout: http://www.pubmedcentral.nih.gov/articlerender.fcgi?tool=pmcentrez&artid=1698513
+pages: 876–887
+pubtype: ARTICLE
+title: DNA Replication in the Archaea
+volume: 70
+year: 2006
+---
+authors: 'Alberts B, Johnson A and Alberts B, Johnson A, Lewis J, Raff M, Roberts K, Walter P, '
+folders_tmp: collection1/subcollection2
+isbn: 0-8153-3218-1
+pubtype: BOOK
+title: Molecular Biology of the Cell
+year: 2002
+---
+authors: 'Tobiason DM, Seifert HS and Tobiason DM, Seifert HS, '
+doi: 10.1371/journal.pbio.0040185
+issue: 6
+journal: PLoS Biology
+linkout: http://www.pubmedcentral.nih.gov/articlerender.fcgi?tool=pmcentrez&artid=1470461
+pages: e185
+pubtype: ARTICLE
+title: 'The Obligate Human Pathogen, Neisseria gonorrhoeae, Is Polyploid'
+volume: 4
+year: 2006
+---
+authors: 'Slater S, Wold S and Slater S, Wold S, Lu M, Boye E, Skarstad K, Kleckner N, '
+doi: 10.1016/0092-8674(95)90272-4
+issue: 6
+journal: Cell
+month: 09
+pages: 927–36
+pubtype: ARTICLE
+title: E. coli SeqA protein binds oriC in two different methyl-modulated reactions appropriate to its roles in DNA replication initiation and origin sequestration
+volume: 82
+year: 1995
+---
+authors: 'Saiki, &#32;RK'
+doi: 10.1126/science.2448875
+issue: 4839
+journal: '[[Science (journal)|Science]]'
+linkout: http://sunsite.berkeley.edu/cgi-bin/ebind2html/pcr/009
+pages: 487-91
+pubtype: ARTICLE
+title: Primer-directed enzymatic amplification of DNA with a thermostable DNA polymerase
+volume: 239
+year: 1988
+---
+authors: 'Colowick, '
+isbn: 0121821633
+month: 10
+pubtype: BOOK
+title: 'DNA Replication: 262'
+year: 1995

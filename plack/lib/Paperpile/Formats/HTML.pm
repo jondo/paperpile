@@ -40,9 +40,9 @@ sub read {
   my $content = $self->content;
 
   my (
-    $title, $authors, $journal, $issue,      $volume,   $year,
-    $month, $ISSN,    $pages,   $doi,        $abstract, $booktitle,
-    $url,   $pmid,    $arxivid, $start_page, $end_page, $publisher
+    $title,   $authors,    $journal,  $issue,     $volume,    $year, $month,
+    $ISSN,    $pages,      $doi,      $abstract,  $booktitle, $url,  $pmid,
+    $arxivid, $start_page, $end_page, $publisher, $keywords
   );
 
   my @authors_creator     = ();
@@ -51,7 +51,22 @@ sub read {
 
   # We parse the HTML via XPath
   my $tree = HTML::TreeBuilder::XPath->new;
-  $tree->utf8_mode(1);
+
+  # there have been issues with the correct display of umlaute
+  # in the frontend. It is now tested on following sites:
+  # charset: utf-8, umlaute HTML encoded ( e.g. &#250;) in meta tags
+  # http://portal.acm.org/citation.cfm?doid=1810085.1810091
+  # no charset defined, umlaute are escaped
+  # http://www.nature.com/npp/journal/vaop/ncurrent/full/npp201134a.html
+  # charset: utf-8, and umlaute are enocded as utf-8
+  # http://www.sciencemag.org/content/315/5820/1807
+  # So it seems, we do not have to parse in UTF-8 modeenable UTF-8 mode
+  # $tree->utf8_mode(1);
+
+  # NPG uses some weird escaping for umlaute encoding in metatags
+  $content =~ s/\|\[/&/g;
+  $content =~ s/\]\|/;/g;
+
   $tree->parse_content($content);
 
   my @meta = $tree->findnodes('/html/head/meta');
@@ -186,7 +201,7 @@ sub read {
         }
         case "DC.SOURCE.ISSUE"  { $issue  = $content }
         case "DC.SOURCE.VOLUME" { $volume = $content }
-	case "DC.SOURCE.ISSN"   { $ISSN   = $content }
+        case "DC.SOURCE.ISSN"   { $ISSN   = $content }
 
         case "PRISM.PUBLICATIONNAME" { $journal = $content }
         case "PRISM.VOLUME"          { $volume  = $content }
@@ -206,7 +221,7 @@ sub read {
         case "PRISM.ENDINGPAGE"       { $end_page   = $content }
         case "CITATION_TITLE"         { $title      = $content if ( !$title ) }
         case "CITATION_JOURNAL_TITLE" { $journal    = $content if ( !$journal ) }
-	case "CITATION_CONFERENCE"    { $journal    = $content if ( !$journal ) }
+        case "CITATION_CONFERENCE"    { $journal    = $content if ( !$journal ) }
         case "CITATION_VOLUME"        { $volume     = $content if ( !$volume ) }
         case "CITATION_ISSUE"         { $issue      = $content if ( !$issue ) }
         case "CITATION_FIRSTPAGE"     { $start_page = $content if ( !$start_page ) }
@@ -220,20 +235,20 @@ sub read {
             $doi = $2 if ( !$doi );
           }
         }
-        case "CITATION_FULLTEXT_HTML_URL" { $url              = $content }
-        case "CITATION_ABSTRACT_HTML_URL" { $url              = $content if ( !$url ) }
-        case "CITATION_PMID"              { $pmid             = $content }
-        case "CITATION_PUBLISHER"         { $publisher        = $content if ( !$publisher ) }
-        case "CITATION_AUTHORS"           { push @authors_citation, $content }
-        case "CITATION_AUTHOR"            { push @authors_citation, $content }
-        case "CITATION_ABSTRACT"          { $abstract         = $content if ( !$abstract ) }
+        case "CITATION_FULLTEXT_HTML_URL" { $url       = $content }
+        case "CITATION_ABSTRACT_HTML_URL" { $url       = $content if ( !$url ) }
+        case "CITATION_PMID"              { $pmid      = $content }
+        case "CITATION_PUBLISHER"         { $publisher = $content if ( !$publisher ) }
+        case "CITATION_AUTHORS" { push @authors_citation, $content }
+        case "CITATION_AUTHOR"  { push @authors_citation, $content }
+        case "CITATION_ABSTRACT" { $abstract = $content if ( !$abstract ) }
         case "CITATION_DATE" {
 
           if ( $content =~ m/(\d{4})-(\d{1,2})-(\d{1,2})/ ) {
             $year  = $1 if ( !$year );
             $month = $2 if ( !$month );
           }
-	  if ( $content =~ m/(\d{4})\/(\d{1,2})\/(\d{1,2})/ ) {
+          if ( $content =~ m/(\d{4})\/(\d{1,2})\/(\d{1,2})/ ) {
             $year  = $1 if ( !$year );
             $month = $2 if ( !$month );
           }
@@ -246,6 +261,7 @@ sub read {
           }
         }
         case "CITATION_YEAR" { $year = $content if ( $content =~ m/^\d+$/ and !$year ) }
+        case "CITATION_KEYWORDS" { $keywords = $content }
 
         case "RFT_JTITLE" { $journal   = $content if ( !$journal ) }
         case "RFT_ATITLE" { $title     = $content if ( !$title ) }
@@ -329,12 +345,12 @@ sub read {
               $doi = $2 if ( !$doi );
             }
           }
-          case /.*CITATION_FULLTEXT_HTML_URL/ { $url              = $content }
-          case /.*CITATION_ABSTRACT_HTML_URL/ { $url              = $content if ( !$url ) }
-          case /.*CITATION_PMID/              { $pmid             = $content }
-          case /.*CITATION_PUBLISHER/         { $publisher        = $content if ( !$publisher ) }
-          case /.*CITATION_AUTHORS/           { push @authors_citation, $content }
-          case /.*CITATION_ABSTRACT/          { $abstract         = $content if ( !$abstract ) }
+          case /.*CITATION_FULLTEXT_HTML_URL/ { $url       = $content }
+          case /.*CITATION_ABSTRACT_HTML_URL/ { $url       = $content if ( !$url ) }
+          case /.*CITATION_PMID/              { $pmid      = $content }
+          case /.*CITATION_PUBLISHER/         { $publisher = $content if ( !$publisher ) }
+          case /.*CITATION_AUTHORS/ { push @authors_citation, $content }
+          case /.*CITATION_ABSTRACT/ { $abstract = $content if ( !$abstract ) }
           case /.*CITATION_DATE/ {
 
             if ( $content =~ m/(\d{4})-(\d{1,2})-(\d{1,2})/ ) {
@@ -371,29 +387,33 @@ sub read {
   if ( $authors eq '' and $#authors_citation > -1 ) {
     if ( $#authors_citation == 0 ) {
       if ( $authors_citation[0] =~ m/;/ and $authors_citation[0] =~ m/,/ ) {
-	$authors_citation[0] =~ s/;/ and /g;
-	$authors_citation[0] =~ s/\s+/ /g;
-	$authors = $authors_citation[0];
+        $authors_citation[0] =~ s/;/ and /g;
+        $authors_citation[0] =~ s/\s+/ /g;
+        $authors = $authors_citation[0];
       } elsif ( $authors_citation[0] !~ m/;/ and $authors_citation[0] =~ m/,/ ) {
-	my @tmp = split( /,/, $authors_citation[0] );
-	@authors_creator = ( );
-	foreach my $entry (@tmp) {
-	  push @authors_creator, Paperpile::Library::Author->new()->parse_freestyle($entry)->bibtex();
-	}
-	$authors = join( " and ", @authors_creator );
+        my @tmp = split( /,/, $authors_citation[0] );
+        @authors_creator = ();
+        foreach my $entry (@tmp) {
+          push @authors_creator,
+            Paperpile::Library::Author->new()->parse_freestyle($entry)->bibtex();
+        }
+        $authors = join( " and ", @authors_creator );
       }
     } else {
+
       # more than one entry
-      @authors_creator = ( );
+      @authors_creator = ();
       foreach my $entry (@authors_citation) {
-	my $count = ($entry =~ tr/,//);
-	if ( $count == 0 ) {
-	  push @authors_creator, Paperpile::Library::Author->new()->parse_freestyle($entry)->bibtex();
-	} elsif ( $count == 1 ) {
-	  push @authors_creator, $entry;
-	} else {
-	  # I do not know if this case exists
-	}
+        my $count = ( $entry =~ tr/,// );
+        if ( $count == 0 ) {
+          push @authors_creator,
+            Paperpile::Library::Author->new()->parse_freestyle($entry)->bibtex();
+        } elsif ( $count == 1 ) {
+          push @authors_creator, $entry;
+        } else {
+
+          # I do not know if this case exists
+        }
       }
       $authors = join( " and ", @authors_creator );
     }
@@ -409,8 +429,8 @@ sub read {
   if ( $start_page and !$end_page ) {
     $pages = "$start_page";
   }
-  if ( $pages ) {
-    $pages =~ s/pp\.\s+//; 
+  if ($pages) {
+    $pages =~ s/pp\.\s+//;
   }
 
   if ($volume) {
@@ -441,6 +461,7 @@ sub read {
   $pub->eprint($arxivid)      if $arxivid;
   $pub->authors($authors)     if $authors;
   $pub->publisher($publisher) if $publisher;
+  $pub->keywords($keywords)   if $keywords;
 
   return $pub;
 }

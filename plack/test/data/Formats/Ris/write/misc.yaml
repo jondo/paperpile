@@ -19,3 +19,274 @@ test_expected: |
   SP  - 257
   EP  - 266
   ER  -
+---
+test_comment: 'Ris writing test for AGU'
+authors: 'Stillman, David E. and Grimm, Robert E.'
+title: 'Radar penetrates only the youngest geological units on Mars'
+journal: 'J. Geophys. Res.'
+day: 03
+month: 03
+year: 2011
+volume: 116
+issue: E3
+pages: E03001
+pubtype: ARTICLE
+issn: 0148-0227
+abstract: 'Signals from the Shallow Radar were intended to penetrate hundreds of meters or more into Mars...'
+keywords: 'Mars;SHARAD;adsorbed water;scattering;GPR;6225 Planetary Sciences: Solar System Objects: Mars;5464 Planetary Sciences: Solid Surface Planets: Remote sensing;5460 Planetary Sciences: Solid Surface Planets: Physical properties of materials;3914 Mineral Physics: Electrical properties;0669 Electromagnetics: Scattering and diffraction'
+url: http://dx.doi.org/10.1029/2010JE003661
+doi: 10.1029/2010JE003661
+publisher: AGU
+test_expected: |
+  TY  - JOUR
+  T1  - Radar penetrates only the youngest geological units on Mars
+  AU  - Stillman, David E.
+  AU  - Grimm, Robert E.
+  Y1  - 2011/03/03
+  AB  - Signals from the Shallow Radar were intended to penetrate hundreds of meters or more into Mars...
+  KW  - Mars
+  KW  - SHARAD
+  KW  - adsorbed water
+  KW  - scattering
+  KW  - GPR
+  KW  - 6225 Planetary Sciences: Solar System Objects: Mars
+  KW  - 5464 Planetary Sciences: Solid Surface Planets: Remote sensing
+  KW  - 5460 Planetary Sciences: Solid Surface Planets: Physical properties of materials
+  KW  - 3914 Mineral Physics: Electrical properties
+  KW  - 0669 Electromagnetics: Scattering and diffraction
+  JF  - J. Geophys. Res.
+  JO  - J. Geophys. Res.
+  VL  - 116
+  IS  - E3
+  SP  - E03001
+  PB  - AGU
+  SN  - 0148-0227
+  UR  - http://dx.doi.org/10.1029/2010JE003661
+  ER  - 
+---
+test_comment: 'Ris writing test for Pion'
+pubtype: ARTICLE
+authors: 'Spotorno, S and Faure, S'
+title: 'Change detection in complex scenes: Hemispheric contribution and the role of perceptual and semantic factors'
+journal: 'Perception'
+year: 2011
+volume: 40
+pages: 5-22
+issue: 1
+abstract: 'The perceptual salience and semantic relevance of objects for the meaning of a scene were evaluated with multiple criteria...'
+url: http://www.perceptionweb.com/abstract.cgi?id=p6524
+publisher: Pion Ltd
+test_expected: |
+  TY  - JOUR
+  T1  - Change detection in complex scenes: Hemispheric contribution and the role of perceptual and semantic factors
+  AU  - Spotorno, S
+  AU  - Faure, S
+  Y1  - 2011
+  AB  - The perceptual salience and semantic relevance of objects for the meaning of a scene were evaluated with multiple criteria...
+  JF  - Perception
+  JO  - Perception
+  VL  - 40
+  IS  - 1
+  SP  - 5
+  EP  - 22
+  PB  - Pion Ltd
+  UR  - http://www.perceptionweb.com/abstract.cgi?id=p6524
+  ER  - 
+---
+test_comment: 'Ris writing test for Cell'
+authors: 'Hanahan, Douglas and Weinberg, Robert A.'
+title: 'Hallmarks of Cancer: The Next Generation'
+year: 2011
+month: 03
+day: 04
+journal: 'Cell'
+volume: 144
+issue: 5
+pages: 646-674
+publisher: 'Cell Press'
+pubtype: ARTICLE
+issn: 0092-8674
+url: http://linkinghub.elsevier.com/retrieve/pii/S0092867411001279
+doi: 10.1016/j.cell.2011.02.013
+test_expected: |
+  TY  - JOUR
+  T1  - Hallmarks of Cancer: The Next Generation
+  AU  - Hanahan, Douglas
+  AU  - Weinberg, Robert A.
+  Y1  - 2011/03/04
+  JF  - Cell
+  JO  - Cell
+  VL  - 144
+  IS  - 5
+  SP  - 646
+  EP  - 674
+  PB  - Cell Press
+  SN  - 0092-8674
+  UR  - http://linkinghub.elsevier.com/retrieve/pii/S0092867411001279
+  ER  - 
+---
+test_comment: 'Ris writing test for Nature'
+authors: 'Toulmin, Camilla'
+title: 'Agriculture: A bowl half full'
+pubtype: ARTICLE
+journal: 'Nature'
+year: 2011
+month: 03
+day: 03
+volume: 471
+issue: 7336
+pages: 31-32
+publisher: 'Nature Publishing Group, a division of Macmillan Publishers Limited. All Rights Reserved.'
+issn: 0028-0836
+url: http://dx.doi.org/10.1038/471031a
+doi: 10.1038/471031a
+test_expected: |
+  TY  - JOUR
+  T1  - Agriculture: A bowl half full
+  AU  - Toulmin, Camilla
+  Y1  - 2011/03/03
+  JF  - Nature
+  JO  - Nature
+  VL  - 471
+  IS  - 7336
+  SP  - 31
+  EP  - 32
+  PB  - Nature Publishing Group, a division of Macmillan Publishers Limited. All Rights Reserved.
+  SN  - 0028-0836
+  UR  - http://dx.doi.org/10.1038/471031a
+  ER  - 
+---
+test_comment: 'Ris writing test for Science'
+authors: 'Hee Im, Seol and Taghert, Paul H.'
+title: 'A CRY to Rise'
+pubtype: ARTICLE
+journal: 'Science'
+year: 2011
+month: 03
+day: 18
+pages: 1394-1395
+volume: 331
+issue: 6023
+url: http://www.sciencemag.org/content/331/6023/1394.short
+test_expected: |
+  TY  - JOUR
+  T1  - A CRY to Rise
+  AU  - Hee Im, Seol
+  AU  - Taghert, Paul H.
+  Y1  - 2011/03/18
+  JF  - Science
+  JO  - Science
+  VL  - 331
+  IS  - 6023
+  SP  - 1394
+  EP  - 1395
+  UR  - http://www.sciencemag.org/content/331/6023/1394.short
+  ER  -
+---
+test_comment: 'Ris writing test for BMC Genomics'
+authors: 'Wang, Di and Pan, Yajiao and Zhao, Xiuqin and Zhu, Linghua and Fu, Binying and Li, Zhikang'
+title: 'Genome-wide Temporal-spatial Gene Expression Profiling ofDrought Responsiveness in Rice'
+pubtype: ARTICLE
+journal: 'BMC Genomics'
+year: 2011
+abstract: 'BACKGROUND:Rice is highly sensitive to drought, and the effect of drought may vary with the different ...'
+pages: 149
+volume: 12
+issue: 1
+url: http://www.biomedcentral.com/1471-2164/12/149
+issn: 1471-2164
+test_expected: |
+  TY  - JOUR
+  T1  - Genome-wide Temporal-spatial Gene Expression Profiling ofDrought Responsiveness in Rice
+  AU  - Wang, Di
+  AU  - Pan, Yajiao
+  AU  - Zhao, Xiuqin
+  AU  - Zhu, Linghua
+  AU  - Fu, Binying
+  AU  - Li, Zhikang
+  Y1  - 2011
+  AB  - BACKGROUND:Rice is highly sensitive to drought, and the effect of drought may vary with the different ...
+  JF  - BMC Genomics
+  JO  - BMC Genomics
+  VL  - 12
+  IS  - 1
+  SP  - 149
+  SN  - 1471-2164
+  UR  - http://www.biomedcentral.com/1471-2164/12/149
+  ER  - 
+---
+test_comment: 'Ris writing test for BOOK'
+authors: 'Smith,K.M.'
+title: 'Porphyrins and metalloporphyrins'
+pubtype: BOOK
+year: 1975
+keywords: 'Porphyrins;Metalloporphyrins;Spectrophotometry [methods];spectroscopy'
+publisher: 'Elsevier Scientific Publishing Company'
+address: 'Amsterdam'
+test_expected: |
+  TY  - BOOK
+  T1  - Porphyrins and metalloporphyrins
+  AU  - Smith,K.M.
+  Y1  - 1975
+  KW  - Porphyrins
+  KW  - Metalloporphyrins
+  KW  - Spectrophotometry [methods]
+  KW  - spectroscopy
+  CY  - Amsterdam
+  PB  - Elsevier Scientific Publishing Company
+  ER  - 
+---
+test_comment: 'Ris writing test for BOOK and series'
+authors: 'Baum, U.'
+title: 'Anatomie und Physiologie'
+pubtype: BOOK
+authors: 'Baum, U.'
+isbn: '9783930192625'
+series: 'Weisse Reihe'
+url: http://books.google.de/books?id=k3jZfDSSDDcC
+year: 2004
+publisher: 'Elsevier, Urban und Fischer'
+test_expected: |
+  TY  - BOOK
+  T1  - Anatomie und Physiologie
+  T3  - Weisse Reihe
+  AU  - Baum, U.
+  Y1  - 2004
+  PB  - Elsevier, Urban und Fischer
+  SN  - 9783930192625
+  UR  - http://books.google.de/books?id=k3jZfDSSDDcC
+  ER  - 
+---
+test_comment: 'Ris writing test for CHAP'
+authors: 'Lewicki,J.A. and Protter,A.A.'
+title: 'Physiological studies of the natriuretic peptide family - Hypertension: Pathophysiology, Diagnosis, and Management'
+pubtype: INBOOK
+year: 1995
+keywords: 'natriuretic;ANF;ANP'
+pages: 1029-1053
+volume: 2
+booktitle: 'Hypertension: Pathophysiology, Diagnosis, and Management'
+editors: 'Laragh,J.H. and Brenner,B.M.'
+issue: 61
+address: 'New York'
+publisher: 'Raven Press, Ltd.'
+test_expected: |
+  TY  - CHAP
+  T1  - Physiological studies of the natriuretic peptide family - Hypertension: Pathophysiology, Diagnosis, and Management
+  BT  - Hypertension: Pathophysiology, Diagnosis, and Management
+  AU  - Lewicki,J.A.
+  AU  - Protter,A.A.
+  ED  - Laragh,J.H.
+  ED  - Brenner,B.M.
+  Y1  - 1995
+  KW  - natriuretic
+  KW  - ANF
+  KW  - ANP
+  VL  - 2
+  IS  - 61
+  SP  - 1029
+  EP  - 1053
+  CY  - New York
+  PB  - Raven Press, Ltd.
+  ER  - 
+

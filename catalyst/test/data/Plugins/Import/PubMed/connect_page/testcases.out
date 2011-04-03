@@ -1,0 +1,14 @@
+---
+abstract: 'BACKGROUND: Evolutionary conservation of RNA secondary structure is a typical feature of many functional non-coding RNAs. Since almost all of the available methods used for prediction and annotation of non-coding RNA genes rely on this evolutionary signature, accurate measures for structural conservation are essential. RESULTS: We systematically assessed the ability of various measures to detect conserved RNA structures in multiple sequence alignments. We tested three existing and eight novel strategies that are based on metrics of folding energies, metrics of single optimal structure predictions, and metrics of structure ensembles. We find that the folding energy based SCI score used in the RNAz program and a simple base-pair distance metric are by far the most accurate. The use of more complex metrics like for example tree editing does not improve performance. A variant of the SCI performed particularly well on highly conserved alignments and is thus a viable alternative when only little evolutionary information is available. Surprisingly, ensemble based methods that, in principle, could benefit from the additional information contained in sub-optimal structures, perform particularly poorly. As a general trend, we observed that methods that include a consensus structure prediction outperformed equivalent methods that only consider pairwise comparisons. CONCLUSION: Structural conservation can be measured accurately with relatively simple and intuitive metrics. They have the potential to form the basis of future RNA gene finders, that face new challenges like finding lineage specific structures or detecting mis-aligned sequences. '
+affiliation: 'Institute for Theoretical Chemistry, University of Vienna, Währingerstrasse 17, 1090 Wien, Austria. agruber@tbi.univie.ac.at'
+authors: 'Gruber, AR and Bernhart, SH and Hofacker, IL and Washietl, S'
+doi: 10.1186/1471-2105-9-122
+issn: 1471-2105
+journal: BMC Bioinformatics
+linkout: http://www.biomedcentral.com/1471-2105/9/122
+pages: 122
+pmid: 18302738
+pubtype: ARTICLE
+title: Strategies for measuring evolutionary conservation of RNA secondary structures
+volume: 9
+year: 2008

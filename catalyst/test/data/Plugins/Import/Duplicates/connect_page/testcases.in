@@ -1,0 +1,14 @@
+---
+file: data/Plugins/Import/Duplicates/connect_page/duplicatetest1.ppl
+switchthreshold: 500
+---
+test_comment: 'switchingthreshold set to 1 switches to the shash mode'
+file: data/Plugins/Import/Duplicates/connect_page/duplicatetest1.ppl
+switchthreshold: 1
+---
+file: data/Plugins/Import/Duplicates/connect_page/duplicatetest2.ppl
+switchthreshold: 500
+---
+test_comment: 'switchingthreshold set to 1 switches to the shash mode'
+file: data/Plugins/Import/Duplicates/connect_page/duplicatetest2.ppl
+switchthreshold: 1

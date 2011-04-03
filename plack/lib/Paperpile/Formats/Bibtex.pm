@@ -22,7 +22,6 @@ use YAML::XS qw/LoadFile/;
 use IO::File;
 use Text::Wrap;
 use Paperpile::Formats::TeXEncoding;
-use Paperpile::App;
 use BibTeX::Parser;
 use BibTeX::Parser::EncodingTable;
 use Encode;
@@ -86,7 +85,7 @@ sub read {
   }
   seek($fhtmp,0,0);
 
-  my $config = LoadFile( Paperpile::App->path_to('conf/fields.yaml') );
+  my $config = LoadFile( Paperpile::Utils->path_to('conf/fields.yaml') );
 
   my %built_in = ();
 
@@ -130,7 +129,8 @@ sub read {
           # Normalize doi to just something like 10.1038/nature06340
           # without urls or anything else.
           $content =~ s/^doi:\s*//i;
-          $content =~ s!^(http://)?dx.doi.org/!!;
+          $content =~ s!^(http://)?dx\.doi\.org/!!;
+          $content =~ s!^(http://)?doi\.acm\.org/!!;
         }
         if ( $field eq 'year' ) {
           $content =~ s/(.*)(\d{4})$/$2/;

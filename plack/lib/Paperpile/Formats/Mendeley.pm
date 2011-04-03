@@ -29,9 +29,6 @@ sub BUILD {
   $self->writable(0);
 }
 
-
-1;
-
 sub read {
 
   my $self = shift;
@@ -71,6 +68,7 @@ sub read {
     # do not keep parsed references, that do not appear in the
     # library to the user
     next if ( $tmp{'onlyReference'} eq 'true' );
+    next if ( $tmp{'deletionPending'} eq 'true' );
 
     # what we try to parse
     my (
@@ -81,6 +79,9 @@ sub read {
       $citekey, $labels,    $note,    $howpublished, $isbn,      $keywords
     );
 
+    my @labels = ();
+    my @attachments = ();
+    my @pdfs        = ();
     my @unsupported_fields = ();
 
     ############################################
@@ -219,6 +220,13 @@ sub read {
           $publisher = $tmp{$key};
           $supported = 1;
         }
+	case 'favourite' {
+	  if( defined $tmp{$key} ) {
+	    if ( $tmp{$key} eq 'true' ) {
+	      push @labels, 'Favorites';
+	    }
+	  }
+        }
       }
 
       if ( !defined $ignore_fields{$key} and $supported == 0 ) {
@@ -275,8 +283,6 @@ sub read {
         . 'FROM DocumentFiles d, Files f '
         . 'WHERE d.documentId=? AND d.hash=f.hash ORDER BY d.rowid ASC' );
     $sth5->execute( $tmp{'id'} );
-    my @attachments = ();
-    my @pdfs        = ();
     while ( my @t = $sth5->fetchrow_array ) {
       my $file = Paperpile::Utils->process_attachment_name( $t[0] );
       next if !$file;
@@ -292,7 +298,6 @@ sub read {
     # get tags as comma separated list
     my $sth6 = $dbh->prepare('SELECT tag FROM DocumentTags WHERE documentId=?');
     $sth6->execute( $tmp{'id'} );
-    my @labels = ();
     while ( my @t = $sth6->fetchrow_array ) {
       push @labels, $t[0];
     }
@@ -342,3 +347,5 @@ sub read {
   return [@output];
 
 }
+
+1;

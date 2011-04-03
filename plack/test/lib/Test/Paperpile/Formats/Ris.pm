@@ -19,7 +19,7 @@ sub startup : Tests(startup => 1) {
 
 # Add test functions here
 
-sub read : Tests(10) {
+sub read : Tests(111) {
 
   my ($self) = @_;
 
@@ -43,7 +43,7 @@ sub read : Tests(10) {
 }
 
 
-sub write : Tests(1) {
+sub write : Tests(10) {
 
   my ($self) = @_;
 

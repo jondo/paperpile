@@ -1,0 +1,29 @@
+---
+authors_LIKE: '.*Gruber.*Neuböck.*Hofacker.*Washietl.*'
+doi_IS: 10.1093/nar/gkm222
+journal_LIKE: Nucleic Acids Res
+pages_LIKE: W335.*
+pubtype_IS: ARTICLE
+title_IS: 'The RNAz web server: prediction of thermodynamically stable and evolutionarily conserved RNA structures'
+volume_IS: 35
+year_IS: 2007
+---
+authors_LIKE: '.*Gruber.*Bernhart.*Hofacker.*Washietl.*'
+doi_IS: 10.1186/1471-2105-9-122
+journal_IS: BMC Bioinformatics
+pages_IS: 122
+pubtype_IS: ARTICLE
+title_IS: Strategies for measuring evolutionary conservation of RNA secondary structures
+volume_IS: 9
+year_IS: 2008
+---
+authors_LIKE: '.*Sharma.*Hoffmann.*Darfeuille.*Reignier.*Findei(ss|ß).*Sittka.*Chabas.*Reiche.*Hackermüller.*Reinhardt.*Stadler.*Vogel.*'
+doi_IS: 10.1038/nature08756
+issue_IS: 7286
+journal_IS: Nature
+pages_LIKE: 250.*
+pubtype_IS: ARTICLE
+title_IS: The primary transcriptome of the major human pathogen Helicobacter pylori
+volume_IS: 464
+year_IS: 2010
+

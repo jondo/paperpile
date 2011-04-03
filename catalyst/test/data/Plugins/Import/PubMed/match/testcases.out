@@ -1,0 +1,79 @@
+---
+abstract: 'Many non-coding RNA genes and cis-acting regulatory elements of mRNAs contain RNA secondary structures that are critical for their function. Such functional RNAs can be predicted on the basis of thermodynamic stability and evolutionary conservation. We present a web server that uses the RNAz algorithm to detect functional RNA structures in multiple alignments of nucleotide sequences. The server provides access to a complete and fully automatic analysis pipeline that allows not only to analyze single alignments in a variety of formats, but also to conduct complex screens of large genomic regions. Results are presented on a website that is illustrated by various structure representations and can be downloaded for local view. The web server is available at: rna.tbi.univie.ac.at/RNAz.'
+affiliation: 'Institute for Theoretical Chemistry, University of Vienna, Währingerstrasse 17, 1090 Vienna, Austria.'
+authors: 'Gruber, AR and Neuböck, R and Hofacker, IL and Washietl, S'
+doi: 10.1093/nar/gkm222
+issn: 1362-4962
+issue: Web Server issue
+journal: Nucleic Acids Res
+linkout: http://nar.oxfordjournals.org/cgi/pmidlookup?view=long&pmid=17452347
+month: Jul
+pages: W335-8
+pmid: 17452347
+pubtype: ARTICLE
+title: 'The RNAz web server: prediction of thermodynamically stable and evolutionarily conserved RNA structures'
+volume: 35
+year: 2007
+---
+abstract: "7SK RNA is a highly abundant noncoding RNA in mammalian cells whose function in transcriptional regulation has only recently been elucidated. Despite its highly conserved sequence throughout vertebrates, all attempts to discover 7SK RNA homologues in invertebrate species have failed so far. Here we report on a combined experimental and computational survey that succeeded in discovering 7SK RNAs in most of the major deuterostome clades and in two protostome phyla: mollusks and annelids. Despite major efforts, no candidates were found in any of the many available ecdysozoan genomes, however. The additional sequence data confirm the evolutionary conservation and hence functional importance of the previously described 3' and 5' stem-loop motifs, and provide evidence for a third, structurally well-conserved domain."
+affiliation: 'Institute for Theoretical Chemistry, University of Vienna, Währingerstrasse 17, A-1090 Wien, Austria. agruber@tbi.univie.ac.at'
+authors: 'Gruber, AR and Koper-Emde, D and Marz, M and Tafer, H and Bernhart, S and Obernosterer, G and Mosig, A and Hofacker, IL and Stadler, PF and Benecke, BJ'
+doi: 10.1007/s00239-007-9052-6
+issn: 0022-2844
+issue: 2
+journal: J Mol Evol
+linkout: http://dx.doi.org/10.1007/s00239-007-9052-6
+month: Feb
+pages: 107-15
+pmid: 18193315
+pubtype: ARTICLE
+title: Invertebrate 7SK snRNAs
+volume: 66
+year: 2008
+---
+abstract: 'BACKGROUND: Evolutionary conservation of RNA secondary structure is a typical feature of many functional non-coding RNAs. Since almost all of the available methods used for prediction and annotation of non-coding RNA genes rely on this evolutionary signature, accurate measures for structural conservation are essential. RESULTS: We systematically assessed the ability of various measures to detect conserved RNA structures in multiple sequence alignments. We tested three existing and eight novel strategies that are based on metrics of folding energies, metrics of single optimal structure predictions, and metrics of structure ensembles. We find that the folding energy based SCI score used in the RNAz program and a simple base-pair distance metric are by far the most accurate. The use of more complex metrics like for example tree editing does not improve performance. A variant of the SCI performed particularly well on highly conserved alignments and is thus a viable alternative when only little evolutionary information is available. Surprisingly, ensemble based methods that, in principle, could benefit from the additional information contained in sub-optimal structures, perform particularly poorly. As a general trend, we observed that methods that include a consensus structure prediction outperformed equivalent methods that only consider pairwise comparisons. CONCLUSION: Structural conservation can be measured accurately with relatively simple and intuitive metrics. They have the potential to form the basis of future RNA gene finders, that face new challenges like finding lineage specific structures or detecting mis-aligned sequences. '
+affiliation: 'Institute for Theoretical Chemistry, University of Vienna, Währingerstrasse 17, 1090 Wien, Austria. agruber@tbi.univie.ac.at'
+authors: 'Gruber, AR and Bernhart, SH and Hofacker, IL and Washietl, S'
+doi: 10.1186/1471-2105-9-122
+issn: 1471-2105
+journal: BMC Bioinformatics
+linkout: http://www.biomedcentral.com/1471-2105/9/122
+pages: 122
+pmid: 18302738
+pubtype: ARTICLE
+title: Strategies for measuring evolutionary conservation of RNA secondary structures
+volume: 9
+year: 2008
+---
+abstract: "Genome sequencing of Helicobacter pylori has revealed the potential proteins and genetic diversity of this prevalent human pathogen, yet little is known about its transcriptional organization and noncoding RNA output. Massively parallel cDNA sequencing (RNA-seq) has been revolutionizing global transcriptomic analysis. Here, using a novel differential approach (dRNA-seq) selective for the 5' end of primary transcripts, we present a genome-wide map of H. pylori transcriptional start sites and operons. We discovered hundreds of transcriptional start sites within operons, and opposite to annotated genes, indicating that complexity of gene expression from the small H. pylori genome is increased by uncoupling of polycistrons and by genome-wide antisense transcription. We also discovered an unexpected number of approximately 60 small RNAs including the epsilon-subdivision counterpart of the regulatory 6S RNA and associated RNA products, and potential regulators of cis- and trans-encoded target messenger RNAs. Our approach establishes a paradigm for mapping and annotating the primary transcriptomes of many living species."
+affiliation: 'Max Planck Institute for Infection Biology, RNA Biology Group, D-10117 Berlin, Germany.'
+authors: 'Sharma, CM and Hoffmann, S and Darfeuille, F and Reignier, J and Findeiss, S and Sittka, A and Chabas, S and Reiche, K and Hackermüller, J and Reinhardt, R and Stadler, PF and Vogel, J'
+doi: 10.1038/nature08756
+issn: 1476-4687
+issue: 7286
+journal: Nature
+linkout: http://dx.doi.org/10.1038/nature08756
+month: Mar
+pages: 250-5
+pmid: 20164839
+pubtype: ARTICLE
+title: The primary transcriptome of the major human pathogen Helicobacter pylori
+volume: 464
+year: 2010
+
+---
+abstract: 'We present an integrative machine learning method, incRNA, for whole-genome identification of noncoding RNAs (ncRNAs). It combines a large amount of expression data, RNA secondary-structure stability, and evolutionary conservation at the protein and nucleic-acid level. Using the incRNA model and data from the modENCODE consortium, we are able to separate known C. elegans ncRNAs from coding sequences and other genomic elements with a high level of accuracy (97% AUC on an independent validation set), and find more than 7000 novel ncRNA candidates, among which more than 1000 are located in the intergenic regions of C. elegans genome. Based on the validation set, we estimate that 91% of the approximately 7000 novel ncRNA candidates are true positives. We then analyze 15 novel ncRNA candidates by RT-PCR, detecting the expression for 14. In addition, we characterize the properties of all the novel ncRNA candidates and find that they have distinct expression patterns across developmental stages and tend to use novel RNA structural families. We also find that they are often targeted by specific transcription factors (âˆ¼59% of intergenic novel ncRNA candidates). Overall, our study identifies many new potential ncRNAs in C. elegans and provides a method that can be adapted to other organisms.'
+affiliation: 'Program in Computational Biology and Bioinformatics, Yale University, New Haven, Connecticut 06520, USA;'
+authors: 'Lu, ZJ and Yip, KY and Wang, G and Shou, C and Hillier, LW and Khurana, E and Agarwal, A and Auerbach, R and Rozowsky, J and Cheng, C and Kato, M and Miller, DM and Slack, F and Snyder, M and Waterston, RH and Reinke, V and Gerstein, MB'
+doi: 10.1101/gr.110189.110
+issn: 1549-5469
+issue: 2
+journal: Genome Res
+linkout: http://genome.cshlp.org/cgi/pmidlookup?view=long&pmid=21177971
+month: Feb
+pages: 276-85
+pmid: 21177971
+pubtype: ARTICLE
+title: 'Prediction and characterization of noncoding RNAs in C. elegans by integrating conservation, secondary structure, and high-throughput sequencing and array data'
+volume: 21
+year: 2011
