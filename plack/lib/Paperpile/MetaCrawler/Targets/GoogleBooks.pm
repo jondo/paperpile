@@ -16,7 +16,7 @@
 
 
 package Paperpile::MetaCrawler::Targets::GoogleBooks;
-use Moose;
+use Mouse;
 use Paperpile::Utils;
 use HTML::TreeBuilder;
 use Paperpile::Library::Author;

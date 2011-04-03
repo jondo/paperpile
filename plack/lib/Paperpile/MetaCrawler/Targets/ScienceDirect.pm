@@ -16,7 +16,7 @@
 
 
 package Paperpile::MetaCrawler::Targets::ScienceDirect;
-use Moose;
+use Mouse;
 use HTML::TreeBuilder;
 use Paperpile::Utils;
 use Paperpile::Formats;

@@ -17,7 +17,7 @@
 
 
 package Paperpile::MetaCrawler::Targets::Pubmed;
-use Moose;
+use Mouse;
 use Paperpile::Plugins::Import::PubMed;
 
 extends 'Paperpile::MetaCrawler::Targets';
@@ -53,3 +53,5 @@ sub convert {
 
   return undef;
 }
+
+1;

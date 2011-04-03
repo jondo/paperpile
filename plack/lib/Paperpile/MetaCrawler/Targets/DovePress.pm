@@ -17,7 +17,7 @@
 
 
 package Paperpile::MetaCrawler::Targets::DovePress;
-use Moose;
+use Mouse;
 use HTML::TreeBuilder;
 use Paperpile::Utils;
 use Paperpile::Formats;

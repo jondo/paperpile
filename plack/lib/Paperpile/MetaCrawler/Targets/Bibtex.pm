@@ -17,7 +17,7 @@
 
 
 package Paperpile::MetaCrawler::Targets::Bibtex;
-use Moose;
+use Mouse;
 extends 'Paperpile::MetaCrawler::Targets';
 
 use Paperpile::Formats::Bibtex;

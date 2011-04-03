@@ -17,7 +17,7 @@
 
 
 package Paperpile::MetaCrawler::Targets::Default;
-use Moose;
+use Mouse;
 use Paperpile::Formats::HTML;
 use Paperpile::MetaCrawler::Targets::Bibtex;
 use Paperpile::Plugins::Import::PubMed;

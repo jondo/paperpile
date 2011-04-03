@@ -17,7 +17,7 @@
 
 
 package Paperpile::MetaCrawler::Targets::Emerald;
-use Moose;
+use Mouse;
 use HTML::TreeBuilder;
 use Paperpile::Utils;
 use Paperpile::Formats;

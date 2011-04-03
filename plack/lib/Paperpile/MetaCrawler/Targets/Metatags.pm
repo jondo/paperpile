@@ -17,7 +17,7 @@
 
 
 package Paperpile::MetaCrawler::Targets::Metatags;
-use Moose;
+use Mouse;
 use Paperpile::Formats::HTML;
 
 extends 'Paperpile::MetaCrawler::Targets';

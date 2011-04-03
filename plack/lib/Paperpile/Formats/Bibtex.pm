@@ -21,6 +21,7 @@ use Data::Dumper;
 use YAML::XS qw/LoadFile/;
 use IO::File;
 use Text::Wrap;
+use Paperpile::App;
 use Paperpile::Formats::TeXEncoding;
 use BibTeX::Parser;
 use BibTeX::Parser::EncodingTable;
@@ -85,7 +86,7 @@ sub read {
   }
   seek($fhtmp,0,0);
 
-  my $config = LoadFile( Paperpile::Utils->path_to('conf/fields.yaml') );
+  my $config = LoadFile( Paperpile::App->path_to('conf/fields.yaml') );
 
   my %built_in = ();
 

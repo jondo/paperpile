@@ -16,7 +16,6 @@
 # Paperpile.  If not, see http://www.gnu.org/licenses.
 
 
-
 package Paperpile::MetaCrawler;
 use Mouse;
 use LWP;
@@ -30,7 +29,6 @@ use Encode;
 use Data::Dumper;
 use Paperpile::Utils;
 use Paperpile::Exceptions;
-use Paperpile::MetaCrawler::Targets;
 
 $Data::Dumper::Indent = 1;
 
@@ -120,7 +118,7 @@ sub search_file {
     my $module = "Paperpile::MetaCrawler::Targets::$target";
     my $m      = eval("use $module; $module->new()");
 
-    print STDERR $@ if $@;
+    print STDERR "===> $@" if $@;
 
     return $m->convert($content, $content_url);
 

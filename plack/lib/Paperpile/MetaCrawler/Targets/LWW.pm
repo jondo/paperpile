@@ -16,7 +16,7 @@
 
 
 package Paperpile::MetaCrawler::Targets::LWW;
-use Moose;
+use Mouse;
 use Paperpile::Utils;
 use Paperpile::Formats;
 use Paperpile::Formats::Ris;

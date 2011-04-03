@@ -16,7 +16,7 @@
 
 
 package Paperpile::MetaCrawler::Targets::SpringerLink;
-use Moose;
+use Mouse;
 use Paperpile::Utils;
 use WWW::Mechanize;
 use HTML::TreeBuilder;

@@ -15,7 +15,7 @@
 # Paperpile.  If not, see http://www.gnu.org/licenses.
 
 package Paperpile::MetaCrawler::Targets::IOP;
-use Moose;
+use Mouse;
 extends 'Paperpile::MetaCrawler::Targets';
 
 use Paperpile::Formats;

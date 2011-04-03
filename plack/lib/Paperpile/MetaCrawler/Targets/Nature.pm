@@ -17,7 +17,7 @@
 
 
 package Paperpile::MetaCrawler::Targets::Nature;
-use Moose;
+use Mouse;
 use HTML::TreeBuilder;
 use HTML::TreeBuilder::XPath;
 use Paperpile::Formats::HTML;

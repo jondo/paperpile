@@ -16,7 +16,7 @@
 
 
 package Paperpile::MetaCrawler::Targets::IEEE;
-use Moose;
+use Mouse;
 use Paperpile::Utils;
 use Paperpile::Formats::HTML;
 use Paperpile::Formats::Bibtex;

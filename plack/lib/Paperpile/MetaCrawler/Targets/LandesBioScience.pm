@@ -16,7 +16,7 @@
 
 
 package Paperpile::MetaCrawler::Targets::LandesBioScience;
-use Moose;
+use Mouse;
 use Paperpile::Formats::HTML;
 
 extends 'Paperpile::MetaCrawler::Targets';

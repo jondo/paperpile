@@ -17,7 +17,7 @@
 
 
 package Paperpile::MetaCrawler::Targets::Lancet;
-use Moose;
+use Mouse;
 use HTML::TreeBuilder;
 use Paperpile::Utils;
 use Paperpile::Formats;

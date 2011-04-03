@@ -17,7 +17,7 @@
 
 
 package Paperpile::MetaCrawler::Targets::LAPress;
-use Moose;
+use Mouse;
 use HTML::TreeBuilder;
 use Paperpile::Utils;
 use Paperpile::Formats;
