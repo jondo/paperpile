@@ -118,7 +118,7 @@ sub search_file {
     my $module = "Paperpile::MetaCrawler::Targets::$target";
     my $m      = eval("use $module; $module->new()");
 
-    print STDERR "===> $@" if $@;
+    print STDERR $@ if $@;
 
     return $m->convert($content, $content_url);
 

@@ -29,10 +29,6 @@ use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
 use Paperpile::Utils;
 
-#use Paperpile::Plugins::Import::SpringerLink;
-#use Paperpile::Plugins::Import::ACM;
-#use Paperpile::Plugins::Import::PubMed;
-#use Paperpile::Plugins::Import::OxfordJournals;
 use Paperpile::Plugins::Import::URL;
 
 extends 'Paperpile::Plugins::Import';

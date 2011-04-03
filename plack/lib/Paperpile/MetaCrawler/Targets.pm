@@ -18,6 +18,7 @@
 
 
 package Paperpile::MetaCrawler::Targets;
+use Mouse;
 use Data::Dumper;
 
 ### Put generic functions here; avoid duplicate code in subclasses!!
