@@ -148,7 +148,7 @@ sub read {
             $data->{booktitle} = $d;
           }
         }
-        case 'T3' {    # series title
+        when ( 'T3' ) {    # series title
           $data->{series} = $d;
         }
         when ( 'A1') {    # primary author
@@ -295,11 +295,11 @@ sub read {
 
         # this are non-standard tags
         # which we unfortunately have been seen in real live data
-        when 'DOI' {
+        when ('DOI') {
           _set_doi( $data, $d, $t );
         }
 
-        when 'DO' {
+        when ('DO') {
           _set_doi( $data, $d, $t );
         }
 
