@@ -17,7 +17,7 @@ my %suites = (
       "t/formats/ris.t",           "t/formats/zotero.t",
       "t/formats/mendeley.t",      "t/plugins/pubmed.t",
       "t/plugins/googlescholar.t", "t/plugins/duplicates.t",
-      "t/plugins/arxiv.t"
+      "t/plugins/arxiv.t",         "t/binaries.t"
     ]
   },
   cover => {

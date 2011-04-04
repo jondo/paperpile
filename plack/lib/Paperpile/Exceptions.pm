@@ -15,7 +15,6 @@
 # received a copy of the GNU Affero General Public License along with
 # Paperpile.  If not, see http://www.gnu.org/licenses.
 
-
 package Paperpile::Exceptions;
 
 use Exception::Class ( PaperpileError,
@@ -28,16 +27,16 @@ use Exception::Class ( PaperpileError,
     isa    => 'PaperpileError',
     fields => 'file'
   },
-  FileSyncConflictError => { isa => 'FileSyncError' },
-  FileReadError         => { isa => 'FileError' },
-  PaperRootNotEmptyError         => { isa => 'FileError' },
-  LibraryMissingError   => { isa => 'FileReadError' },
-  DatabaseVersionError  => { isa => 'FileReadError' },
-  FileWriteError        => { isa => 'FileError' },
-  FileFormatError       => { isa => 'FileError' },
-  DuplicateError        => { isa => 'PaperpileError' },
-  NetError              => { isa => 'PaperpileError' },
-  NetGetError           => {
+  FileSyncConflictError  => { isa => 'FileSyncError' },
+  FileReadError          => { isa => 'FileError' },
+  PaperRootNotEmptyError => { isa => 'FileError' },
+  LibraryMissingError    => { isa => 'FileReadError' },
+  DatabaseVersionError   => { isa => 'FileReadError' },
+  FileWriteError         => { isa => 'FileError' },
+  FileFormatError        => { isa => 'FileError' },
+  DuplicateError         => { isa => 'PaperpileError' },
+  NetError               => { isa => 'PaperpileError' },
+  NetGetError            => {
     isa    => 'NetError',
     fields => 'code',
   },
@@ -53,6 +52,7 @@ use Exception::Class ( PaperpileError,
   CrawlerUnknownSiteError => { isa => 'CrawlerError' },
   CrawlerScrapeError      => { isa => 'CrawlerError' },
   ExtractionError         => { isa => 'PaperpileError', },
+  ExtpdfError             => { isa => 'PaperpileError', },
 
 );
 

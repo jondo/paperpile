@@ -1,0 +1,1237 @@
+Protein family review
+
+Sebastian Maurer-Stroh, Stefan Washietl and Frank Eisenhaber
+
+comment
+
+Protein prenyltransferases
+Address: Research Institute of Molecular Pathology, Dr Bohr-Gasse 7, A-1030 Vienna, Austria.
+Correspondence: Sebastian Maurer-Stroh. E-mail: stroh@imp.univie.ac.at
+Published: 1 April 2003
+
+reviews
+
+Genome Biology 2003, 4:212
+The electronic version of this article is the complete one and can be
+found online at http://genomebiology.com/2003/4/4/212
+© 2003 BioMed Central Ltd
+
+Gene organization
+
+Evolutionary history
+Protein prenyltransferases are currently known only in
+eukaryotes, but they are widespread, being found in vertebrates, insects, nematodes, plants, fungi and protozoa,
+
+Genome Biology 2003, 4:212
+
+information
+
+The genomic organization of the human genes that encode
+protein prenyltransferases is shown in Figure 1. It is interesting
+
+Automatic comparisons of data from expressed sequence
+tags (ESTs) with genes (for example using the program
+Acembly, for which the results are available from the NCBI
+AceView server [2]) shows that all the human protein
+prenyltransferase genes have multiple alternative splice variants. The extent of translation of the various predicted transcripts and the structures and functions of the resulting
+proteins remain to be established experimentally; some of
+the predicted transcripts may be derived from missplicing
+rather than being real splice variants.
+
+interactions
+
+Protein prenylation is the posttranslational attachment of
+either a farnesyl group or a geranylgeranyl group via a
+thioether linkage (-C-S-C-) to a cysteine at or near the carboxyl terminus of the protein. Farnesyl and geranylgeranyl
+groups are polyisoprenes, unsaturated hydrocarbons with a
+multiple of five carbons; the chain is 15 carbons long in the
+farnesyl moiety and 20 carbons long in the geranylgeranyl
+moiety (see Table 1). There are three different protein
+prenyltransferases in humans: farnesyltransferase (FT) and
+geranylgeranyltransferase 1 (GGT1) share the same motif
+(the CaaX box) around the cysteine in their substrates, and
+are thus called CaaX prenyltransferases, whereas geranylgeranyltransferase 2 (GGT2, also called Rab geranylgeranyltransferase) recognizes a different motif and is thus called a
+non-CaaX prenyltransferase [1]. Each protein consists of two
+subunits, ␣ and ␤; the ␣ subunit of FT and GGT1 is encoded
+by the same gene, FNTA (see Table 1).
+
+to note that the genes encoding both subunits of non-CaaX
+prenyltransferases are much smaller (about 6-9 kilobases,
+kb) than those of the CaaX prenyltransferases (about 30-76
+kb). The number of exons in the two types of genes are
+similar; the differences in gene size therefore result from differing intron lengths.
+
+refereed research
+
+Gene organization and evolutionary history
+
+deposited research
+
+Three different protein prenyltransferases (farnesyltransferase and geranylgeranyltransferases I and
+II) catalyze the attachment of prenyl lipid anchors 15 or 20 carbons long to the carboxyl termini of
+a variety of eukaryotic proteins. Farnesyltransferase and geranylgeranyltransferase I both recognize
+a ‘Ca1a2X’ motif on their protein substrates; geranylgeranyltransferase II recognizes a different,
+non-CaaX motif. Each enzyme has two subunits. The genes encoding CaaX protein
+prenyltransferases are considerably longer than those encoding non-CaaX subunits, as a result of
+longer introns. Alternative splice forms are predicted to occur, but the extent to which each splice
+form is translated and the functions of the different resulting isoforms remain to be established.
+Farnesyltransferase-inhibitor drugs have been developed as anti-cancer agents and may also be able
+to treat several other diseases. The effects of these inhibitors are complicated, however, by the
+overlapping substrate specificities of geranylgeranyltransferase I and farnesyltransferase.
+
+reports
+
+Summary
+
+212.2 Genome Biology 2003,
+
+Volume 4, Issue 4, Article 212
+
+Maurer-Stroh et al.
+
+http://genomebiology.com/2003/4/4/212
+
+Table 1
+Features of human protein prenyltransferases
+Farnesyltransferase (FT)
+
+Geranylgeranyltransferase I (GGT1)
+
+Geranylgeranyltransferase II (GGT2 or RabGGT)
+
+Gene name
+(␣ subunit)
+
+FNTA
+
+FNTA
+
+RABGGTA
+
+Gene name
+(␤ subunit)
+
+FNTB
+
+PGGT1B
+
+RABGGTB
+
+Substrate motif
+
+Carboxy-terminal -Ca1a2X box*
+
+Carboxy-terminal -Ca1a2X box*
+
+Carboxy-terminal motif such as -CC, -CXC,
+-CCX, -CCXX, -CCXXX, or -CXXX†
+
+Geranylgeranyl
+
+Geranylgeranyl
+(one or two moieties per substrate)
+
+Lipid anchor
+
+Farnesyl
+
+*C, cysteine; a1, and a2 are amino acids that are preferably aliphatic; the identity of a1 is more flexible than a2. X can be C, S, Q, A, M, T, H, V, N, F, G, or
+I for FT, or L, F, I, V, or M for GGT1 (in decreasing order of affinity). †Requires an escort protein such as REP1.
+
+including several parasites. The chromosomal locations and
+number of exons from protein prenyltransferase genes in
+the major eukaryotic model organisms are shown in
+Table 2. The ␣ and ␤ subunits have different folds, so are
+unlikely to have arisen from a common ancestor. Molecular
+phylogenetic analysis shows that orthologous proteins in
+different species are more closely related to each other than
+to their paralogs in the same species; the relationships
+between the ␤ subunits are not fully clear. As well as the
+known genes, processed pseudogenes resulting from retrotransposition events have been found in the human and
+mouse genomes [3,4].
+The ␣ subunits of protein prenyltransferases consist of tetratricopeptide repeats and are part of the tetratricopeptide
+repeat superfamily [5], which also includes functionally
+diverse proteins involved in transcription, co-chaperoning,
+protein transport, cell-cycle control and phosphorylation.
+Although evolution of repeat proteins is difficult to analyze
+and interpret, Zhang and Grishin [6] have deduced convincingly that the FNTA and RABGGTA genes originated from a
+common ancestor that already contained multiple tetratricopeptide repeats rather than having independently amplified
+the number of motifs as the families diverged over time.
+The evolutionary history of the ␤ subunits of protein prenyltransferases has received much less attention so far than that
+of the ␣ subunits [7]. They can, however, be shown using
+
+standard sequence analysis tools such as PSI-Blast [8] or
+HMMer [9] to be part of a superfamily of prenyltransferases.
+Whereas the ␤ subunits of protein prenyltransferases attach
+lipid anchors to proteins, other members of the superfamily
+catalyze different reactions involving polyisoprenes, such as
+the cyclization of polyisoprene derivatives during the synthesis of hopanoids in bacteria [10], cycloartenol in plants [11],
+ergosterol in fungi [12] and lanosterol in vertebrates [13,14];
+these products are then generally processed further to
+produce essential substances such as cholesterol, steroid
+hormones or vitamin D and their equivalents. A merged
+PFAM [15] domain (PF00432) has been created containing
+the ␤ subunits of protein prenyltransferases, as well as squalene-hopene cyclases and lanosterol and cycloartenol synthases. Intriguingly, structural superposition of the
+conserved (␣-␣)6 barrel forming one half of bacterial squalene-hopene cyclase (the enzyme that synthesizes
+hopanoids) [16] with the ␤ subunit of rat FT [17] reveals correspondence not only of their secondary structural elements
+but also of the parts of their active or binding sites
+(Figure 2). This would make sense if the different enzymes
+have retained common reaction mechanisms - or at least
+common substrate-binding characteristics - during evolution. Indeed, all of the members of the prenyltransferase
+superfamily bind substrates containing isoprenyl units,
+although they bind different numbers and variations of such
+units and the underlying processing and binding mechanisms seem to have diverged widely over time.
+
+Genome Biology 2003, 4:212
+
+http://genomebiology.com/2003/4/4/212
+
+(a)
+
+Genome Biology 2003,
+
+Maurer-Stroh et al. 212.3
+
+Table 2
+
+(b)
+
+FNTA
+
+Volume 4, Issue 4, Article 212
+
+Protein prenyltransferase genes in model organisms
+
+Mus musculus
+
+8
+12
+18
+14
+3
+
+9
+6
+9
+15
+8
+
+Drosophila melanogaster
+
+FTA (GGT1A)
+FTB
+GGT1B
+GGT2A
+GGT2B
+
+2
+3
+2
+3
+2
+
+3
+4
+4
+1
+2
+
+FTA (GGT1A)
+FTB
+GGT1B
+GGT2A
+GGT2B
+
+4
+5
+2
+4
+3
+
+4
+6
+6
+9
+6
+
+Arabidopsis thaliana
+
+FTA (GGT1A)
+FTB
+GGT1B
+GGT2A
+GGT2B
+
+3
+5
+2
+4
+3
+
+5
+14
+11
+8
+9
+
+Saccharomyces cerevisiae
+
+FTA (GGT1A)
+FTB
+GGT1B
+GGT2A
+GGT2B
+
+11
+4
+7
+10
+16
+
+1
+1
+1
+1
+1
+
+RABGGTA
+
+14q11
+
+6.1 kb
+
+9 exons
+
+FNTB
+
+16 exons
+
+14q23-q24
+
+75.9 kb
+
+RABGGTB
+
+12 exons
+1p31
+
+8.9 kb
+
+PGGT1B
+
+deposited research
+
+FTA (GGT1A)
+FTB
+GGT1B
+GGT2A
+GGT2B
+
+29.9 kb
+
+reports
+
+Number
+of exons
+
+reviews
+
+Chromosome
+
+Caenorhabditis elegans
+
+8p22-q1 1
+
+Subunit
+
+comment
+
+Organism
+
+8 exons
+52.0 kb
+
+9 exons
+
+The CaaX prenyltransferases FT and GGT1 and the non-CaaX
+prenyltransferase GGT2 share the same heterodimeric structure [1] (Figure 3). In the ␣ subunits of both types of protein
+prenyltransferases, seven tetratricopeptide repeats are
+formed by pairs of helices (helices 2 to 15) that are stabilized
+
+It is difficult to estimate the effect of alternative splicing on
+the structure of protein prenyltransferases. We would
+expect that the integrity of the structure of the ␤ subunits
+would be more sensitive to non-terminal truncations than
+are the ␣ subunits, because the modular structure of the
+
+Genome Biology 2003, 4:212
+
+information
+
+Characteristic structural features
+
+interactions
+
+Figure 1
+Gene structures and chromosomal locations of human protein
+prenyltransferase subunit genes. The chromosome diagrams and the
+locations of the genes on the cytogenetic map are according to the NCBI
+MapViewer [67]. The sizes of the genes are indicated but are not drawn
+to scale. (a) Genes encoding CaaX protein prenyltransferases are
+relatively long; (b) genes encoding non-CaaX protein prenyltransferases
+are much shorter.
+
+by conserved intercalating residues. The ␣ subunits of GGT2
+in mammals and plants also have an immunoglobulin-like
+domain between the fifth and sixth tetratricopeptide repeat,
+as well as leucine-rich repeats at the carboxyl terminus. The
+functions of these additional domains in GGT2 are as yet
+undefined, but they are apparently not directly involved in
+the interaction with substrates and Rab escort proteins (see
+below) [18,19]. The tetratricopeptide repeats of the ␣ subunit
+form a right-handed superhelix, which embraces the (␣-␣)6
+barrel of the ␤ subunit [20]. The ␤ subunits include most of
+the substrate- and lipid-binding pockets [20] and their tight
+association with the respective ␣ subunits is required for
+proper function [21]. Compared with FT, GGT2 has a larger
+hydrophobic pocket in the ␤ subunit to accommodate the
+longer lipid [22].
+
+refereed research
+
+5q22
+
+212.4 Genome Biology 2003,
+
+(a)
+
+Volume 4, Issue 4, Article 212
+
+Maurer-Stroh et al.
+
+http://genomebiology.com/2003/4/4/212
+
+(b)
+
+(c)
+
+*
+20
+*
+40
+*
+1D8D:B
+95 CLDASRPWLCYWILHSLELLDEPIPQIVATDVCQFLELCQSP-------------DGG
+3SQC:C 305 QASISPVWDTGLAVLALRAAGLPADHDRLVKAGEWLLDRQITvpgdwavkrpnlkPGG
+S
+W
+4 2L1
+P
+1
+13L
+Q
+GG
+
+139
+362
+
+60
+*
+80
+*
+100
+*
+1D8D:B 140 FGGGPGQ--YPHLAPTYAAVNALCIIGTEEAYNVIN-REKLLQYLYSLKQPDGSFLMH
+3SQC:C 363 FAFQFDNvyYPDVCDTAVVVWALNTLRLPDERRRRDaMTKGFRWIVGMQSSNGGWGAY
+F2
+1
+YP 4
+T
+V AL
+4
+1
+1
+1
+K
+134 241
+1G23
+3
+
+194
+420
+
+120
+*
+140
+*
+160
+*
+1D8D:B 195 VG-------------------GEVDVRSAYCAASVASLTNII-TPDLFEGTAEWIARC
+3SQC:C 421 DVdntsdlpnhipfcdfgevtDPPSEDVTAHVLECFGSFGYDdAWKVIRRAVEYLKRE
+1 2
+2
+2 14 1 2 E34 R
+
+232
+478
+
+180
+*
+200
+*
+220
+*
+1D8D:B 233 QNWEGGIGGVPGME---AHGGYTFCGLAALV-ILKKERSLNLKSLLQWVTSRQMRFEG
+3SQC:C 479 QKPDGSWFG----RwgvNYLYGTGAVVSALKaVGIDTREPYIQKALDWVEQHQNP-DG
+Q1 1G2
+G
+1
+3
+T
+42AL
+4
+1 R
+41
+L1WV
+Q
+1G
+
+286
+531
+
+240
+*
+260
+*
+280
+*
+1D8D:B 287 GFQG----------RCNKLVDGCYSFWQAGLLPLLHRALHAQGDPALSMSHWMFHQQA
+3SQC:C 532 GWGEdcrsyedpayAGKGASTPSQTAWALMALIAGGR-------------AESEAARR
+G3
+1
+2 W
+L
+R
+1
+
+334
+576
+
+300
+*
+320
+*
+340
+1D8D:B 335 LQEYILMCCQCPAGGLLDKPGKS-------------RDFYHTCYCLSGLSIAQHFGS
+3SQC:C 577 GVQYLVETQRPD-GGWDE---PYytgtgfpgdfylgYTMYRHVFPTLALGRYKQAIE
+1Y44
+1
+GG
+1
+Y
+3
+2L2
+1
+
+378
+629
+
+Figure 2
+The structural relationship between protein prenyltransferase ␤ subunits and squalene-hopene cyclases. (a) The complete structure of squalene-hopene
+cyclase from the bacterium Alicyclobacillus acidocaldarius (Protein Data Bank (PDB) identifier 3SQC [68]). (b) Structural superposition of the conserved
+(␣-␣)6 barrels of squalene-hopene cyclase (blue) and the rat FT ␤ subunit (cyan; see Figure 3 for the full structure of the FT). Blue spheres, functionally
+important residues in the half of the squalene-hopene cyclase that is shown (the sphere indicates the van der Waals radius); pink spheres, farnesylpyrophosphate and Zn2+ bound to the ␤ subunit of FT; pink residues in stick representation, the Ca1a2X peptide of the substrate protein. (c) Alignment
+of the two proteins on the basis of the structural superposition. Secondary structural elements are colored as in (b); black residues with colored
+background represent ␣ helix and white residues with colored background represent ␤ sheet. Conserved residues and similar residues are shown below
+the alignment; 1, polar; 2, small; 3, aromatic; 4, hydrophobic. The lower-case letters represent residues within 3SQC that were not easily superimposed
+on the 1D8D structure (that is, gaps in 1D8D). The molecular representations were created using VMD [69].
+
+Genome Biology 2003, 4:212
+
+http://genomebiology.com/2003/4/4/212
+
+Genome Biology 2003,
+
+Volume 4, Issue 4, Article 212
+
+Maurer-Stroh et al. 212.5
+
+Enzyme mechanism
+
+Genome Biology 2003, 4:212
+
+information
+
+GGT2 recognizes the structural features of a complex of the
+substrate with an escort protein (Rab escort protein (REP),
+
+Lipid anchors are common posttranslational modifications
+that can direct the subcellular localization of proteins. Other
+lipid modifications, such as myristoylation [36-38], palmitoylation [39,40] and glycosylphosphatidylinositol (GPI)
+anchors [41,42], are mainly important for attachment of the
+protein to membranes, but lipid modification by protein
+prenyltransferases seems to have a more complex role: the
+farnesyl and geranylgeranyl moieties attached to the substrates are directly involved in protein-protein interactions
+as well as in protein-membrane interactions [43]. The
+importance of protein prenyltransferases is illustrated by the
+
+interactions
+
+In contrast to FT and GGT1, GGT2 does not require a very
+specific carboxy-terminal motif [30] apart from the availability of several cysteines close to the carboxyl terminus
+that are often arranged -CC, -CXC, -CCX, -CCXX, -CCXXX
+or, in a few cases, with only a single cysteine as in -CXXX. If
+the motif consists of two cysteines in close proximity, two
+geranylgeranyl moieties are usually added.
+
+As the ␣ subunit of CaaX prenyltransferases is shared
+between FT and GGT1, its expression must be higher than
+that of each ␤ subunit if it is to form 1:1 complexes with the ␤
+subunits of both enzymes. These higher expression levels
+seem to be transcriptionally regulated by different promoters; in order to produce recombinant CaaX prenyltransferases in the laboratory, it is thus necessary to
+downregulate expression of the ␣ subunits when coexpressing with ␤ subunits [35].
+
+refereed research
+
+CaaX prenyltransferases recognize the carboxy-terminal
+Ca1a2X motif (see Table 1) [23,24] of substrate proteins,
+usually after binding farnesyl-pyrophosphate [25] or geranylgeranyl-pyrophosphate [26]. The lipid anchors are then
+transferred by a catalytic mechanism that depends on formation of a complex between a Zn2+ cation and the cysteine
+of the Ca1a2X motif [20]. High concentrations of Mg2+ are
+required for optimal enzymatic activity of FT [27], though
+this is apparently not the case for GGT1 [28]. The Zn2+ is
+suggested to be required for the proper conformation of the
+substrate peptide [17]. The major conformational change in
+the transfer step seems to be a rotation of the prenylpyrophosphate in the binding pocket and not of parts of the
+enzyme itself. A detailed picture of the reaction pathway that
+involves electrophilic and nucleophilic mechanisms is given
+by a series of structures representing the different states [28]
+as well as by kinetic measurements [29].
+
+The results of systematic oligonucleotide microarray experiments catalogued in the human gene-expression index
+database [33,34] show that protein prenyltransferases are
+expressed in a variety of tissues. Both CaaX prenyltransferases seem to be active (that is, their ␣ and ␤ subunits are
+coexpressed) in a range of tissues, and the non-CaaX
+prenyltransferase subunits are also expressed in several
+more tissues. It should be noted, however, that many of the
+expression levels listed [33,34] are close to the detection
+threshold and could therefore result from cross-hybridization between close homologs rather than true expression.
+Interestingly, the ␣ subunits also appear to be expressed in
+tissues that lack expression of the corresponding ␤ subunits; this suggests that single subunits, or isoforms of
+them, might have additional, prenylation-independent
+functions in the cell.
+
+deposited research
+
+tetratricopeptide repeat motifs in the ␣ subunits would
+allow truncations and additions without severe consequences for the hydrophobic packing of the structure.
+
+Localization and function
+reports
+
+Figure 3
+The complete structure of rat FT (PDB identifier 1D8D [70]). The
+spheres in the center represent the farnesyl-pyrophosphate and Zn2+, and
+the amino acids in stick representation are the CaaX motif of the protein
+substrate. The molecular representation was created using VMD [69].
+
+reviews
+
+β
+
+comment
+
+previously known as component A) and then scans the
+carboxyl terminus for prenylatable cysteines [30]. The
+catalytic mechanism of lipid transfer from geranylgeranylpyrophosphate to the protein substrate also requires Zn2+,
+and the following model has been presented for how the
+double geranylgeranylation could take place on the basis of
+insights from the reaction pathway of FT [28]. After attachment of the first prenyl group, the lipid chain is translocated
+over the enzyme surface into another hydrophobic groove
+upon binding of the second geranylgeranyl-pyrophosphate.
+Finally, binding of a third geranylgeranyl-pyrophosphate
+releases the whole complex of the now doubly geranylgeranylated substrate with its escort protein; the escort
+protein is also involved in the transport of the substrate to
+the target membrane [31,32].
+
+α
+
+212.6 Genome Biology 2003,
+
+Volume 4, Issue 4, Article 212
+
+Maurer-Stroh et al.
+
+involvement of their substrates in critical cellular pathways
+and diseases [44].
+
+http://genomebiology.com/2003/4/4/212
+
+Farnesyltransferase
+
+(a)
+
+Substrates and functions of CaaX prenyltransferases
+
+Because several prenylated substrates are involved in diseases, inhibition of protein prenyltransferases has great
+potential for medical applications. A boom in the field was
+triggered by the finding that inhibition of FT in mice that
+have tumors derived from H-Ras-transformed cells leads to
+tumor regression, while the inhibitor has no adverse effect
+on the organism [49]. This led to successful completion of
+clinical phase I trials of farnesyl transferase inhibitors
+(FTIs), but in phase II trials the efficacy of the inhibitors
+towards a broad spectrum of different cancer cells (such as
+K-Ras-transformed cells) was far below the high expectations that arose from the phase I trials. Surprisingly,
+however, beneficial effects were found for other, nonneoplastic diseases; for example, diabetic retinopathy and
+macular degeneration [50]. The unexpected physiological
+effects of FT inhibition are partly due to a striking crossspecificity between the two CaaX prenyltransferases: both
+FT and GGT1 can use either farnesyl-pyrophosphate or
+GGPP to a certain extent to transfer lipids to several of each
+others’ substrates as well as their own [51,52], and several
+substrates can be either farnesylated or geranylgeranylated.
+The substrates probably compete in vivo for the enzymes
+loaded with the preferred polyprenyl-pyrophosphate, and
+the type of modification that is added depends on the relative affinity of the substrates for the enzymes.
+In cancer cells, FTIs are known to affect growth in soft agar
+(anchorage-independent growth), cell-cycle progression at
+
+Vital-F H-Ras K-Ras RhoB-F RhoB-GG Vital-GG
+Geranylgeranyltransferase I
+(b)
+
+(Vital-F)
+
+X
+
+X
+H-Ras
+X
+
+X
+
+Farnesyltransferase
+
+X
+
+Typical substrates that are farnesylated by FT include many
+members of the Ras superfamily of small GTPases (H-Ras,
+K-Ras, N-Ras, Ras2, Rap2, RhoB (which is also geranylgeranylated), RhoE, Rheb, TC10, and TC21), as well as the
+nuclear lamina proteins lamin A and B, the kinetochore proteins CENP-E and CENP-F, fungal mating factors, cGMP
+phosphodiesterase ␣, ␥ subunit variants of G proteins, DnaJ
+heat-shock protein homologs, rhodopsin kinase, the peroxisomal membrane proteins Pex19 and PxF and paralemmin
+(a neural protein suggested to be involved in membrane
+dynamics). GGT1 preferentially geranylgeranylates some of
+the other small GTPases (such as Rac1, Rac2, RalA, Rap1A,
+Rap1B, RhoA, and RhoB (which is also farnesylated, as
+noted above), RhoC, Cdc42, Rab8 (which is also geranylgeranylated by GGT2), Rab11, and Rab13, as well as some
+␥-subunit variants of G proteins, cGMP phosphodiesterase ␤
+and the plant calmodulin CaM53. Typically, prenylation by
+CaaX protein prenyltransferases is accompanied by further
+posttranslational processing, most often involving cleavage
+of the carboxy-terminal tripeptide (-a1a2X) followed by carboxymethylation of the carboxyl terminus [45-47]. Palmitoylation is another modification that sometimes takes place
+after prenylation [48].
+
+X
+
+(K-Ras) RhoB-F RhoB-GG Vital-GG
+X
+
+Geranylgeranyltransferase I
+
+Figure 4
+Differential prenylation of substrates of CaaX protein prenyltransferases (a)
+under normal conditions and (b) in the presence of a FT inhibitor.
+Substrates are shown in the middle of each panel, with the two enzymes
+above and below. ‘Vital-F’ and ‘Vital-GG’ represent all the proteins for which
+farnesylation (Vital-F) or geranylgeranylation (Vital-GG) are essential; RhoBGG represents geranylgeranylated RhoB and RhoB-F represents farnesylated
+RhoB. Thick arrow, normal prenylation activity; thin arrow, reduced
+prenylation activity through cross-specificity of the non-preferred enzyme;
+arrows with crosses, blocked prenylation activity during inhibition of FT;
+brackets, substituting prenylation activity by GGT1 during inhibition of FT.
+
+the G1-S phase and the G2-M phase checkpoints, the morphology of the cytoskeleton (formation of actin stress fibers) and
+induction of apoptosis. The substrate proteins that have
+been suggested to be involved in these effects include H-Ras
+[49], Rheb [53], CENP-E [54] and RhoB [55]; FTI effects are
+reviewed in more detail elsewhere [56]. The effects of FT
+inhibition in cells transformed with H-Ras differ from those
+on cells transformed with K-Ras. This difference has been
+attributed to the ability of GGT1 to alternatively prenylate
+some proteins, through the cross-specificity mentioned
+above, including K-Ras but not H-Ras (see Figure 4). RhoB
+can be both farnesylated and geranylgeranylated; Prendergast and colleagues [57] have suggested that the different
+levels of farnesylated and geranylgeranylated RhoB in FTItreated cells compared with untreated cells could contribute
+to the observed effects of FTIs.
+
+Substrates and functions of non-CaaX
+prenyltransferases
+The main substrates for prenylation by GGT2 are the Rab
+family of proteins, the largest group of small GTPases in the
+
+Genome Biology 2003, 4:212
+
+http://genomebiology.com/2003/4/4/212
+
+Genome Biology 2003,
+
+Volume 4, Issue 4, Article 212
+
+Maurer-Stroh et al. 212.7
+
+Frontiers
+
+The authors are grateful for useful comments from Maria Novatchkova
+and Alexander Schleiffer as well as for continuous support from
+Boehringer Ingelheim. This project has been partly funded by the Fonds
+zur Förderung der wissenschaftlichen Forschung Österreichs (FWF grant
+P15037) and by the Austrian National Bank (OeNB).
+
+References
+1.
+
+2.
+3.
+
+4.
+
+Genome Biology 2003, 4:212
+
+information
+
+5.
+
+Casey PJ, Seabra MC: Protein prenyltransferases. J Biol Chem
+1996, 271:5289-5292.
+A short minireview describing protein prenyltransferases, written
+before the structure was known.
+AceView [http://www.humangenes.org]
+Alignment of expressed sequence tags and mRNAs to the human
+genome, showing alternative splice forms.
+Andres DA, Milatovich A, Ozcelik T, Wenzlau JM, Brown MS, Goldstein JL, Francke U: cDNA cloning of the two subunits of
+human CAAX farnesyltransferase and chromosomal
+mapping of FNTA and FNTB loci and related sequences.
+Genomics 1993, 18:105-112.
+Cloning of human FNTA and FNTB; ‘related sequences’ refers to
+processed pseudogenes.
+Dhawan P, Yang E, Kumar A, Mehta KD: Genetic complexity of
+the human geranylgeranyltransferase I beta-subunit gene: a
+multigene family of pseudogenes derived from mis-spliced
+transcripts. Gene 1998, 210:9-15.
+The authors suggest that there are 13 GGT1B pseudogenes, but these
+seem to correspond to only two in the human genome.
+Blatch GL, Lassle M: The tetratricopeptide repeat: a structural
+motif mediating protein-protein interactions. BioEssays 1999,
+21:932-939.
+Review describing the family of TPR-containing proteins.
+
+interactions
+
+A third issue is the striking differences in gene size and
+intron length between the two types of protein prenyltransferases. One of several possible factors that could have
+caused this is a difference in evolutionary selection pressures. Whereas FT and GGT1 partly compensate each other
+functionally, there is no counterpart for GGT2. Furthermore,
+formation of a complex between the substrate and an escort
+protein is necessary for recognition by GGT2 and the conservation of additional binding sites at the surface is therefore
+required. Also, the severity of the effect when the prenylation
+of different substrates is abolished may vary. Finally, the size
+of the genomic region containing the gene might alter its
+accessibility to the transcription machinery and the time
+needed to complete transcription, so gene size may affect or
+
+Acknowledgements
+
+refereed research
+
+There are several issues that merit further study in the regulation of protein prenyltransferases. Firstly, it is not clear
+how the concomitant transcription of the two subunits
+from two different chromosomes is regulated or where and
+how the subunits meet to build up functional prenyltransferases. Secondly, given that there are multiple splice variants, it is likely that additional variants of subunits will be
+found to have distinct functions or regulatory roles; an
+example is a variant of the FT/GGT1 ␣ subunit that has
+been reported to be directly involved in signaling by transforming growth factor ␤ and activin [65]. Interpretation of
+results in areas ranging from molecular biology to clinical
+trials must take into account possible isoforms with
+varying functions or altered interactions to avoid erroneous conclusions.
+
+deposited research
+
+Finally, more research is also needed on the effects of FTIs.
+After the rush to develop inhibitors, basic research is now
+needed as well as clinical trials in order to improve the
+understanding of the basic processes involved [66]. For
+example, it cannot be ruled out that some effects of FTIs are
+not a direct consequence of inhibiting prenylation but are
+instead due to cross-reactivity with proteins from completely
+different pathways. It is tempting to speculate that one of the
+proteins that are evolutionarily related to the protein prenyltransferases (such as other prenyltransferases) could be
+affected by FTIs; the selectivity of existing FTIs, which do
+not inhibit even the much more closely related GGTs, makes
+this scenario most unlikely, however. The next task is to
+identify clearly the proteins whose altered prenylation
+causes the observed effects of FT inhibition. Given the multiplicity and heterogeneity of these effects, it is clear that they
+cannot be attributed to one single farnesylated protein that
+lacks a lipid modification because of FT inhibition; rather,
+alterations in the function of several proteins probably cause
+the observed effects, with variations depending on the cell
+type, disease and organism. Further research may eventually
+lead to FTIs being used successfully to treat cancers and
+other diseases.
+
+reports
+
+As with CaaX protein prenyltransferases, deficiencies in
+prenylation by non-CaaX protein prenyltransferases are relevant to diseases [59,60]. A mutation inactivating a start
+codon of the major transcript of the ␣ subunit of GGT2 is
+one of the many mutations involved in the recessively inherited Hermansky-Pudlak syndrome and related disorders
+[61,62], in which platelet synthesis, platelet organelle function and pigmentation are affected. X-linked choroideremia
+(CHM) results in retinal degeneration, with symptoms starting from night blindness in young people and progressing
+over decades until vision is completely lost [63]. It is caused
+by loss-of-function mutations in the CHM gene, which
+encodes Rab escort protein 1 (REP1) [64]. Loss-of function
+mutations in the Rab27a gene cause Griscelli syndrome,
+whose symptoms are similar to Hermansky-Pudlak syndrome and other diseases associated with insufficient Rab
+prenylation [60].
+
+reviews
+
+be affected by expression levels. The implications of these
+factors for the exact evolutionary history of the protein
+prenyltransferase genes (such as the relative ages of the subunits and the order of duplication events) remain to be
+established.
+
+comment
+
+Ras superfamily. There are at least 60 different Rabs in
+humans [58]. They interact with the Rab escort protein REP,
+which is required for the prenylation of Rabs by GGT2 [30],
+and are involved in the docking of transport vesicles to their
+specific target membranes [59].
+
+212.8 Genome Biology 2003,
+
+6.
+
+7.
+
+8.
+
+9.
+
+10.
+11.
+
+12.
+
+13.
+
+14.
+
+15.
+
+16.
+
+17.
+
+18.
+
+19.
+
+20.
+
+21.
+
+Volume 4, Issue 4, Article 212
+
+Maurer-Stroh et al.
+
+Zhang H, Grishin NV: The alpha-subunit of protein prenyltransferases is a member of the tetratricopeptide repeat
+family. Protein Sci 1999, 8:1658-1667.
+Evolutionary history and relationships of the FT ␣ subunit.
+Liang PH, Ko TP, Wang AH: Structure, mechanism and function of prenyltransferases. Eur J Biochem 2002, 269:3339-3354.
+A review giving a quick overview of isoprenyl-pyrophosphate synthases,
+isoprenyl cyclases and protein prenyltransferases that share processing
+polyisoprene derivatives in some way with partly overlapping structures
+and reaction mechanisms.
+Altschul SF, Madden TL, Schaffer AA, Zhang J, Zhang Z, Miller W,
+Lipman DJ: Gapped BLAST and PSI-BLAST: a new generation of protein database search programs. Nucleic Acids Res
+1997, 25:3389-3402.
+The standard reference for the sequence similarity search tools of the
+BLAST suite.
+Eddy SR: Profile hidden Markov models. Bioinformatics 1998,
+14:755-763.
+A sensitive alternative method to BLAST for sequence similarity
+searches.
+Wendt KU, Poralla K, Schulz GE: Structure and function of a
+squalene cyclase. Science 1997, 277:1811-1815.
+The first crystal structure of a squalene cyclase.
+Nes WD, Venkatramesh M: Enzymology of phytosterol transformations. Crit Rev Biochem Mol Biol 1999, 34:81-93.
+A review on plant hormone synthesis, including the cycloartenol synthases, which are homologous to the beta subunit of protein prenyltranserases.
+Sturley SL: Conservation of eukaryotic sterol homeostasis:
+new insights from studies in budding yeast. Biochim Biophys
+Acta 2000, 1529:155-163.
+A review including discussion of ergosterol synthesis in fungi.
+Janowski BA, Willy PJ, Devi TR, Falck JR, Mangelsdorf DJ: An oxysterol signalling pathway mediated by the nuclear receptor
+LXR alpha. Nature 1996, 383:728-731.
+A description of intermediate steps in steroid hormone and cholesterol
+synthesis.
+Kim JH, Lee JN, Paik YK: Cholesterol biosynthesis from
+lanosterol. A concerted role for Sp1 and NF-Y-binding sites
+for sterol-mediated regulation of rat 7- dehydrocholesterol
+reductase gene expression. J Biol Chem 2001, 276:18153-18160.
+Analysis of the cholesterol biosynthesis pathway, starting from lanosterol.
+Bateman A, Birney E, Durbin R, Eddy SR, Howe KL, Sonnhammer EL:
+The Pfam protein families database. Nucleic Acids Res 2000,
+28:263-266.
+A protein families database automatically generated by clustering proteins into families according to similarity identified with hidden Markov
+models.
+Wendt KU, Lenhart A, Schulz GE: The structure of the membrane protein squalene-hopene cyclase at 2.0 Å resolution.
+J Mol Biol 1999, 286:175-187.
+High-resolution structure of squalene-hopene cyclase plus discussion of
+catalytic mechanism and membrane interaction surfaces.
+Long SB, Casey PJ, Beese LS: The basis for K-Ras4B binding
+specificity to protein farnesyltransferase revealed by 2 Å
+resolution ternary complex structures. Structure Fold Des 2000,
+8:209-222.
+The first crystal structure of FT in complex with farnesyl-pyrophosphate.
+Dursina B, Thoma NH, Sidorovitch V, Niculae A, Iakovenko A, Rak
+A, Albert S, Ceacareanu AC, Kolling R, Herrmann C, et al.: Interaction of yeast Rab geranylgeranyl transferase with its protein
+and lipid substrates. Biochemistry 2002, 41:6805-6816.
+Shows that immunoglobulin-like and leucine-rich repeat domains are
+not required for non-CaaX prenylation.
+Pylypenko O, Rak A, Reents R, Niculae A, Sidorovitch V, Cioaca MD,
+Bessolitsyna E, Thoma NH, Waldmann H, Schlichting I, et al.: Structure of rab escort protein-1 in complex with rab geranylgeranyltransferase. Mol Cell 2003, 11:483-494.
+Structure of the complex of GGT2 with REP1.
+Park HW, Boduluri SR, Moomaw JF, Casey PJ, Beese LS: Crystal
+structure of protein farnesyltransferase at 2.25 angstrom
+resolution. Science 1997, 275:1800-1804.
+The first crystal structure of protein FT.
+Andres DA, Goldstein JL, Ho YK, Brown MS: Mutational analysis
+of alpha-subunit of protein farnesyltransferase. Evidence for
+a catalytic role. J Biol Chem 1993, 268:1383-1390.
+The first evidence for residues of the ␣ subunit being involved in catalysis.
+
+http://genomebiology.com/2003/4/4/212
+
+22. Zhang H, Seabra MC, Deisenhofer J: Crystal structure of Rab
+geranylgeranyltransferase at 2.0 A resolution. Structure Fold
+Des 2000, 8:241-251.
+The first crystal structure of GGT2.
+23. Moores SL, Schaber MD, Mosser SD, Rands E, O’Hara MB, Garsky
+VM, Marshall MS, Pompliano DL, Gibbs JB: Sequence dependence
+of protein isoprenylation. J Biol Chem 1991, 266:14603-14610.
+Detailed analysis of the amino-acid composition of the motifs recognized by protein prenyltransferases.
+24. Caplin BE, Hettich LA, Marshall MS: Substrate characterization
+of the Saccharomyces cerevisiae protein farnesyltransferase
+and type-I protein geranylgeranyltransferase. Biochim Biophys
+Acta 1994, 1205:39-48.
+Characterization of substrate motifs in yeast and the cross-specificity
+between FT and GGT1.
+25. Reiss Y, Goldstein JL, Seabra MC, Casey PJ, Brown MS: Inhibition
+of purified p21ras farnesyl:protein transferase by Cys-AAX
+tetrapeptides. Cell 1990, 62:81-88.
+An early biochemical analysis of FT including farnesyl-pyrophosphate
+binding and inhibition with CaaX tetrapeptides.
+26. Yokoyama K, McGeady P, Gelb MH: Mammalian protein geranylgeranyltransferase-I: substrate specificity, kinetic mechanism, metal requirements, and affinity labeling. Biochemistry
+1995, 34:1344-1354.
+Complete biochemical characterization of mammalian GGT1.
+27. Saderholm MJ, Hightower KE, Fierke CA: Role of metals in the
+reaction catalyzed by protein farnesyltransferase. Biochemistry
+2000, 39: 12398-12405.
+The metal requirements of FT catalysis.
+28. Long SB, Casey PJ, Beese LS: Reaction path of protein farnesyltransferase at atomic resolution. Nature 2002, 419:645-650.
+Completion of a series of structures resembling intermediate steps of
+the reaction pathway of FT. Discussion of implications for all three
+protein prenyltransferases.
+29. Furfine ES, Leban JJ, Landavazo A, Moomaw JF, Casey PJ: Protein
+farnesyltransferase: kinetics of farnesyl pyrophosphate
+binding and product release. Biochemistry 1995, 34:6857-6862.
+Kinetic analysis of the reaction pathway of FT.
+30. Alexandrov K, Simon I, Yurchenko V, Iakovenko A, Rostkova E,
+Scheidig AJ, Goody RS: Characterization of the ternary
+complex between Rab7, REP-1 and Rab geranylgeranyl
+transferase. Eur J Biochem 1999, 265:160-170.
+GGT2 prenylation requires formation of complex of GGT2 with substrate and escort protein.
+31. Alexandrov K, Horiuchi H, Steele-Mortimer O, Seabra MC, Zerial M:
+Rab escort protein-1 is a multifunctional protein that
+accompanies newly prenylated rab proteins to their target
+membranes. EMBO J 1994, 13:5262-5273.
+Rab escort protein is not only required for the prenylation reaction but
+also accompanies Rab substrates to the membrane. This article also
+presents its homology to the GDP dissociation inhibitor.
+32. Benito-Moreno RM, Miaczynska M, Bauer BE, Schweyen RJ, Ragnini
+A: Mrs6p, the yeast homologue of the mammalian choroideraemia protein: immunological evidence for its function
+as the Ypt1p Rab escort protein. Curr Genet 1994, 27:23-25.
+Characterization of the yeast Rab/Ypt escort protein.
+33. Haverty PM, Weng Z, Best NL, Auerbach KR, Hsiao LL, Jensen RV,
+Gullans SR: HugeIndex: a database with visualization tools for
+high-density oligonucleotide array data from normal human
+tissues. Nucleic Acids Res 2002, 30:214-217.
+Systematic mRNA expression analysis of human tissues.
+34. HuGE Index [http://hugeindex.org/]
+A database of systematic mRNA expression analyses of human tissues.
+35. Tsao KL, Waugh DS: Balancing the production of two recombinant proteins in Escherichia coli by manipulating plasmid
+copy number: high-level expression of heterodimeric Ras
+farnesyltransferase. Protein Expr Purif 1997, 11:233-240.
+The ␣ subunit has to be downregulated when coexpressed with the ␤
+subunit in order to yield high levels of recombinant FT.
+36. Gordon JI, Duronio RJ, Rudnick DA, Adams SP, Gokel GW: Protein
+N-myristoylation. J Biol Chem 1991, 266:8647-8650.
+Compact review on protein N-myristoylation.
+37. Maurer-Stroh S, Eisenhaber B, Eisenhaber F: N-terminal N-myristoylation of proteins: refinement of the sequence motif and
+its taxon-specific differences. J Mol Biol 2002, 317:523-540.
+A detailed update of the sequence motif for N-myristoylation as well as
+enzyme-substrate interactions.
+
+Genome Biology 2003, 4:212
+
+http://genomebiology.com/2003/4/4/212
+
+Genome Biology 2003,
+
+Maurer-Stroh et al. 212.9
+
+reports
+deposited research
+refereed research
+interactions
+information
+
+Genome Biology 2003, 4:212
+
+reviews
+
+54. Ashar HR, James L, Gray K, Carr D, Black S, Armstrong L, Bishop
+WR, Kirschmeier P: Farnesyl transferase inhibitors block the
+farnesylation of CENP-E and CENP-F and alter the association of CENP-E with the microtubules. J Biol Chem 2000,
+275:30451-30457.
+A lack of prenylation of CENP-E affects microtubule-centromere interaction at the G2/M phase checkpoint.
+55. Lebowitz PF, Casey PJ, Prendergast GC, Thissen JA: Farnesyltransferase inhibitors alter the prenylation and growth-stimulating function of RhoB. J Biol Chem 1997, 272:15591-15594.
+Altering the prenylation status of RhoB alters its functions.
+56. Tamanoi F, Gau CL, Jiang C, Edamatsu H, Kato-Stankiewicz J:
+Protein farnesylation in mammalian cells: effects of farnesyltransferase inhibitors on cancer cells. Cell Mol Life Sci 2001,
+58:1636-1649.
+A review on cellular processes affected by FT inhibition in mammalian
+cancers.
+57. Prendergast GC: Actin’ up: RhoB in cancer and apoptosis. Nat
+Rev Cancer 2001, 1:162-168.
+A short review of RhoB function, including a hypothesis on the effects
+of FTIs.
+58. Pereira-Leal JB, Seabra MC: Evolution of the Rab family of small
+GTP-binding proteins. J Mol Biol 2001, 313:889-901.
+An extensive analysis of Rab proteins in eukaryotic genomes.
+59. Seabra MC, Mules EH, Hume AN: Rab GTPases, intracellular
+traffic and disease. Trends Mol Med 2002, 8:23-30.
+An update of Rab functions and localizations, plus their involvement in
+disease.
+60. Pereira-Leal JB, Hume AN, Seabra MC: Prenylation of Rab
+GTPases: molecular mechanisms and involvement in
+genetic disease. FEBS Lett 2001, 498:197-200.
+A minireview of Rab prenylation deficiency and disease.
+61. Huizing M, Anikster Y, Gahl WA: Hermansky-Pudlak syndrome
+and related disorders of organelle formation. Traffic 2000,
+1:823-835.
+A review on Hermansky-Pudlak syndrome and related disorders.
+62. Detter JC, Zhang Q, Mules EH, Novak EK, Mishra VS, Li W, McMurtrie EB, Tchernev VT, Wallace MR, Seabra MC, et al.: Rab geranylgeranyl transferase alpha mutation in the gunmetal mouse
+reduces Rab prenylation and platelet synthesis. Proc Natl Acad
+Sci USA 2000, 97:4144-4149.
+Genetic and molecular basis for Rab prenylation deficiency in Hermansky-Pudlak syndrome.
+63. Seabra MC: New insights into the pathogenesis of choroideremia: a tale of two REPs. Ophthalmic Genet 1996, 17:43-46.
+The mechanism of choroideremia pathology involves an inability of Rab
+escort protein 2 to fully substitute for function of Rab escort protein 1.
+64. van den Hurk JA, Schwartz M, van Bokhoven H, van de Pol TJ,
+Bogerd L, Pinckers AJ, Bleeker-Wagemakers EM, Pawlowitzki IH,
+Ruther K, Ropers HH, et al.: Molecular basis of choroideremia
+(CHM): mutations involving the Rab escort protein-1 (REP1) gene. Hum Mutat 1997, 9:110-117.
+A loss-of-function mutation in the CHM gene that codes for Rab escort
+protein 1 results in choroideremia.
+65. Wang T, Danielson PD, Li BY, Shah PC, Kim SD, Donahoe PK: The
+p21(RAS) farnesyltransferase alpha subunit in TGF-beta and
+activin signaling. Science 1996, 271:1120-1122.
+An isoform of FT ␣ subunit that has a non-classical function.
+66. Cox AD, Der CJ: Farnesyltransferase inhibitors: promises and
+realities. Curr Opin Pharmacol 2002, 2:388-393.
+A review on the pitfalls of FT inhibition.
+67. Homo sapiens genome view
+[http://www.ncbi.nlm.nih.gov/mapview/map_search.cgi?]
+Graphical display of features of the human genome sequence.
+68. Protein Data Bank: structure explorer - 3SQC
+[http://www.rcsb.org/pdb/cgi/explore.cgi?pdbId=3SQC]
+Information on the three-dimensional structure of bacterial squalenehopene cyclase.
+69. Visual Molecular Dynamics
+[http://www.ks.uiuc.edu/Research/vmd/]
+Free software for displaying, animating, and analyzing large biomolecular
+systems.
+70. Protein Data Bank: structure explorer - 1D8D
+[http://www.rcsb.org/pdb/cgi/explore.cgi?pdbId=1D8D]
+Information on the three-dimensional structure of rat FT.
+
+comment
+
+38. Maurer-Stroh S, Eisenhaber B, Eisenhaber F: N-terminal N-myristoylation of proteins: prediction of substrate proteins from
+amino acid sequence. J Mol Biol 2002, 317:541-557.
+Large-scale prediction unveils a series of new target proteins for
+protein N-myristoylation.
+39. Morello JP, Bouvier M: Palmitoylation: a post-translational
+modification that regulates signalling from G-protein
+coupled receptors. Biochem Cell Biol 1996, 74:449-457.
+A review on the importance of palmitoylation in G-protein signaling.
+40. Resh MD: Fatty acylation of proteins: new insights into membrane targeting of myristoylated and palmitoylated proteins. Biochim Biophys Acta 1999, 1451:1-16.
+A short review on myristoyl and palmitoyl anchors for membrane targeting.
+41. Chatterjee S, Mayor S: The GPI-anchor and protein sorting. Cell
+Mol Life Sci 2001, 58:1969-1987.
+A review on glycosylphosphatidylinositol lipid anchors.
+42. Eisenhaber B, Bork P, Eisenhaber F: Post-translational GPI lipid
+anchor modification of proteins in kingdoms of life: analysis
+of protein sequence data from complete genomes. Protein
+Eng 2001, 14:17-25.
+Full genome analyses of GPI-anchor-containing proteins.
+43. Sinensky M: Functional aspects of polyisoprenoid protein substituents: roles in protein-protein interaction and trafficking. Biochim Biophys Acta 2000, 1529:203-209.
+Role of farnesyl and geranylgeranyl anchors in protein-protein interactions.
+44. Sinensky M: Recent advances in the study of prenylated proteins. Biochim Biophys Acta 2000, 1484:93-106.
+Review on enzymology and function of protein prenylation.
+45. Trueblood CE, Boyartchuk VL, Picologlou EA, Rozema D, Poulter
+CD, Rine J: The CaaX proteases, Afc1p and Rce1p, have
+overlapping but distinct substrate specificities. Mol Cell Biol
+2000, 20:4381-4392.
+Characterization of endoproteases cleaving the carboxy-terminal
+tripeptide after prenylation of cysteine in the CaaX motif.
+46. Pei J, Grishin NV: Type II CAAX prenyl endopeptidases
+belong to a novel superfamily of putative membrane-bound
+metalloproteases. Trends Biochem Sci 2001, 26:275-277.
+A description of a protein superfamily that includes CaaX prenyl endoproteases.
+47. Bergo MO, Leung GK, Ambroziak P, Otto JC, Casey PJ, Gomes AQ,
+Seabra MC, Young SG: Isoprenylcysteine carboxyl methyltransferase deficiency in mice. J Biol Chem 2001, 276:5841-5845.
+A description of the methyltransferase that carboxymethylates cysteines at the carboxyl terminus of prenylated proteins.
+48. Hancock JF, Magee AI, Childs JE, Marshall CJ: All ras proteins are
+polyisoprenylated but only some are palmitoylated. Cell
+1989, 57:1167-1177.
+Palmitoylation of Ras proteins sometimes takes place after prenylation.
+49. Kohl NE, Omer CA, Conner MW, Anthony NJ, Davide JP, deSolms
+SJ, Giuliani EA, Gomez RP, Graham SL, Hamilton K, et al.: Inhibition
+of farnesyltransferase induces regression of mammary and
+salivary carcinomas in ras transgenic mice. Nat Med 1995,
+1:792-797.
+FT inhibition causes tumor regression in H-Ras transforming mice with
+minimal side-effects on the organism.
+50. Prendergast GC, Rane N: Farnesyltransferase inhibitors: mechanism and applications. Expert Opin Investig Drugs 2001, 10:21052116.
+Detailed review on FTI, including their effects on non-neoplastic
+diseases.
+51. Armstrong SA, Hannah VC, Goldstein JL, Brown MS: CAAX geranylgeranyl transferase transfers farnesyl as efficiently as
+geranylgeranyl to RhoB. J Biol Chem 1995, 270:7864-7868.
+Reports that GGT1 can farnesylate RhoB as well as geranylgeranylating
+it, a surprising finding.
+52. Yokoyama K, Zimmerman K, Scholten J, Gelb MH: Differential
+prenyl pyrophosphate binding to mammalian protein geranylgeranyltransferase-I and protein farnesyltransferase and
+its consequence on the specificity of protein prenylation.
+J Biol Chem 1997, 272:3944-3952.
+Detailed analysis of prenyl pyrophosphate cross-specificity of FT and
+GGT1.
+53. Tamanoi F, Kato-Stankiewicz J, Jiang C, Machado I, Thapar N: Farnesylated proteins and cell cycle progression. J Cell Biochem
+2001, Suppl 37:64-70.
+The involvement of farnesylated proteins in the cell cycle in the light of
+the effects of FT inhibition.
+
+Volume 4, Issue 4, Article 212
+
+

@@ -4,7 +4,7 @@ use strict;
 use Test::More;
 use Data::Dumper;
 use Paperpile;
-use Paperpile::Utils;
+use Paperpile::App;
 use base 'Test::Paperpile';
 
 sub class { 'Paperpile::PdfCrawler' }
@@ -14,7 +14,7 @@ sub startup : Tests(startup => 2) {
 
   use_ok $self->class;
 
-  $self->{driver_file} = Paperpile::Utils->path_to("data/pdf-crawler.xml")->stringify;
+  $self->{driver_file} = Paperpile::App->path_to("data/pdf-crawler.xml");
 
   ok( -e $self->{driver_file}, "Found driver file." ) || $self->SKIP_ALL("PDF crawler driver file not found");
 

@@ -31,6 +31,7 @@ use Storable qw(lock_store lock_retrieve);
 use Digest::MD5;
 use URI::Split qw(uri_split uri_join);
 use Encode;
+use XML::Simple;
 
 use Data::Dumper;
 use Date::Format;
@@ -590,7 +591,52 @@ sub decode_data {
 sub gm_timestamp {
 
   my @time = gmtime(time);
-  return strftime("%Y-%m-%d %X", @time);
+  return strftime( "%Y-%m-%d %X", @time );
+
+}
+
+
+# Run extpdf with arguments given as hashref in $arguments. Returns
+# either hashref with results (INFO, WORDLIST) or a simple scalar
+# value with the data (TEXT, RENDER)
+
+sub extpdf {
+
+  my ( $self, $arguments ) = @_;
+
+  my $command = $arguments->{command};
+
+  if ( !( $command ~~ [ 'INFO', 'WORDLIST', 'TEXT', 'RENDER' ] ) ) {
+    ExtpdfError->throw( error => "Unknown command '$command' for extpdf" );
+  }
+
+  my $extpdf = $self->get_binary('extpdf');
+
+  my $xml = XMLout( $arguments, RootName => 'extpdf', XMLDecl => 1, NoAttr => 1 );
+
+  my ( $fh, $filename ) = File::Temp::tempfile();
+  print $fh $xml;
+  close($fh);
+
+  my @result = `$extpdf $filename`;
+
+  if ( $? != 0 ) {
+    ExtpdfError->throw( error => "Unknown error in extpdf." );
+  }
+
+  my ($output_string, $output);
+
+  $output_string.=$_ foreach (@result);
+
+  if ($command ~~ ['INFO', 'WORDLIST']){
+    $output = XMLin($output_string);
+  } else {
+    $output = $output_string;
+  }
+
+  unlink($filename);
+
+  return $output;
 
 }
 

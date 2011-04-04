@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<extpdf>
+  <comment>Extpdf: Create wordlist for page 1</comment>
+  <command>WORDLIST</command>
+  <inFile>test.pdf</inFile>
+  <page>0</page>
+</extpdf>

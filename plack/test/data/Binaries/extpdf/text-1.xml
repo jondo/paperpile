@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<extpdf>
+  <comment>Extpdf: Dumping text</comment>
+  <command>TEXT</command>
+  <inFile>test.pdf</inFile>
+</extpdf>
