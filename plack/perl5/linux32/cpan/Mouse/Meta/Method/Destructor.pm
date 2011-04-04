@@ -1,36 +1,74 @@
 package Mouse::Meta::Method::Destructor;
-use strict;
-use warnings;
+use Mouse::Util qw(:meta); # enables strict and warnings
 
-sub generate_destructor_method_inline {
-    my ($class, $meta) = @_;
+use constant _MOUSE_DEBUG => $ENV{MOUSE_DEBUG} ? 1 : 0;
 
-    my $demolishall = do {
-        if ($meta->name->can('DEMOLISH')) {
-            my @code = ();
-            no strict 'refs';
-            for my $klass ($meta->linearized_isa) {
-                if (*{$klass . '::DEMOLISH'}{CODE}) {
-                    push @code, "${klass}::DEMOLISH(\$self);";
-                }
-            }
-            join "\n", @code;
-        } else {
-            return sub { }; # no demolish =)
+sub _generate_destructor{
+    my (undef, $metaclass) = @_;
+
+    my $demolishall = '';
+    for my $class ($metaclass->linearized_isa) {
+        if (Mouse::Util::get_code_ref($class, 'DEMOLISH')) {
+            $demolishall .= '                ' . $class
+                . '::DEMOLISH($self, $Mouse::Util::in_global_destruction);'
+                . "\n",
         }
-    };
-
-    my $code = <<"...";
-    sub {
-        my \$self = shift;
-        $demolishall;
     }
-...
 
-    local $@;
-    my $res = eval $code;
-    die $@ if $@;
-    return $res;
+    if($demolishall) {
+        $demolishall = sprintf <<'EOT', $demolishall;
+        my $e = do{
+            local $?;
+            local $@;
+            eval{
+                %s;
+            };
+            $@;
+        };
+        no warnings 'misc';
+        die $e if $e; # rethrow
+EOT
+    }
+
+    my $name   = $metaclass->name;
+    my $source = sprintf(<<'EOT', __FILE__, $name, $demolishall);
+#line 1 "%s"
+    package %s;
+    sub {
+        my($self) = @_;
+        return $self->Mouse::Object::DESTROY()
+            if ref($self) ne __PACKAGE__;
+        # DEMOLISHALL
+        %s;
+        return;
+    }
+EOT
+
+    warn $source if _MOUSE_DEBUG;
+
+    my $code;
+    my $e = do{
+        local $@;
+        $code = eval $source;
+        $@;
+    };
+    die $e if $e;
+    return $code;
 }
 
 1;
+__END__
+
+=head1 NAME
+
+Mouse::Meta::Method::Destructor - A Mouse method generator for destructors
+
+=head1 VERSION
+
+This document describes Mouse version 0.91
+
+=head1 SEE ALSO
+
+L<Moose::Meta::Method::Destructor>
+
+=cut

@@ -1,306 +1,145 @@
 package Mouse::Meta::Role;
-use strict;
-use warnings;
-use Carp 'confess';
-use Mouse::Util qw(version authority identifier);
+use Mouse::Util qw(:meta); # enables strict and warnings
 
-do {
-    my %METACLASS_CACHE;
+use Mouse::Meta::Module;
+our @ISA = qw(Mouse::Meta::Module);
 
-    # because Mouse doesn't introspect existing classes, we're forced to
-    # only pay attention to other Mouse classes
-    sub _metaclass_cache {
-        my $class = shift;
-        my $name  = shift;
-        return $METACLASS_CACHE{$name};
-    }
+sub method_metaclass;
 
-    sub initialize {
-        my $class = shift;
-        my $name  = shift;
-        $METACLASS_CACHE{$name} = $class->new(name => $name)
-            if !exists($METACLASS_CACHE{$name});
-        return $METACLASS_CACHE{$name};
-    }
-};
-
-sub new {
+sub _construct_meta {
     my $class = shift;
+
     my %args  = @_;
 
-    $args{attributes}       ||= {};
-    $args{required_methods} ||= [];
-    $args{roles}            ||= [];
+    $args{methods}          = {};
+    $args{attributes}       = {};
+    $args{required_methods} = [];
+    $args{roles}            = [];
 
-    bless \%args, $class;
+    my $self = bless \%args, ref($class) || $class;
+    if($class ne __PACKAGE__){
+        $self->meta->_initialize_object($self, \%args);
+    }
+    return $self;
 }
 
-sub name { $_[0]->{name} }
+sub create_anon_role{
+    my $self = shift;
+    return $self->create(undef, @_);
+}
+
+sub is_anon_role;
+
+sub get_roles;
+
+sub calculate_all_roles {
+    my $self = shift;
+    my %seen;
+    return grep { !$seen{ $_->name }++ }
+           ($self, map  { $_->calculate_all_roles } @{ $self->get_roles });
+}
+
+sub get_required_method_list{
+    return @{ $_[0]->{required_methods} };
+}
 
 sub add_required_methods {
-    my $self = shift;
-    my @methods = @_;
-    push @{$self->{required_methods}}, @methods;
+    my($self, @methods) = @_;
+    my %required = map{ $_ => 1 } @{$self->{required_methods}};
+    push @{$self->{required_methods}}, grep{ !$required{$_}++ && !$self->has_method($_) } @methods;
+    return;
 }
 
-
+sub requires_method {
+    my($self, $name) = @_;
+    return scalar( grep{ $_ eq $name } @{ $self->{required_methods} } ) != 0;
+}
 
 sub add_attribute {
     my $self = shift;
     my $name = shift;
-    my $spec = shift;
-    $self->{attributes}->{$name} = $spec;
+
+    $self->{attributes}->{$name} = (@_ == 1) ? $_[0] : { @_ };
+    return;
 }
 
-sub has_attribute { exists $_[0]->{attributes}->{$_[1]}  }
-sub get_attribute_list { keys %{ $_[0]->{attributes} } }
-sub get_attribute { $_[0]->{attributes}->{$_[1]} }
-
-# copied from Class::Inspector
-sub get_method_list {
-    my $self = shift;
-    my $name = $self->name;
-
-    no strict 'refs';
-    # Get all the CODE symbol table entries
-    my @functions =
-      grep !/^(?:has|with|around|before|after|augment|inner|override|super|blessed|extends|confess|excludes|meta|requires)$/,
-      grep { defined &{"${name}::$_"} }
-      keys %{"${name}::"};
-    wantarray ? @functions : \@functions;
-}
-
-# Moose uses Application::ToInstance, Application::ToClass, Application::ToRole
 sub apply {
-    my $self  = shift;
-    my $selfname = $self->name;
-    my $class = shift;
-    my $classname = $class->name;
-    my %args  = @_;
+    my $self     = shift;
+    my $consumer = shift;
 
-    if ($class->isa('Mouse::Object')) {
-        Carp::croak('Mouse does not support Application::ToInstance yet');
-    }
-
-    if ($class->isa('Mouse::Meta::Class')) {
-        for my $name (@{$self->{required_methods}}) {
-            unless ($classname->can($name)) {
-                confess "'$selfname' requires the method '$name' to be implemented by '$classname'";
-            }
-        }
-    }
-
-    {
-        no strict 'refs';
-        for my $name ($self->get_method_list) {
-            next if $name eq 'meta';
-
-            my $class_function = "${classname}::${name}";
-            my $role_function = "${selfname}::${name}";
-            if (defined &$class_function) {
-                # XXX what's Moose's behavior?
-                #next;
-            } else {
-                *{$class_function} = \&{$role_function};
-            }
-            if ($args{alias} && $args{alias}->{$name}) {
-                my $dstname = $args{alias}->{$name};
-                unless ($classname->can($dstname)) {
-                    *{"${classname}::${dstname}"} = \&$role_function;
-                }
-            }
-        }
-    }
-
-    if ($class->isa('Mouse::Meta::Class')) {
-        # apply role to class
-        for my $name ($self->get_attribute_list) {
-            next if $class->has_attribute($name);
-            my $spec = $self->get_attribute($name);
-
-            my $metaclass = 'Mouse::Meta::Attribute';
-            if ( my $metaclass_name = $spec->{metaclass} ) {
-                my $new_class = Mouse::Util::resolve_metaclass_alias(
-                    'Attribute',
-                    $metaclass_name
-                );
-                if ( $metaclass ne $new_class ) {
-                    $metaclass = $new_class;
-                }
-            }
-
-            $metaclass->create($class, $name, %$spec);
-        }
-    } else {
-        # apply role to role
-        # XXX Room for speed improvement
-        for my $name ($self->get_attribute_list) {
-            next if $class->has_attribute($name);
-            my $spec = $self->get_attribute($name);
-            $class->add_attribute($name, $spec);
-        }
-    }
-
-    # XXX Room for speed improvement in role to role
-    for my $modifier_type (qw/before after around override/) {
-        my $add_method = "add_${modifier_type}_method_modifier";
-        my $modified = $self->{"${modifier_type}_method_modifiers"};
-
-        for my $method_name (keys %$modified) {
-            for my $code (@{ $modified->{$method_name} }) {
-                $class->$add_method($method_name => $code);
-            }
-        }
-    }
-
-    # append roles
-    push @{ $class->roles }, $self, @{ $self->roles };
+    require 'Mouse/Meta/Role/Application.pm';
+    return Mouse::Meta::Role::Application->new(@_)->apply($self, $consumer);
 }
 
-sub combine_apply {
-    my(undef, $class, @roles) = @_;
-    my $classname = $class->name;
+sub combine {
+    my($self, @role_specs) = @_;
 
-    if ($class->isa('Mouse::Meta::Class')) {
-        for my $role_spec (@roles) {
-            my $self = $role_spec->[0]->meta;
-            for my $name (@{$self->{required_methods}}) {
-                unless ($classname->can($name)) {
-                    my $method_required = 0;
-                    for my $role (@roles) {
-                        $method_required = 1 if $self->name ne $role->[0] && $role->[0]->can($name);
-                    }
-                    confess "'".$self->name."' requires the method '$name' to be implemented by '$classname'"
-                        unless $method_required;
-                }
-            }
-        }
-    }
-
-    {
-        no strict 'refs';
-        for my $role_spec (@roles) {
-            my $self = $role_spec->[0]->meta;
-            my $selfname = $self->name;
-            my %args = %{ $role_spec->[1] };
-            for my $name ($self->get_method_list) {
-                next if $name eq 'meta';
-
-                my $class_function = "${classname}::${name}";
-                my $role_function = "${selfname}::${name}";
-                if (defined &$class_function) {
-                    # XXX what's Moose's behavior?
-                    #next;
-                } else {
-                    *$class_function = *$role_function;
-                }
-                if ($args{alias} && $args{alias}->{$name}) {
-                    my $dstname = $args{alias}->{$name};
-                    unless ($classname->can($dstname)) {
-                        *{"${classname}::${dstname}"} = \&$role_function;
-                    }
-                }
-            }
-        }
-    }
-
-
-    if ($class->isa('Mouse::Meta::Class')) {
-        # apply role to class
-        for my $role_spec (@roles) {
-            my $self = $role_spec->[0]->meta;
-            for my $name ($self->get_attribute_list) {
-                next if $class->has_attribute($name);
-                my $spec = $self->get_attribute($name);
-
-                my $metaclass = 'Mouse::Meta::Attribute';
-                if ( my $metaclass_name = $spec->{metaclass} ) {
-                    my $new_class = Mouse::Util::resolve_metaclass_alias(
-                        'Attribute',
-                        $metaclass_name
-                    );
-                    if ( $metaclass ne $new_class ) {
-                        $metaclass = $new_class;
-                    }
-                }
-
-                $metaclass->create($class, $name, %$spec);
-            }
-        }
-    } else {
-        # apply role to role
-        # XXX Room for speed improvement
-        for my $role_spec (@roles) {
-            my $self = $role_spec->[0]->meta;
-            for my $name ($self->get_attribute_list) {
-                next if $class->has_attribute($name);
-                my $spec = $self->get_attribute($name);
-                $class->add_attribute($name, $spec);
-            }
-        }
-    }
-
-    # XXX Room for speed improvement in role to role
-    for my $modifier_type (qw/before after around override/) {
-        my $add_method = "add_${modifier_type}_method_modifier";
-        for my $role_spec (@roles) {
-            my $self = $role_spec->[0]->meta;
-            my $modified = $self->{"${modifier_type}_method_modifiers"};
-
-            for my $method_name (keys %$modified) {
-                for my $code (@{ $modified->{$method_name} }) {
-                    $class->$add_method($method_name => $code);
-                }
-            }
-        }
-    }
-
-    # append roles
-    my %role_apply_cache;
-    my $apply_roles = $class->roles;
-    for my $role_spec (@roles) {
-        my $self = $role_spec->[0]->meta;
-        push @$apply_roles, $self unless $role_apply_cache{$self}++;
-        for my $role (@{ $self->roles }) {
-            push @$apply_roles, $role unless $role_apply_cache{$role}++;
-        }
-    }
+    require 'Mouse/Meta/Role/Composite.pm';
+    return Mouse::Meta::Role::Composite->new(roles => \@role_specs);
 }
 
-for my $modifier_type (qw/before after around override/) {
-    no strict 'refs';
-    *{ __PACKAGE__ . '::' . "add_${modifier_type}_method_modifier" } = sub {
-        my ($self, $method_name, $method) = @_;
+sub add_before_method_modifier;
+sub add_around_method_modifier;
+sub add_after_method_modifier;
 
-        push @{ $self->{"${modifier_type}_method_modifiers"}->{$method_name} },
-            $method;
-    };
+sub get_before_method_modifiers;
+sub get_around_method_modifiers;
+sub get_after_method_modifiers;
 
-    *{ __PACKAGE__ . '::' . "get_${modifier_type}_method_modifiers" } = sub {
-        my ($self, $method_name, $method) = @_;
-        @{ $self->{"${modifier_type}_method_modifiers"}->{$method_name} || [] }
-    };
+sub add_override_method_modifier{
+    my($self, $method_name, $method) = @_;
+
+    if($self->has_method($method_name)){
+        # This error happens in the override keyword or during role composition,
+        # so I added a message, "A local method of ...", only for compatibility (gfx)
+        $self->throw_error("Cannot add an override of method '$method_name' "
+                   . "because there is a local version of '$method_name'"
+                   . "(A local method of the same name as been found)");
+    }
+
+    $self->{override_method_modifiers}->{$method_name} = $method;
 }
 
-sub roles { $_[0]->{roles} }
+sub get_override_method_modifier {
+    my ($self, $method_name) = @_;
+    return $self->{override_method_modifiers}->{$method_name};
+}
 
-
-# This is currently not passing all the Moose tests.
 sub does_role {
     my ($self, $role_name) = @_;
 
     (defined $role_name)
-        || confess "You must supply a role name to look for";
+        || $self->throw_error("You must supply a role name to look for");
+
+    $role_name = $role_name->name if ref $role_name;
 
     # if we are it,.. then return true
     return 1 if $role_name eq $self->name;
-
-    for my $role (@{ $self->{roles} }) {
+    # otherwise.. check our children
+    for my $role (@{ $self->get_roles }) {
         return 1 if $role->does_role($role_name);
     }
     return 0;
 }
 
-
 1;
+__END__
 
+=head1 NAME
+
+Mouse::Meta::Role - The Mouse Role metaclass
+
+=head1 VERSION
+
+This document describes Mouse version 0.91
+
+=head1 DESCRIPTION
+
+This class is a meta object protocol for Mouse roles,
+which is a subset of Moose::Meta:::Role.
+
+=head1 SEE ALSO
+
+L<Moose::Meta::Role>
+
+=cut

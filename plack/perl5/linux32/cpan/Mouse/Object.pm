@@ -1,207 +1,71 @@
 package Mouse::Object;
-use strict;
-use warnings;
+use Mouse::Util qw(does dump meta); # enables strict and warnings
+# all the stuff are defined in XS or PP
 
-use Scalar::Util 'weaken';
-use Carp 'confess';
-
-sub new {
-    my $class = shift;
-
-    my $args = $class->BUILDARGS(@_);
-
-    my $instance = bless {}, $class;
-
-    for my $attribute ($class->meta->get_all_attributes) {
-        my $from = $attribute->init_arg;
-        my $key  = $attribute->name;
-
-        if (defined($from) && exists($args->{$from})) {
-            $args->{$from} = $attribute->coerce_constraint($args->{$from})
-                if $attribute->should_coerce;
-            $attribute->verify_against_type_constraint($args->{$from});
-
-            $instance->{$key} = $args->{$from};
-
-            weaken($instance->{$key})
-                if ref($instance->{$key}) && $attribute->is_weak_ref;
-
-            if ($attribute->has_trigger) {
-                $attribute->trigger->($instance, $args->{$from});
-            }
-        }
-        else {
-            if ($attribute->has_default || $attribute->has_builder) {
-                unless ($attribute->is_lazy) {
-                    my $default = $attribute->default;
-                    my $builder = $attribute->builder;
-                    my $value = $attribute->has_builder
-                              ? $instance->$builder
-                              : ref($default) eq 'CODE'
-                                  ? $default->($instance)
-                                  : $default;
-
-                    $value = $attribute->coerce_constraint($value)
-                        if $attribute->should_coerce;
-                    $attribute->verify_against_type_constraint($value);
-
-                    $instance->{$key} = $value;
-
-                    weaken($instance->{$key})
-                        if ref($instance->{$key}) && $attribute->is_weak_ref;
-                }
-            }
-            else {
-                if ($attribute->is_required) {
-                    confess "Attribute (".$attribute->name.") is required";
-                }
-            }
-        }
-    }
-
-    $instance->BUILDALL($args);
-
-    return $instance;
+sub DOES {
+    my($self, $class_or_role_name) = @_;
+    return $self->isa($class_or_role_name) || $self->does($class_or_role_name);
 }
-
-sub BUILDARGS {
-    my $class = shift;
-
-    if (scalar @_ == 1) {
-        (ref($_[0]) eq 'HASH')
-            || confess "Single parameters to new() must be a HASH ref";
-        return {%{$_[0]}};
-    }
-    else {
-        return {@_};
-    }
-}
-
-sub DESTROY { shift->DEMOLISHALL }
-
-sub BUILDALL {
-    my $self = shift;
-
-    # short circuit
-    return unless $self->can('BUILD');
-
-    for my $class (reverse $self->meta->linearized_isa) {
-        no strict 'refs';
-        no warnings 'once';
-        my $code = *{ $class . '::BUILD' }{CODE}
-            or next;
-        $code->($self, @_);
-    }
-}
-
-sub DEMOLISHALL {
-    my $self = shift;
-
-    # short circuit
-    return unless $self->can('DEMOLISH');
-
-    no strict 'refs';
-
-    my @isa;
-    if ( my $meta = Mouse::class_of($self) ) {
-        @isa = $meta->linearized_isa;
-    } else {
-        # We cannot count on being able to retrieve a previously made
-        # metaclass, _or_ being able to make a new one during global
-        # destruction. However, we should still be able to use mro at
-        # that time (at least tests suggest so ;)
-        my $class_name = ref $self;
-        @isa = @{ Mouse::Util::get_linear_isa($class_name) }
-    }
-
-    foreach my $class (@isa) {
-        no strict 'refs';
-        my $demolish = *{"${class}::DEMOLISH"}{CODE};
-        $self->$demolish
-            if defined $demolish;
-    }
-}
-
-sub dump { 
-    my $self = shift;
-    require Data::Dumper;
-    local $Data::Dumper::Maxdepth = shift if @_;
-    Data::Dumper::Dumper $self;
-}
-
-
-sub does {
-    my ($self, $role_name) = @_;
-    (defined $role_name)
-        || confess "You must supply a role name to does()";
-    my $meta = $self->meta;
-    foreach my $class ($meta->linearized_isa) {
-        my $m = $meta->initialize($class);
-        return 1 
-            if $m->can('does_role') && $m->does_role($role_name);            
-    }
-    return 0;   
-};
 
 1;
-
 __END__
 
 =head1 NAME
 
-Mouse::Object - we don't need to steenkin' constructor
+Mouse::Object - The base object for Mouse classes
+
+=head1 VERSION
+
+This document describes Mouse version 0.91
 
 =head1 METHODS
 
-=head2 new arguments -> object
+=head2 C<< $class->new(%args | \%args) -> Object >>
 
-Instantiates a new Mouse::Object. This is obviously intended for subclasses.
+Instantiates a new C<Mouse::Object>. This is obviously intended for subclasses.
 
-=head2 BUILDALL \%args
+=head2 C<< $class->BUILDARGS(@args) -> HashRef >>
 
-Calls L</BUILD> on each class in the class hierarchy. This is called at the
-end of L</new>.
+Lets you override the arguments that C<new> takes.
+It must return a HashRef of parameters.
 
-=head2 BUILD \%args
+=head2 C<< $object->BUILDALL(\%args) >>
+
+Calls C<BUILD> on each class in the class hierarchy. This is called at the
+end of C<new>.
+
+=head2 C<< $object->BUILD(\%args) >>
 
 You may put any business logic initialization in BUILD methods. You don't
 need to redispatch or return any specific value.
 
-=head2 BUILDARGS
+=head2 C<< $object->DEMOLISHALL >>
 
-Lets you override the arguments that C<new> takes. Return a hashref of
-parameters.
+Calls C<DEMOLISH> on each class in the class hierarchy. This is called at
+C<DESTROY> time.
 
-=head2 DEMOLISHALL
-
-Calls L</DEMOLISH> on each class in the class hierarchy. This is called at
-L</DESTROY> time.
-
-=head2 DEMOLISH
+=head2 C<< $object->DEMOLISH >>
 
 You may put any business logic deinitialization in DEMOLISH methods. You don't
 need to redispatch or return any specific value.
 
+=head2 C<< $object->does($role_name) -> Bool >>
 
-=head2 does $role_name
+This will check if the invocant's class B<does> a given C<$role_name>.
+This is similar to C<isa> for object, but it checks the roles instead.
 
-This will check if the invocant's class "does" a given C<$role_name>.
-This is similar to "isa" for object, but it checks the roles instead.
+=head2 C<< $object->dump($maxdepth) -> Str >>
 
+This is a handy utility for dumping an object with Data::Dumper.
+By default, the maximum depth is 3, to avoid making a mess.
 
-=head2 B<dump ($maxdepth)>
+=head2 C<< $object->meta() -> MetaClass >>
 
-From the Moose POD:
+This is a method which provides access to the object's metaclass.
 
-    C'mon, how many times have you written the following code while debugging:
+=head1 SEE ALSO
 
-     use Data::Dumper; 
-     warn Dumper $obj;
-
-    It can get seriously annoying, so why not just use this.
-
-The implementation was lifted directly from Moose::Object.
+L<Moose::Object>
 
 =cut
-
 

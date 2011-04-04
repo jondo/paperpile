@@ -1,349 +1,438 @@
 package Mouse::Util::TypeConstraints;
-use strict;
-use warnings;
-use base 'Exporter';
+use Mouse::Util; # enables strict and warnings
 
-use Carp ();
-use Scalar::Util qw/blessed looks_like_number openhandle/;
 use Mouse::Meta::TypeConstraint;
+use Mouse::Exporter;
 
-our @EXPORT = qw(
-    as where message from via type subtype coerce class_type role_type enum
-    find_type_constraint
+use Carp         ();
+use Scalar::Util ();
+
+Mouse::Exporter->setup_import_methods(
+    as_is => [qw(
+        as where message optimize_as
+        from via
+
+        type subtype class_type role_type duck_type
+        enum
+        coerce
+
+        find_type_constraint
+        register_type_constraint
+    )],
 );
 
+our @CARP_NOT = qw(Mouse::Meta::Attribute);
+
 my %TYPE;
-my %TYPE_SOURCE;
-my %COERCE;
-my %COERCE_KEYS;
 
-sub as ($) {
-    as => $_[0]
-}
-sub where (&) {
-    where => $_[0]
-}
-sub message (&) {
-    message => $_[0]
-}
+# The root type
+$TYPE{Any} = Mouse::Meta::TypeConstraint->new(
+    name => 'Any',
+);
 
-sub from { @_ }
-sub via (&) {
-    $_[0]
-}
+my @builtins = (
+    # $name    => $parent,   $code,
 
-BEGIN {
-    no warnings 'uninitialized';
-    %TYPE = (
-        Any        => sub { 1 },
-        Item       => sub { 1 },
-        Bool       => sub {
-            !defined($_[0]) || $_[0] eq "" || "$_[0]" eq '1' || "$_[0]" eq '0'
-        },
-        Undef      => sub { !defined($_[0]) },
-        Defined    => sub { defined($_[0]) },
-        Value      => sub { defined($_[0]) && !ref($_[0]) },
-        Num        => sub { !ref($_[0]) && looks_like_number($_[0]) },
-        Int        => sub { defined($_[0]) && !ref($_[0]) && $_[0] =~ /^-?[0-9]+$/ },
-        Str        => sub { defined($_[0]) && !ref($_[0]) },
-        ClassName  => sub { Mouse::is_class_loaded($_[0]) },
-        Ref        => sub { ref($_[0]) },
+    # the base type
+    Item       => 'Any',     undef,
 
-        ScalarRef  => sub { ref($_[0]) eq 'SCALAR' },
-        ArrayRef   => sub { ref($_[0]) eq 'ARRAY'  },
-        HashRef    => sub { ref($_[0]) eq 'HASH'   },
-        CodeRef    => sub { ref($_[0]) eq 'CODE'   },
-        RegexpRef  => sub { ref($_[0]) eq 'Regexp' },
-        GlobRef    => sub { ref($_[0]) eq 'GLOB'   },
+    # the maybe[] type
+    Maybe      => 'Item',    undef,
 
-        FileHandle => sub {
-            ref($_[0]) eq 'GLOB' && openhandle($_[0])
-            or
-            blessed($_[0]) && $_[0]->isa("IO::Handle")
-        },
+    # value types
+    Undef      => 'Item',    \&Undef,
+    Defined    => 'Item',    \&Defined,
+    Bool       => 'Item',    \&Bool,
+    Value      => 'Defined', \&Value,
+    Str        => 'Value',   \&Str,
+    Num        => 'Str',     \&Num,
+    Int        => 'Num',     \&Int,
 
-        Object     => sub { blessed($_[0]) && blessed($_[0]) ne 'Regexp' },
+    # ref types
+    Ref        => 'Defined', \&Ref,
+    ScalarRef  => 'Ref',     \&ScalarRef,
+    ArrayRef   => 'Ref',     \&ArrayRef,
+    HashRef    => 'Ref',     \&HashRef,
+    CodeRef    => 'Ref',     \&CodeRef,
+    RegexpRef  => 'Ref',     \&RegexpRef,
+    GlobRef    => 'Ref',     \&GlobRef,
+
+    # object types
+    FileHandle => 'GlobRef', \&FileHandle,
+    Object     => 'Ref',     \&Object,
+
+    # special string types
+    ClassName  => 'Str',       \&ClassName,
+    RoleName   => 'ClassName', \&RoleName,
+);
+
+while (my ($name, $parent, $code) = splice @builtins, 0, 3) {
+    $TYPE{$name} = Mouse::Meta::TypeConstraint->new(
+        name      => $name,
+        parent    => $TYPE{$parent},
+        optimized => $code,
     );
-    while (my ($name, $code) = each %TYPE) {
-        $TYPE{$name} = Mouse::Meta::TypeConstraint->new( _compiled_type_constraint => $code, name => $name );
+}
+
+# parametarizable types
+$TYPE{Maybe}   {constraint_generator} = \&_parameterize_Maybe_for;
+$TYPE{ArrayRef}{constraint_generator} = \&_parameterize_ArrayRef_for;
+$TYPE{HashRef} {constraint_generator} = \&_parameterize_HashRef_for;
+
+# sugars
+sub as          ($) { (as          => $_[0]) } ## no critic
+sub where       (&) { (where       => $_[0]) } ## no critic
+sub message     (&) { (message     => $_[0]) } ## no critic
+sub optimize_as (&) { (optimize_as => $_[0]) } ## no critic
+
+sub from    { @_ }
+sub via (&) { $_[0] } ## no critic
+
+# type utilities
+
+sub optimized_constraints { # DEPRECATED
+    Carp::cluck('optimized_constraints() has been deprecated');
+    return \%TYPE;
+}
+
+undef @builtins;        # free the allocated memory
+@builtins = keys %TYPE; # reuse it
+sub list_all_builtin_type_constraints { @builtins }
+sub list_all_type_constraints         { keys %TYPE }
+
+sub _define_type {
+    my $is_subtype = shift;
+    my $name;
+    my %args;
+
+    if(@_ == 1 && ref $_[0] ){    # @_ : { name => $name, where => ... }
+        %args = %{$_[0]};
+    }
+    elsif(@_ == 2 && ref $_[1]) { # @_ : $name => { where => ... }
+        $name = $_[0];
+        %args = %{$_[1]};
+    }
+    elsif(@_ % 2) {               # @_ : $name => ( where => ... )
+        ($name, %args) = @_;
+    }
+    else{                         # @_ : (name => $name, where => ...)
+        %args = @_;
     }
 
-    sub optimized_constraints { \%TYPE }
-    my @TYPE_KEYS = keys %TYPE;
-    sub list_all_builtin_type_constraints { @TYPE_KEYS }
+    if(!defined $name){
+        $name = $args{name};
+    }
 
-    @TYPE_SOURCE{@TYPE_KEYS} = (__PACKAGE__) x @TYPE_KEYS;
+    $args{name} = $name;
+
+    my $parent = delete $args{as};
+    if($is_subtype && !$parent){
+        $parent = delete $args{name};
+        $name   = undef;
+    }
+
+    if(defined $parent) {
+        $args{parent} = find_or_create_isa_type_constraint($parent);
+    }
+
+    if(defined $name){
+        # set 'package_defined_in' only if it is not a core package
+        my $this = $args{package_defined_in};
+        if(!$this){
+            $this = caller(1);
+            if($this !~ /\A Mouse \b/xms){
+                $args{package_defined_in} = $this;
+            }
+        }
+
+        if(defined $TYPE{$name}){
+            my $that = $TYPE{$name}->{package_defined_in} || __PACKAGE__;
+            if($this ne $that) {
+                my $note = '';
+                if($that eq __PACKAGE__) {
+                    $note = sprintf " ('%s' is %s type constraint)",
+                        $name,
+                        scalar(grep { $name eq $_ } list_all_builtin_type_constraints())
+                            ? 'a builtin'
+                            : 'an implicitly created';
+                }
+                Carp::croak("The type constraint '$name' has already been created in $that"
+                          . " and cannot be created again in $this" . $note);
+            }
+        }
+    }
+
+    $args{constraint} = delete $args{where}        if exists $args{where};
+    $args{optimized}  = delete $args{optimized_as} if exists $args{optimized_as};
+
+    my $constraint = Mouse::Meta::TypeConstraint->new(%args);
+
+    if(defined $name){
+        return $TYPE{$name} = $constraint;
+    }
+    else{
+        return $constraint;
+    }
 }
 
 sub type {
-    my $pkg = caller(0);
-    my($name, %conf) = @_;
-    if ($TYPE{$name} && $TYPE_SOURCE{$name} ne $pkg) {
-        Carp::croak "The type constraint '$name' has already been created in $TYPE_SOURCE{$name} and cannot be created again in $pkg";
-    };
-    my $constraint = $conf{where} || do {
-        my $as = delete $conf{as} || 'Any';
-        if (! exists $TYPE{$as}) {
-            $TYPE{$as} = _build_type_constraint($as);
-        }
-        $TYPE{$as};
-    };
-
-    $TYPE_SOURCE{$name} = $pkg;
-    $TYPE{$name} = Mouse::Meta::TypeConstraint->new(
-        name => $name,
-        _compiled_type_constraint => sub {
-            local $_ = $_[0];
-            if (ref $constraint eq 'CODE') {
-                $constraint->($_[0])
-            } else {
-                $constraint->check($_[0])
-            }
-        }
-    );
+    return _define_type 0, @_;
 }
 
 sub subtype {
-    my $pkg = caller(0);
-    my($name, %conf) = @_;
-    if ($TYPE{$name} && $TYPE_SOURCE{$name} ne $pkg) {
-        Carp::croak "The type constraint '$name' has already been created in $TYPE_SOURCE{$name} and cannot be created again in $pkg";
-    };
-    my $constraint = delete $conf{where};
-    my $as_constraint = find_or_create_isa_type_constraint(delete $conf{as} || 'Any');
-
-    $TYPE_SOURCE{$name} = $pkg;
-    $TYPE{$name} = Mouse::Meta::TypeConstraint->new(
-        name => $name,
-        _compiled_type_constraint => (
-            $constraint ? 
-            sub {
-                local $_ = $_[0];
-                $as_constraint->check($_[0]) && $constraint->($_[0])
-            } :
-            sub {
-                local $_ = $_[0];
-                $as_constraint->check($_[0]);
-            }
-        ),
-        %conf
-    );
-
-    return $name;
+    return _define_type 1, @_;
 }
 
-sub coerce {
-    my($name, %conf) = @_;
+sub coerce { # coerce $type, from $from, via { ... }, ...
+    my $type_name = shift;
+    my $type = find_type_constraint($type_name)
+        or Carp::croak("Cannot find type '$type_name', perhaps you forgot to load it");
 
-    Carp::croak "Cannot find type '$name', perhaps you forgot to load it."
-        unless $TYPE{$name};
-
-    unless ($COERCE{$name}) {
-        $COERCE{$name}      = {};
-        $COERCE_KEYS{$name} = [];
-    }
-    while (my($type, $code) = each %conf) {
-        Carp::croak "A coercion action already exists for '$type'"
-            if $COERCE{$name}->{$type};
-
-        if (! $TYPE{$type}) {
-            # looks parameterized
-            if ($type =~ /^[^\[]+\[.+\]$/) {
-                $TYPE{$type} = _build_type_constraint($type);
-            } else {
-                Carp::croak "Could not find the type constraint ($type) to coerce from"
-            }
-        }
-
-        unshift @{ $COERCE_KEYS{$name} }, $type;
-        $COERCE{$name}->{$type} = $code;
-    }
+    $type->_add_type_coercions(@_);
+    return;
 }
 
 sub class_type {
-    my($name, $conf) = @_;
-    if ($conf && $conf->{class}) {
-        # No, you're using this wrong
-        warn "class_type() should be class_type(ClassName). Perhaps you're looking for subtype $name => as '$conf->{class}'?";
-        subtype($name, as => $conf->{class});
-    } else {
-        subtype(
-            $name => where => sub { $_->isa($name) }
-        );
-    }
+    my($name, $options) = @_;
+    my $class = $options->{class} || $name;
+
+    # ClassType
+    return subtype $name => (
+        as           => 'Object',
+        optimized_as => Mouse::Util::generate_isa_predicate_for($class),
+        class        => $class,
+    );
 }
 
 sub role_type {
-    my($name, $conf) = @_;
-    my $role = $conf->{role};
-    subtype(
-        $name => where => sub {
-            return unless defined $_ && ref($_) && $_->isa('Mouse::Object');
-            $_->meta->does_role($role);
-        }
+    my($name, $options) = @_;
+    my $role = $options->{role} || $name;
+
+    # RoleType
+    return subtype $name => (
+        as           => 'Object',
+        optimized_as => sub {
+            return Scalar::Util::blessed($_[0])
+                && Mouse::Util::does_role($_[0], $role);
+        },
+        role         => $role,
     );
 }
 
-# this is an original method for Mouse
-sub typecast_constraints {
-    my($class, $pkg, $types, $value) = @_;
-    Carp::croak("wrong arguments count") unless @_==4;
+sub duck_type {
+    my($name, @methods);
 
-    local $_;
-    for my $type ( split /\|/, $types ) {
-        next unless $COERCE{$type};
-        for my $coerce_type (@{ $COERCE_KEYS{$type}}) {
-            $_ = $value;
-            next unless $TYPE{$coerce_type}->check($value);
-            $_ = $value;
-            $_ = $COERCE{$type}->{$coerce_type}->($value);
-            return $_ if $types->check($_);
-        }
+    if(ref($_[0]) ne 'ARRAY'){
+        $name = shift;
     }
-    return $value;
+
+    @methods = (@_ == 1 && ref($_[0]) eq 'ARRAY') ? @{$_[0]} : @_;
+
+    # DuckType
+    return _define_type 1, $name => (
+        as           => 'Object',
+        optimized_as => Mouse::Util::generate_can_predicate_for(\@methods),
+        message      => sub {
+            my($object) = @_;
+            my @missing = grep { !$object->can($_) } @methods;
+            return ref($object)
+                . ' is missing methods '
+                . Mouse::Util::quoted_english_list(@missing);
+        },
+        methods      => \@methods,
+    );
 }
 
-my $serial_enum = 0;
 sub enum {
-    # enum ['small', 'medium', 'large']
-    if (ref($_[0]) eq 'ARRAY') {
-        my @elements = @{ shift @_ };
+    my($name, %valid);
 
-        my $name = 'Mouse::Util::TypeConstaints::Enum::Serial::'
-                 . ++$serial_enum;
-        enum($name, @elements);
-        return $name;
+    if(!(@_ == 1 && ref($_[0]) eq 'ARRAY')){
+        $name = shift;
     }
 
-    # enum size => 'small', 'medium', 'large'
-    my $name = shift;
-    my %is_valid = map { $_ => 1 } @_;
+    %valid = map{ $_ => undef }
+        (@_ == 1 && ref($_[0]) eq 'ARRAY' ? @{$_[0]} : @_);
 
-    subtype(
-        $name => where => sub { $is_valid{$_} }
+    # EnumType
+    return _define_type 1, $name => (
+        as            => 'Str',
+        optimized_as  => sub{
+            return defined($_[0]) && !ref($_[0]) && exists $valid{$_[0]};
+        },
     );
 }
 
-sub _build_type_constraint {
+sub _find_or_create_regular_type{
+    my($spec, $create)  = @_;
 
-    my $spec = shift;
-    my $code;
-    $spec =~ s/\s+//g;
-    if ($spec =~ /^([^\[]+)\[(.+)\]$/) {
-        # parameterized
-        my $constraint = $1;
-        my $param      = $2;
-        my $parent;
-        if ($constraint eq 'Maybe') {
-            $parent = _build_type_constraint('Undef');
-        } else {
-            $parent = _build_type_constraint($constraint);
+    return $TYPE{$spec} if exists $TYPE{$spec};
+
+    my $meta = Mouse::Util::get_metaclass_by_name($spec);
+
+    if(!defined $meta){
+        return $create ? class_type($spec) : undef;
+    }
+
+    if(Mouse::Util::is_a_metarole($meta)){
+        return role_type($spec);
+    }
+    else{
+        return class_type($spec);
+    }
+}
+
+sub _find_or_create_parameterized_type{
+    my($base, $param) = @_;
+
+    my $name = sprintf '%s[%s]', $base->name, $param->name;
+
+    $TYPE{$name} ||= $base->parameterize($param, $name);
+}
+
+sub _find_or_create_union_type{
+    return if grep{ not defined } @_; # all things must be defined
+    my @types = sort
+        map{ $_->{type_constraints} ? @{$_->{type_constraints}} : $_ } @_;
+
+    my $name = join '|', @types;
+
+    # UnionType
+    $TYPE{$name} ||= Mouse::Meta::TypeConstraint->new(
+        name              => $name,
+        type_constraints  => \@types,
+    );
+}
+
+# The type parser
+
+# param : '[' type ']' | NOTHING
+sub _parse_param {
+    my($c) = @_;
+
+    if($c->{spec} =~ s/^\[//){
+        my $type = _parse_type($c, 1);
+
+        if($c->{spec} =~ s/^\]//){
+            return $type;
         }
-        my $child = _build_type_constraint($param);
-        if ($constraint eq 'ArrayRef') {
-            my $code_str = 
-                "#line " . __LINE__ . ' "' . __FILE__ . "\"\n" .
-                "sub {\n" .
-                "    if (\$parent->check(\$_[0])) {\n" .
-                "        foreach my \$e (\@{\$_[0]}) {\n" .
-                "            return () unless \$child->check(\$e);\n" .
-                "        }\n" .
-                "        return 1;\n" .
-                "    }\n" .
-                "    return ();\n" .
-                "};\n"
-            ;
-            $code = eval $code_str or Carp::confess("Failed to generate inline type constraint: $@");
-        } elsif ($constraint eq 'HashRef') {
-            my $code_str = 
-                "#line " . __LINE__ . ' "' . __FILE__ . "\"\n" .
-                "sub {\n" .
-                "    if (\$parent->check(\$_[0])) {\n" .
-                "        foreach my \$e (values \%{\$_[0]}) {\n" .
-                "            return () unless \$child->check(\$e);\n" .
-                "        }\n" .
-                "        return 1;\n" .
-                "    }\n" .
-                "    return ();\n" .
-                "};\n"
-            ;
-            $code = eval $code_str or Carp::confess($@);
-        } elsif ($constraint eq 'Maybe') {
-            my $code_str =
-                "#line " . __LINE__ . ' "' . __FILE__ . "\"\n" .
-                "sub {\n" .
-                "    return \$child->check(\$_[0]) || \$parent->check(\$_[0]);\n" .
-                "};\n"
-            ;
-            $code = eval $code_str or Carp::confess($@);
-        } else {
-            Carp::confess("Support for parameterized types other than Maybe, ArrayRef or HashRef is not implemented yet");
+        Carp::croak("Syntax error in type: missing right square bracket in '$c->{orig}'");
+    }
+
+    return undef;
+}
+
+# name : [\w.:]+
+sub _parse_name {
+    my($c, $create) = @_;
+
+    if($c->{spec} =~ s/\A ([\w.:]+) //xms){
+        return _find_or_create_regular_type($1, $create);
+    }
+    Carp::croak("Syntax error in type: expect type name near '$c->{spec}' in '$c->{orig}'");
+}
+
+# single_type : name param
+sub _parse_single_type {
+    my($c, $create) = @_;
+
+    my $type  = _parse_name($c, $create);
+    my $param = _parse_param($c);
+
+    if(defined $type){
+        if(defined $param){
+            return _find_or_create_parameterized_type($type, $param);
         }
-        $TYPE{$spec} = Mouse::Meta::TypeConstraint->new( _compiled_type_constraint => $code, name => $spec );
-    } else {
-        $code = $TYPE{ $spec };
-        if (! $code) {
-            # is $spec a known role?  If so, constrain with 'does' instead of 'isa'
-            require Mouse::Meta::Role;
-            my $check = Mouse::Meta::Role->_metaclass_cache($spec)? 
-                'does' : 'isa';
-            my $code_str = 
-                "#line " . __LINE__ . ' "' . __FILE__ . "\"\n" .
-                "sub {\n" .
-                "    Scalar::Util::blessed(\$_[0]) && \$_[0]->$check('$spec');\n" .
-                "}"
-            ;
-            $code = eval $code_str  or Carp::confess($@);
-            $TYPE{$spec} = Mouse::Meta::TypeConstraint->new( _compiled_type_constraint => $code, name => $spec );
+        else {
+            return $type;
         }
     }
-    return Mouse::Meta::TypeConstraint->new( _compiled_type_constraint => $code, name => $spec );
+    elsif(defined $param){
+        Carp::croak("Undefined type with parameter [$param] in '$c->{orig}'");
+    }
+    else{
+        return undef;
+    }
 }
+
+# type : single_type  ('|' single_type)*
+sub _parse_type {
+    my($c, $create) = @_;
+
+    my $type = _parse_single_type($c, $create);
+    if($c->{spec}){ # can be an union type
+        my @types;
+        while($c->{spec} =~ s/^\|//){
+            push @types, _parse_single_type($c, $create);
+        }
+        if(@types){
+            return _find_or_create_union_type($type, @types);
+        }
+    }
+    return $type;
+}
+
 
 sub find_type_constraint {
-    my $type_constraint = shift;
-    return $TYPE{$type_constraint};
+    my($spec) = @_;
+    return $spec if Mouse::Util::is_a_type_constraint($spec) or not defined $spec;
+
+    $spec =~ s/\s+//g;
+    return $TYPE{$spec};
+}
+
+sub register_type_constraint {
+    my($constraint) = @_;
+    Carp::croak("No type supplied / type is not a valid type constraint")
+        unless Mouse::Util::is_a_type_constraint($constraint);
+    return $TYPE{$constraint->name} = $constraint;
+}
+
+sub find_or_parse_type_constraint {
+    my($spec) = @_;
+    return $spec if Mouse::Util::is_a_type_constraint($spec) or not defined $spec;
+
+    $spec =~ tr/ \t\r\n//d;
+
+    my $tc = $TYPE{$spec};
+    if(defined $tc) {
+        return $tc;
+    }
+
+    my %context = (
+        spec => $spec,
+        orig => $spec,
+    );
+    $tc = _parse_type(\%context);
+
+    if($context{spec}){
+        Carp::croak("Syntax error: extra elements '$context{spec}' in '$context{orig}'");
+    }
+
+    return $TYPE{$spec} = $tc;
+}
+
+sub find_or_create_does_type_constraint{
+    # XXX: Moose does not register a new role_type, but Mouse does.
+    my $tc = find_or_parse_type_constraint(@_);
+    return defined($tc) ? $tc : role_type(@_);
 }
 
 sub find_or_create_isa_type_constraint {
-    my $type_constraint = shift;
-
-    my $code;
-
-    $type_constraint =~ s/\s+//g;
-
-    $code = $TYPE{$type_constraint};
-    if (! $code) {
-        my @type_constraints = split /\|/, $type_constraint;
-        if (@type_constraints == 1) {
-            $code = $TYPE{$type_constraints[0]} ||
-                _build_type_constraint($type_constraints[0]);
-        } else {
-            my @code_list = map {
-                $TYPE{$_} || _build_type_constraint($_)
-            } @type_constraints;
-            $code = Mouse::Meta::TypeConstraint->new(
-                _compiled_type_constraint => sub {
-                    my $i = 0;
-                    for my $code (@code_list) {
-                        return 1 if $code->check($_[0]);
-                    }
-                    return 0;
-                },
-                name => $type_constraint,
-            );
-        }
-    }
-    return $code;
+    # XXX: Moose does not register a new class_type, but Mouse does.
+    my $tc = find_or_parse_type_constraint(@_);
+    return defined($tc) ? $tc : class_type(@_);
 }
 
 1;
-
 __END__
 
 =head1 NAME
 
 Mouse::Util::TypeConstraints - Type constraint system for Mouse
+
+=head1 VERSION
+
+This document describes Mouse version 0.91
 
 =head2 SYNOPSIS
 
@@ -411,18 +500,18 @@ yet to have been created, is to quote the type name:
 This module also provides a simple hierarchy for Perl 5 types, here is
 that hierarchy represented visually.
 
-  Any
+ Any
   Item
       Bool
       Maybe[`a]
       Undef
       Defined
           Value
-              Num
-                Int
               Str
-                ClassName
-                RoleName
+                  Num
+                      Int
+                  ClassName
+                  RoleName
           Ref
               ScalarRef
               ArrayRef[`a]
@@ -430,9 +519,8 @@ that hierarchy represented visually.
               CodeRef
               RegexpRef
               GlobRef
-                FileHandle
+                  FileHandle
               Object
-                Role
 
 B<NOTE:> Any type followed by a type parameter C<[`a]> can be
 parameterized, this means you can say:
@@ -444,10 +532,6 @@ parameterized, this means you can say:
 If Mouse finds a name in brackets that it does not recognize as an
 existing type, it assumes that this is a class name, for example
 C<ArrayRef[DateTime]>.
-
-B<NOTE:> Unless you parameterize a type, then it is invalid to include
-the square brackets. I.e. C<ArrayRef[]> will be treated as a new type
-name, I<not> as a parameterization of C<ArrayRef>.
 
 B<NOTE:> The C<Undef> type constraint for the most part works
 correctly now, but edge cases may still exist, please use it
@@ -505,29 +589,53 @@ related C<eq_deeply> function.
 
 =head1 METHODS
 
-=head2 optimized_constraints -> HashRef[CODE]
+=head2 C<< list_all_builtin_type_constraints -> (Names) >>
 
-Returns the simple type constraints that Mouse understands.
+Returns the names of builtin type constraints.
+
+=head2 C<< list_all_type_constraints -> (Names) >>
+
+Returns the names of all the type constraints.
 
 =head1 FUNCTIONS
 
 =over 4
 
-=item B<subtype 'Name' => as 'Parent' => where { } ...>
+=item C<< type $name => where { } ... -> Mouse::Meta::TypeConstraint >>
 
-=item B<subtype as 'Parent' => where { } ...>
+=item C<< subtype $name => as $parent => where { } ... -> Mouse::Meta::TypeConstraint >>
 
-=item B<class_type ($class, ?$options)>
+=item C<< subtype as $parent => where { } ...  -> Mouse::Meta::TypeConstraint >>
 
-=item B<role_type ($role, ?$options)>
+=item C<< class_type ($class, ?$options) -> Mouse::Meta::TypeConstraint >>
 
-=item B<enum (\@values)>
+=item C<< role_type ($role, ?$options) -> Mouse::Meta::TypeConstraint >>
+
+=item C<< duck_type($name, @methods | \@methods) -> Mouse::Meta::TypeConstraint >>
+
+=item C<< duck_type(\@methods) -> Mouse::Meta::TypeConstraint >>
+
+=item C<< enum($name, @values | \@values) -> Mouse::Meta::TypeConstraint >>
+
+=item C<< enum (\@values) -> Mouse::Meta::TypeConstraint >>
+
+=item C<< coerce $type => from $another_type, via { }, ... >>
+
+=back
+
+=over 4
+
+=item C<< find_type_constraint(Type) -> Mouse::Meta::TypeConstraint >>
 
 =back
 
 =head1 THANKS
 
-Much of this documentation was taken from L<Moose::Util::TypeConstraints>
+Much of this documentation was taken from C<Moose::Util::TypeConstraints>
+
+=head1 SEE ALSO
+
+L<Moose::Util::TypeConstraints>
 
 =cut
 

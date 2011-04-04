@@ -1,4 +1,7 @@
 package HTTP::Body::MultiPart;
+BEGIN {
+  $HTTP::Body::MultiPart::VERSION = '1.12';
+}
 
 use strict;
 use base 'HTTP::Body';
@@ -6,6 +9,7 @@ use bytes;
 
 use IO::File;
 use File::Temp 0.14;
+use File::Spec;
 
 =head1 NAME
 
@@ -30,7 +34,7 @@ HTTP Body Multipart Parser.
 sub init {
     my $self = shift;
 
-    unless ( $self->content_type =~ /boundary=\"?([^\";,]+)\"?/ ) {
+    unless ( $self->content_type =~ /boundary=\"?([^\";]+)\"?/ ) {
         my $content_type = $self->content_type;
         Carp::croak("Invalid boundary in content_type: '$content_type'");
     }
@@ -270,7 +274,10 @@ sub handler {
             $part->{filename} = $filename;
 
             if ( $filename ne "" ) {
-                my $fh = File::Temp->new( UNLINK => 0, DIR => $self->tmpdir );
+                my $basename = (File::Spec->splitpath($filename))[2];
+                my $suffix = $basename =~ /[^.]+(\.[^\\\/]+)$/ ? $1 : q{};
+
+                my $fh = File::Temp->new( UNLINK => 0, DIR => $self->tmpdir, SUFFIX => $suffix );
 
                 $part->{fh}       = $fh;
                 $part->{tempname} = $fh->filename;

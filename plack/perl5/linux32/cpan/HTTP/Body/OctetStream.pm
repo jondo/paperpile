@@ -1,4 +1,7 @@
 package HTTP::Body::OctetStream;
+BEGIN {
+  $HTTP::Body::OctetStream::VERSION = '1.12';
+}
 
 use strict;
 use base 'HTTP::Body';

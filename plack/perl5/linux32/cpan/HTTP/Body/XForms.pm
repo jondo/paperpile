@@ -1,4 +1,7 @@
 package HTTP::Body::XForms;
+BEGIN {
+  $HTTP::Body::XForms::VERSION = '1.12';
+}
 
 use strict;
 use base 'HTTP::Body';
@@ -34,6 +37,8 @@ the buffer content.
 
 sub spin {
     my $self = shift;
+
+    return unless $self->length == $self->content_length;
 
     $self->body($self->{buffer});
     $self->param( 'XForms:Model', $self->{buffer} );
