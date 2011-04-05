@@ -1,3 +1,20 @@
+# Copyright 2009-2011 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.  You should have
+# received a copy of the GNU Affero General Public License along with
+# Paperpile.  If not, see http://www.gnu.org/licenses.
+
+
 package Paperpile::App;
 
 use strict;
@@ -7,42 +24,48 @@ use Plack::Request;
 use Plack::Response;
 use Data::Dumper;
 use JSON;
-use YAML::XS qw(LoadFile DumpFile);
-use Cwd qw(abs_path);
 use Time::HiRes;
 use Text::SimpleTable;
 use Template::Tiny;
-
-use File::Spec;
 use File::Find;
-use File::HomeDir;
 
+use Paperpile;
 use Paperpile::App::Context;
 use Paperpile::Exceptions;
 
-
 has '_routes' => ( is => 'rw' );
-has '_config' => ( is => 'rw' );
 
+
+# The central app function for Plack
+sub app {
+
+  my ( $self, $env ) = @_;
+
+  return $self->process_request($env);
+
+}
+
+# Show startup logs and call initialization functions
 sub startup {
 
   my ($self) = @_;
 
   $self->log("Starting Paperpile.");
 
-  my $config = $self->config->{app_settings};
-
   my $table = Text::SimpleTable->new( 20, 50 );
 
-  $table->row( "System",             $config->{platform} );
-  $table->row( "Version",            $config->{version_id} . " (" . $config->{version_name} . ")" );
-  $table->row( "Build",              $config->{build_number} );
-  $table->row( "User DB version",    $config->{settings_db_version} );
-  $table->row( "Library DB version", $config->{library_db_version} );
-  $table->row( "QRuntime version",   $config->{qruntime_version} );
-  $table->row( "User directory",     $self->config->{paperpile_user_dir} );
-  $table->row( "Temp directory",     $self->config->{tmp_dir} );
-  $table->row( "User database",      $self->config->{user_db} );
+  my $config = Paperpile->config;
+  my $c      = $config->{app_settings};
+
+  $table->row( "System",             $c->{platform} );
+  $table->row( "Version",            $c->{version_id} . " (" . $c->{version_name} . ")" );
+  $table->row( "Build",              $c->{build_number} );
+  $table->row( "User DB version",    $c->{settings_db_version} );
+  $table->row( "Library DB version", $c->{library_db_version} );
+  $table->row( "QRuntime version",   $c->{qruntime_version} );
+  $table->row( "User directory",     $config->{paperpile_user_dir} );
+  $table->row( "Temp directory",     $config->{tmp_dir} );
+  $table->row( "User database",      $config->{user_db} );
 
   print STDERR $table->draw;
 
@@ -54,225 +77,7 @@ sub startup {
 
 }
 
-sub config {
-
-  my ($self) = @_;
-
-  # If instantiated cache config. However, also allow function calls
-  # on class without object
-  if ( ref $self ) {
-    if ( defined $self->_config ) {
-      return $self->_config;
-    }
-  }
-
-  my $config = $self->_raw_config;
-
-  my $substitutions = $self->_substitutions;
-
-  $self->_substitute_config( $config, $substitutions );
-
-  if ( ref $self ) {
-    $self->_config($config);
-  }
-
-  return $config;
-}
-
-sub get_model {
-
-  my ( $self, $name ) = @_;
-
-  $name = lc($name);
-
-  my $model;
-
-  if ( $name eq "user" ) {
-    my $file = $self->config->{user_db};
-    return Paperpile::Model::User->new( { file => $file } );
-  }
-
-  if ( $name eq "app" ) {
-    my $file = $self->path_to( "db", "app.db" );
-    return Paperpile::Model::App->new( { file => $file } );
-  }
-
-  if ( $name eq "queue" ) {
-    my $file = $self->config->{queue_db};
-    return Paperpile::Model::Queue->new( { file => $file } );
-  }
-
-  if ( $name eq "library" ) {
-
-    my $file = Paperpile::Utils->session->{library_db};
-
-    if ( !$file ) {
-      my $file = $self->get_model("User")->settings->{library_db};
-    }
-
-    return Paperpile::Model::Library->new( { file => $file } );
-  }
-}
-
-# Get configuration data without substitution of special fields
-sub _raw_config {
-
-  my ($self) = @_;
-
-  my $file = $self->path_to( "conf", "settings.yaml" );
-
-  return LoadFile($file);
-}
-
-# Replace special fields such as __USERHOME__ in configuration
-# data. This function works recursively through the whole data
-# structure ($item is the current node and should be initialized with
-# the hashref from _raw_config). The replacement values of the special
-# fields are given by $substitutions
-
-sub _substitute_config {
-
-  my ( $self, $item, $substitutions ) = @_;
-
-  # If hash, call myself for each item again.
-  if ( ref($item) eq "HASH" ) {
-    foreach my $value ( values %{$item} ) {
-      my $new_item = ref($value) ? $value : \$value;
-      $self->_substitute_config( $new_item, $substitutions );
-    }
-  }
-
-  # If array, also call myself for each item again.
-  if ( ref($item) eq "ARRAY" ) {
-    foreach my $value ( @{$item} ) {
-      my $new_item = ref($value) ? $value : \$value;
-      $self->_substitute_config( $new_item, $substitutions );
-    }
-  }
-
-  # If scalar, we substitute the special fields __XXX__
-  if ( ref($item) eq "SCALAR" ) {
-
-    my $value = $$item;
-
-    if ( $value =~ /__(.*)__/ ) {
-
-      foreach my $pattern ( keys %$substitutions ) {
-        my $replacement = $substitutions->{$pattern};
-        $value =~ s/__$pattern\__/$replacement/;
-      }
-    }
-    $$item = $value;
-  }
-}
-
-# Return run-time values for substititions as hash
-
-sub _substitutions {
-
-  my ($self) = @_;
-
-  my $platform;
-  if ( $^O =~ /linux/i ) {
-    my @f = `file /bin/ls`;    # More robust way for this??
-    if ( $f[0] =~ /64-bit/ ) {
-      $platform = 'linux64';
-    } else {
-      $platform = 'linux32';
-    }
-  }
-  if ( $^O =~ /cygwin/i or $^O =~ /MSWin/i ) {
-    $platform = 'win32';
-  }
-
-  if ( $^O =~ /(darwin|osx)/i ) {
-    $platform = 'osx';
-  }
-
-  # Set basic locations based on platform
-  my $userhome;
-  my $pp_user_dir;
-  my $pp_paper_dir;
-  my $pp_tmp_dir;
-
-  if ( $platform =~ /linux/ ) {
-    $userhome     = $ENV{HOME};
-    $pp_user_dir  = $ENV{HOME} . '/.paperpile';
-    $pp_paper_dir = $ENV{HOME} . '/.paperpile/papers';
-
-    my $tmp = $ENV{TMPDIR} || '/tmp';
-    $pp_tmp_dir = File::Spec->catfile( $tmp, "paperpile-" . $ENV{USER} );
-
-  }
-
-  if ( $platform eq 'osx' ) {
-    $userhome     = $ENV{HOME};
-    $pp_user_dir  = $ENV{HOME} . '/Library/Application Support/Paperpile';
-    $pp_paper_dir = $ENV{HOME} . '/Documents/Paperpile';
-
-    my $tmp = $ENV{TMPDIR} || '/tmp';
-    $pp_tmp_dir = File::Spec->catfile( $tmp, "paperpile-" . $ENV{USER} );
-
-  }
-
-  if ( $platform eq 'win32' ) {
-
-    $userhome = File::HomeDir->my_home;
-    $pp_user_dir  = File::Spec->catfile(File::HomeDir->my_data,"Paperpile");
-    $pp_paper_dir = File::Spec->catfile(File::HomeDir->my_documents,"Paperpile");
-    $pp_tmp_dir   = File::Spec->catfile(File::HomeDir->my_data,"Temp","paperpile");
-
-  }
-
-
-  # If we have a development version (i.e. no build number) we use a
-  # different user dir to allow parallel usage of a stable Paperpile
-  # installation and development
-  if ( $self->_raw_config->{app_settings}->{build_number} == 0 ) {
-    $pp_user_dir  = $ENV{HOME} . '/.paperdev';
-    $pp_paper_dir = $ENV{HOME} . '/.paperdev/papers';
-  }
-
-  return {
-    'USERHOME'     => $userhome,
-    'PLATFORM'     => $platform,
-    'PP_USER_DIR'  => $pp_user_dir,
-    'PP_PAPER_DIR' => $pp_paper_dir,
-    'PP_TMP_DIR'   => $pp_tmp_dir,
-  };
-
-}
-
-sub home_dir {
-
-  my ($self) = @_;
-
-  # Find home directory via location of Paperpile.pm file
-  foreach my $i ( 0 .. $#INC ) {
-    my $dir = $INC[$i];
-    if ( -e File::Spec->catfile( $dir, "Paperpile.pm" ) ) {
-      $dir =~ s!(/|\\)lib(/|\\)?$!!;
-      return abs_path($dir);
-    }
-  }
-}
-
-sub path_to {
-
-  my $self = shift;
-
-  return File::Spec->catfile( $self->home_dir, @_ );
-
-}
-
-sub app {
-
-  my ( $self, $env ) = @_;
-
-  return $self->process_request($env);
-
-}
-
+# Dynamically load controller classes
 sub _prepare_controllers {
 
   my ($self) = @_;
@@ -283,7 +88,7 @@ sub _prepare_controllers {
     sub {
       my $name = $File::Find::name;
 
-      $name=~s!\\!/!g;
+      $name =~ s!\\!/!g;
 
       if ( $name =~ m!/lib/(Paperpile/.*)\.pm! ) {
         my $class = $1;
@@ -303,23 +108,15 @@ sub _prepare_controllers {
 
       }
     },
-    $self->path_to( "lib", "Paperpile", "Controller" )
+    Paperpile->path_to( "lib", "Paperpile", "Controller" )
   );
 
   $self->_routes( {%routes} );
 
 }
 
-sub not_found {
 
-  my ($self, $env) = @_;
-
-  $self->log("Path". $env->{PATH_INFO}. "not found.");
-
-  my $response = Plack::Response->new(404);
-  return $response->finalize;
-}
-
+# Dispatch request to various handler functions
 sub process_request {
 
   my ( $self, $env ) = @_;
@@ -340,10 +137,12 @@ sub process_request {
 
   my $response;
 
+  # Ajax call
   if ($path =~/ajax/){
     $response = $self->process_ajax($c, $env);
   }
 
+  # HTML page
   if ($path =~/screens/){
     $response = $self->process_templates($c, $env);
   }
@@ -354,6 +153,7 @@ sub process_request {
 
 }
 
+# Display templated HTML pages
 sub process_templates {
 
   my ( $self, $c, $env ) = @_;
@@ -366,7 +166,7 @@ sub process_templates {
 
   Paperpile::Controller::Root->templates($c, $path);
 
-  my $template_file = $self->path_to("root","templates",$path.'.tt');
+  my $template_file = Paperpile->path_to("root","templates",$path.'.tt');
 
   if (!-e $template_file){
     return $self->not_found($env);
@@ -392,6 +192,7 @@ sub process_templates {
 
 }
 
+# Process Ajax request.
 sub process_ajax {
   my ( $self, $c, $env ) = @_;
 
@@ -462,6 +263,18 @@ sub process_ajax {
 }
 
 
+# Return 404 not found message
+sub not_found {
+
+  my ($self, $env) = @_;
+
+  $self->log("Path". $env->{PATH_INFO}. "not found.");
+
+  my $response = Plack::Response->new(404);
+  return $response->finalize;
+}
+
+# Log to STDERR
 sub log {
 
   my ( $self, $msg ) = @_;
@@ -470,6 +283,7 @@ sub log {
 
 }
 
+# Pretty print request parameters
 sub log_parameters {
 
   my ( $self, $params ) = @_;
@@ -489,6 +303,7 @@ sub log_parameters {
 
 }
 
+# Pretty print controllers and their routes
 sub log_routes {
 
   my ( $self, $params ) = @_;

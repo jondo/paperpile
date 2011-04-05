@@ -24,11 +24,11 @@ use File::Path;
 use File::Temp qw(tempfile);
 use URI::Escape;
 
+use Paperpile;
+use Paperpile::Utils;
+use Paperpile::Formats;
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
-use Paperpile::Utils;
-use Paperpile::App;
-use Paperpile::Formats;
 
 extends 'Paperpile::Plugins::Import::DB';
 
@@ -76,7 +76,7 @@ sub connect {
 
     Paperpile::Utils->uniquify_pubs($data);
 
-    my $empty_db = Paperpile::App->path_to('db','library.db');
+    my $empty_db = Paperpile->path_to('db','library.db');
     copy( $empty_db, $self->_db_file ) or die "Could not initialize empty db ($!)";
 
     my $model = $self->get_model();
@@ -164,7 +164,7 @@ sub complete_details {
   }
 
   # If that didn't work, just use the standard match approach.
-  my $plugin_list = [ split( /,/, Paperpile::App->get_model("Library")->get_setting('search_seq') ) ];
+  my $plugin_list = [ split( /,/, Paperpile::Utils->get_model("Library")->get_setting('search_seq') ) ];
   $pub->auto_complete($plugin_list);
   $pub->_needs_details_lookup(0);
   return $pub;

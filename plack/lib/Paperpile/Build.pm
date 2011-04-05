@@ -18,10 +18,10 @@
 package Paperpile::Build;
 use Mouse;
 
+use Paperpile;
+use Paperpile::Utils;
 use Paperpile::Model::User;
 use Paperpile::Model::Library;
-use Paperpile::Utils;
-use Paperpile::App;
 
 use Config;
 
@@ -371,7 +371,7 @@ sub get_qruntime {
 
   my ($self,$platform) = @_;
 
-  my $version = Paperpile::App->config->{app_settings}->{qruntime_version};
+  my $version = Paperpile->config->{app_settings}->{qruntime_version};
 
   my $tmp_dir = tempdir( CLEANUP => 1 );
 
@@ -489,7 +489,7 @@ sub push_qruntime {
 
   my $platform = Paperpile::Utils->get_platform;
 
-  my $qruntime_version = Paperpile::App->config->{app_settings}->{qruntime_version};
+  my $qruntime_version = Paperpile->config->{app_settings}->{qruntime_version};
 
   my $dest_dir = "qruntime-$qruntime_version-$platform";
 
@@ -501,7 +501,7 @@ sub push_qruntime {
 
   if ($platform eq 'osx'){
 
-    my $contents = Paperpile::App->path_to("")."/../c/qruntime/paperpile.app/Contents";
+    my $contents = Paperpile->path_to("")."/../c/qruntime/paperpile.app/Contents";
 
     mkdir "$dest_dir/Contents";
     mkdir "$dest_dir/Contents/Frameworks";
@@ -524,7 +524,7 @@ sub push_qruntime {
 
   if ($platform=~/linux(64|32)/) {
 
-    my $runtime = Paperpile::App->path_to("")."/../c/qruntime";
+    my $runtime = Paperpile->path_to("")."/../c/qruntime";
 
     mkdir "$dest_dir/lib";
     mkdir "$dest_dir/plugins";

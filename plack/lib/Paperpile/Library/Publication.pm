@@ -22,9 +22,9 @@ use Data::GUID;
 use Data::Dumper;
 use File::Temp qw(tempfile);
 
-use Paperpile::App;
-use Paperpile::Library::Author;
+use Paperpile;
 use Paperpile::Utils;
+use Paperpile::Library::Author;
 use Paperpile::Exceptions;
 use Paperpile::Formats;
 use Encode qw(encode_utf8);
@@ -117,7 +117,7 @@ has 'folders' => ( is => 'rw', default => '' );
 
 ### Fields from the config file
 
-my $config = LoadFile( Paperpile::App->path_to('conf/fields.yaml') );
+my $config = LoadFile( Paperpile->path_to('conf/fields.yaml') );
 
 foreach my $field ( keys %{ $config->{pub_fields} } ) {
 

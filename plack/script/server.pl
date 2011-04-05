@@ -20,7 +20,6 @@ use lib "$FindBin::Bin/../lib";
 
 use Plack::Runner;
 use Paperpile::App;
-use Paperpile::Job;
 use Data::Dumper;
 
 use Plack::Middleware::Static;
@@ -29,7 +28,7 @@ my $paperpile = new Paperpile::App->new();
 
 $paperpile->startup();
 
-my $root = $paperpile->home_dir() . "/root/";
+my $root = Paperpile->home_dir() . "/root/";
 
 my $app = sub {
   return $paperpile->app(shift);

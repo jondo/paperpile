@@ -26,7 +26,7 @@ use Data::GUID;
 use File::Path qw(rmtree);
 use File::stat;
 
-use Paperpile::App;
+use Paperpile;
 use Paperpile::Library::Publication;
 
 # The version numbers of the current installation
@@ -167,7 +167,7 @@ sub lift_library_2_3 {
   ### Initialize empty database from template and get handle
 
   my ( $volume, $dirs, $base_name ) = splitpath( $self->library_db );
-  copy( Paperpile::App->path_to('db/library.db')->stringify, catfile( $dirs, $base_name ) )
+  copy( Paperpile->path_to('db/library.db')->stringify, catfile( $dirs, $base_name ) )
     or die("Error initializing new database. Aborting migration ($!)");
 
   my $dbh_new = $self->get_dbh( $self->library_db );
