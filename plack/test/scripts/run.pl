@@ -1,7 +1,5 @@
 # Call via ../run.pl to run with the right perl interpreter
 
-BEGIN { $ENV{CATALYST_DEBUG} = 0 }
-
 use strict;
 use TAP::Harness;
 use Getopt::Long;
