@@ -35,7 +35,7 @@ sub redirect_ok {
 
     # Set a new status message based on the redirect destination URL.
     my $domain = $self->crawler->_short_domain($request->url);
-    Paperpile::Utils->update_job_info( $self->crawler->jobid, 'msg', "Fetching from $domain...", "PDF download canceled" );
+    Paperpile::Utils->update_job_info( $self->crawler->jobid, 'msg', "Fetching from $domain..." );
 
     return 1;
 }
@@ -44,7 +44,7 @@ sub crawler {
     # Stores a reference to the crawler object.
     my $self = shift;
     my $crawler = shift;
-    
+
     $self->{_crawler} = $crawler if (defined $crawler);
     return $self->{_crawler};
 }

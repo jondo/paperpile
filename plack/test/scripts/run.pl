@@ -4,23 +4,23 @@ use strict;
 use TAP::Harness;
 use Getopt::Long;
 use File::Basename;
+use File::Path;
 
 ## Define available testsuites here
+
+$ENV{PLACK_DEBUG} = 0;
 
 my %suites = (
   basic => {
     name  => 'Basic backend unit and regression tests',
     files => [
-      "t/basic.t",                 "t/formats/bibtex.t",
+      "t/basic.t",                 "t/job.t",
+      "t/queue.t",                 "t/formats/bibtex.t",
       "t/formats/ris.t",           "t/formats/zotero.t",
       "t/formats/mendeley.t",      "t/plugins/pubmed.t",
       "t/plugins/googlescholar.t", "t/plugins/duplicates.t",
       "t/plugins/arxiv.t",         "t/binaries.t"
     ]
-  },
-  cover => {
-    name  => 'Coverage analysis (see coverage/coverage.html)',
-    files => ["t/cover.t"]
   },
   pdfcrawler => {
     name  => 'PDF crawler',
@@ -35,12 +35,14 @@ my $verbosity = 1;
 my $nocolor   = 0;
 my $junit     = 0;
 my $help      = 0;
+my $cover     = 0;
 
 GetOptions(
   "nocolor"     => \$nocolor,
   "verbosity:i" => \$verbosity,
   "junit"       => \$junit,
-  "help"        => \$help
+  "help"        => \$help,
+  "cover"       => \$cover,
 );
 
 usage() if ( @ARGV == 0 || $help );
@@ -78,19 +80,36 @@ my $harness = TAP::Harness->new( \%args );
 
 ## Run tests
 
-my $cover = 0;
-
 my @to_run;
 
 foreach my $file (@files) {
-  push @to_run, [ $file, $file ];
-  $cover = 1 if $file =~ /cover\.t/;
+
+  # If --cover is given we run temporary copies of the test script
+  # with additional code
+  if ($cover){
+    rmtree('coverage');
+    open(IN, "<$file");
+    my @code = <IN>;
+    open(TMP, ">$file.tmp");
+    print TMP 'use Devel::Cover ( -db => "coverage", -silent => 1, -ignore => "t/.*", -ignore => ".*Test/Paperpile.*", -ignore => ".*/perl5/.*");', "\n";
+    print TMP @code;
+    close(TMP);
+    push @to_run, [ "$file.tmp", "$file" ];
+  } else {
+    push @to_run, [ $file, $file ];
+  }
 }
 
 $harness->runtests(@to_run);
 
-## Generate HTML coverage reports
 if ($cover) {
+
+  # Remove temporary copies again
+  foreach my $file (@files) {
+    unlink "$file.tmp";
+  }
+
+  # Build HTML output
   my $platform = $ENV{PLATFORM};
   system("../perl5/$platform/bin/paperperl  ../perl5/$platform/bin/cover coverage");
 }
@@ -113,6 +132,7 @@ sub usage {
   print STDERR "  --nocolor     Don't colorize outpout\n";
   print STDERR "  --verbosity   Verbosity level (-3..1, see TAP::Harness)\n";
   print STDERR "  --junit       JUnit formatted output\n\n";
+  print STDERR "  --cover       Run coverage analysis\n\n";
 
   exit(1);
 

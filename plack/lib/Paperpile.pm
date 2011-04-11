@@ -224,4 +224,13 @@ sub _substitutions {
   };
 }
 
+sub log {
+
+  my ( $self, $msg ) = @_;
+
+  print STDERR $msg if $ENV{PLACK_DEBUG};
+
+}
+
+
 1;

@@ -34,6 +34,7 @@ use XML::Simple;
 
 use Data::Dumper;
 use Date::Format;
+use Data::GUID;
 use Config;
 
 use Paperpile;
@@ -487,30 +488,17 @@ sub uniquify_pubs {
 }
 
 # Updates the job information for job with $jobid. If $jobid is not
-# defined it just returns without doing anything.  The function
-# returns 1 if the job was not interrupted, otherwise it returns 0.
-# If the optional $cancel_msg is given, it directly throws a
-# UserCancel expection with $cancel_msg as content.
+# defined it just returns without doing anything.
 
 sub update_job_info {
 
-  my ( $self, $jobid, $key, $value, $cancel_msg ) = @_;
+  my ( $self, $jobid, $key, $value ) = @_;
 
   return(1) if (!$jobid);
 
   my $job = Paperpile::Job->new( { id => $jobid } );
 
   $job->update_info( $key, $value );
-
-  if ($job->interrupt eq "CANCEL"){
-    if ($cancel_msg){
-      UserCancel->throw( error => $cancel_msg );
-    } else {
-      return 0;
-    }
-  } else {
-    return 1;
-  }
 
 }
 
@@ -673,6 +661,19 @@ sub get_model {
     return Paperpile::Model::Library->new( { file => $file } );
   }
 }
+
+sub generate_guid {
+  my $self = shift;
+
+  my $guid = Data::GUID->new;
+  $guid = $guid->as_hex;
+  $guid =~ s/^0x//;
+
+  return $guid;
+}
+
+
+
 
 
 

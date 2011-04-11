@@ -350,7 +350,7 @@ sub _get_location {
     sub {
       my ( $data, $response, $protocol ) = @_;
       $response->content( $response->content . $data );
-      Paperpile::Utils->update_job_info( $self->jobid, 'msg', $msg, "Meta-data lookup canceled." );
+      Paperpile::Utils->update_job_info( $self->jobid, 'msg', $msg );
     }
   );
 

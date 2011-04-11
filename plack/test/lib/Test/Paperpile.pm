@@ -11,40 +11,11 @@ use base 'Test::Class';
 
 sub class { 'Paperpile' };
 
-sub startup : Tests(startup => 1) {
+sub startup : Tests(startup => 0) {
   my ($self) = @_;
-  use_ok $self->class;
-}
 
-sub directories : Tests(9) {
-
-  ok(Paperpile->platform ~~[qw/linux32 linux64 osx win32/], "detect platform");
-
-  ok(-d Paperpile->home_dir, "home_dir exists");
-  ok(-e Paperpile->home_dir."/lib/Paperpile.pm", "home_dir contains Paperpile.pm");
-
-  ok(-e Paperpile->path_to('lib'), "path_to finds .../lib");
-  ok(-e Paperpile->path_to('lib','Paperpile'), "path_to finds .../lib/Paperpile");
-
-  my $tmp_dir = Paperpile->tmp_dir;
-
-  ok(defined $tmp_dir, "tmp_dir defined");
-
-  mkpath($tmp_dir);
-
-  ok(-d $tmp_dir, "tmp_dir exists");
-
-  open(OUT, ">$tmp_dir/tmp");
-  print OUT "tmp";
-
-  ok(-e "$tmp_dir/tmp", "write file to temp_dir");
-
-  unlink("$tmp_dir/tmp");
-
-  ok(!(-e "$tmp_dir/tmp"), "delete file from temp_dir");
 
 }
-
 
 # Compare $pub against fields in $data. The following suffixes can be
 # used (default is "IS")
@@ -104,5 +75,7 @@ sub test_fields {
     }
   }
 }
+
+
 
 1;

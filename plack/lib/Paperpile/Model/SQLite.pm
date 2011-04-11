@@ -291,7 +291,7 @@ sub log {
 
   my ( $self, $msg ) = @_;
 
-  my $debug = 1; 
+  my $debug = 1;
 
   if (defined $ENV{PLACK_DEBUG}){
     $debug = $ENV{PLACK_DEBUG};

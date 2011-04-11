@@ -53,6 +53,7 @@ use Exception::Class ( PaperpileError,
   CrawlerScrapeError      => { isa => 'CrawlerError' },
   ExtractionError         => { isa => 'PaperpileError', },
   ExtpdfError             => { isa => 'PaperpileError', },
+  TestError => { isa => 'PaperpileError' },
 
 );
 

@@ -520,7 +520,6 @@ sub refresh_job_fields {
   $data->{id}     = $job->id;
   $data->{error}  = $job->error;
   $data->{start}  = $job->start;
-  $data->{interrupt}  = $job->interrupt;
 
   foreach my $key ( keys %{ $job->info } ) {
     $data->{$key} = $job->info->{$key};
@@ -644,7 +643,7 @@ sub auto_complete {
 
     $msg = "Search publisher's site" if $plugin_name eq 'URL';
 
-    Paperpile::Utils->update_job_info($self->_jobid, 'msg', $msg, "Auto-complete canceled");
+    Paperpile::Utils->update_job_info($self->_jobid, 'msg', $msg);
 
     eval {
       my $plugin_module = "Paperpile::Plugins::Import::" . $plugin_name;
@@ -706,6 +705,8 @@ sub auto_complete {
 
 sub create_guid {
   my $self = shift;
+
+  # use Paperpile::Utils->generate_guid instead
 
   my $_guid = Data::GUID->new;
   $_guid = $_guid->as_hex;

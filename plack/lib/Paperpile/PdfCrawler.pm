@@ -162,11 +162,7 @@ sub _identify_site {
     # Note that this only shows up during the actual regex matching -- during any
     # page requests made using _get_location, the message will be set within that
     # method to something like  "Fetching from xyz..."
-    Paperpile::Utils->update_job_info(
-      $self->jobid, 'msg',
-      "Searching $target for PDF...",
-      "PDF download canceled"
-    );
+    Paperpile::Utils->update_job_info( $self->jobid, 'msg', "Searching $target for PDF..." );
 
     foreach my $site ( @{ $driver->{site} } ) {
 
@@ -202,6 +198,7 @@ sub _identify_site {
             print STDERR "Match. Using driver " . $site->{name} . "\n" if $self->debug;
             return $site;
           } else {
+
             #print STDERR "No match. \n" if $self->debug;
           }
         }
@@ -270,7 +267,7 @@ sub _matchURL {
 
   my $msg = "Locating PDF on " . $self->_short_domain($URL). "...";
 
-  Paperpile::Utils->update_job_info( $self->jobid, 'msg', $msg, "PDF download canceled" );
+  Paperpile::Utils->update_job_info( $self->jobid, 'msg', $msg);
 
   print STDERR "    Trying to match pattern $pattern in content of $URL...\n"
     if $self->debug;
@@ -389,7 +386,7 @@ sub _get_location {
 
   # Custom message for DOI resolution.
   $msg = "Resolving DOI..." if ( $domain =~ /doi\.org/i );
-  Paperpile::Utils->update_job_info( $self->jobid, 'msg', $msg, "PDF download canceled" );
+  Paperpile::Utils->update_job_info( $self->jobid, 'msg', $msg );
 
   # Keep a list of all URLs we're redirected through, for caching purposes.
   my %url_keys;
@@ -407,11 +404,7 @@ sub _get_location {
       if ( $cur_url ne $URL ) {
         $url_keys{$cur_url} = 1;
         my $cur_domain = $self->_short_domain($cur_url);
-        Paperpile::Utils->update_job_info(
-          $self->jobid, 'msg',
-          "Fetching from $cur_domain...",
-          "PDF download canceled"
-        );
+        Paperpile::Utils->update_job_info( $self->jobid, 'msg', "Fetching from $cur_domain..." );
       }
 
       $response->content( $response->content . $data );

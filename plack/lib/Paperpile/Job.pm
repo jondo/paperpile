@@ -15,7 +15,6 @@
 # received a copy of the GNU Affero General Public License along with
 # Paperpile.  If not, see http://www.gnu.org/licenses.
 
-
 package Paperpile::Job;
 
 use Mouse;
@@ -45,7 +44,9 @@ enum 'Types' => (
   'PDF_SEARCH',         # search PDF online
   'METADATA_UPDATE',    # Update the metadata for a given reference.
   'WEB_IMPORT',         # Import a reference that was sent from the browser
-  'TEST_JOB'
+  'TEST_JOB1',
+  'TEST_JOB2',
+  'TEST_JOB3',
 );
 
 enum 'Status' => (
@@ -55,28 +56,30 @@ enum 'Status' => (
   'ERROR'               # job finished with an error or was canceled.
 );
 
-has 'job_type'   => ( is => 'rw', isa => 'Types' );
-has 'status' => ( is => 'rw', isa => 'Status' );
+has 'job_type' => ( is => 'rw', isa => 'Types' );
+has 'status'   => ( is => 'rw', isa => 'Status' );
 
-has 'id'    => ( is => 'rw' );    # Unique id identifying the job
-has 'error' => ( is => 'rw' );    # Error message if job failed
+# GUID identifying the job
+has 'id' => ( is => 'rw' );
+
+# Process id of forked sub-process or Win32 process
+has 'pid' => ( is => 'rw', default => -1 );
+
+# Error message if job failed
+has 'error' => ( is => 'rw' );
+
+# The job is queued or not
+has 'queued' => ( is => 'rw', isa => 'Int', default => 0 );
 
 # Field to store different job type specific information
-has 'info' => ( is => 'rw', isa => 'HashRef' );
+has 'info' => ( is => 'rw', isa => 'HashRef', default => sub { {}; } );
 
 # Time (in seconds) that was used to finish a job
-has 'start' => ( is => 'rw', isa => 'Int' );
+has 'start'    => ( is => 'rw', isa => 'Int' );
 has 'duration' => ( is => 'rw', isa => 'Int' );
 
-# This field serves as way to send interrupts to a running job. If set
-# to 'CANCEL' a running job should exit with an exception UserCancel.
-has 'interrupt' => ( is => 'rw', default => '' );
-
-# Publication object which is needed for all job types
-has 'pub' => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
-
-# Should this job be hidden from the queue widget and grid?
-has 'hidden' => ( is => 'rw', default => 0 );
+# Publication object
+has 'pub' => ( is => 'rw' );
 
 # File name to store the job object
 has '_file' => ( is => 'rw' );
@@ -99,10 +102,10 @@ sub BUILD {
 
   # if no id is given we create a new job
   if ( !$params->{id} ) {
-    $self->generate_id;
+    $self->id( Paperpile::Utils->generate_guid );
 
-    if ($params->{job_type}){
-      $self->job_type($params->{job_type});
+    if ( $params->{job_type} ) {
+      $self->job_type( $params->{job_type} );
       $self->info( { msg => $self->noun . " waiting..." } );
     }
 
@@ -126,13 +129,22 @@ sub BUILD {
   }
 }
 
+sub noun {
+  my $self = shift;
+
+  my $type = $self->job_type;
+  return 'PDF download'  if ( $type eq 'PDF_SEARCH' );
+  return 'PDF import'    if ( $type eq 'PDF_IMPORT' );
+  return 'Auto-complete' if ( $type eq 'METADATA_UPDATE' );
+  return 'Test job' if ( $type =~ /TEST_JOB/ );
+}
+
 ## Save job object to disk
 
 sub save {
   my $self = shift;
   my $file = $self->_file;
   lock_store( $self, $self->_file );
-
 }
 
 ## Read job object from disk
@@ -151,94 +163,6 @@ sub restore {
   }
 }
 
-sub reset {
-  my $self = shift;
-
-  if ( $self->status eq 'RUNNING' ) {
-    $self->interrupt('CANCEL');
-    $self->save;
-  }
-
-  $self->update_status('PENDING');
-  $self->error('');
-  $self->interrupt('');
-  $self->info( { msg => '' } );
-  $self->save;
-}
-
-sub noun {
-  my $self = shift;
-
-  my $type = $self->job_type;
-  return 'PDF download'    if ( $type eq 'PDF_SEARCH' );
-  return 'PDF import'      if ( $type eq 'PDF_IMPORT' );
-  return 'Auto-complete'   if ( $type eq 'METADATA_UPDATE' );
-  return 'Test job'        if ( $type eq 'TEST_JOB' );
-}
-
-sub remove {
-  my $self = shift;
-
-  my $dbh = Paperpile::Utils->get_model("Queue")->dbh;
-
-  my $id = $self->id;
-  $dbh->do("DELETE FROM Queue WHERE jobid='$id';");
-
-  unlink $self->_file;
-}
-
-sub cancel {
-  my $self = shift;
-
-  return if ( $self->status ~~ [ 'ERROR', 'DONE' ] );
-
-  if ( $self->status eq 'RUNNING' ) {
-    $self->interrupt('CANCEL');
-  } else {
-    $self->error( $self->noun . ' canceled.' );
-    $self->update_status('ERROR');
-  }
-
-  $self->save;
-}
-
-
-sub is_canceled {
-
-  my $self = shift;
-
-  my $stored;
-
-  eval { $stored = lock_retrieve( $self->_file ); };
-  return 0 if not $stored;
-
-  if ($stored->interrupt eq 'CANCEL'){
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-## Generate alphanumerical random id
-
-sub generate_id {
-
-  my $self = shift;
-
-  my $string = '';
-
-  my $i = 0;
-
-  while ( $i < 16 ) {
-    my $j = chr( int( rand(127) ) );
-    if ( $j =~ /[a-zA-Z0-9]/ ) {
-      $string .= uc($j);
-      $i++;
-    }
-  }
-  $self->id($string);
-}
-
 ## Updates status in job file and queue database table
 
 sub update_status {
@@ -246,19 +170,22 @@ sub update_status {
 
   $self->status($status);
 
-  my $dbh = Paperpile::Utils->get_model("Queue")->dbh;
+  if ( $self->queued ) {
 
-  my $job_id = $dbh->quote( $self->id );
+    my $dbh = Paperpile::Utils->get_model("Queue")->dbh;
 
-  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+    my $job_id = $dbh->quote( $self->id );
 
-  $status = $dbh->quote( $self->status );
+    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
-  my $duration = $self->duration;
+    $status = $dbh->quote( $self->status );
 
-  $dbh->do("UPDATE Queue SET status=$status, duration=$duration WHERE jobid=$job_id");
+    my $duration = $self->duration;
 
-  $dbh->commit;
+    $dbh->do("UPDATE Queue SET status=$status, duration=$duration WHERE jobid=$job_id");
+
+    $dbh->commit;
+  }
 
   $self->save;
 
@@ -281,6 +208,69 @@ sub update_info {
 
 }
 
+# Deletes job
+sub remove {
+  my $self = shift;
+
+  if ( $self->queued ) {
+    my $dbh = Paperpile::Utils->get_model("Queue")->dbh;
+    my $id  = $self->id;
+    $dbh->do("DELETE FROM Queue WHERE jobid='$id';");
+  }
+
+  unlink $self->_file;
+}
+
+
+# Stops a running or pending process. Status is set to ERROR and
+# message is set to "... canceled"
+sub cancel {
+  my $self = shift;
+
+  return if ( $self->status ~~ [ 'ERROR', 'DONE' ] );
+
+  if ( $self->status eq 'RUNNING' ) {
+    my $pid = $self->pid;
+
+    # Adapt that for windows!!
+    my $processInfo = `ps -A |grep $pid`;
+
+    # Paranoia check to make sure the process is indeed a perl process
+    if (! ($processInfo =~/perl/) ){
+      die("Cancel would have killed $processInfo. Aborted");
+    }
+
+    Paperpile->log("KILLING: $processInfo");
+
+    kill(9,$pid);
+
+    UserCancel->throw( error => $self->noun . ' canceled.' );
+
+  } else {
+    $self->error( $self->noun . ' canceled.' );
+    $self->update_status('ERROR');
+  }
+
+  $self->save;
+}
+
+
+# Resets all fields to prepares a job for a retry
+sub reset {
+  my $self = shift;
+
+  if ( $self->status eq 'RUNNING' ) {
+    $self->cancel;
+  }
+
+  $self->update_status('PENDING');
+  $self->error('');
+  $self->info( { msg => '' } );
+  $self->save;
+}
+
+
+
 ## Runs the job in a forked sub-process
 
 sub run {
@@ -289,11 +279,10 @@ sub run {
 
   my $pid = undef;
 
-  if ($^O eq 'MSWin32') {
+  if ( $^O eq 'MSWin32' ) {
 
     # require 'Win32';
     # require 'Win32::Process';
-
 
     # my $paperperl = Paperpile->path_to('perl5','win32','bin','paperperl.exe');
     # my $worker = Paperpile->path_to('script','worker.pl');
@@ -316,6 +305,8 @@ sub run {
     # fork returned 0, so this branch is child
     elsif ( $pid == 0 ) {
 
+      $self->pid($$);
+
       close(STDOUT);
 
       my $start_time = time;
@@ -330,9 +321,11 @@ sub run {
       # Make sure that each job takes at least 1 second to be sent once
       # as "running" to frontend which is necessary to get updated
       # correctly. Clearly not optimal but works for now...
-      if ( $end_time - $start_time <= 1 ) {
+      if ( $self->queued && ( $end_time - $start_time <= 1 ) ) {
         sleep(1);
       }
+
+      $self->pid(-1);
 
       if ($@) {
         $self->_catch_error;
@@ -341,8 +334,10 @@ sub run {
         $self->update_status('DONE');
       }
 
-      my $q = Paperpile::Queue->new();
-      $q->run;
+      if ( $self->queued ) {
+        my $q = Paperpile::Queue->new();
+        $q->run;
+      }
 
       exit();
     }
@@ -359,29 +354,9 @@ sub _do_work {
 
   my $self = shift;
 
-   if ( $self->job_type eq 'METADATA_UPDATE' ) {
-
-     $self->update_info( 'msg', 'Searching PDF' );
-     sleep(2);
-     $self->update_info( 'msg', 'Starting download' );
-     sleep(2);
-     $self->update_info( 'msg',  'Downloading' );
-     $self->update_info( 'size', 1000 );
-     sleep(1);
-     $self->update_info( 'downloaded', 200 );
-     sleep(1);
-     $self->update_info( 'downloaded', 500 );
-     sleep(1);
-     $self->update_info( 'downloaded', 800 );
-     sleep(1);
-     $self->update_info( 'downloaded', 1000 );
-     sleep(1);
-     ExtractionError->throw("Some random error") if ( rand(1) > 0.5 );
-     $self->update_info( 'msg', 'File successfully downloaded.' );
-     return;
-   }
-
-  $self->pub->_jobid( $self->id );
+  if ( $self->pub ) {
+    $self->pub->_jobid( $self->id );
+  }
 
   if ( $self->job_type eq 'PDF_SEARCH' ) {
 
@@ -528,6 +503,26 @@ sub _do_work {
     }
 
   }
+
+  if ( $self->job_type eq 'TEST_JOB1' ) {
+    $self->update_info( 'msg', 'Step1' );
+    sleep(2);
+    $self->update_info( 'msg', 'Step2' );
+    sleep(2);
+    $self->update_info( 'msg', 'Done.' );
+    return;
+  }
+
+  if ( $self->job_type eq 'TEST_JOB2' ) {
+    TestError->throw("Test exception");
+    return;
+  }
+
+  if ( $self->job_type eq 'TEST_JOB3' ) {
+    die("Unknown exception.");
+    return;
+  }
+
 }
 
 ## Set error fields after an exception was thrown
@@ -539,13 +534,14 @@ sub _catch_error {
   my $e = Exception::Class->caught();
 
   if ( ref $e ) {
-    if (Exception::Class->caught('UserCancel')){
-      $self->error( $self->noun. ' canceled.');
+    if ( Exception::Class->caught('UserCancel') ) {
+      $self->error( $self->noun . ' canceled.' );
     } else {
       $self->error( $e->error );
     }
   } else {
-    print STDERR $@;    # log this error also on console
+
+    Paperpile->log($@) if $ENV{PLACK_DEBUG};    # log this error also on console
     $self->error("An unexpected error has occured ($@)");
   }
 
@@ -641,9 +637,8 @@ sub as_hash {
 
 sub _match {
 
-  my ($self, $require_linkout) = @_;
+  my ( $self, $require_linkout ) = @_;
 
-  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
 
   my $model    = Paperpile::Utils->get_model("Library");
   my $settings = $model->settings;
@@ -654,20 +649,16 @@ sub _match {
 
   my $success_plugin;
 
-
   print STDERR "[queue] Start matching against online resources.\n";
 
-  eval {
-    $success_plugin = $self->pub->auto_complete([@plugin_list], $require_linkout);
-  };
+  eval { $success_plugin = $self->pub->auto_complete( [@plugin_list], $require_linkout ); };
 
-  if (Exception::Class->caught ) {
+  if ( Exception::Class->caught ) {
     $self->_rethrow_error;
   }
 
   return $success_plugin;
 }
-
 
 ## Crawls for the PDF on the publisher site
 
@@ -675,10 +666,8 @@ sub _crawl {
 
   my $self = shift;
 
-  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
-
   my $crawler = Paperpile::PdfCrawler->new;
-  $crawler->jobid($self->id);
+  $crawler->jobid( $self->id );
   $crawler->debug(1);
   $crawler->driver_file( Paperpile->path_to( 'data', 'pdf-crawler.xml' ) );
   $crawler->load_driver();
@@ -687,8 +676,8 @@ sub _crawl {
 
   my $start_url = '';
 
-  if ($self->pub->best_link ne '') {
-      $start_url = $self->pub->best_link;
+  if ( $self->pub->best_link ne '' ) {
+    $start_url = $self->pub->best_link;
   } else {
     die("No target url for PDF download");
   }
@@ -701,7 +690,7 @@ sub _crawl {
 
   # Save LWP user agent with potentially important cookies to be
   # re-used in _download
-  $self->_browser($crawler->browser);
+  $self->_browser( $crawler->browser );
 
 }
 
@@ -710,8 +699,6 @@ sub _crawl {
 sub _download {
 
   my $self = shift;
-
-  UserCancel->throw( error => $self->noun . ' canceled.' ) if ( $self->is_canceled );
 
   print STDERR "[queue] Start downloading ", $self->pub->_pdf_url, "\n";
 
@@ -731,10 +718,6 @@ sub _download {
       my ( $data, $response, $protocol ) = @_;
 
       $self->restore;
-
-      if ( $self->interrupt eq 'CANCEL' ) {
-        die("CANCEL");
-      }
 
       if ( not -e $file ) {
         my $length = $response->content_length;
@@ -821,8 +804,6 @@ sub _extract_meta_data {
 
   my $self = shift;
 
-  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
-
   print STDERR "[queue] Extracting meta data for ", $self->pub->pdf, "\n";
 
   my $bin = Paperpile::Utils->get_binary('pdftoxml');
@@ -843,8 +824,6 @@ sub _lookup_pdf {
 
   my $self = shift;
 
-  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
-
   my $md5 = Paperpile::Utils->calculate_md5( $self->pub->pdf );
 
   my $pub = Paperpile::Utils->get_model("Library")->lookup_pdf($md5);
@@ -861,8 +840,6 @@ sub _insert {
 
   my $self = shift;
 
-  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
-
   my $model = Paperpile::Utils->get_model("Library");
 
   # We here track the PDF file in the pub->pdf field, for import
@@ -877,7 +854,7 @@ sub _insert {
   # Insert into any necessary collections.
   if ( scalar @{ $self->_collection_guids } > 0 ) {
     foreach my $guid ( @{ $self->_collection_guids } ) {
-      if ( ($guid ne '') and ($guid ne 'LOCAL_ROOT') ) {
+      if ( ( $guid ne '' ) and ( $guid ne 'LOCAL_ROOT' ) ) {
         $model->add_to_collection( [ $self->pub ], $guid );
       }
     }
@@ -895,10 +872,11 @@ sub _attach_pdf {
 
   my $file = $self->pub->pdf;
 
-  if ($self->is_canceled){
-    unlink($file);
-    UserCancel->throw( error => $self->noun . ' canceled.' )
-  }
+  # Handle deleting of pdf files with new cancel
+  #if ( $self->is_canceled ) {
+  #  unlink($file);
+  #  UserCancel->throw( error => $self->noun . ' canceled.' );
+  #}
 
   my $model = Paperpile::Utils->get_model("Library");
 

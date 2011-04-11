@@ -1,4 +1,4 @@
 use lib '../lib';
-use Test::Paperpile;
+use Test::Paperpile::Basic;
 
-Test::Paperpile->new->runtests;
+Test::Paperpile::Basic->new->runtests;
