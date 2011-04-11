@@ -230,19 +230,23 @@ sub cancel {
   return if ( $self->status ~~ [ 'ERROR', 'DONE' ] );
 
   if ( $self->status eq 'RUNNING' ) {
+
     my $pid = $self->pid;
 
-    # Adapt that for windows!!
-    my $processInfo = `ps -A |grep $pid`;
+    if ( $pid != -1 ) {
 
-    # Paranoia check to make sure the process is indeed a perl process
-    if (! ($processInfo =~/perl/) ){
-      die("Cancel would have killed $processInfo. Aborted");
+      # Adapt that for windows!!
+      my $processInfo = `ps -A |grep $pid`;
+
+      # Paranoia check to make sure the process is indeed a perl process
+      if ( !( $processInfo =~ /perl/ ) ) {
+        die("Cancel would have killed $processInfo. Aborted");
+      }
+
+      Paperpile->log("KILLING: $processInfo");
+
+      kill( 9, $pid );
     }
-
-    Paperpile->log("KILLING: $processInfo");
-
-    kill(9,$pid);
 
     UserCancel->throw( error => $self->noun . ' canceled.' );
 
