@@ -47,6 +47,7 @@ enum 'Types' => (
   'TEST_JOB1',
   'TEST_JOB2',
   'TEST_JOB3',
+  'TEST_JOB4',
 );
 
 enum 'Status' => (
@@ -518,14 +519,23 @@ sub _do_work {
   }
 
   if ( $self->job_type eq 'TEST_JOB2' ) {
-    TestError->throw("Test exception");
+    $self->update_info( 'msg', 'Step1' );
+    sleep(2);
+    $self->update_info( 'msg', 'Done.' );
     return;
   }
 
   if ( $self->job_type eq 'TEST_JOB3' ) {
+    TestError->throw("Test exception");
+    return;
+  }
+
+  if ( $self->job_type eq 'TEST_JOB4' ) {
     die("Unknown exception.");
     return;
   }
+
+
 
 }
 

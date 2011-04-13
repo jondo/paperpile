@@ -22,7 +22,7 @@ sub startup : Tests(startup => 1) {
 
 }
 
-sub basic : Tests(35) {
+sub basic : Tests(33) {
   my ($self) = @_;
 
   my $q = Paperpile::Queue->new;
@@ -151,9 +151,51 @@ sub basic : Tests(35) {
 
   is( $count, 0, "clear_all. All jobs cleared." );
 
-
 }
 
+
+sub running : Tests(5) {
+
+  my ($self) = @_;
+
+  my $job1 = Paperpile::Job->new( job_type => "TEST_JOB2", queued => 1 );
+  my $job2 = Paperpile::Job->new( job_type => "TEST_JOB2", queued => 1 );
+
+  $job1->update_info( "name", "job1" );
+  $job2->update_info( "name", "job2" );
+
+  my $q = Paperpile::Queue->new;
+
+  $q->submit($job1);
+  $q->submit($job2);
+
+  $q->max_running(1);
+
+  $q->run;
+
+  sleep(1);
+
+  my $jobs = $q->get_jobs('RUNNING');
+
+  is( @$jobs, 1, "Running queue. One job is running." );
+  is( $jobs->[0]->{info}->{name}, "job1", "Running queue. Job 1 is running.");
+
+  sleep(2);
+
+  my $jobs = $q->get_jobs('RUNNING');
+
+  is( @$jobs, 1, "Running queue. One job is running." );
+  is( $jobs->[0]->{info}->{name}, "job2", "Running queue. Job 2 is running.");
+
+  sleep(2);
+
+  my $jobs = $q->get_jobs('DONE');
+
+  is( @$jobs, 2, "Running queue. Both jobs done." );
+
+
+
+}
 
 
 

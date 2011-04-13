@@ -19,7 +19,6 @@ sub startup : Tests(startup => 1) {
 
 }
 
-
 sub save_store : Tests(10) {
   my ($self) = @_;
 
@@ -75,7 +74,7 @@ sub save_store : Tests(10) {
 
 }
 
-sub run_cancel : Tests(30) {
+sub run_cancel : Tests(23) {
   my ($self) = @_;
 
   ## TEST_JOB1 normal job with several stages
@@ -104,9 +103,9 @@ sub run_cancel : Tests(30) {
 
   $job->remove;
 
-  ## TEST_JOB2: job that throws exception
+  ## TEST_JOB3: job that throws exception
 
-  my $job = $self->class->new( job_type => "TEST_JOB2" );
+  my $job = $self->class->new( job_type => "TEST_JOB3" );
   $job->run;
   sleep(1);
   $job->restore;
@@ -116,9 +115,9 @@ sub run_cancel : Tests(30) {
 
   $job->remove;
 
-  ## TEST_JOB3: job that dies from an unknown error
+  ## TEST_JOB4: job that dies from an unknown error
 
-  my $job = $self->class->new( job_type => "TEST_JOB3" );
+  my $job = $self->class->new( job_type => "TEST_JOB4" );
   $job->run;
   sleep(1);
   $job->restore;
@@ -153,11 +152,6 @@ sub run_cancel : Tests(30) {
   like( $job->{error}, qr/canceled/, "Cancel running job. Error field is set." );
 
   $job->remove;
-
-
-  #$job->run;
-  #sleep(1);
-  #$job->restore;
 
 }
 
