@@ -83,7 +83,10 @@ has 'duration' => ( is => 'rw', isa => 'Int' );
 has 'pub' => ( is => 'rw' );
 
 # File name to store the job object
-has '_file' => ( is => 'rw' );
+has '_freeze_file' => ( is => 'rw' );
+
+# File name to dump JSON for the frontend
+has '_json_file' => ( is => 'rw' );
 
 # rowid in the database table. At the moment only used to re-submit
 # jobs at the original position
@@ -115,14 +118,23 @@ sub BUILD {
     $self->duration(0);
     $self->start(0);
 
-    my $file = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'queue', $self->id );
-    $self->_file($file);
+    my $job_dir  = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'jobs' );
+    my $json_dir = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'json' );
+
+    mkdir $job_dir  if ( !-e $job_dir );
+    mkdir $json_dir if ( !-e $json_dir );
+
+    $self->_freeze_file( File::Spec->catfile( $job_dir, $self->id ) );
+
+    $self->_json_file( File::Spec->catfile( $json_dir, "job-" . $self->id . ".json" ) );
+
     $self->save;
   }
 
   # otherwise restore object from disk
   else {
-    $self->_file( File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'queue', $self->id ) );
+    $self->_freeze_file(
+      File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'jobs', $self->id ) );
     $self->restore;
     if ( $self->pub ) {
       $self->pub->refresh_job_fields($self);
@@ -144,8 +156,11 @@ sub noun {
 
 sub save {
   my $self = shift;
-  my $file = $self->_file;
-  lock_store( $self, $self->_file );
+  my $file = $self->_freeze_file;
+  lock_store( $self, $self->_freeze_file );
+
+  $self->_save_json;
+
 }
 
 ## Read job object from disk
@@ -155,7 +170,7 @@ sub restore {
 
   my $stored = undef;
 
-  eval { $stored = lock_retrieve( $self->_file ); };
+  eval { $stored = lock_retrieve( $self->_freeze_file ); };
 
   return if not $stored;
 
@@ -199,13 +214,16 @@ sub update_info {
 
   my ( $self, $key, $value ) = @_;
 
-  my $stored = lock_retrieve( $self->_file );
+  my $stored = lock_retrieve( $self->_freeze_file );
 
   $stored->{info}->{$key} = $value;
 
-  lock_store( $stored, $self->_file );
+  lock_store( $stored, $self->_freeze_file );
 
   $self->{info}->{$key} = $value;
+
+  $self->_save_json;
+
 
 }
 
@@ -219,7 +237,9 @@ sub remove {
     $dbh->do("DELETE FROM Queue WHERE jobid='$id';");
   }
 
-  unlink $self->_file;
+  unlink $self->_freeze_file;
+  unlink $self->_json_file;
+
 }
 
 
@@ -637,6 +657,20 @@ sub as_hash {
 
   }
   return {%hash};
+
+}
+
+sub _save_json {
+
+  my $self = shift;
+
+  my $json = JSON->new->utf8->encode( $self->as_hash );
+
+  open(OUT, ">".$self->_json_file) || die("Could not open ".$self->_json_file. "for writing");
+
+  print OUT $json;
+
+  close OUT;
 
 }
 

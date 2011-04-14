@@ -63,11 +63,21 @@ has types => ( is => 'rw', default => sub {return {};});
 # List of currently running jobs
 has running_jobs => ( is => 'rw', isa => 'ArrayRef', default => sub {[]} );
 
+# File name to dump JSON for the frontend
+has '_json_file' => ( is => 'rw' );
+
 has _dbh => ( is => 'rw');
 
 sub BUILD {
   my ( $self, $params ) = @_;
   $self->restore;
+
+  my $json_dir = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'json' );
+
+  mkdir $json_dir if ( !-e $json_dir );
+
+  $self->_json_file( File::Spec->catfile( $json_dir, "queue.json") );
+
 }
 
 sub dbh {
@@ -106,6 +116,8 @@ sub save {
   } else {
     $self->dbh->do("INSERT INTO Settings VALUES ('queue',$serialized)");
   }
+
+  $self->_save_json;
 
 }
 
@@ -324,9 +336,6 @@ sub run {
 
   $self->dbh->do('COMMIT TRANSACTION');
 
-#  $self->restore;
-#  return if ($self->status eq 'PAUSED');
-
   # If no jobs are running and no more jobs left to start we set
   # status to 'WAITING'
   if ($curr_running == 0 and @to_be_started == 0){
@@ -414,7 +423,8 @@ sub clear_all {
   while ( $sth->fetch ) {
     my $job = Paperpile::Job->new( { id => $job_id } );
 
-    unlink( $job->_file );
+    unlink( $job->_freeze_file );
+    unlink( $job->_json_file );
   }
 
   $self->dbh->do("UPDATE Settings SET value='' WHERE key='queue'");
@@ -441,7 +451,8 @@ sub clear {
   while ( $sth->fetch ) {
     my $job = Paperpile::Job->new( { id => $job_id } );
     push @guids, $job->{pub}->{guid} if (defined $job->{pub}->{guid});
-    unlink( $job->_file );
+    unlink( $job->_freeze_file );
+    unlink( $job->_json_file );
   }
 
   $self->dbh->do("DELETE FROM Queue WHERE (status = 'DONE' OR status ='ERROR')");
@@ -451,8 +462,19 @@ sub clear {
   return [@guids];
 }
 
+sub _save_json {
 
+  my $self = shift;
 
+  my $json = JSON->new->utf8->encode( $self->as_hash );
+
+  open(OUT, ">".$self->_json_file) || die("Could not open ".$self->_json_file. "for writing");
+
+  print OUT $json;
+
+  close OUT;
+
+}
 
 sub as_hash {
   my $self = shift;

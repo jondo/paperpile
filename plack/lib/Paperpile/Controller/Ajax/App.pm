@@ -53,7 +53,7 @@ sub init_session  {
     FileWriteError->throw("Could not start application. Temporary file $tmp_dir not writable.");
   }
 
-  foreach my $subdir ('rss','import','download','queue','filesync'){
+  foreach my $subdir ('rss','import','download','jobs','json','filesync'){
     mkpath( File::Spec->catfile( $tmp_dir, $subdir ) );
   }
 

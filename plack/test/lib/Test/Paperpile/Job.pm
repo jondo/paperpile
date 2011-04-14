@@ -3,6 +3,7 @@ package Test::Paperpile::Job;
 use strict;
 use Test::More;
 use Data::Dumper;
+use JSON;
 
 use Paperpile;
 use Paperpile::App;
@@ -19,8 +20,11 @@ sub startup : Tests(startup => 1) {
 
 }
 
-sub save_store : Tests(10) {
+sub save_store : Tests(14) {
+
   my ($self) = @_;
+
+  ## Create new job from scratch
 
   my $job = $self->class->new( job_type => "TEST_JOB1" );
 
@@ -28,22 +32,44 @@ sub save_store : Tests(10) {
 
   like( $id, qr/[0-9A-F]{32}/, "Creating new job object from scratch." );
 
-  ok( -e $job->_file, "Job file is present." );
+  ok( -e $job->_freeze_file, "Job file is present." );
+
+  ## Create new job from dump
 
   $job = $self->class->new( id => $id );
 
-  is( $id, $job->id, "Creating new job object from disk." );
+  is( $id, $job->id, "Creating new job object from freeze dump." );
+
+  ## Update job info via different functions
 
   $job->{info}->{test} = "123";
   $job->save;
   $job->{info}->{test} = undef;
   $job->restore;
-  is( $job->{info}->{test}, "123", "Saving/restoring object to/from disk" );
+  is( $job->{info}->{test}, "123", "Saving/restoring object to/from freeze/thaw dump" );
+
+  ok( -e $job->_json_file, "JSON file is present." );
+
+  open( IN, "<".$job->_json_file );
+  my $string = '';
+  $string .= $_ while (<IN>);
+  my $data = decode_json($string);
+
+  is( $data->{info}->{test}, "123", "Saving/restoring object to/from JSON file" );
 
   $job->update_info( "test", "456" );
   $job->{info}->{test} = undef;
   $job->restore;
   is( $job->{info}->{test}, "456", "Updating info" );
+
+  open( IN, "<".$job->_json_file );
+  $string = '';
+  $string .= $_ while (<IN>);
+  $data = decode_json($string);
+
+  is( $data->{info}->{test}, "456", "Saving/restoring object to/from JSON file" );
+
+  ## Update job status
 
   $job->update_status("DONE");
   is( $job->{status}, "DONE", "Updating status. Updated in object." );
@@ -63,9 +89,12 @@ sub save_store : Tests(10) {
 
   is( $q->num_done, 1, "Updating status for queued job. Updated in database." );
 
+  ## Deleting jobs
+
   $job->queued(0);
   $job->remove;
-  ok( !( -e $job->_file ), "Deleting job. File is removed." );
+  ok( !( -e $job->_freeze_file ), "Deleting job. Freeze file is removed." );
+  ok( !( -e $job->_json_file ),   "Deleting job. JSON file is removed." );
 
   $job->queued(1);
   $job->remove;
@@ -84,17 +113,23 @@ sub run_cancel : Tests(23) {
   is( $job->{pid}, -1, "Before running the job pid is -1." );
 
   $job->run;
+
   sleep(1);
+
   $job->restore;
   is( $job->{status},      "RUNNING", "Test job 1. Status is RUNNING" );
   is( $job->{info}->{msg}, "Step1",   "Test job 1. Msg is updated" );
   like( $job->{pid}, qr/\d+/, "Test job 1. PID is set" );
   cmp_ok( $job->{pid}, '!=', $$, "Test job 1. PID is different from main process." );
+
   sleep(2);
+
   $job->restore;
   is( $job->{status},      "RUNNING", "Test job 1. Status is still RUNNING" );
   is( $job->{info}->{msg}, "Step2",   "Test job 1. Msg is updated again" );
+
   sleep(2);
+
   $job->restore;
   is( $job->{status},      "DONE",  "Test job 1. Status is DONE" );
   is( $job->{info}->{msg}, "Done.", "Test job 1. Msg is updated when done" );
@@ -119,7 +154,9 @@ sub run_cancel : Tests(23) {
 
   my $job = $self->class->new( job_type => "TEST_JOB4" );
   $job->run;
+
   sleep(1);
+
   $job->restore;
   is( $job->{status}, "ERROR", "Test job 3. Status is ERROR" );
   like( $job->{error}, qr/Unknown exception/, "Test job 3. Error field is set." );
@@ -133,7 +170,9 @@ sub run_cancel : Tests(23) {
 
   is( $job->{status}, "PENDING", "Cancel pending job. Status is PENDING" );
   $job->cancel;
+
   sleep(1);
+
   $job->restore;
   is( $job->{status}, "ERROR", "Cancel pending job. Status is ERROR" );
   like( $job->{error}, qr/canceled/, "Cancel pending job. Error field is set." );
@@ -144,9 +183,13 @@ sub run_cancel : Tests(23) {
 
   my $job = $self->class->new( job_type => "TEST_JOB1" );
   is( $job->{status}, "PENDING", "Cancel running job. Status is PENDING" );
+
   sleep(1);
+
   $job->cancel;
+
   sleep(1);
+
   $job->restore;
   is( $job->{status}, "ERROR", "Cancel running job. Status is ERROR" );
   like( $job->{error}, qr/canceled/, "Cancel running job. Error field is set." );
