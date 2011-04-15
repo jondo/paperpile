@@ -4,6 +4,7 @@ use strict;
 use Test::More;
 use Data::Dumper;
 use File::Copy;
+use JSON;
 
 use Paperpile;
 
@@ -22,7 +23,7 @@ sub startup : Tests(startup => 1) {
 
 }
 
-sub basic : Tests(33) {
+sub basic : Tests(35) {
   my ($self) = @_;
 
   my $q = Paperpile::Queue->new;
@@ -35,6 +36,13 @@ sub basic : Tests(33) {
   $q->restore;
 
   is( $q->max_running, 10, "Save restore object to/from database" );
+
+  open( IN, "<".$q->_json_file );
+  my $string = '';
+  $string .= $_ while (<IN>);
+  my $data = decode_json($string);
+
+  is( $data->{max_running}, 10, "Save restore object to/from json file" );
 
   my $job1 = Paperpile::Job->new( job_type => "TEST_JOB1", queued => 1 );
   my $job2 = Paperpile::Job->new( job_type => "TEST_JOB1", queued => 1 );

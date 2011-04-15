@@ -4,6 +4,7 @@ use strict;
 use Test::More;
 use Data::Dumper;
 use JSON;
+use utf8;
 
 use Paperpile;
 use Paperpile::App;
@@ -42,11 +43,11 @@ sub save_store : Tests(14) {
 
   ## Update job info via different functions
 
-  $job->{info}->{test} = "123";
+  $job->{info}->{test} = "some text 私はガラス";
   $job->save;
   $job->{info}->{test} = undef;
   $job->restore;
-  is( $job->{info}->{test}, "123", "Saving/restoring object to/from freeze/thaw dump" );
+  is( $job->{info}->{test}, "some text 私はガラス", "Saving/restoring object to/from freeze/thaw dump" );
 
   ok( -e $job->_json_file, "JSON file is present." );
 
@@ -55,7 +56,7 @@ sub save_store : Tests(14) {
   $string .= $_ while (<IN>);
   my $data = decode_json($string);
 
-  is( $data->{info}->{test}, "123", "Saving/restoring object to/from JSON file" );
+  is( $data->{info}->{test}, "some text 私はガラス", "Saving/restoring object to/from JSON file" );
 
   $job->update_info( "test", "456" );
   $job->{info}->{test} = undef;

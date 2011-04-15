@@ -70,13 +70,14 @@ has _dbh => ( is => 'rw');
 
 sub BUILD {
   my ( $self, $params ) = @_;
-  $self->restore;
 
   my $json_dir = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'json' );
-
   mkdir $json_dir if ( !-e $json_dir );
-
   $self->_json_file( File::Spec->catfile( $json_dir, "queue.json") );
+
+  $self->restore;
+
+
 
 }
 
