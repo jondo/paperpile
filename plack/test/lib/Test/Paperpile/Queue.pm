@@ -23,13 +23,16 @@ sub startup : Tests(startup => 1) {
 
 }
 
-sub basic : Tests(35) {
+sub basic : Tests(34) {
   my ($self) = @_;
 
   my $q = Paperpile::Queue->new;
 
+
+  ## Get DB handle
   isa_ok( $q->dbh, 'DBI::db', "get db handle" );
 
+  ## Save restore from/to database and JSON file
   $q->max_running(10);
   $q->save;
   $q->max_running(0);
@@ -43,6 +46,9 @@ sub basic : Tests(35) {
   my $data = decode_json($string);
 
   is( $data->{max_running}, 10, "Save restore object to/from json file" );
+
+
+  ## Submit jobs
 
   my $job1 = Paperpile::Job->new( job_type => "TEST_JOB1", queued => 1 );
   my $job2 = Paperpile::Job->new( job_type => "TEST_JOB1", queued => 1 );
@@ -63,6 +69,8 @@ sub basic : Tests(35) {
   ($count) = $q->dbh->selectrow_array("SELECT count(*) FROM Queue;");
 
   is( $count, 3, "Submit job2 and job3 to queue. Count is 3." );
+
+  ## Get jobs and job statistics
 
   my $jobs = $q->get_jobs;
 
@@ -123,9 +131,9 @@ sub basic : Tests(35) {
   $jobs = $q->get_jobs('ERROR');
   is( @$jobs, 1, "Statistics 4. Get all jobs with errors. Count is ok." );
 
+  ## Cancel jobs
 
-  # Testing cancel all. Don't use status 'RUNNING' because they are
-  # not really running.
+  # Don't use status 'RUNNING' for cancel because they are not really running.
   $job1->update_status('PENDING');
   $job2->update_status('PENDING');
   $job3->update_status('DONE');
@@ -143,6 +151,8 @@ sub basic : Tests(35) {
   $job1->update_status('PENDING');
   $job2->update_status('ERROR');
   $job3->update_status('DONE');
+
+  ## Clear jobs
 
   $q->clear;
 
@@ -162,17 +172,19 @@ sub basic : Tests(35) {
 }
 
 
-sub running : Tests(5) {
+sub running : Tests(14) {
 
   my ($self) = @_;
+
+  my $q = Paperpile::Queue->new;
+
+  ## First run one after another
 
   my $job1 = Paperpile::Job->new( job_type => "TEST_JOB2", queued => 1 );
   my $job2 = Paperpile::Job->new( job_type => "TEST_JOB2", queued => 1 );
 
   $job1->update_info( "name", "job1" );
   $job2->update_info( "name", "job2" );
-
-  my $q = Paperpile::Queue->new;
 
   $q->submit($job1);
   $q->submit($job2);
@@ -185,15 +197,49 @@ sub running : Tests(5) {
 
   my $jobs = $q->get_jobs('RUNNING');
 
-  is( @$jobs, 1, "Running queue. One job is running." );
-  is( $jobs->[0]->{info}->{name}, "job1", "Running queue. Job 1 is running.");
+  is( @$jobs, 1, "Running queue sequential. One job is running." );
+  is( $jobs->[0]->{info}->{name}, "job1", "Running queue sequential. Job 1 is running.");
 
   sleep(2);
 
   my $jobs = $q->get_jobs('RUNNING');
 
-  is( @$jobs, 1, "Running queue. One job is running." );
-  is( $jobs->[0]->{info}->{name}, "job2", "Running queue. Job 2 is running.");
+  is( @$jobs, 1, "Running queue sequential. One job is running." );
+  is( $jobs->[0]->{info}->{name}, "job2", "Running queue sequential. Job 2 is running.");
+
+  sleep(2);
+
+  my $jobs = $q->get_jobs('DONE');
+
+  is( @$jobs, 2, "Running queue sequential. Both jobs done." );
+
+
+  ## Run two job simultanously
+
+  $q->clear_all();
+
+  $job1 = Paperpile::Job->new( job_type => "TEST_JOB2", queued => 1 );
+  $job2 = Paperpile::Job->new( job_type => "TEST_JOB2", queued => 1 );
+
+  $job1->update_info( "name", "job1" );
+  $job2->update_info( "name", "job2" );
+
+  my $q = Paperpile::Queue->new;
+
+  $q->submit($job1);
+  $q->submit($job2);
+
+  $q->max_running(2);
+
+  $q->run;
+
+  sleep(1);
+
+  my $jobs = $q->get_jobs('RUNNING');
+
+  is( @$jobs, 2, "Running queue in parallel. Tow jobs running." );
+  is( $jobs->[0]->{info}->{name}, "job1", "Running queue in parallel. Job 1 is running.");
+  is( $jobs->[1]->{info}->{name}, "job2", "Running queue in parallel. Job 2 is running.");
 
   sleep(2);
 
@@ -201,7 +247,45 @@ sub running : Tests(5) {
 
   is( @$jobs, 2, "Running queue. Both jobs done." );
 
+  ## Run two jobs with pause/resume
 
+  $q->clear_all();
+
+  $job1 = Paperpile::Job->new( job_type => "TEST_JOB2", queued => 1 );
+  $job2 = Paperpile::Job->new( job_type => "TEST_JOB2", queued => 1 );
+
+  $job1->update_info( "name", "job1" );
+  $job2->update_info( "name", "job2" );
+
+  $q->submit($job1);
+  $q->submit($job2);
+
+  $q->max_running(1);
+
+  $q->run;
+  $q->pause;
+
+  sleep(1);
+
+  my $jobs = $q->get_jobs('RUNNING');
+
+  is( @$jobs, 1, "Running queue with pause/resume. One job is running." );
+  is( $jobs->[0]->{info}->{name}, "job1", "Running queue sequential. Job 1 is running.");
+
+  sleep(2);
+
+  my $jobs = $q->get_jobs('RUNNING');
+
+  is( @$jobs, 0, "Running queue with pause/resume. No job is running." );
+
+  $q->resume;
+
+  sleep(1);
+
+  my $jobs = $q->get_jobs('RUNNING');
+
+  is( @$jobs, 1, "Running queue with pause/resume. One job is running." );
+  is( $jobs->[0]->{info}->{name}, "job2", "Running queue sequential. Job 2 is running.");
 
 }
 
