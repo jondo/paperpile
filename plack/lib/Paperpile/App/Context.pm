@@ -1,6 +1,8 @@
 package Paperpile::App::Context;
 
 use Mouse;
+use Paperpile;
+use Paperpile::Utils;
 
 has 'request' => ( is => 'rw' );
 has 'app'     => ( is => 'rw' );
@@ -10,7 +12,7 @@ sub config {
 
   my ($self) = @_;
 
-  return $self->app->config;
+  return Paperpile->config;
 
 }
 
@@ -18,7 +20,7 @@ sub model {
 
   my ( $self, $name ) = @_;
 
-  return $self->app->get_model($name);
+  return Paperpile::Utils->get_model($name);
 
 }
 
@@ -26,7 +28,7 @@ sub path_to {
 
   my $self = shift;
 
-  return $self->app->path_to(@_);
+  return Paperpile->path_to(@_);
 
 }
 

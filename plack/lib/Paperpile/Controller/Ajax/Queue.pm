@@ -19,7 +19,6 @@ package Paperpile::Controller::Ajax::Queue;
 
 use strict;
 use warnings;
-use Paperpile::App;
 use Paperpile::Library::Publication;
 
 use Data::Dumper;
@@ -250,7 +249,7 @@ sub retry_jobs  {
   }
 
   my $q   = Paperpile::Queue->new();
-  my $dbh = Paperpile::App->get_model("Queue")->dbh;
+  my $dbh = Paperpile::Utils->get_model("Queue")->dbh;
 
   my @pub_list = ();
   foreach my $id (@$ids) {

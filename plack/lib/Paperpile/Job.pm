@@ -21,7 +21,7 @@ package Paperpile::Job;
 use Mouse;
 use Mouse::Util::TypeConstraints;
 
-use Paperpile::App;
+use Paperpile;
 use Paperpile::Utils;
 use Paperpile::Exceptions;
 use Paperpile::Queue;
@@ -179,7 +179,7 @@ sub noun {
 sub remove {
   my $self = shift;
 
-  my $dbh = Paperpile::App->get_model("Queue")->dbh;
+  my $dbh = Paperpile::Utils->get_model("Queue")->dbh;
 
   my $id = $self->id;
   $dbh->do("DELETE FROM Queue WHERE jobid='$id';");
@@ -246,7 +246,7 @@ sub update_status {
 
   $self->status($status);
 
-  my $dbh = Paperpile::App->get_model("Queue")->dbh;
+  my $dbh = Paperpile::Utils->get_model("Queue")->dbh;
 
   my $job_id = $dbh->quote( $self->id );
 
@@ -295,8 +295,8 @@ sub run {
     # require 'Win32::Process';
 
 
-    # my $paperperl = Paperpile::App->path_to('perl5','win32','bin','paperperl.exe');
-    # my $worker = Paperpile::App->path_to('script','worker.pl');
+    # my $paperperl = Paperpile->path_to('perl5','win32','bin','paperperl.exe');
+    # my $worker = Paperpile->path_to('script','worker.pl');
 
     # my $process;
     # Win32::Process::Create($process,
@@ -474,7 +474,7 @@ sub _do_work {
 
       # If the destination pub doesn't have a PDF, add this one to it. See issue #756.
       if ( $self->pub->_insert_skipped && !$self->pub->pdf ) {
-        my $m = Paperpile::App->get_model("Library");
+        my $m = Paperpile::Utils->get_model("Library");
         $m->attach_file( $orig_pdf_file, 1, $self->pub );
         $self->update_info( 'msg', "PDF attached to existing reference in library." );
         return;
@@ -500,7 +500,7 @@ sub _do_work {
 
     my $new_hash = $pub->as_hash;
     if ($success) {
-      my $m = Paperpile::App->get_model("Library");
+      my $m = Paperpile::Utils->get_model("Library");
 
       # Update the database entry
       $m->update_pub( $pub->guid, $new_hash );
@@ -645,7 +645,7 @@ sub _match {
 
   UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
 
-  my $model    = Paperpile::App->get_model("Library");
+  my $model    = Paperpile::Utils->get_model("Library");
   my $settings = $model->settings;
 
   my @plugin_list = split( /,/, $settings->{search_seq} );
@@ -680,7 +680,7 @@ sub _crawl {
   my $crawler = Paperpile::PdfCrawler->new;
   $crawler->jobid($self->id);
   $crawler->debug(1);
-  $crawler->driver_file( Paperpile::App->path_to( 'data', 'pdf-crawler.xml' ) );
+  $crawler->driver_file( Paperpile->path_to( 'data', 'pdf-crawler.xml' ) );
   $crawler->load_driver();
 
   my $pdf;
@@ -847,7 +847,7 @@ sub _lookup_pdf {
 
   my $md5 = Paperpile::Utils->calculate_md5( $self->pub->pdf );
 
-  my $pub = Paperpile::App->get_model("Library")->lookup_pdf($md5);
+  my $pub = Paperpile::Utils->get_model("Library")->lookup_pdf($md5);
 
   if ($pub) {
     $self->pub($pub);
@@ -863,7 +863,7 @@ sub _insert {
 
   UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
 
-  my $model = Paperpile::App->get_model("Library");
+  my $model = Paperpile::Utils->get_model("Library");
 
   # We here track the PDF file in the pub->pdf field, for import
   # _pdf_tmp needs to be set
@@ -900,7 +900,7 @@ sub _attach_pdf {
     UserCancel->throw( error => $self->noun . ' canceled.' )
   }
 
-  my $model = Paperpile::App->get_model("Library");
+  my $model = Paperpile::Utils->get_model("Library");
 
   $model->attach_file( $file, 1, $self->pub );
 

@@ -23,6 +23,8 @@ use Data::Dumper;
 use LockFile::Simple;
 use FreezeThaw qw/freeze thaw/;
 
+use Paperpile;
+
 has 'file'   => ( is => 'rw' );
 has '_dbh'   => ( is => 'rw' );
 has '_txdbh' => ( is => 'rw' );
@@ -96,7 +98,7 @@ sub begin_transaction {
     # /tmp. Should avoid locking issues in NFS based file systems
 
     my $lock = LockFile::Simple->make(
-      -format => Paperpile::App->config->{tmp_dir} . "/%f.lock",
+      -format => Paperpile->config->{tmp_dir} . "/%f.lock",
       -delay     => 1,     # Wait 1 second between next try to get lock on file
       -max       => 30,    # Try at most 30 times, i.e. timeout is 30 seconds
       -autoclean => 1,     # Clean lockfile when process ends

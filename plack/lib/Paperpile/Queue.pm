@@ -20,7 +20,7 @@ package Paperpile::Queue;
 
 use Mouse;
 use Mouse::Util::TypeConstraints;
-use Paperpile::App;
+use Paperpile;
 use Paperpile::Utils;
 use Paperpile::Exceptions;
 use Paperpile::Job;
@@ -75,7 +75,7 @@ sub dbh {
   my $self = shift;
 
   if (not $self->_dbh){
-    $self->_dbh(Paperpile::App->get_model("Queue")->dbh);
+    $self->_dbh(Paperpile::Utils->get_model("Queue")->dbh);
   }
 
   return $self->_dbh;

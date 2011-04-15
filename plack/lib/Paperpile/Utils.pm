@@ -1,4 +1,3 @@
-
 # Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
@@ -37,17 +36,17 @@ use Data::Dumper;
 use Date::Format;
 use Config;
 
+use Paperpile;
+
 use Paperpile::Model::User;
 use Paperpile::Model::Library;
 use Paperpile::Model::Queue;
-
-use Paperpile::App;
 
 sub get_tmp_dir {
 
   my ( $self ) = @_;
 
-  return Paperpile::App->config->{tmp_dir};
+  return Paperpile->tmp_dir;
 
 }
 
@@ -63,7 +62,7 @@ sub get_browser {
     $settings = $test_proxy;
   } else {
 
-    my $model = Paperpile::App->get_model("User");
+    my $model = $self->get_model("User");
     $settings = $model->settings;
   }
 
@@ -126,11 +125,11 @@ sub get_binary{
 
   if ($platform eq 'osx'){
     # Make sure that fontconfig configuration files are found on OSX
-    my $fc=File::Spec->catfile(Paperpile::App->path_to('bin'), 'osx','fonts','fonts.conf');
+    my $fc=File::Spec->catfile(Paperpile->path_to('bin'), 'osx','fonts','fonts.conf');
     $ENV{FONTCONFIG_FILE}=$fc;
   }
 
-  my $bin=File::Spec->catfile(Paperpile::App->path_to('bin'), $platform, $name);
+  my $bin=File::Spec->catfile(Paperpile->path_to('bin'), $platform, $name);
 
   $bin=~s/ /\\ /g;
 
@@ -642,6 +641,42 @@ sub extpdf {
   return $output;
 
 }
+
+sub get_model {
+
+  my ( $self, $name ) = @_;
+
+  $name = lc($name);
+
+  my $model;
+
+  if ( $name eq "user" ) {
+    my $file = Paperpile->config->{user_db};
+    return Paperpile::Model::User->new( { file => $file } );
+  }
+
+  if ( $name eq "app" ) {
+    my $file = Paperpile->path_to( "db", "app.db" );
+    return Paperpile::Model::App->new( { file => $file } );
+  }
+
+  if ( $name eq "queue" ) {
+    my $file = Paperpile->config->{queue_db};
+    return Paperpile::Model::Queue->new( { file => $file } );
+  }
+
+  if ( $name eq "library" ) {
+
+    my $file = $self->session->{library_db};
+
+    if ( !$file ) {
+      my $file = $self->get_model("User")->settings->{library_db};
+    }
+
+    return Paperpile::Model::Library->new( { file => $file } );
+  }
+}
+
 
 
 1;
