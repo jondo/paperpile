@@ -214,10 +214,6 @@ sub test_network  {
 
   my ( $self, $c ) = @_;
 
-  my $cancel_handle = $c->params->{cancel_handle};
-
-  Paperpile::Utils->register_cancel_handle($cancel_handle);
-
   my $browser = Paperpile::Utils->get_browser( $c->params );
 
   my $response = $browser->get('http://pubmed.org');
@@ -228,21 +224,6 @@ sub test_network  {
       code  => $response->code
     );
   }
-
-  Paperpile::Utils->clear_cancel($$);
-
-}
-
-sub cancel_request  {
-
-  my ( $self, $c ) = @_;
-
-  my $cancel_handle = $c->params->{cancel_handle};
-  my $kill          = $c->params->{kill};
-
-  $kill = 0 if not defined $kill;
-
-  Paperpile::Utils->activate_cancel_handle( $cancel_handle, $kill );
 
 }
 

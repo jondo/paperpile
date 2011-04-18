@@ -121,10 +121,6 @@ sub complete_entry  {
 
   my ($plugin, $selection) = $self->_get_selection($c);
 
-  my $cancel_handle = $c->params->{cancel_handle};
-
-  Paperpile::Utils->register_cancel_handle($cancel_handle);
-
   my @new_pubs = ();
   foreach my $pub (@$selection) {
     if ( $plugin->needs_completing($pub) ) {
@@ -156,8 +152,6 @@ sub complete_entry  {
   $self->_save_plugin($c, $plugin);
 
   $c->stash->{data} = { pubs => $results };
-
-  Paperpile::Utils->clear_cancel($$);
 
 }
 

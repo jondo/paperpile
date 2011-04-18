@@ -177,34 +177,6 @@ sub adjust_root {
 }
 
 
-# Convert labels that can consists of several words to one
-# string. Start, end and spaces are encoded by numbers. We cannot
-# encode with special characters as they are ignored by FTS.
-# eg. "Really crap papers" gets to "88Really99crap99papers88" This hack
-# is necessary to allow searching for a specific label using FTS.
-sub encode_labels {
-
-  (my $self, my $labels) = @_;
-
-  return "" if not $labels;
-
-  my @labels = split(/,/, $labels);
-
-  my @new_labels=();
-
-  foreach my $label (@labels){
-
-    $label=~s/ /99/g;
-    $label='88'.$label.'88';
-    push @new_labels, $label;
-
-  }
-
-  return join(',', @new_labels);
-
-}
-
-
 # Copies file $source to $dest. Creates directory if not already
 # exists and makes sure that file name is unique.
 
@@ -253,108 +225,6 @@ sub copy_file{
 }
 
 
-# Registers a handle from the frontend connects it to the PID of the
-# current process. The idea is that the frontend only needs to know
-# about the handle and the backend only needs to know about its PID
-
-sub register_cancel_handle {
-
-  my ( $self, $handle ) = @_;
-
-  my $new_cancel_data = { map => {}, cancel => {} };
-
-  my $cancel_data = $self->retrieve('cancel_data');
-
-  if ($cancel_data) {
-    $new_cancel_data = $cancel_data;
-  }
-
-  $new_cancel_data->{map}->{$$} = $handle;
-  $new_cancel_data->{map}->{$handle} = $$;
-
-  $new_cancel_data->{cancel}->{$handle}   = 0;
-
-  $self->store('cancel_data', $new_cancel_data);
-
-}
-
-# Marks a handle for cancelling. The next time a process that is
-# associated with handle calls 'check_cancel' gets 1 as answer and
-# should stop. If $kill is true, the process associated with the
-# handle is killed immediately
-
-sub activate_cancel_handle {
-
-  my ( $self, $handle, $kill ) = @_;
-
-  my $cancel_data = $self->retrieve('cancel_data');
-
-  return if not defined $cancel_data;
-
-  if ($kill){
-    my $pid = $cancel_data->{map}->{$handle};
-    delete($cancel_data->{map}->{$pid});
-    delete($cancel_data->{map}->{$handle});
-    delete($cancel_data->{cancel}->{$handle});
-    $self->store( 'cancel_data', $cancel_data );
-
-    # Note to future-self: Make sure this works on OSX and windows
-    my $processInfo = `ps -A |grep $pid`;
-
-    # Paranoia check to make sure the process is indeed a perl process
-    if (! ($processInfo =~/perl/) ){
-      die("Cancel would have killed $processInfo. Aborted");
-    }
-
-    print STDERR "KILLING: $processInfo";
-
-    kill(9,$pid);
-
-  } else {
-    $cancel_data->{cancel}->{$handle} = 1;
-  }
-
-  $self->store( 'cancel_data', $cancel_data );
-
-}
-
-# If it returns 1 the process with process id $pid should stop.
-
-sub check_cancel {
-
-  my ( $self, $pid ) = @_;
-
-  my $cancel_data = $self->retrieve('cancel_data');
-
-  return 0 if not defined $cancel_data;
-
-  my $handle = $cancel_data->{map}->{$pid};
-
-  return $cancel_data->{cancel}->{$handle};
-
-}
-
-# Cleanup. Should be called before a process that registered a cancel
-# handle quits.
-
-sub clear_cancel {
-
-  my ( $self, $pid ) = @_;
-
-  my $cancel_data = $self->retrieve('cancel_data');
-
-  return 0 if not defined $cancel_data;
-
-  my $handle = $cancel_data->{map}->{$pid};
-
-  delete($cancel_data->{map}->{$pid});
-  delete($cancel_data->{map}->{$handle});
-  delete($cancel_data->{cancel}->{$handle});
-
-  $self->store( 'cancel_data', $cancel_data );
-
-}
-
 sub calculate_md5 {
   my ($self, $file) = @_;
   open( FILE, "<$file" ) or FileReadError->throw( error => "Could not read " . $file );
@@ -362,7 +232,6 @@ sub calculate_md5 {
   $c->addfile(*FILE);
   return $c->hexdigest;
 }
-
 
 
 sub store {
@@ -671,10 +540,5 @@ sub generate_guid {
 
   return $guid;
 }
-
-
-
-
-
 
 1;

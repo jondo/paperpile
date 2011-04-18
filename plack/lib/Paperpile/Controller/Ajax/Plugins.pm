@@ -65,12 +65,6 @@ sub resultsgrid  {
   my $plugin_name = $c->params->{plugin_name};
   my $plugin;
 
-  my $cancel_handle = $c->params->{cancel_handle} || undef;
-
-  if ($cancel_handle){
-    Paperpile::Utils->register_cancel_handle($cancel_handle);
-  }
-
   if ( not defined Paperpile::Utils->session($c)->{"grid_$grid_id"} or $task eq 'NEW' ) {
 
     # Load required module dynamically
@@ -157,10 +151,6 @@ sub resultsgrid  {
   }
 
   Paperpile::Utils->session($c, {"grid_$grid_id" => $plugin});
-
-  if ($cancel_handle){
-    Paperpile::Utils->clear_cancel($$);
-  }
 
   _resultsgrid_format( @_, $entries, $plugin->total_entries );
 
