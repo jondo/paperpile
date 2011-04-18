@@ -24,6 +24,8 @@ use Data::Dumper;
 
 use Plack::Middleware::Static;
 
+$ENV{PLACK_DEBUG} = 1;
+
 my $paperpile = new Paperpile::App->new();
 
 $paperpile->startup();

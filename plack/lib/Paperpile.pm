@@ -215,6 +215,12 @@ sub _substitutions {
     $pp_paper_dir = $ENV{HOME} . '/.paperdev/papers';
   }
 
+  # For running tests we use different folders
+  if ($ENV{PP_TESTING}){
+    $pp_user_dir  = $self->path_to("test","workspace");
+    $pp_paper_dir = $self->path_to("test","workspace","papers");
+  }
+
   return {
     'USERHOME'     => $userhome,
     'PLATFORM'     => $platform,
@@ -228,9 +234,10 @@ sub log {
 
   my ( $self, $msg ) = @_;
 
-  print STDERR $msg if $ENV{PLACK_DEBUG};
+  print STDERR "[info] ", $msg, "\n" if $ENV{PLACK_DEBUG};
 
 }
+
 
 
 1;

@@ -50,7 +50,7 @@ sub startup {
 
   my ($self) = @_;
 
-  $self->log("Starting Paperpile.");
+  Paperpile->log("Starting Paperpile.");
 
   my $table = Text::SimpleTable->new( 20, 50 );
 
@@ -67,9 +67,9 @@ sub startup {
   $table->row( "Temp directory",     $config->{tmp_dir} );
   $table->row( "User database",      $config->{user_db} );
 
-  print STDERR $table->draw;
+  print STDERR $table->draw if $ENV{PLACK_DEBUG};
 
-  $self->log("Loading Controllers.");
+  Paperpile->log("Loading Controllers.");
 
   $self->_prepare_controllers;
 
@@ -128,7 +128,7 @@ sub process_request {
   $c->request( Plack::Request->new($env) );
   $c->app($self);
 
-  $self->log( sprintf( "Request %s %s", $c->request->method, $c->request->path_info ) );
+  Paperpile->log( sprintf( "Request %s %s", $c->request->method, $c->request->path_info ) );
   $self->log_parameters( $c->request->parameters );
 
   # Dispatch url path to right class and method
@@ -147,7 +147,7 @@ sub process_request {
     $response = $self->process_templates($c, $env);
   }
 
-  $self->log( sprintf( "Request took %.6fs", Time::HiRes::gettimeofday- $start_time ) );
+  Paperpile->log( sprintf( "Request took %.6fs", Time::HiRes::gettimeofday- $start_time ) );
 
   return $response;
 
@@ -268,19 +268,10 @@ sub not_found {
 
   my ($self, $env) = @_;
 
-  $self->log("Path". $env->{PATH_INFO}. "not found.");
+  Paperpile->log("Path". $env->{PATH_INFO}. "not found.");
 
   my $response = Plack::Response->new(404);
   return $response->finalize;
-}
-
-# Log to STDERR
-sub log {
-
-  my ( $self, $msg ) = @_;
-
-  print STDERR "[info] " . $msg, "\n";
-
 }
 
 # Pretty print request parameters
@@ -299,7 +290,7 @@ sub log_parameters {
     $table->row( "", "No parameters" );
   }
 
-  print STDERR $table->draw;
+  print STDERR $table->draw if $ENV{PLACK_DEBUG};
 
 }
 
@@ -313,7 +304,7 @@ sub log_routes {
     $table->row( $key, $self->_routes->{$key} );
   }
 
-  print STDERR $table->draw;
+  print STDERR $table->draw if $ENV{PLACK_DEBUG};
 
 }
 

@@ -9,6 +9,7 @@ use File::Path;
 ## Define available testsuites here
 
 $ENV{PLACK_DEBUG} = 0;
+$ENV{PP_TESTING} = 1;
 
 my %suites = (
   basic => {
@@ -19,7 +20,9 @@ my %suites = (
       "t/formats/ris.t",           "t/formats/zotero.t",
       "t/formats/mendeley.t",      "t/plugins/pubmed.t",
       "t/plugins/googlescholar.t", "t/plugins/duplicates.t",
-      "t/plugins/arxiv.t",         "t/binaries.t"
+      "t/plugins/arxiv.t",         "t/binaries.t",
+      "t/ajax/app.t",
+
     ]
   },
   pdfcrawler => {
@@ -86,12 +89,14 @@ foreach my $file (@files) {
 
   # If --cover is given we run temporary copies of the test script
   # with additional code
-  if ($cover){
+  if ($cover) {
     rmtree('coverage');
-    open(IN, "<$file");
+    open( IN, "<$file" );
     my @code = <IN>;
-    open(TMP, ">$file.tmp");
-    print TMP 'use Devel::Cover ( -db => "coverage", -silent => 1, -ignore => "t/.*", -ignore => ".*Test/Paperpile.*", -ignore => ".*/perl5/.*");', "\n";
+    open( TMP, ">$file.tmp" );
+    print TMP
+      'use Devel::Cover ( -db => "coverage", -silent => 1, -ignore => "t/.*", -ignore => ".*Test/Paperpile.*", -ignore => ".*/perl5/.*");',
+      "\n";
     print TMP @code;
     close(TMP);
     push @to_run, [ "$file.tmp", "$file" ];

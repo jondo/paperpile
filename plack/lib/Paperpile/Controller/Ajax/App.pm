@@ -34,12 +34,12 @@ sub heartbeat  {
 
   my ( $self, $c ) = @_;
 
-  $c->stash->{version} = $c->config->{app_settings}->{version};
+  $c->stash->{version} = $c->config->{app_settings}->{version_id};
   $c->stash->{status}  = 'RUNNING';
 
 }
 
-sub init_session  {
+sub init_session {
 
   my ( $self, $c ) = @_;
 
@@ -47,13 +47,13 @@ sub init_session  {
 
   my $tmp_dir = Paperpile::Utils->get_tmp_dir;
 
-  mkpath( $tmp_dir );
+  mkpath($tmp_dir);
 
   if ( !( -w $tmp_dir ) ) {
     FileWriteError->throw("Could not start application. Temporary file $tmp_dir not writable.");
   }
 
-  foreach my $subdir ('rss','import','download','jobs','json','filesync'){
+  foreach my $subdir ( 'rss', 'import', 'download', 'jobs', 'json', 'filesync' ) {
     mkpath( File::Spec->catfile( $tmp_dir, $subdir ) );
   }
 
@@ -61,13 +61,11 @@ sub init_session  {
   unlink( glob( File::Spec->catfile( $tmp_dir, 'download', '*pdf' ) ) );
   unlink( glob( File::Spec->catfile( $tmp_dir, 'import',   '*ppl' ) ) );
 
-  # Clear file with cancel handles and any potential lock files that
-  # have been left after a crash
-  unlink( File::Spec->catfile( $tmp_dir, 'cancel_data' ) );
+  # Clear any potential lock files that have been left after a crash
   unlink( glob( File::Spec->catfile( $tmp_dir, '*lock' ) ) );
 
   # Clear session variables
-  unlink( File::Spec->catfile($tmp_dir, 'local_session' ) );
+  unlink( File::Spec->catfile( $tmp_dir, 'local_session' ) );
 
   # Clear log files of external processes
   unlink( glob( File::Spec->catfile( $tmp_dir, 'worker_*.log' ) ) );
@@ -86,13 +84,11 @@ sub init_session  {
 
     # initialize databases
 
-    print STDERR $c->path_to('db','user.db'), "==>", $c->config->{'user_db'}, "\n";
-
-    copy( $c->path_to('db','user.db'), $c->config->{'user_db'} )
+    copy( $c->path_to( 'db', 'user.db' ), $c->config->{'user_db'} )
       or
       FileWriteError->throw("Could not start application (Error initializing settings database)");
 
-    Paperpile::Utils->session($c, {library_db => $c->config->{'user_settings'}->{library_db}});
+    Paperpile::Utils->session( $c, { library_db => $c->config->{'user_settings'}->{library_db} } );
 
     # Don't overwrite an existing library database in the case the
     # user has just deleted the user settings database
@@ -115,7 +111,8 @@ sub init_session  {
     # User might have deleted or moved her library. In that case we initialize an empty one
     if ( !-e $library_db ) {
 
-      Paperpile::Utils->session($c,{library_db => $c->config->{'user_settings'}->{library_db}});
+      Paperpile::Utils->session( $c,
+        { library_db => $c->config->{'user_settings'}->{library_db} } );
 
       copy( $c->path_to('db/library.db'), $c->config->{'user_settings'}->{library_db} )
         or FileWriteError->throw(
@@ -128,7 +125,7 @@ sub init_session  {
         "Could not find your Paperpile library file $library_db. Start with an empty one.");
     }
 
-    Paperpile::Utils->session($c,{library_db => $library_db});
+    Paperpile::Utils->session( $c, { library_db => $library_db } );
 
   }
 
@@ -155,7 +152,6 @@ sub init_session  {
     my $q = Paperpile::Queue->new();
     $q->clear_all;
   }
-
 
 }
 
