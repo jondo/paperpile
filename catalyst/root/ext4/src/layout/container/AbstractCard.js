@@ -36,11 +36,28 @@ Ext.define('Ext.layout.container.AbstractCard', {
     type: 'card',
 
     sizeAllCards: false,
+
     hideInactive: true,
 
+    /**
+     * @cfg {Boolean} deferredRender
+     * True to render each contained item at the time it becomes active, false to render all contained items
+     * as soon as the layout is rendered (defaults to false).  If there is a significant amount of content or
+     * a lot of heavy controls being rendered into panels that are not displayed by default, setting this to
+     * true might improve performance.
+     */
+    deferredRender : false,
+
     beforeLayout: function() {
-        this.activeItem = this.getActiveItem();
-        return Ext.layout.container.AbstractCard.superclass.beforeLayout.apply(this, arguments);
+        var me = this;
+        me.activeItem = me.getActiveItem();
+        if (me.deferredRender) {
+            me.renderItems([me.activeItem], me.getRenderTarget());
+            return true;
+        }
+        else {
+            return Ext.layout.container.AbstractCard.superclass.beforeLayout.apply(me, arguments);
+        }
     },
 
     onLayout: function() {
@@ -62,6 +79,13 @@ Ext.define('Ext.layout.container.AbstractCard', {
             }
             me.firstActivated = true;
         }
+    },
+
+    isValidParent : function(item, target, position) {
+        // Note: Card layout does not care about order within the target because only one is ever visible.
+        // We only care whether the item is a direct child of the target.
+        var itemEl = item.el ? item.el.dom : Ext.getDom(item);
+        return (itemEl && itemEl.parentNode === (target.dom || target)) || false;
     },
 
     /**

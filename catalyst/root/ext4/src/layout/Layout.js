@@ -49,7 +49,7 @@ Ext.define('Ext.layout.Layout', {
             me.owner.needsLayout = false;
         }
         me.layoutBusy = false;
-        me.afterLayout();
+        me.afterLayout.apply(me, arguments);
     },
 
     beforeLayout : function() {

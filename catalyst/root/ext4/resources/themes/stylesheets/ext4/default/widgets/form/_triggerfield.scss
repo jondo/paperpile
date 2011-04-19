@@ -7,42 +7,50 @@
         background-image: theme-image($theme-name, 'form/trigger.gif');
 		background-position: 0 0;
 		
-		width: 17px;
-		height: 21px;
+		width: $form-trigger-width;
+		height: $form-trigger-height;
 		float: left;
 
-		border-bottom: 1px solid adjust-color($neutral-color, $hue: 234.545deg, $saturation: -41.453%, $lightness: -14.706%);
+		border-bottom: $form-trigger-border-bottom;
 
         cursor: pointer;
         cursor: hand;
     }
     
     .#{$prefix}form-trigger-over {
-		background-position: -17px 0;
+		background-position: -$form-trigger-width 0;
 
-		border-bottom-color: adjust-color($base-color, $hue: -4.322deg, $saturation: -1.065%, $lightness: -16.863%);
+		border-bottom-color: $form-trigger-border-bottom-color-over;
     }
     
     .#{$prefix}form-trigger-wrap-focus .#{$prefix}form-trigger {
-		background-position: -51px 0;
+		background-position: -($form-trigger-width * 3) 0;
 
-		border-bottom-color: adjust-color($base-color, $hue: -4.322deg, $saturation: -1.065%, $lightness: -16.863%);
+		border-bottom-color: $form-trigger-border-bottom-color-focus;
     }
     
     .#{$prefix}form-trigger-wrap-focus .#{$prefix}form-trigger-over {
-        background-position: -68px 0;
+        background-position: -($form-trigger-width * 4) 0;
+        
+        @if $form-trigger-border-bottom-color-focus-over {
+            border-bottom-color: $form-trigger-border-bottom-color-focus-over;
+        }
     }
     
     .#{$prefix}form-trigger-click,
     .#{$prefix}form-trigger-wrap-focus .#{$prefix}form-trigger-click {
-		background-position: -34px 0;
+		background-position: -($form-trigger-width * 2) 0;
+		
+		@if $form-trigger-border-bottom-color-pressed {
+    		border-bottom-color: $form-trigger-border-bottom-color-pressed;
+    	}
     }
 
     .#{$prefix}form-trigger-icon {
-        height: 20px;
+        height: $form-trigger-width - 1;
         
         background-repeat: no-repeat;
-        background-position: 7px 6px;
+        background-position: $form-trigger-icon-background-position;
     }
     
     .#{$prefix}pickerfield-open {
@@ -53,7 +61,7 @@
     
     .#{$prefix}pickerfield-open-above {
         .#{$prefix}form-field {
-            @include border-bottom-left-radius($form-field-border-radius);
+            @include border-bottom-left-radius(3px);
             @include border-top-radius(0);
         }
     }
@@ -71,8 +79,10 @@
     .#{$prefix}form-spinner-up,
     .#{$prefix}form-spinner-down {
         background-image: theme-image($theme-name, 'form/spinner.gif');
-        width: 17px;
+        
+        width: $form-trigger-width;
         height: 11px;
+        
         font-size: 0; /*for IE*/
     }
     .#{$prefix}form-spinner-down {
@@ -80,17 +90,17 @@
         height: 10px;
     }
     .#{$prefix}form-trigger-wrap-focus .#{$prefix}form-spinner-down {
-        background-position: -51px -11px;
+        background-position: -($form-trigger-width * 3) -11px;
     }
     .#{$prefix}form-spinner-down-over {
-        background-position: -17px -11px;
+        background-position: -$form-trigger-width -11px;
     }
     .#{$prefix}form-trigger-wrap-focus .#{$prefix}form-spinner-down-over {
-        background-position: -68px -11px;
+        background-position: -($form-trigger-width * 4) -11px;
     }
 
     .#{$prefix}form-spinner-down-click,
     .#{$prefix}form-trigger-wrap-focus .#{$prefix}form-spinner-down-click {
-        background-position: -34px -11px;
+        background-position: -($form-trigger-width * 2) -11px;
     }
 }

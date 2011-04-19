@@ -28,25 +28,33 @@
     padding: $loadmask-msg-padding;
     border: 1px solid;
     border-color: $loadmask-msg-border-color;
-
-    @if $supports-gradients or $compile-all {
-        @include background-gradient($loadmask-msg-background-color, $loadmask-msg-background-gradient);
+    
+    @if $loadmask-msg-background-gradient {
+        @if $supports-gradients or $compile-all {
+            @include background-gradient($loadmask-msg-background-color, $loadmask-msg-background-gradient);
+        }
+    } @else {
+        background: $loadmask-msg-background-color;
     }
     
     div {
         padding: $loadmask-msg-inner-padding;
-        background-image: theme-image($theme-name, $loadmask-msg-inner-icon);
-        background-repeat: no-repeat;
-        background-position: 5px center;  
+        
+        //if an icon is defined show it
+        @if $loadmask-msg-inner-icon {
+            background-image: theme-image($theme-name, $loadmask-msg-inner-icon);
+            background-repeat: no-repeat;
+            background-position: 5px center;
+        }
+        
         cursor: wait;
         
-        border: 1px solid #a3bad9;
+        border: 1px solid $loadmask-msg-inner-border-color;
         
-        background-color: #eee;
+        background-color: $loadmask-msg-inner-background-color;
         
-        color: #222;
-        font: normal 11px tahoma, arial, helvetica, sans-serif;
-        text-shadow: 0 1px 0 #fff;
+        color: $loadmask-msg-inner-color;
+        font: $loadmask-msg-inner-font;
     }
 }
 

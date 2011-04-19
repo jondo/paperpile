@@ -40,8 +40,7 @@ Ext.define('Ext.picker.Date', {
         'Ext.util.KeyNav', 
         'Ext.EventObject', 
         'Ext.fx.Manager', 
-        'Ext.picker.Month', 
-        'Ext.util.Date'
+        'Ext.picker.Month' 
     ],
     alias: 'widget.datepicker',
     alternateClassName: 'Ext.DatePicker',
@@ -85,7 +84,7 @@ Ext.define('Ext.picker.Date', {
     /**
      * @cfg {String} format
      * The default date format string which can be overriden for localization support.  The format must be
-     * valid according to {@link Ext.util.Date#parse} (defaults to {@link Ext.util.Date#defaultFormat}).
+     * valid according to {@link Ext.Date#parse} (defaults to {@link Ext.Date#defaultFormat}).
      */
     /**
      * @cfg {String} disabledDaysText

@@ -127,6 +127,8 @@ Ext.define('Ext.AbstractDataView', {
     /**
      * @cfg {String} emptyText
      * The text to display in the view when there is no data to display (defaults to '').
+     * Note that when using local data the emptyText will not be displayed unless you set
+     * the {@link #deferEmptyText} option to false.
      */
     emptyText: "",
 
@@ -155,7 +157,7 @@ Ext.define('Ext.AbstractDataView', {
     //private
     last: false,
     
-    triggerEvent: 'click',
+    triggerEvent: 'itemclick',
     triggerCtEvent: 'containerclick',
     
     addCmpEvents: function() {
@@ -164,39 +166,41 @@ Ext.define('Ext.AbstractDataView', {
 
     // private
     initComponent : function(){
+        var me = this,
+            isDef = Ext.isDefined;
+
         //<debug>
-        var isDef = Ext.isDefined;
-        if (!isDef(this.tpl) || !isDef(this.store) || !isDef(this.itemSelector)) {
+        if (!isDef(me.tpl) || !isDef(me.store) || !isDef(me.itemSelector)) {
             throw "DataView requires tpl, store and itemSelector configurations to be defined.";
         }
         //</debug>
 
-        Ext.AbstractDataView.superclass.initComponent.call(this);
-        if(Ext.isString(this.tpl) || Ext.isArray(this.tpl)){
-            this.tpl = new Ext.XTemplate(this.tpl);
+        me.callParent();
+        if(Ext.isString(me.tpl) || Ext.isArray(me.tpl)){
+            me.tpl = new Ext.XTemplate(me.tpl);
         }
 
         // backwards compat alias for overClass/selectedClass
         // TODO: Consider support for overCls generation Ext.Component config
-        if (Ext.isDefined(this.overCls) || Ext.isDefined(this.overClass)) {
-            this.overItemCls = this.overCls || this.overClass;
-            delete this.overCls;
-            delete this.overClass;
+        if (isDef(me.overCls) || isDef(me.overClass)) {
+            me.overItemCls = me.overCls || me.overClass;
+            delete me.overCls;
+            delete me.overClass;
             //<debug>
             throw "Using the deprecated overCls or overClass configuration. Use overItemCls.";
             //</debug>
         }
 
-        if (Ext.isDefined(this.selectedCls) || Ext.isDefined(this.selectedClass)) {
-            this.selectedItemCls = this.selectedCls || this.selectedClass;
-            delete this.selectedCls;
-            delete this.selectedClass;
+        if (isDef(me.selectedCls) || isDef(me.selectedClass)) {
+            me.selectedItemCls = me.selectedCls || me.selectedClass;
+            delete me.selectedCls;
+            delete me.selectedClass;
             //<debug>
             throw "Using the deprecated selectedCls or selectedClass configuration. Use selectedItemCls.";
             //</debug>
         }
         
-        this.addEvents(
+        me.addEvents(
             /**
              * @event beforerefresh
              * Fires before the view is refreshed
@@ -211,11 +215,11 @@ Ext.define('Ext.AbstractDataView', {
             'refresh'
         );
         
-        this.addCmpEvents();
+        me.addCmpEvents();
 
-        this.store = Ext.data.StoreMgr.lookup(this.store);
-        this.all = new Ext.CompositeElementLite();
-        this.getSelectionModel().bindComponent(this);
+        me.store = Ext.data.StoreMgr.lookup(me.store);
+        me.all = new Ext.CompositeElementLite();
+        me.getSelectionModel().bindComponent(me);
     },
     
     onRender : function() {
@@ -226,7 +230,7 @@ Ext.define('Ext.AbstractDataView', {
         me.callParent(arguments);
 
         if (loadingText) {
-            me.loadMask = new Ext.LoadMask(me.el, {
+            me.loadMask = new Ext.LoadMask(me.el.dom.parentNode, {
                 msg: loadingText,
                 listeners: {
                     beforeshow: function() {
@@ -243,66 +247,72 @@ Ext.define('Ext.AbstractDataView', {
     },
 
     getSelectionModel: function(){
-        if (!this.selModel) {
-            this.selModel = {};
+        var me = this,
+            mode = 'SINGLE';
+            
+        if (!me.selModel) {
+            me.selModel = {};
         }
 
-        var mode = 'SINGLE';
-        if (this.simpleSelect) {
+        if (me.simpleSelect) {
             mode = 'SIMPLE';
-        } else if (this.multiSelect) {
+        } else if (me.multiSelect) {
             mode = 'MULTI';
         }
         
-        Ext.applyIf(this.selModel, {
-            allowDeselect: this.allowDeselect,
+        Ext.applyIf(me.selModel, {
+            allowDeselect: me.allowDeselect,
             mode: mode
         });        
         
-        if (!this.selModel.events) {
-            this.selModel = new Ext.selection.DataViewModel(this.selModel);
+        if (!me.selModel.events) {
+            me.selModel = new Ext.selection.DataViewModel(me.selModel);
         }
         
-        if (!this.selModel.hasRelaySetup) {
-            this.relayEvents(this.selModel, ['selectionchange', 'beforeselect', 'select', 'deselect']);
-            this.selModel.hasRelaySetup = true;
+        if (!me.selModel.hasRelaySetup) {
+            me.relayEvents(me.selModel, ['selectionchange', 'beforeselect', 'select', 'deselect']);
+            me.selModel.hasRelaySetup = true;
         }
 
         // lock the selection model if user
         // has disabled selection
-        if (this.disableSelection) {
-            this.selModel.locked = true;
+        if (me.disableSelection) {
+            me.selModel.locked = true;
         }
         
-        return this.selModel;
+        return me.selModel;
     },
 
     /**
      * Refreshes the view by reloading the data from the store and re-rendering the template.
      */
     refresh: function() {
-        if (!this.rendered) {
+        var me = this,
+            el,
+            records;
+            
+        if (!me.rendered) {
             return;
         }
         
-        this.fireEvent('beforerefresh', this);
-        var el = this.getTargetEl(),
-            records = this.store.getRange();
+        me.fireEvent('beforerefresh', me);
+        el = me.getTargetEl();
+        records = me.store.getRange();
 
         el.update('');
         if (records.length < 1) {
-            if (!this.deferEmptyText || this.hasSkippedEmptyText) {
-                el.update(this.emptyText);
+            if (!me.deferEmptyText || me.hasSkippedEmptyText) {
+                el.update(me.emptyText);
             }
-            this.all.clear();
+            me.all.clear();
         } else {
-            this.tpl.overwrite(el, this.collectData(records, 0));
-            this.all.fill(Ext.query(this.getItemSelector(), el.dom));
-            this.updateIndexes(0);
+            me.tpl.overwrite(el, me.collectData(records, 0));
+            me.all.fill(Ext.query(me.getItemSelector(), el.dom));
+            me.updateIndexes(0);
         }
-        this.selModel.refresh();
-        this.hasSkippedEmptyText = true;
-        this.fireEvent('refresh', this);
+        me.selModel.refresh();
+        me.hasSkippedEmptyText = true;
+        me.fireEvent('refresh', me);
     },
 
     /**
@@ -316,79 +326,11 @@ Ext.define('Ext.AbstractDataView', {
      */
     prepareData: function(data, index, record) {
         if (record) {    
-            Ext.apply(data, this.prepareAssociatedData(record));            
+            Ext.apply(data, record.getAssociatedData());            
         }
         return data;
     },
     
-    /**
-     * @private
-     * This complex-looking method takes a given Model instance and returns an object containing all data from
-     * all of that Model's *loaded* associations. It does this recursively - for example if we have a User which
-     * hasMany Orders, and each Order hasMany OrderItems, it will return an object like this:
-     * 
-     * {
-     *     orders: [
-     *         {
-     *             id: 123,
-     *             status: 'shipped',
-     *             orderItems: [
-     *                 ...
-     *             ]
-     *         }
-     *     ]
-     * }
-     * 
-     * This makes it easy to iterate over loaded associations in a DataView.
-     * 
-     * @param {Ext.data.Model} record The Model instance
-     * @param {Array} ids PRIVATE. The set of Model instance internalIds that have already been loaded
-     * @return {Object} The nested data set for the Model's loaded associations
-     */
-    prepareAssociatedData: function(record, ids) {
-        //we keep track of all of the internalIds of the models that we have loaded so far in here
-        ids = ids || [];
-        
-        var associations     = record.associations.items,
-            associationCount = associations.length,
-            associationData  = {},
-            associatedStore, associatedName, associatedRecords, associatedRecord,
-            associatedRecordCount, association, internalId, i, j;
-        
-        for (i = 0; i < associationCount; i++) {
-            association = associations[i];
-            
-            //this is the hasMany store filled with the associated data
-            associatedStore = record[association.storeName];
-            
-            //we will use this to contain each associated record's data
-            associationData[association.name] = [];
-            
-            //if it's loaded, put it into the association data
-            if (associatedStore && associatedStore.data.length > 0) {
-                associatedRecords = associatedStore.data.items;
-                associatedRecordCount = associatedRecords.length;
-            
-                //now we're finally iterating over the records in the association. We do this recursively
-                for (j = 0; j < associatedRecordCount; j++) {
-                    associatedRecord = associatedRecords[j];
-                    internalId = associatedRecord.internalId;
-                    
-                    //when we load the associations for a specific model instance we add it to the set of loaded ids so that
-                    //we don't load it twice. If we don't do this, we can fall into endless recursive loading failures.
-                    if (Ext.Array.indexOf(ids, internalId) == -1) {
-                        ids.push(internalId);
-                        
-                        associationData[association.name][j] = associatedRecord.data;
-                        Ext.apply(associationData[association.name][j], this.prepareAssociatedData(associatedRecord, ids));
-                    }
-                }
-            }
-        }
-        
-        return associationData;
-    },
-
     /**
      * <p>Function which can be overridden which returns the data object passed to this
      * DataView's {@link #tpl template} to render the whole DataView.</p>
@@ -422,35 +364,39 @@ Ext.define('Ext.AbstractDataView', {
 
     // private
     onUpdate : function(ds, record){
-        var index = this.store.indexOf(record),
+        var me = this,
+            index = me.store.indexOf(record),
             original,
             node;
 
         if (index > -1){
-            original = this.all.elements[index];
-            node = this.bufferRender([record], index)[0];
+            original = me.all.elements[index];
+            node = me.bufferRender([record], index)[0];
 
-            this.all.replaceElement(index, node, true);
-            this.updateIndexes(index, index);
+            me.all.replaceElement(index, node, true);
+            me.updateIndexes(index, index);
 
             // Maintain selection after update
             // TODO: Move to approriate event handler.
-            this.selModel.refresh();
+            me.selModel.refresh();
         }
     },
 
     // private
     onAdd : function(ds, records, index) {
-        if (this.all.getCount() === 0) {
-            this.refresh();
+        var me = this,
+            nodes;
+            
+        if (me.all.getCount() === 0) {
+            me.refresh();
             return;
         }
         
-        var nodes = this.bufferRender(records, index);
-        this.doAdd(nodes, records, index);
+        nodes = me.bufferRender(records, index);
+        me.doAdd(nodes, records, index);
 
-        this.selModel.refresh();
-        this.updateIndexes(index);
+        me.selModel.refresh();
+        me.updateIndexes(index);
     },
 
     doAdd: function(nodes, records, index) {
@@ -467,10 +413,12 @@ Ext.define('Ext.AbstractDataView', {
     
     // private
     onRemove : function(ds, record, index) {
-        this.doRemove(record, index);
-        this.updateIndexes(index);
-        if (this.store.getCount() === 0){
-            this.refresh();
+        var me = this;
+        
+        me.doRemove(record, index);
+        me.updateIndexes(index);
+        if (me.store.getCount() === 0){
+            me.refresh();
         }
     },
     
@@ -487,7 +435,7 @@ Ext.define('Ext.AbstractDataView', {
     },
 
     // private
-    updateIndexes : function(startIndex, endIndex){
+    updateIndexes : function(startIndex, endIndex) {
         var ns = this.all.elements;
         startIndex = startIndex || 0;
         endIndex = endIndex || ((endIndex === 0) ? 0 : (ns.length - 1));
@@ -512,48 +460,50 @@ Ext.define('Ext.AbstractDataView', {
      * @param {Store} store The store to bind to this view
      */
     bindStore : function(store, initial) {
-        if (!initial && this.store) {
-            if (store !== this.store && this.store.autoDestroy) {
-                this.store.destroy();
+        var me = this;
+        
+        if (!initial && me.store) {
+            if (store !== me.store && me.store.autoDestroy) {
+                me.store.destroy();
             } 
             else {
-                this.mun(this.store, {
-                    scope: this,
-                    datachanged: this.onDataChanged,
-                    add: this.onAdd,
-                    remove: this.onRemove,
-                    update: this.onUpdate,
-                    clear: this.refresh                    
+                me.mun(me.store, {
+                    scope: me,
+                    datachanged: me.onDataChanged,
+                    add: me.onAdd,
+                    remove: me.onRemove,
+                    update: me.onUpdate,
+                    clear: me.refresh                    
                 });
             }
             if (!store) {
-                if (this.loadMask) {
-                    this.loadMask.bindStore(null);
+                if (me.loadMask) {
+                    me.loadMask.bindStore(null);
                 }
-                this.store = null;
+                me.store = null;
             }
         }
         if (store) {
             store = Ext.data.StoreMgr.lookup(store);
-            this.mon(store, {
-                scope: this,
-                datachanged: this.onDataChanged,
-                add: this.onAdd,
-                remove: this.onRemove,
-                update: this.onUpdate,
-                clear: this.refresh                    
+            me.mon(store, {
+                scope: me,
+                datachanged: me.onDataChanged,
+                add: me.onAdd,
+                remove: me.onRemove,
+                update: me.onUpdate,
+                clear: me.refresh                    
             });
-            if (this.loadMask) {
-                this.loadMask.bindStore(store);
+            if (me.loadMask) {
+                me.loadMask.bindStore(store);
             }
         }
         
-        this.store = store;
+        me.store = store;
         // Bind the store to our selection model
-        this.getSelectionModel().bind(store);
+        me.getSelectionModel().bind(store);
         
         if (store) {
-            this.refresh(true);
+            me.refresh(true);
         }
     },
 
@@ -718,10 +668,12 @@ Ext.define('Ext.AbstractDataView', {
     },
 
     onDestroy : function() {
-        this.all.clear();
-        Ext.AbstractDataView.superclass.onDestroy.call(this);
-        this.bindStore(null);
-        this.selModel.destroy();
+        var me = this;
+        
+        me.all.clear();
+        me.callParent();
+        me.bindStore(null);
+        me.selModel.destroy();
     },
 
     // invoked by the selection model to maintain visual UI cues

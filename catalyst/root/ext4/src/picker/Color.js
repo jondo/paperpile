@@ -104,14 +104,14 @@ cp.colors = ['000000', '993300', '333300'];
     
     constructor: function() {
         this.renderTpl = new Ext.XTemplate('<tpl for="colors"><a href="#" class="color-{.}" hidefocus="on"><em><span style="background:#{.}" unselectable="on">&#160;</span></em></a></tpl>');
-        Ext.picker.Color.superclass.constructor.apply(this, arguments);
+        this.callParent(arguments);
     },
     
     // private
     initComponent : function(){
         var me = this;
         
-        Ext.picker.Color.superclass.initComponent.call(me);
+        this.callParent(arguments);
         me.addEvents(
             /**
              * @event select
@@ -137,7 +137,7 @@ cp.colors = ['000000', '993300', '333300'];
             itemCls: me.itemCls,
             colors: me.colors    
         });
-        Ext.picker.Color.superclass.onRender.call(me, container, position);
+        this.callParent(arguments);
 
         me.mon(me.el, clickEvent, me.handleClick, me, {delegate: 'a'});
         // always stop following the anchors
@@ -151,7 +151,7 @@ cp.colors = ['000000', '993300', '333300'];
         var me = this,
             value;
             
-        Ext.picker.Color.superclass.afterRender.call(me);
+        this.callParent(arguments);
         if (me.value) {
             value = me.value;
             me.value = null;

@@ -23,7 +23,19 @@
         $background-direction: bottom,
         $table: true
     );
-        
+    
+    .#{$prefix}tab-bar-strip-border {
+        height: 1px;
+        position: absolute;
+        overflow: hidden;
+        zoom: 1;
+        z-index: 3;
+        background-color: $tab-base-color;
+        border-width: 0 1px;
+        border-style: solid;
+        border-color: $tab-border-color;
+    }
+    
     .#{$prefix}tab {
         z-index: 1;
         margin: 2px 0 0 2px;
@@ -31,20 +43,22 @@
         zoom: 1;
         *display: inline;
         white-space: nowrap;
-        padding: 5px 9px 6px;
         height: $tab-height;
         border-color: $tab-border-color;
         cursor: pointer;
+
+        em {
+            display: block;
+            padding: 0 6px;
+        }
         
         button {
             background-color: transparent;
             background-position: 0 -1px;
             background-repeat: no-repeat;
-            border: 0px none;
-            height: 14px;
-            margin: -1px 0 0;
-            display: block;
+            border: 0;
             padding: 0;
+            margin: 0;
             -webkit-appearance: none;
             font-size: $tab-font-size;
             @if $tab-font-weight {
@@ -72,19 +86,63 @@
             display: none;
         }
     }
-    
+
+    @if $include-ie {
+        * html .#{$prefix}ie {
+            .#{$prefix}tab button {
+                width: 1px;
+            }
+        }
+
+        .#{$prefix}strict .#{$prefix}ie6,
+        .#{$prefix}strict .#{$prefix}ie7 {
+            .#{$prefix}tab .#{$prefix}frame-mc {
+                height: 100%;
+            }
+        }
+    }
+
     .#{$prefix}tab-top {
-        @include inner-border(
-            $width: $tab-top-inner-border-width,
-            $color: $tab-inner-border-color
-        );
+        @if $tab-inner-border {
+            @include inner-border(
+                $width: $tab-top-inner-border-width,
+                $color: $tab-inner-border-color
+            );
+        }
+
+        $framepad: max(top($tab-top-border-radius), right($tab-top-border-radius)) - top($tab-top-border-width);
+
+        em {
+            padding-bottom: $framepad;
+        }
+
+        button {
+            height: $tab-height - $framepad * 2 - top($tab-top-border-width);
+        }
     }
     
     .#{$prefix}tab-bottom {
+        @if $tab-inner-border {
+            @include inner-border(
+                $width: $tab-bottom-inner-border-width,
+                $color: $tab-inner-border-color
+            );
+        }
+
         @include inner-border(
             $width: $tab-bottom-inner-border-width,
             $color: $tab-inner-border-color
         );
+
+        $framepad: max(bottom($tab-bottom-border-radius), left($tab-bottom-border-radius)) - bottom($tab-bottom-border-width);
+
+        em {
+            padding-top: $framepad;
+        }
+
+        button {
+            height: $tab-height - $framepad * 2 - bottom($tab-bottom-border-width);
+        }
     }
     
     .#{$prefix}tab-default-disabled {
@@ -105,53 +163,7 @@
             padding-left: 20px;
         }
     }
-    
-    @if $include-ie {
-        * html .#{$prefix}ie, .#{$prefix}ie7 {
-            .#{$prefix}tab button {
-                white-space: nowrap;
-                zoom: 1;
-                width: 16px;
-                line-height: 13px;
-                height: 14px;
-            }
-        }
 
-        .#{$prefix}ie .#{$prefix}tab-top .#{$prefix}frame-mc {
-            padding: 2px 6px 5px;
-        }
-
-        * html .#{$prefix}ie8 .#{$prefix}tab-top .#{$prefix}frame-mc {
-            padding: 2px 6px 4px;
-        }
-        
-        .#{$prefix}ie .#{$prefix}tab-bottom .#{$prefix}frame-mc {
-            padding: 5px 6px 2px;
-        }
-
-        * html .#{$prefix}ie8 .#{$prefix}tab-bottom .#{$prefix}frame-mc {
-            padding: 4px 6px 2px;
-        }     
-    }
-    
-    @if $include-opera {
-        .#{$prefix}opera .#{$prefix}tab-top .#{$prefix}frame-mc {
-            padding: 2px 6px 6px;
-        }
-        .#{$prefix}opera .#{$prefix}tab-bottom .#{$prefix}frame-mc {
-            padding: 6px 6px 2px;
-        }  
-    }
-    
-    @if $include-ff {
-        .#{$prefix}gecko .#{$prefix}tab-top {
-            padding-bottom: 4px;
-        }
-        .#{$prefix}gecko .#{$prefix}tab-bottom {
-            padding-top: 4px;
-        }
-    }
-    
     //over
     .#{$prefix}tab-over {
         @if $tab-border-color-over != $tab-border-color {
@@ -182,7 +194,7 @@
             @include background-gradient($tab-base-color-over, $tab-background-gradient-over, bottom);
         }
     }
-    @else if $tab-base-color-over != $tab-background-over {
+    @else if $tab-base-color-over != $tab-base-color {
         .#{$prefix}tab-top-over,
         .#{$prefix}tab-bottom-over {
             background-color: $tab-base-color-over;
@@ -220,7 +232,7 @@
             @include background-gradient($tab-base-color-active, $tab-background-gradient-active, bottom);
         }
     }
-    @else if $tab-base-color-active != $tab-background-active {
+    @else if $tab-base-color-active != $tab-base-color {
         .#{$prefix}tab-top-active,
         .#{$prefix}tab-bottom-active {
             background-color: $tab-base-color-active;
@@ -261,7 +273,7 @@
             @include background-gradient($tab-base-color-disabled, $tab-background-gradient-disabled, bottom);
         }
     }
-    @else if $tab-base-color-disabled != $tab-background-active {
+    @else if $tab-base-color-disabled != $tab-base-color {
         .#{$prefix}tab-top-disabled,
         .#{$prefix}tab-bottom-disabled {
             background-color: $tab-base-color-disabled;
@@ -284,14 +296,24 @@
         }     
     }
     
-    .#{$prefix}tab-closable {
-        padding-right: 5px;
+    .#{$prefix}tab-closable em {
+        padding-right: $tab-closable-icon-width + 3;
     }
 
-    .#{$prefix}tab-closable em {
-        display: block;
-        background: theme-image($theme-name, 'tab/tab-default-close.gif') transparent no-repeat right center;
-        padding-right: 14px;
+    .#{$prefix}tab-close-btn {
+        position: absolute;
+        top: $tab-closable-icon-top;
+        right: $tab-closable-icon-right;
+        width: $tab-closable-icon-width;
+        height: $tab-closable-icon-height;
+        font-size: 0;
+        line-height: 0;
+        text-indent: -999px;
+        background: theme-image($theme-name, $tab-closable-icon) no-repeat;
+        @include opacity(.6);
+    }
+    .#{$prefix}tab-close-btn:hover {
+        @include opacity(1);
     }
 
     @if not $supports-border-radius or $compile-all {

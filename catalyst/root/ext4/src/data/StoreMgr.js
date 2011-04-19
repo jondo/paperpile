@@ -36,6 +36,7 @@ Ext.define('Ext.data.StoreMgr', {
     extend: 'Ext.util.MixedCollection',
     alternateClassName: 'Ext.StoreMgr',
     singleton: true,
+    uses: ['Ext.data.ArrayStore'],
     
     /**
      * @cfg {Object} listeners @hide
@@ -68,26 +69,44 @@ Ext.define('Ext.data.StoreMgr', {
 
     /**
      * Gets a registered Store by id
-     * @param {String/Object} id The id of the Store, or a Store instance
+     * @param {String/Object} id The id of the Store, or a Store instance, or a store configuration
      * @return {Ext.data.Store}
      */
-    lookup : function(id) {
-        if (Ext.isArray(id)) {
-            var fields = ['field1'], expand = !Ext.isArray(id[0]);
-            if(!expand){
-                for(var i = 2, len = id[0].length; i <= len; ++i){
+    lookup : function(store) {
+        // handle the case when we are given an array or an array of arrays.
+        if (Ext.isArray(store)) {
+            var fields = ['field1'], 
+                expand = !Ext.isArray(store[0]),
+                data = store,
+                i,
+                len;
+                
+            if(expand){
+                data = [];
+                for (i = 0, len = store.length; i < len; ++i) {
+                    data.push([store[i]]);
+                }
+            } else {
+                for(i = 2, len = store[0].length; i <= len; ++i){
                     fields.push('field' + i);
                 }
             }
             return new Ext.data.ArrayStore({
-                data  : id,
+                data  : data,
                 fields: fields,
-                expandData : expand,
                 autoDestroy: true,
-                autoCreated: true
+                autoCreated: true,
+                expanded: expand
             });
         }
-        return Ext.isObject(id) ? (id.events ? id : Ext.create('Ext.data.Store', id)) : this.get(id);
+        
+        if (Ext.isString(store)) {
+            // store id
+            return this.get(store);
+        } else {
+            // store instance or store config
+            return Ext.data.AbstractStore.create(store);
+        }
     },
 
     // getKey implementation for MixedCollection

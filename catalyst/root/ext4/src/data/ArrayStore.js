@@ -47,6 +47,7 @@ var myData = [
 Ext.define('Ext.data.ArrayStore', {
     extend: 'Ext.data.Store',
     alias: 'store.array',
+    uses: ['Ext.data.ArrayReader'],
     
     /**
      * @cfg {Ext.data.DataReader} reader @hide

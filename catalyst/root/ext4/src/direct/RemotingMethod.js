@@ -10,6 +10,7 @@ Ext.define('Ext.direct.RemotingMethod', {
             name;
             
         me.name = config.name;
+        me.formHandler = config.formHandler;
         if (Ext.isNumber(params)) {
             // given only the number of parameters
             me.len = params;

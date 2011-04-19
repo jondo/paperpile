@@ -181,8 +181,7 @@ Ext.define('Ext.view.DropZone', {
     },
 
     onContainerDrop : function(dd, e, data) {
-        this.onNodeDrop(dd, null, e, data);
-        return this.valid;
+        return this.onNodeDrop(dd, null, e, data);
     },
 
     onNodeDrop: function(node, dragZone, e, data) {
@@ -190,7 +189,7 @@ Ext.define('Ext.view.DropZone', {
             dropped = false,
 
             // Create a closure to perform the operation which the event handler may use.
-            // Users may now return false from the beforedrop handler, and perform any kind
+            // Users may now return <code>0</code> from the beforedrop handler, and perform any kind
             // of asynchronous processing such as an Ext.Msg.confirm, or an Ajax request,
             // and complete the drop gesture at some point in the future by calling this function.
             processDrop = function () {
@@ -198,13 +197,23 @@ Ext.define('Ext.view.DropZone', {
                 me.handleNodeDrop(data, me.overRecord, me.currentPosition);
                 dropped = true;
                 me.fireViewEvent('drop', node, data, me.overRecord, me.currentPosition);
-            };
+            },
+            performOperation;
 
-        if (me.valid && (me.fireViewEvent('beforedrop', node, data, me.overRecord, me.currentPosition, processDrop) !== false)) {
-            // If the processDrop function was called in the event handler, do not do it again.
-            if (!dropped) {
-                processDrop();
+        if (me.valid) {
+            performOperation = me.fireViewEvent('beforedrop', node, data, me.overRecord, me.currentPosition, processDrop);
+            if (performOperation === 0) {
+                return;
+            } else if (performOperation !== false) {
+                // If the processDrop function was called in the event handler, do not do it again.
+                if (!dropped) {
+                    processDrop();
+                }
+            } else {
+                return false;
             }
+        } else {
+            return false;
         }
     }
 });

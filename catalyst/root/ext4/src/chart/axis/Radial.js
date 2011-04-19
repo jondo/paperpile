@@ -95,7 +95,8 @@ Ext.define('Ext.chart.axis.Radial', {
             labelArray = [], label,
             fields = [], nfields,
             categories = [], xField,
-            maxValue = 0,
+            aggregate = !!this.maximum,
+            maxValue = this.maximum || 0,
             steps = this.steps, i = 0, j, dx, dy,
             pi2 = Math.PI * 2,
             cos = Math.cos, sin = Math.sin,
@@ -112,10 +113,13 @@ Ext.define('Ext.chart.axis.Radial', {
             fields.push(series.yField);
             xField = series.xField;
         });
+        
         //get maxValue to interpolate
         store.each(function(record, i) {
-            for (i = 0, nfields = fields.length; i < nfields; i++) {
-                maxValue = max(+record.get(fields[i]), maxValue);
+            if (aggregate) {
+                for (i = 0, nfields = fields.length; i < nfields; i++) {
+                    maxValue = max(+record.get(fields[i]), maxValue);
+                }
             }
             categories.push(record.get(xField));
         });

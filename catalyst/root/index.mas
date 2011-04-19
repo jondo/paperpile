@@ -16,6 +16,7 @@
 <title>Paperpile</title>
 
 <script type="text/javascript" charset="utf-8" src="ext4/bootstrap.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/main/Settings.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/main/tabs.js"></script>
 <!-- 
 <script type="text/javascript" charset="utf-8" src="js/main/tree.js"></script>

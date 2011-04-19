@@ -105,9 +105,9 @@ Ext.define('Ext.util.Region', {
     constrainTo : function(r) {
         var me = this,
             constrain = Ext.Number.constrain;
-        me.top = me.y = constrain(me.y, r.y, r.bottom);
+        me.top = me.y = constrain(me.top, r.y, r.bottom);
         me.bottom = constrain(me.bottom, r.y, r.bottom);
-        me.left = me.x = constrain(me.x, r.x, r.right);
+        me.left = me.x = constrain(me.left, r.x, r.right);
         me.right = constrain(me.right, r.x, r.right);
         return me;
     },

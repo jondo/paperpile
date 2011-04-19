@@ -67,7 +67,11 @@ Ext.define('Ext.menu.Menu', {
      */
     floating: true,
 
-    constrain: true,
+    /**
+     * @cfg {Boolean} @hide
+     * Menu performs its own size changing constraining, so ensure Component's constraining is not applied
+     */
+    constrain: false,
 
     /**
      * @cfg {Boolean} hidden
@@ -91,6 +95,11 @@ Ext.define('Ext.menu.Menu', {
      * @cfg {String/Object} layout @hide
      */
 
+    /**
+     * @cfg {Boolean} showSeparator True to show the icon separator. (defaults to true).
+     */
+    showSeparator : true,
+     
     /**
      * @cfg {Number} minWidth
      * The minimum width of the Menu. Defaults to `120`.
@@ -181,11 +190,13 @@ Ext.define('Ext.menu.Menu', {
         me.callParent(arguments);
 
         // TODO: Move this to a subTemplate When we support them in the future
-
-        me.iconSepEl = me.layout.getRenderTarget().insertFirst({
-            cls: prefix + 'menu-icon-separator',
-            html: space
-        });
+        if (me.showSeparator) {
+            me.iconSepEl = me.layout.getRenderTarget().insertFirst({
+                cls: prefix + 'menu-icon-separator',
+                html: space
+            });
+        }
+        
         me.focusEl = me.el.createChild({
             cls: prefix + 'menu-focus',
             tabIndex: '-1',
@@ -199,7 +210,7 @@ Ext.define('Ext.menu.Menu', {
         });
         me.mouseMonitor = me.el.monitorMouseLeave(100, me.onMouseLeave, me);
 
-        if ((!Ext.isStrict && Ext.isIE) || Ext.isIE6) {
+        if (me.showSeparator && ((!Ext.isStrict && Ext.isIE) || Ext.isIE6)) {
             me.iconSepEl.setHeight(me.el.getHeight());
         }
 
@@ -322,17 +333,6 @@ Ext.define('Ext.menu.Menu', {
 
         if (cmp.isMenuItem) {
             cmp.parentMenu = me;
-        }
-
-        // For IE6 & IE quirks, we have to give a bogus size to child components
-        // so they don't inherit the bogus width of this menu. Since the menu is
-        // position: absolute, it inherits the width of document.body.
-        //
-        // This includes left/right dock items.
-        if (!cmp.isMenuItem
-                && cmp.dock != 'top' && cmp.dock != 'bottom'
-                && ((!Ext.isStrict && Ext.isIE) || Ext.isIE6)) {
-            cmp.width = cmp.width || 1;
         }
 
         if (!cmp.isMenuItem && !cmp.dock) {
@@ -469,6 +469,7 @@ Ext.define('Ext.menu.Menu', {
      * @param {Mixed component} The {@link Ext.Component} or {@link Ext.core.Element} to show the menu by.
      * @param {String} position (optional) Alignment position as used by {@link Ext.core.Element#getAlignToXY Ext.core.Element.getAlignToXY}. Defaults to `{@link #defaultAlign}`.
      * @param {Array} offsets (optional) Alignment offsets as used by {@link Ext.core.Element#getAlignToXY Ext.core.Element.getAlignToXY}. Defaults to `undefined`.
+     * @return {Menu} This Menu.
      * @markdown
      */
     showBy: function(cmp, pos, off) {
@@ -477,8 +478,6 @@ Ext.define('Ext.menu.Menu', {
         if (me.floating && cmp) {
             me.layout.autoSize = true;
             me.show();
-            delete me.height;
-            me.setSize();
 
             // Component or Element
             cmp = cmp.el || cmp;
@@ -493,6 +492,7 @@ Ext.define('Ext.menu.Menu', {
             me.showAt(xy);
             me.doConstrain();
         }
+        return me;
     },
 
     doConstrain : function() {
@@ -530,7 +530,9 @@ Ext.define('Ext.menu.Menu', {
         if (full > max && max > 0){
             me.layout.autoSize = false;
             me.setHeight(max);
-            me.iconSepEl.setHeight(me.layout.getRenderTarget().dom.scrollHeight);
+            if (me.showSeparator){
+                me.iconSepEl.setHeight(me.layout.getRenderTarget().dom.scrollHeight);
+            }
         }
         me.el.setY(returnY);
     }

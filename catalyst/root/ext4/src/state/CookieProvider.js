@@ -13,7 +13,7 @@
    var cp = new Ext.state.CookieProvider({
        path: "/cgi-bin/",
        expires: new Date(new Date().getTime()+(1000*60*60*24*30)), //30 days
-       domain: "extjs.com"
+       domain: "sencha.com"
    });
    Ext.state.Manager.setProvider(cp);
  </code></pre>
@@ -22,9 +22,9 @@
  * @cfg {String} path The path for which the cookie is active (defaults to root '/' which makes it active for all pages in the site)
  * @cfg {Date} expires The cookie expiration date (defaults to 7 days from now)
  * @cfg {String} domain The domain to save the cookie for.  Note that you cannot specify a different domain than
- * your page is on, but you can specify a sub-domain, or simply the domain itself like 'extjs.com' to include
+ * your page is on, but you can specify a sub-domain, or simply the domain itself like 'sencha.com' to include
  * all sub-domains if you need to access cookies across different sub-domains (defaults to null which uses the same
- * domain the page is running on including the 'www' like 'www.extjs.com')
+ * domain the page is running on including the 'www' like 'www.sencha.com')
  * @cfg {Boolean} secure True if the site is using SSL (defaults to false)
  * @constructor
  * Create a new CookieProvider
@@ -32,16 +32,14 @@
  */
 Ext.define('Ext.state.CookieProvider', {
     extend: 'Ext.state.Provider',
-    
+
     constructor : function(config){
         var me = this;
-        
-        Ext.state.CookieProvider.superclass.constructor.call(me);
         me.path = "/";
         me.expires = new Date(new Date().getTime()+(1000*60*60*24*7)); //7 days
         me.domain = null;
         me.secure = false;
-        Ext.apply(me, config);
+        me.callParent(arguments);
         me.state = me.readCookies();
     },
     
@@ -54,13 +52,13 @@ Ext.define('Ext.state.CookieProvider', {
             return;
         }
         me.setCookie(name, value);
-        Ext.state.CookieProvider.superclass.set.call(me, name, value);
+        me.callParent(arguments);
     },
 
     // private
     clear : function(name){
         this.clearCookie(name);
-        Ext.state.CookieProvider.superclass.clear.call(this, name);
+        me.callParent(arguments);
     },
 
     // private
@@ -68,6 +66,8 @@ Ext.define('Ext.state.CookieProvider', {
         var cookies = {},
             c = document.cookie + ";",
             re = /\s?(.*?)=(.*?);/g,
+            prefix = this.prefix,
+            len = prefix.length,
             matches,
             name,
             value;
@@ -75,8 +75,8 @@ Ext.define('Ext.state.CookieProvider', {
         while((matches = re.exec(c)) != null){
             name = matches[1];
             value = matches[2];
-            if(name && name.substring(0,3) == "ys-"){
-                cookies[name.substr(3)] = this.decodeValue(value);
+            if (name && name.substring(0, len) == prefix){
+                cookies[name.substr(len)] = this.decodeValue(value);
             }
         }
         return cookies;
@@ -86,7 +86,7 @@ Ext.define('Ext.state.CookieProvider', {
     setCookie : function(name, value){
         var me = this;
         
-        document.cookie = "ys-"+ name + "=" + me.encodeValue(value) +
+        document.cookie = me.prefix + name + "=" + me.encodeValue(value) +
            ((me.expires == null) ? "" : ("; expires=" + me.expires.toGMTString())) +
            ((me.path == null) ? "" : ("; path=" + me.path)) +
            ((me.domain == null) ? "" : ("; domain=" + me.domain)) +
@@ -97,7 +97,7 @@ Ext.define('Ext.state.CookieProvider', {
     clearCookie : function(name){
         var me = this;
         
-        document.cookie = "ys-" + name + "=null; expires=Thu, 01-Jan-70 00:00:01 GMT" +
+        document.cookie = me.prefix + name + "=null; expires=Thu, 01-Jan-70 00:00:01 GMT" +
            ((me.path == null) ? "" : ("; path=" + me.path)) +
            ((me.domain == null) ? "" : ("; domain=" + me.domain)) +
            ((me.secure == true) ? "; secure" : "");

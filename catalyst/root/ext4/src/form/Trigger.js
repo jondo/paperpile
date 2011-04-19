@@ -8,7 +8,6 @@
  * <pre><code>
 var trigger = new Ext.form.Trigger();
 trigger.onTriggerClick = myTriggerFn;
-trigger.applyToMarkup('my-field');
 </code></pre>
  *
  * <p>However, in general you will most likely want to use Trigger as the base class for a reusable component.
@@ -195,7 +194,7 @@ Ext.define('Ext.form.Trigger', {
         var me = this,
             triggerWrap = me.triggerWrap,
             totalTriggerWidth = 0;
-        if (triggerWrap && !me.hideTrigger) {
+        if (triggerWrap && !me.hideTrigger && !me.readOnly) {
             me.triggerEl.each(function(trigger) {
                 totalTriggerWidth += trigger.getWidth();
             });

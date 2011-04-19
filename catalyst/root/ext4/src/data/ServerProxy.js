@@ -171,6 +171,10 @@ api: {
         //copy any sorters, filters etc into the params so they can be sent over the wire
         params = Ext.applyIf(params, this.getParams(params, operation));
         
+        if (operation.id && !params.id) {
+            params.id = operation.id;
+        }
+        
         request = Ext.create('Ext.data.Request', {
             params   : params,
             action   : operation.action,
@@ -207,30 +211,39 @@ api: {
             result = reader.read(response);
             records = result.records;
             length = records.length;
-            mc = Ext.create('Ext.util.MixedCollection', true, function(r) {return r.getId();});
-                
-            mc.addAll(operation.records);
-            for (i = 0; i < length; i++) {
-                record = mc.get(records[i].getId());
+            mc;
+            
+            if (result.success !== false) {
+                mc = Ext.create('Ext.util.MixedCollection', true, function(r) {return r.getId();})
+                mc.addAll(operation.records);
+                for (i = 0; i < length; i++) {
+                    record = mc.get(records[i].getId());
                     
-                if (record) {
-                    record.set(record.data);
+                    if (record) {
+                        record.beginEdit();
+                        record.set(record.data);
+                        record.endEdit(true);
+                    }
                 }
+                
+                //see comment in buildRequest for why we include the response object here
+                Ext.apply(operation, {
+                    response: response,
+                    resultSet: result
+                });
+                
+                operation.setCompleted();
+                operation.setSuccessful();
+            } else {
+                operation.setException(result.message);
+                me.fireEvent('exception', this, response, operation);
             }
-
-            //see comment in buildRequest for why we include the response object here
-            Ext.apply(operation, {
-                response : response,
-                resultSet: result
-            });
-                
-            operation.setCompleted();
-            operation.setSuccessful();
         } else {
-            me.fireEvent('exception', this, response, operation);
-                
-            //TODO: extract error message from reader
-            operation.setException();                
+            operation.setException({
+                status: response.status,
+                statusText: response.statusText
+            }); 
+            me.fireEvent('exception', this, response, operation);              
         }
             
         //this callback is the one that was passed to the 'read' or 'write' function above
@@ -238,7 +251,17 @@ api: {
             callback.call(scope || me, operation);
         }
             
-        me.afterRequest(request, true);
+        me.afterRequest(request, success);
+    },
+    
+    /**
+     * Encode any values being sent to the server. Can be overridden in subclasses.
+     * @private
+     * @param {Array} An array of sorters/filters.
+     * @return {Mixed} The encoded value
+     */
+    applyEncoding: function(value){
+        return Ext.encode(value);
     },
     
     /**
@@ -258,8 +281,8 @@ api: {
                 direction: sorters[i].direction
             };
         }
+        return this.applyEncoding(min);
         
-        return Ext.encode(min);
     },
     
     /**
@@ -279,8 +302,7 @@ api: {
                 value   : filters[i].value
             };
         }
-        
-        return Ext.encode(min);
+        return this.applyEncoding(min);
     },
     
     /**
@@ -290,7 +312,7 @@ api: {
      * @return {String} The encoded group string
      */
     encodeGroupers: function(group) {
-        return Ext.encode(group);
+        return this.applyEncoding(group);
     },
     
     /**

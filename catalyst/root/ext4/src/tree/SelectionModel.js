@@ -1,6 +1,6 @@
 /**
  * @class Ext.tree.SelectionModel
- * @extends Ext.grid.RowSelectionModel
+ * @extends Ext.selection.RowModel
  *
  * Adds custom behavior for left/right keyboard navigation for use with a tree.
  * Depends on the view having an expand and collapse method which accepts a
@@ -9,7 +9,7 @@
  * @private
  */
 Ext.define('Ext.tree.SelectionModel', {
-    extend: 'Ext.grid.RowSelectionModel',
+    extend: 'Ext.selection.RowModel',
     alias: 'selection.treemodel',
     
     // typically selection models prune records from the selection

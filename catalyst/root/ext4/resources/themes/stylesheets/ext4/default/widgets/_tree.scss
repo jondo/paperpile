@@ -178,6 +178,35 @@
         }
     }
     
+    .#{$prefix}tree-checkbox {
+        float: left;
+        margin: 3px 3px 0 0;
+        display: block;
+    }
+    
+    //various positions issues across IE
+    @if $include-ie {
+        .#{$prefix}ie .#{$prefix}tree-checkbox {
+            position: relative;
+            top: -2px;
+            margin: 0;
+        }
+       
+        .#{$prefix}ie8 .#{$prefix}tree-checkbox {
+            top: 2px;
+            margin-right: 3px;
+        }
+
+        .#{$prefix}quirks {
+            .#{$prefix}ie8 {
+                .#{$prefix}tree-checkbox {
+                    top: -2px;
+                    margin: 0;
+                }
+            }
+        }
+    }
+    
     @if $include-ff {
         .#{$prefix}gecko {
             .#{$prefix}tree-panel .#{$prefix}grid-row .#{$prefix}grid-cell-inner {

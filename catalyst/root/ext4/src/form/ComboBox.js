@@ -4,7 +4,7 @@
 
 A combobox control with support for autocomplete, remote loading, and many other features.
 
-A ComboBox is like a combination of a traditional HTML text `<input>` field and a `<select>`
+A ComboBox is like a combination of a traditional HTML text `&lt;input&gt;` field and a `&lt;select&gt;`
 field; the user is able to type freely into the field, and/or pick values from a dropdown selection
 list. The user can input any value by default, even if it does not appear in the selection list;
 to prevent free-form values and restrict them to items in the list, set {@link #forceSelection} to `true`.
@@ -118,9 +118,6 @@ Ext.define('Ext.form.ComboBox', {
      * @cfg {String} displayField The underlying {@link Ext.data.Field#name data field name} to bind to this
      * ComboBox (defaults to 'text').
      * <p>See also <tt>{@link #valueField}</tt>.</p>
-     * <p>TODO still valid? <b>Note</b>: if using a ComboBox in an {@link Ext.grid.Editing Editor Grid} a
-     * {@link Ext.grid.Header#renderer renderer} will be needed to show the displayField when the editor is not
-     * active.</p>
      */
     displayField: 'text',
 
@@ -129,8 +126,8 @@ Ext.define('Ext.form.ComboBox', {
      * @required
      * The underlying {@link Ext.data.Field#name data value name} to bind to this ComboBox (defaults to match
      * the value of the {@link #displayField} config).
-     * <p>TODO still valid? <b>Note</b>: use of a <tt>valueField</tt> requires the user to make a selection in order for a value to be
-     * mapped.  See also <tt>{@link #hiddenName}</tt>, <tt>{@link #hiddenValue}</tt>, and <tt>{@link #displayField}</tt>.</p>
+     * <p><b>Note</b>: use of a <tt>valueField</tt> requires the user to make a selection in order for a value to be
+     * mapped. See also <tt>{@link #displayField}</tt>.</p>
      */
 
     /**
@@ -312,6 +309,8 @@ var combo = new Ext.form.ComboBox({
      * </ul>
      */
 
+    //private
+    ignoreSelection: 0,
 
     initComponent: function() {
         var me = this,
@@ -335,7 +334,7 @@ var combo = new Ext.form.ComboBox({
 
         this.addEvents(
             // TODO need beforeselect?
-                
+
             /**
              * @event beforequery
              * Fires before all queries are processed. Return false to cancel the query or set the queryEvent's
@@ -350,11 +349,14 @@ var combo = new Ext.form.ComboBox({
             'beforequery'
         );
 
-        
+
         me.bindStore(me.store, true);
         if (me.store.autoCreated) {
-            me.valueField = 'field1';
-            me.displayField = 'field2';
+            me.queryMode = 'local';
+            me.valueField = me.displayField = 'field1';
+            if (!me.store.expanded) {
+                me.displayField = 'field2';
+            }
         }
 
         if (!isDefined(me.valueField)) {
@@ -382,7 +384,7 @@ var combo = new Ext.form.ComboBox({
         me.callParent();
 
         me.doQueryTask = new Ext.util.DelayedTask(me.doRawQuery, me);
-        
+
         // store has already been loaded, setValue
         if (me.store.getCount() > 0) {
             me.setValue(me.value);
@@ -404,7 +406,7 @@ var combo = new Ext.form.ComboBox({
         var me = this,
             value = me.getRawValue(),
             rec   = me.findRecordByDisplay(value);
-        
+
         // forceSelection required by no record found
         if (me.forceSelection && !rec) {
             me.setRawValue('');
@@ -428,7 +430,7 @@ var combo = new Ext.form.ComboBox({
             selStart = me.getRawValue().length;
 
             boundList.highlightItem(boundList.getNode(record));
-            
+
             if (selStart !== 0 && selStart !== len) {
                 me.setRawValue(newValue);
                 me.selectText(selStart, newValue.length);
@@ -439,7 +441,7 @@ var combo = new Ext.form.ComboBox({
     // invoked when a different store is bound to this combo
     // than the original
     resetToDefault: function() {
-        
+
     },
 
     bindStore: function(store, initial) {
@@ -479,7 +481,7 @@ var combo = new Ext.form.ComboBox({
             }
         }
     },
-    
+
     onLoad: function() {
         var me = this;
 
@@ -501,7 +503,7 @@ var combo = new Ext.form.ComboBox({
             me.assertValue();
         }
     },
-    
+
     /**
      * @private
      * Execute the query with the raw contents within the textfield.
@@ -521,7 +523,7 @@ var combo = new Ext.form.ComboBox({
      */
     doQuery: function(queryString, forceAll) {
         queryString = queryString || '';
-        
+
         // store in object and pass by reference in 'beforequery'
         // so that client code can modify values.
         var me = this,
@@ -537,11 +539,11 @@ var combo = new Ext.form.ComboBox({
         if (me.fireEvent('beforequery', qe) === false || qe.cancel) {
             return false;
         }
-        
+
         // get back out possibly modified values
         queryString = qe.query;
         forceAll = qe.forceAll;
-        
+
         // query permitted to run
         if (forceAll || (queryString.length >= me.minChars)) {
             // expand before starting query so LoadMask can position itself correctly
@@ -560,6 +562,13 @@ var combo = new Ext.form.ComboBox({
                         params: me.getParams(queryString)
                     });
                 }
+            }
+
+            // Clear current selection if it does not match the current value in the field
+            if (me.getRawValue() !== me.getDisplayValue()) {
+                me.ignoreSelection++;
+                me.picker.getSelectionModel().deselectAll();
+                me.ignoreSelection--;
             }
 
             if (isLocalMode) {
@@ -590,12 +599,19 @@ var combo = new Ext.form.ComboBox({
      */
     doAutoSelect: function() {
         var me = this,
-            picker = me.picker;
+            picker = me.picker,
+            lastSelected, itemNode;
         if (picker && me.autoSelect && me.store.getCount() > 0) {
-            picker.highlightItem(picker.getNode(0));
+            // Highlight the last selected item and scroll it into view
+            lastSelected = picker.getSelectionModel().lastSelected;
+            itemNode = picker.getNode(lastSelected || 0);
+            if (itemNode) {
+                picker.highlightItem(itemNode);
+                picker.listEl.scrollChildIntoView(itemNode, false);
+            }
         }
     },
-    
+
     doTypeAhead: function() {
         if (!this.typeAheadTask) {
             this.typeAheadTask = new Ext.util.DelayedTask(this.onTypeAhead, this);
@@ -604,7 +620,7 @@ var combo = new Ext.form.ComboBox({
             this.typeAheadTask.delay(this.typeAheadDelay);
         }
     },
-    
+
 
 
     onTriggerClick: function() {
@@ -624,18 +640,21 @@ var combo = new Ext.form.ComboBox({
         }
     },
 
-    
+
     // store the last key and doQuery if relevant
     onKeyUp: function(e, t) {
-        var key = e.getKey();
-        
-        this.lastKey = key;
-        // we put this in a task so that we can cancel it if a user is
-        // in and out before the queryDelay elapses
-        
-        // perform query w/ any normal key or backspace or delete
-        if (!e.isSpecialKey() || key == e.BACKSPACE || key == e.DELETE) {
-            this.doQueryTask.delay(this.queryDelay);
+        var me = this,
+            key = e.getKey();
+
+        if (!me.readOnly) {
+            me.lastKey = key;
+            // we put this in a task so that we can cancel it if a user is
+            // in and out before the queryDelay elapses
+
+            // perform query w/ any normal key or backspace or delete
+            if (!e.isSpecialKey() || key == e.BACKSPACE || key == e.DELETE) {
+                me.doQueryTask.delay(me.queryDelay);
+            }
         }
     },
 
@@ -649,7 +668,7 @@ var combo = new Ext.form.ComboBox({
 
     createPicker: function() {
         var me = this,
-            value = me.value,
+            value = Ext.Array.from(me.value),
             picker,
             opts = Ext.apply({
                 selModel: {
@@ -665,15 +684,17 @@ var combo = new Ext.form.ComboBox({
                 pageSize: me.pageSize
             }, me.listConfig, me.defaultListConfig);
 
-        picker = new Ext.view.BoundList(opts);
+        picker = me.picker = new Ext.view.BoundList(opts);
 
-        // Ensure the selected Models display as selected.
-        if (Ext.isDefined(value)) {
-            if (Ext.isString(value)) {
-                value = value.split(me.delimiter);
-            }
+        // Set the BoundList's selection to match the current value
+        if (value.length > 0) {
             me.select(value);
         }
+
+        me.mon(picker, {
+            refresh: me.onListRefresh,
+            scope: me
+        });
 
         me.mon(picker.getSelectionModel(), {
             selectionChange: me.onListSelectionChange,
@@ -683,11 +704,15 @@ var combo = new Ext.form.ComboBox({
         return picker;
     },
 
+    onListRefresh: function() {
+        this.alignPicker();
+    },
+
     onListSelectionChange: function(list, selectedRecords) {
         var me = this;
         // Only react to selection if it is not called from setValue, and if our list is
         // expanded (ignores changes to the selection model triggered elsewhere)
-        if (!me.inSetValue && me.isExpanded) {
+        if (!me.ignoreSelection && me.isExpanded) {
             if (!me.multiSelect) {
                 Ext.defer(me.collapse, 1, me);
             }
@@ -704,9 +729,7 @@ var combo = new Ext.form.ComboBox({
     onExpand: function() {
         var me = this,
             keyNav = me.listKeyNav,
-            picker = me.getPicker(),
-            lastSelected = picker.getSelectionModel().lastSelected,
-            itemNode;
+            picker = me.getPicker();
 
         if (!keyNav) {
             keyNav = me.listKeyNav = new Ext.view.BoundListKeyNav(this.inputEl, {
@@ -716,15 +739,6 @@ var combo = new Ext.form.ComboBox({
             });
         }
         Ext.defer(keyNav.enable, 1, keyNav); //wait a bit so it doesn't react to the down arrow opening the picker
-
-        // Highlight the last selected item and scroll it into view
-        if (lastSelected) {
-            itemNode = picker.getNode(lastSelected);
-            if (itemNode) {
-                picker.highlightItem(itemNode);
-                picker.el.scrollChildIntoView(itemNode, false);
-            }
-        }
 
         me.inputEl.focus();
     },
@@ -741,7 +755,7 @@ var combo = new Ext.form.ComboBox({
     },
 
 
-    
+
     /**
      * Selects an item by a {@link Ext.data.Model Model}, or by a key value.
      * @param r
@@ -749,7 +763,7 @@ var combo = new Ext.form.ComboBox({
     select: function(r) {
         this.setValue(r, true);
     },
-    
+
 
     /**
      * Find the record by searching for a specific field/value combination
@@ -759,7 +773,7 @@ var combo = new Ext.form.ComboBox({
     findRecord: function(field, value) {
         var ds  = this.store,
             idx = ds.find(field, value);
-        
+
         if (idx !== -1) {
             return ds.getAt(idx);
         } else {
@@ -771,7 +785,7 @@ var combo = new Ext.form.ComboBox({
     },
     findRecordByDisplay: function(value) {
         return this.findRecord(this.displayField, value);
-    },    
+    },
 
     /**
      * Sets the specified value(s) into the field. For each value, if a record is found in the {@link #store} that
@@ -779,12 +793,13 @@ var combo = new Ext.form.ComboBox({
      * field.  If no match is found, and the {@link #valueNotFoundText} config option is defined, then that will be
      * displayed as the default field text. Otherwise a blank value will be shown, although the value will still be set.
      * @param {String|Array} value The value(s) to be set. Can be either a single String or {@link Ext.data.Model},
-     * or an Array of Strings or Models. 
+     * or an Array of Strings or Models.
      * @return {Ext.form.Field} this
      */
     setValue: function(value, doSelect) {
         var me = this,
             valueNotFoundText = me.valueNotFoundText,
+            inputEl = me.inputEl,
             i, len,
             record, selModel,
             models = [],
@@ -825,30 +840,85 @@ var combo = new Ext.form.ComboBox({
 
         // Select the rows in the list if required.
         // This must not recurse into here.
-        if ((me.isExpanded && (doSelect !== false)) || (me.picker && doSelect)) {
-            me.inSetValue = true;
+        if (me.picker && doSelect !== false) {
+            me.ignoreSelection++;
             selModel = me.picker.getSelectionModel();
             selModel.deselectAll();
             if (models.length) {
                 selModel.select(models);
             }
+            me.ignoreSelection--;
         }
 
         // Set the value of this field. If we are multiselecting, then that is an array.
         me.value = (processedValue.length == 1) ? processedValue[0] : processedValue;
+        me.displayTplData = displayTplData; //store for getDisplayValue method
+
+        if (inputEl && me.emptyText && !Ext.isEmpty(value)) {
+            inputEl.removeCls(me.emptyCls);
+        }
 
         // Calculate raw value from the collection of Model data
-        me.setRawValue(me.displayTpl.apply(displayTplData));
+        me.setRawValue(me.getDisplayValue());
+        me.checkChange();
+
+        me.applyEmptyText();
 
         return me;
     },
 
+    /**
+     * @private Generate the string value to be displayed in the text field for the currently stored value
+     */
+    getDisplayValue: function() {
+        return this.displayTpl.apply(this.displayTplData);
+    },
+
     getValue: function() {
-        return this.value;
+        // If the user has not changed the raw field value since a value was selected from the list,
+        // then return the structured value from the selection. If the raw field value is different
+        // than what would be displayed due to selection, return that raw value.
+        var me = this,
+            picker = me.picker,
+            rawValue = me.getRawValue(), //current value of text field
+            value = me.value; //stored value from last selection or setValue() call
+
+        if (me.getDisplayValue() !== rawValue) {
+            value = rawValue;
+            me.value = me.displayTplData = null;
+            if (picker) {
+                me.ignoreSelection++;
+                picker.getSelectionModel().deselectAll();
+                me.ignoreSelection--;
+            }
+        }
+
+        return value;
     },
     
     getSubmitValue: function() {
         return this.getValue();
+    },
+
+    areValuesEqual: function(v1, v2) {
+        var fromArray = Ext.Array.from,
+            i, len;
+
+        v1 = fromArray(v1);
+        v2 = fromArray(v2);
+        len = v1.length;
+
+        if (len !== v2.length) {
+            return false;
+        }
+
+        for(i = 0; i < len; i++) {
+            if (v2[i] !== v1[i]) {
+                return false;
+            }
+        }
+
+        return true;
     },
 
     /**

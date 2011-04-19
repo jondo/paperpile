@@ -5,28 +5,68 @@
 Ext.define('Ext.grid.ColumnLayout', {
     extend: 'Ext.layout.container.HBox',
     alias: 'layout.gridcolumn',
-    clearInnerCtOnLayout: false,
+
+    // Height-stretched innerCt must be able to revert back to unstretched height
+    clearInnerCtOnLayout: true,
+
     constructor: function() {
-        Ext.grid.ColumnLayout.superclass.constructor.apply(this, arguments);
-        this.availableSpaceOffset = Ext.getScrollBarWidth() - 2;
+        var me = this;
+        me.callParent(arguments);
+        if (!Ext.isDefined(me.availableSpaceOffset)) {
+            me.availableSpaceOffset = (Ext.getScrollBarWidth() - 2);
+        }
     },
+
+    beforeLayout: function() {
+        var me = this,
+            i = 0,
+            items = me.getLayoutItems(),
+            len = items.length,
+            item;
+        me.callParent(arguments);
+
+        me.innerCt.setHeight(23);
+
+        // Unstretch child items before the layout which stretches them.
+        if (me.align == 'stretchmax') {
+            for (; i < len; i++) {
+                item = items[i];
+                item.el.setStyle({
+                    height: 'auto'
+                });
+                item.titleContainer.setStyle({
+                    height: 'auto',
+                    paddingTop: '0'
+                });
+                if (item.componentLayout && item.componentLayout.lastComponentSize) {
+                    item.componentLayout.lastComponentSize.height = item.el.dom.offsetHeight;
+                }
+            }
+        }
+    },
+
+    afterLayout: function() {
+        var me = this,
+            i = 0,
+            items = me.getLayoutItems(),
+            len = items.length;
+        me.callParent(arguments);
+
+        // Set up padding in items
+        if (me.align == 'stretchmax') {
+            for (; i < len; i++) {
+                items[i].setPadding();
+            }
+        }
+    },
+
     // FIX: when flexing we actually don't have enough space as we would
     // typically because of the scrollOffset on the GridView, must reserve this
     updateInnerCtSize: function(tSize, calcs) {
-        if (calcs.meta.tooNarrow) {
-            var width   = calcs.meta.desiredSize,
-                height  = tSize.height,
-                offset  = this.availableSpaceOffset;
-
-            // if ColumnModel has been placed in a container.
-            //if (this.owner.ownerCt) {
-            //    offset = this.owner.ownerCt.view.getScrollOffset();
-            //}
-            //offset = Ext.getScrollBarWidth() - 2;
-
-            this.innerCt.setSize(width + offset, height);
-        } else {
-            return Ext.grid.ColumnLayout.superclass.updateInnerCtSize.apply(this, arguments);
+        // Columns must not account for scroll offset
+        if (!this.isColumn && calcs.meta.tooNarrow) {
+            tSize.width = calcs.meta.desiredSize + this.availableSpaceOffset;
         }
+        return this.callParent(arguments);
     }
 });

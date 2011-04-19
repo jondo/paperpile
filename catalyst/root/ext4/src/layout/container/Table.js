@@ -64,7 +64,7 @@ Ext.define('Ext.layout.container.Table', {
 
     alias: ['layout.table'],
     extend: 'Ext.layout.container.Auto',
-    alternatClassName: 'Ext.layout.TableLayout',
+    alternateClassName: 'Ext.layout.TableLayout',
 
     /* End Definitions */
 
@@ -78,6 +78,8 @@ Ext.define('Ext.layout.container.Table', {
     monitorResize:false,
 
     type: 'table',
+
+    clearEl: true, // Base class will not create it if already truthy. Not needed in tables.
 
     targetCls: Ext.baseCSSPrefix + 'table-layout-ct',
     tableCls: Ext.baseCSSPrefix + 'table-layout',

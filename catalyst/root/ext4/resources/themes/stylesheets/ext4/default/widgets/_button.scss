@@ -21,6 +21,12 @@
             cursor: hand;
         }
         
+        background-repeat: no-repeat;
+        
+        em {
+            background-repeat: no-repeat;
+        }
+        
         button {
             overflow: visible;
             margin: 0;
@@ -28,6 +34,7 @@
             border: 0;  
             width: auto;    
             background: transparent;
+            background-repeat: no-repeat;
             text-align: center;
             white-space: nowrap;
             outline: 0 none;
@@ -38,21 +45,6 @@
         }
     }
     
-    .#{$prefix}nbr {
-        .#{$prefix}btn {
-            td {
-                padding: 0 !important;
-            }
-            
-            .#{$prefix}frame-mc {
-                vertical-align: middle;
-                white-space: nowrap;
-                text-align: center;
-                cursor: pointer;
-            }
-        }
-    }
-  
     @if $include-ie {
         * html .#{$prefix}ie {
             .#{$prefix}btn button {
@@ -71,10 +63,6 @@
     @if not $supports-border-radius or $compile-all {
         .#{$prefix}nbr {
             .#{$prefix}btn {
-                td {
-                    padding: 0 !important;
-                }
-
                 .#{$prefix}frame-mc {
                     vertical-align: middle;
                     white-space: nowrap;
@@ -440,5 +428,30 @@
         
         background-image: none;
         background: transparent;
+    }
+
+    // Styles for an anchor button. Need fiddling for each browser.
+    .#{$prefix}btn em a {
+        text-decoration: none;
+        display: inline-block;
+        color: #333;
+    }
+    .#{$prefix}ie .#{$prefix}btn em a,
+    .#{$prefix}opera .#{$prefix}btn em a {
+        padding-top: 1px 0 0 0;
+    }
+    .#{$prefix}gecko .#{$prefix}btn em a {
+        padding: 4px 0 0 0;
+    }
+    .#{$prefix}chrome .#{$prefix}btn em a {
+        padding: 2px 0 0 0;
+    }
+    .#{$prefix}ie .#{$prefix}btn em a {
+        padding: 0;
+        font-family: inherit;
+        font-size: 11px;
+    }
+    .#{$prefix}ie6 .#{$prefix}btn em a {
+        padding-top: 0;
     }
 }

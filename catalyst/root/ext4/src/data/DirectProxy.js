@@ -80,13 +80,15 @@ paramOrder: 'param1|param2|param'
             // We need to pass params
             method = fn.directCfg.method;
             
-            if (method.ordered && method.len > 0) {
-                if (paramOrder) {
-                    for (len = paramOrder.length; i < len; ++i) {
-                        args.push(params[paramOrder[i]]);
+            if (method.ordered) {
+                if (method.len > 0) {
+                    if (paramOrder) {
+                        for (len = paramOrder.length; i < len; ++i) {
+                            args.push(params[paramOrder[i]]);
+                        }
+                    } else if (me.paramsAsHash) {
+                        args.push(params);
                     }
-                } else if (me.paramsAsHash) {
-                    args.push(params);
                 }
             } else {
                 args.push(params);
@@ -101,6 +103,14 @@ paramOrder: 'param1|param2|param'
         });
         args.push(me.createRequestCallback(request, operation, callback, scope), me);
         fn.apply(window, args);
+    },
+    
+    /*
+     * Inherit docs. We don't apply any encoding here because
+     * all of the direct requests go out as jsonData
+     */
+    applyEncoding: function(value){
+        return value;
     },
     
     createRequestCallback: function(request, operation, callback, scope){

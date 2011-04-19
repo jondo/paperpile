@@ -217,7 +217,7 @@ var myData = [
     /**
      * @cfg {String} dateFormat
      * <p>(Optional) Used when converting received data into a Date when the {@link #type} is specified as <code>"date"</code>.</p>
-     * <p>A format string for the {@link Ext.util.Date#parse Ext.util.Date.parse} function, or "timestamp" if the
+     * <p>A format string for the {@link Ext.Date#parse Ext.Date.parse} function, or "timestamp" if the
      * value provided by the Reader is a UNIX timestamp, or "time" if the value provided by the Reader is a
      * javascript millisecond timestamp. See {@link Date}</p>
      */

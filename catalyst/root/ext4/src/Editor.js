@@ -174,6 +174,7 @@ autoSize: {
             blur: me.onBlur,
             specialkey: me.onSpecialKey
         });
+
         if (field.grow) {
             me.mon(field, 'autosize', me.doComponentLayout,  me, {delay: 1});
         }
@@ -267,16 +268,21 @@ autoSize: {
 
         if (complete || cancel) {
             event.stopEvent();
-            if (complete) {
-                me.completeEdit();
-            } else {
-                me.cancelEdit();
-            }
-            if (field.triggerBlur) {
-                field.triggerBlur();
-            }
+            // Must defer this slightly to prevent exiting edit mode before the field's own
+            // key nav can handle the enter key, e.g. selecting an item in a combobox list
+            Ext.defer(function() {
+                if (complete) {
+                    me.completeEdit();
+                } else {
+                    me.cancelEdit();
+                }
+                if (field.triggerBlur) {
+                    field.triggerBlur();
+                }
+            }, 10);
         }
-        me.fireEvent('specialkey', me, field, event);
+
+        this.fireEvent('specialkey', this, field, event);
     },
 
     /**
@@ -300,11 +306,14 @@ autoSize: {
         
         if (me.fireEvent('beforestartedit', me, me.boundEl, value) !== false) {
             me.startValue = value;
-            field.reset();
-            field.setValue(value);
             me.show();
+            field.reset();
+            field.show().focus(false, 10);
+            field.setValue(value);
+            if (field.autoSize) {
+                field.autoSize();
+            }
             me.realign(rendered); // only force a layout after first time
-            field.autoSize();
             me.editing = true;
         }
     },
@@ -371,8 +380,6 @@ autoSize: {
         if (me.hideEl !== false) {
             me.boundEl.hide();
         }
-
-        me.field.show().focus(false, true);
         me.fireEvent("startedit", me.boundEl, me.startValue);
     },
 

@@ -252,8 +252,8 @@ TestAction.multiply(
             if (Ext.isFunction(callback)) {
                 callback(result, event);
             } else {
-                Ext.callback(callback[funcName], callback.scope, [result, e]);
-                Ext.callback(callback.callback, callback.scope, [result, e]);
+                Ext.callback(callback[funcName], callback.scope, [result, event]);
+                Ext.callback(callback.callback, callback.scope, [result, event]);
             }
         }
     },

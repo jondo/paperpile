@@ -49,7 +49,7 @@ UnitModel = Ext.regModel('Unit',
  */
 Ext.define('Ext.data.Types', {
     singleton: true,
-    requires: ['Ext.data.SortTypes', 'Ext.util.Date']
+    requires: ['Ext.data.SortTypes']
 }, function() {
     var st = Ext.data.SortTypes;
     
@@ -82,7 +82,8 @@ Ext.define('Ext.data.Types', {
          */
         STRING: {
             convert: function(v) {
-                return (v === undefined || v === null) ? '' : String(v);
+                var defaultValue = this.useNull ? null : '';
+                return (v === undefined || v === null) ? defaultValue : String(v);
             },
             sortType: st.asUCString,
             type: 'string'
@@ -127,6 +128,9 @@ Ext.define('Ext.data.Types', {
          */
         BOOL: {
             convert: function(v) {
+                if (this.useNull && v === undefined || v === null || v === '') {
+                    return null;
+                }
                 return v === true || v === 'true' || v == 1;
             },
             sortType: st.none,
@@ -156,7 +160,7 @@ Ext.define('Ext.data.Types', {
                     if (df == 'time') {
                         return new Date(parseInt(v, 10));
                     }
-                    return Ext.util.Date.parse(v, df);
+                    return Ext.Date.parse(v, df);
                 }
                 
                 var parsed = Date.parse(v);

@@ -144,38 +144,6 @@ Ext.define('Ext.data.Operation', {
     },
     
     /**
-     * @private
-     */
-    markStarted: function() {
-        console.warn("Operation: markStarted has been deprecated. Please use setStarted");
-        return this.setStarted();
-    },
-    
-    /**
-     * @private
-     */
-    markCompleted: function() {
-        console.warn("Operation: markCompleted has been deprecated. Please use setCompleted");
-        return this.setCompleted();
-    },
-    
-    /**
-     * @private
-     */
-    markSuccessful: function() {
-        console.warn("Operation: markSuccessful has been deprecated. Please use setSuccessful");
-        return this.setSuccessful();
-    },
-    
-    /**
-     * @private
-     */
-    markException: function() {
-        console.warn("Operation: markException has been deprecated. Please use setException");
-        return this.setException();
-    },
-    
-    /**
      * Returns true if this Operation encountered an exception (see also {@link #getError})
      * @return {Boolean} True if there was an exception
      */

@@ -23,7 +23,7 @@ Ext.define('Ext.layout.container.Anchor', {
 
     alias: 'layout.anchor',
     extend: 'Ext.layout.Container',
-    alternatClassName: 'Ext.layout.AnchorLayout',
+    alternateClassName: 'Ext.layout.AnchorLayout',
 
     /* End Definitions */
 
@@ -89,7 +89,7 @@ anchor: '-50 75%'
 
     // private
     onLayout: function() {
-        Ext.layout.container.Anchor.superclass.onLayout.call(this, arguments);
+        this.callParent(arguments);
 
         var me = this,
             size = me.getLayoutTargetSize(),
@@ -171,12 +171,7 @@ anchor: '-50 75%'
 
         for (i = 0; i < len; i++) {
             box = boxes[i];
-            if (box.anchor) {
-                me.setItemSize(box.component, box.width, box.height);
-            }
-            else {
-                me.layoutItem(box.component);
-            }
+            me.setItemSize(box.component, box.width, box.height);
         }
 
         if (overflow && overflow != 'hidden' && !me.adjustmentPass) {

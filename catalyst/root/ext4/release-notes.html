@@ -13,6 +13,578 @@
         <div id="releases">
             <div class="release">
                 <h1>
+                    Release Notes for Ext JS 4 Beta 1
+                </h1>
+                <p class="notes">
+                    Release Notes: March 30, 2011<br>
+                    Version Number: 4.0.0beta1
+                </p>
+                <h2>
+                    New In This Release
+                </h2>
+                <ul>
+                    <li>New Examples
+                        <div style="margin-left: 2em">
+                            <ul>
+                                <li>
+                                    <a href="examples/core/spotlight.html">Spotlight example</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/direct/direct-grid.html">Ext.Direct Grid Integration</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/form/form-grid-access.html">Binding a Grid to a Form</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/grid/cell-editing.html">Grid Cell Editing</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/grid/group-header-grid.html">Grid Grouping</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/grid/group-summary-grid.html">Grid Grouping with Summaries</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/grid/infinite-scroll.html">Grid 'Infinite' Scrolling</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/grid/live-search-grid.html">Live Search Grid</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/grid/locking-grid.html">Grid Locking</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/grid/remote-group-summary-grid.html">Grid Remote Group Summary</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/grid/row-editing.html">Grid Row Editing</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/layout/column.html">Column Layout</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/menu/action-grid.html">Actions</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/tabs/tab-scroller-menu.html">Overflow Tabs to a Menu</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/tree/check-tree.html">Tree with CheckBox selection</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/tree/two-trees.html">Drag and Drop between Trees</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/view/animated-dataview.html">Animated DataView</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/view/multisort/multisort.html">MultiSort DataView</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/grid-filtering/grid-filter-local.html">Locally Filtered Grid</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/restful/restful.html">RESTful Store with GridPanel and RowEditor</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/locale/dutch-form.html">Localization (static)</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/locale/multi-lang.html">Localization (dynamic)</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/state/state.html">Browser State</a>
+                                </li>
+                            </ul>
+                            <ul>
+                                <li>
+                                    <a href="examples/writer/writer.html">Data.writer</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li>Bug Fixes
+                        <ul>
+                            <li>Fixed an issue where menu items would not respect the cls property
+                            </li>
+                            <li>Fixed improper variable in RemotingProvider
+                            </li>
+                            <li>Fixed param logic in DirectProxy
+                            </li>
+                            <li>Fixed an issue when reloading stores with different data sets
+                            </li>
+                            <li>Added a finite check for a DrawComponent's bounding box
+                            </li>
+                            <li>Pass the correct parameter to ServerProxy.afterRequest
+                            </li>
+                            <li>Fix indexOf reference in ListMenu
+                            </li>
+                            <li>When a date is chosen for a date filter, hide its parent menu
+                            </li>
+                            <li>Add autocomplete="off" to Button template to prevent Firefox from remembering its disabled state between page reloads
+                            </li>
+                            <li>Prevent NumericFilter's menu fields from getting focused when mousing over them
+                            </li>
+                            <li>Fix form submission when using direct
+                            </li>
+                            <li>Fixed an issue where phantom records were being duplicated in the store when returned from a remote data source
+                            </li>
+                            <li>Fixed an issue when clearing a client data proxy
+                            </li>
+                            <li>Fixed Model dependencies
+                            </li>
+                            <li>Removed redundant requires in Component
+                            </li>
+                            <li>Fix to make sure initExtCss always executes after Ext.supports.init
+                            </li>
+                            <li>Fix an issues where the expander icons are hidden when lines: false is used
+                            </li>
+                            <li>Ensure that the grid doesn't trigger a sort on the store when it renders
+                            </li>
+                            <li>Fix setValue method and initial value config on HtmlEditor
+                            </li>
+                            <li>Fixed recursive cloning of a non "plain" object (the constructor of which is !== Object)
+                            </li>
+                            <li>Ensure a layout isn't triggered if the container is destroying
+                            </li>
+                            <li>Fixed the styling of forms in a toolbar
+                            </li>
+                            <li>Fixed Window restore issue
+                            </li>
+                            <li>Fixed Grid dependencies
+                            </li>
+                            <li>Fix Accordion layout when initially layed out with no child items
+                            </li>
+                            <li>Updating $font-size dynamic variable's to use ceil to fix sub-pixel (ex: 10.4px) font-sizes
+                            </li>
+                            <li>Fixed multiple issues with rotated labels on category axis
+                            </li>
+                            <li>Fix TabPanel dependencies
+                            </li>
+                            <li>Fix typo in alternateClassName definitions
+                            </li>
+                            <li>If the panel has a re-expander, make sure the title is set when setTitle is called
+                            </li>
+                            <li>Fix an issue where panels would not be collapsed initially when not in a container
+                            </li>
+                            <li>Allow the combo store to be bound using a single flat array
+                            </li>
+                            <li>Fix autoCreated Store setup in StoreMgr
+                            </li>
+                            <li>Fix unreachable code in Ext.getDom
+                            </li>
+                            <li>Properly clear managedListeners array in Observable
+                            </li>
+                            <li>Fix problem with the animate config option replacing the animate method
+                            </li>
+                            <li>Fixed grid scroll options 'horizontal' and 'none'
+                            </li>
+                            <li>Fix problem with autoHeighting TabPanels by their child items
+                            </li>
+                            <li>Fix menu box overflow handler on IE
+                            </li>
+                            <li>Fixed stacked bar chart axis calculation issue
+                            </li>
+                            <li>Fix scaling re-calculation issue for Bar, Line, Scatter series
+                            </li>
+                            <li>Fire change event when ComboBox value is changed
+                            </li>
+                            <li>Update alignment of ComboBox dropdown when its content changes, so it can flip from below to above or vice versa as the user types
+                            </li>
+                            <li>Clear selection in ComboBox.BoundList if it no longer matches the value in the field, so that the old value can be re-selected
+                            </li>
+                            <li>Fix bug with ComboBox where the value in the field would be blanked out while the user was typing with typeAhead:true
+                            </li>
+                            <li>Fix ComboBox scrolling selected item into view when list is expanded
+                            </li>
+                            <li>Set ComboBox selection in list when it is first created, if the ComboBox has an initial 'value' config
+                            </li>
+                            <li>Fix Scatter series shadow issue
+                            </li>
+                            <li>Don't reinsert a node into the NodeStore if its new parent is not part of the NodeStore
+                            </li>
+                            <li>Fixed issue with Element.destroy not being properly called resulting in memory problems for IE
+                            </li>
+                            <li>Fixed Ext.require() not firing callbacks after a failure
+                            </li>
+                            <li>Fixed Ext.Loader.getPath() not returning properly value for unknown namespace
+                            </li>
+                            <li>Forced setting the Axis minimum and maximum values specified by the configuration
+                            </li>
+                            <li>Fixed cropped window titles in various browsers
+                            </li>
+                            <li>Firefox fix for getNextId method in WebStorageProxy
+                            </li>
+                            <li>Fixed an issue with the id not being sent when calling load directly on the model
+                            </li>
+                            <li>Fixed a bug in previousNode and nextNode. They were not being checked before walking up the hierarchy and therefore triggered a cousin to always be returned
+                            </li>
+                            <li>Fixed discontinuous tree selection
+                            </li>
+                            <li>Field component onLayout was being run while the field was hidden but not after, so trigger width was always calcualted as zero. Changed order so layout occurs after show
+                            </li>
+                            <li>Fix reset method on sliders
+                            </li>
+                            <li>Fix application of emptyText in IE when ComboBox value is set
+                            </li>
+                            <li>Fix the setTitle text in windows with vertical headers
+                            </li>
+                            <li>Make empty ComboBox list item hoverable/clickable in IE quirks mode
+                            </li>
+                            <li>Fixes Sprite item Bounding Box offset in Opera
+                            </li>
+                            <li>Fix "Member not found" error in IE by preventing native event object from getting passed and used across the specialkey buffered listener
+                            </li>
+                            <li>Fix individual record update in Ext.grid.GroupingFeature
+                            </li>
+                            <li>Surface has now the ability to add in instances of Sprite and configuration objects
+                            </li>
+                            <li>Ensure datachanged event is fired when filtering the Store without sorters
+                            </li>
+                            <li>Adjust alignment styles for checkboxes and radios to match Ext3
+                            </li>
+                            <li>Fixed checkbox spacing + positioning in IE
+                            </li>
+                            <li>Fixed a bug in DataView Draggable where items in the ghost dataview would not be correctly removed
+                            </li>
+                            <li>Fix vertical clipping of CheckboxGroup columns without fixed widths in IE quirks mode
+                            </li>
+                            <li>Fix bug with Radial Axis scaling
+                            </li>
+                            <li>Fix an issue when retrieving the previous sibling of a component
+                            </li>
+                            <li>Fix sorter issue with DirectProxy
+                            </li>
+                            <li>Fix setReadOnly method in HtmlEditor
+                            </li>
+                            <li>Fix issue with looking up a store by id
+                            </li>
+                            <li>Fix problem hiding modal mask after modal window hide
+                            </li>
+                            <li>Fix support for passing a dom element as a target to an animation
+                            </li>
+                        </ul>
+                    </li>
+                    <li>Enhancements
+                        <ul>
+                            <li>Locking GridPanel implemtented
+                            </li>
+                            <li>Accessibility theme added
+                            </li>
+                            <li>Numeric Axis majorTickSteps added to set the number of major ticks between a `maximum` and a `minimum` value
+                            </li>
+                            <li>Implement the animate configuration option on TreePanel
+                            </li>
+                            <li>Implement singleExpand on TreePanel
+                            </li>
+                            <li>Store aggregation functions moved to the prototype
+                            </li>
+                            <li>Implemented checked field in NodeInterface. Have renderer add a checkbox if a value other then null is set in checked
+                            </li>
+                            <li>Implemented state support as a mixin
+                            </li>
+                            <li>Added html to each tab in the history example to make it clearer which tab is currently activated
+                            </li>
+                            <li>Refactored the GridFilters plugin UX as FiltersFeature, a Ext.grid.Feature subclass, and ported it to work with the new Ext4 grid architecture. Reworked the grid-filters example to match
+                            </li>
+                            <li>Inject the TableView instance into each grid filter, even if it is an already instantiated Filter rather than a filter config object
+                            </li>
+                            <li>Allow month picker items to wrap properly when inside components with white-space:nowrap like menus
+                            </li>
+                            <li>Refactoring a Theming so it is easier to customize
+                            </li>
+                            <li>Updated the themes example to include more components
+                            </li>
+                            <li>Added HTTP error info to the data operation when a request fails
+                            </li>
+                            <li>Added load event in preference of read event on TreeStore
+                            </li>
+                            <li>Grid headers now support grouping in which a header may be configured with a nested headers config object as well as a text/header string
+                            </li>
+                            <li>The Ext 3.x class ActionColumn has been implemented in 4.x as ActionHeader
+                            </li>
+                            <li>Cleaned all locale packages files
+                            </li>
+                            <li>Introduced a new getAssociatedData method on Model to make it easier to aggregate model data
+                            </li>
+                            <li>Added window state management
+                            </li>
+                            <li>Added state support for border layout
+                            </li>
+                            <li>Removed extraneous layout in Card.setActiveItem
+                            </li>
+                            <li>Made Ext.override proxy to Ext.Base.override if the class was created with Ext.define
+                            </li>
+                            <li>added Ext.Base.getName method
+                            </li>
+                            <li>Add animateTarget to show/hide of floating Components (such as Windows and Tooltips, or anything else that floats
+                            </li>
+                            <li>Allow the aggregation function to be called with the grouped parameter for consistency
+                            </li>
+                            <li>Added total summary and group summary support for the grid
+                            </li>
+                            <li>Fix combos example to make getInnerTpl work properly - now must be part of listConfig
+                            </li>
+                            <li>Implemented Ext.form.File, a custom field widget for file uploads
+                            </li>
+                            <li>Properly set class on field error quicktips
+                            </li>
+                            <li>Added grid state support
+                            </li>
+                            <li>Relay view and tree events to the TreePanel and TreeStore
+                            </li>
+                            <li>Added a new LocalStorage state provider
+                            </li>
+                            <li>Allow the model to be defined in the store prototype
+                            </li>
+                            <li>Implemented Sutherland–Hodgman algorithm and use it for our render label axis implementation
+                            </li>
+                            <li>Implemented animate config option
+                            </li>
+                            <li>Styled invalid form qtips
+                            </li>
+                            <li>Implemented Tree sorting
+                            </li>
+                            <li>Add additional check in setStyle to ensure the dom node still exists before setting style on it
+                            </li>
+                            <li>FocusManager enhancements to support Containers being able to subscribe for keyboard navigation
+                            </li>
+                            <li>Implemented Ext.menu.DateMenu class
+                            </li>
+                            <li>Implemented Ext.menu.ColorMenu class
+                            </li>
+                            <li>Cleanup FocusManager's handling of component add/destroy when enabled
+                            </li>
+                            <li>Convert TabBar to use FocusManager.subscribe instead of its own KeyNav
+                            </li>
+                            <li>Grid Header needs to give visual indication when it is focused, which will show the menu trigger. This supports key navigation on grid headers and the ability to press down to open the header menu. The menu needs the trigger to be shown since it aligns itself to the trigger
+                            </li>
+                            <li>Add deep copy operation to NodeInterface
+                            </li>
+                            <li>Allow Ext.form.Basic#markInvalid to accept a Ext.data.Errors object
+                            </li>
+                            <li>Added logic to reduce/increase the number of columns in the shadowCt to match the number of items if columns:'auto'
+                            </li>
+                            <li>Updated MVC to work with dynamic loading
+                            </li>
+                            <li>Implemented CheckBox selection for Trees
+                            </li>
+                            <li>Prevent ComboBox from querying and expanding list on keyup if readOnly=true.
+                            </li>
+                            <li>HeaderDropZone will intelligently move a Header within the same container rather than add/remove, which will perform better as well as prevent add/remove events from firing unnecessarily on the HeaderContainer
+                            </li>
+                            <li>Trigger fields no longer reserve space for trigger when it is hidden due to readOnly=true
+                            </li>
+                            <li>Number field value can no longer be modified by up/down arrows or mousewheel when readOnly=true
+                            </li>
+                            <li>Implemented scrolling while dragging
+                            </li>
+                            <li>Implemented Grid Editing support as a plugin
+                            </li>
+                            <li>Clean html entities when setting text to an Surface Sprite
+                            </li>
+                            <li>Enhanced htmlDecode and htmlEncode methods in Ext.String
+                            </li>
+                            <li>Scatter and Line series now skip records with undefined yValues
+                            </li>
+                            <li>ComboBox now automatically set queryMode='local' for auto-generated array stores
+                            </li>
+                            <li>Ext.form.BaseField now rewraps the browser event object when firing the specialkey event, to prevent issues with buffered specialkey listeners
+                            </li>
+                            <li>Extended the useNull option to apply to boolean/string types for data stores
+                            </li>
+                            <li>Added deferredRender back to Card Layout (currently defaulted to true for TabPanel)
+                            </li>
+                            <li>Updated FeedViewer to be smarter about how it opened many tabs at once
+                            </li>
+                            <li>Modify Proxy so batching is configurable
+                            </li>
+                            <li>Allow a store configuration to be passed to data bound objects
+                            </li>
+                            <li>Add beginEdit/cancelEdit/endEdit functionality to Model
+                            </li>
+                            <li>Added isValid to Model for a shortcut
+                            </li>
+                            <li>Added autoSave support for Data writers
+                            </li>
+                            <li>Ensure writer always passes the id if we have a non phantom
+                            </li>
+                            <li>Made Tips constrain within their zIndexManager's client element. Change the constrain default to true
+                            </li>
+                            <li>Button will now use an anchor element when configured with an href
+                            </li>
+                            <li>Make Ext.form.Field.resetOriginalValue update the field's dirty state to match
+                            </li>
+                            <li>Automatically convert objects into records with NodeInterface
+                            </li>
+                            <li>Make ComboBox.getValue return the raw text field value if it does not match the display value from the last list selection or setValue call. Allows submitting values that do not appear in the store
+                            </li>
+                            <li>Enhance the appendChild, removeChild, insertBefore code on the NodeInterface with suppressEvents capabilities. This optimizes the performance of the initial Tree rendering drastically
+                            </li>
+                            <li>Implemented Grid RowEditing
+                            </li>
+                            <li>Basic.updateRecord() will now use the actual field data for updating the Model fields rather than the submit-friendly string equivalent of the form field data. Certain string encodings are not compatible with Model field covert methods if they are not in the exact/proper format, e.g. Date fields
+                            </li>
+                            <li>Remove Canvas support as it is not ready for release. SVG/VML still covers all desktop platforms.
+                            </li>
+                        </ul>
+                    </li>
+                    <li>API Changes
+                        <ul>
+                            <li>Moved methods slated for deprecation to the compat layer
+                            </li>
+                            <li>Added a new ElementLoader class that is the superclass of ComponentLoader. The purpose of this class is to replace Ext.Updater. Updater is removed and the load method now points to the new loader
+                            </li>
+                            <li>Move model creation into the model itself, essentially deprecates regModel
+                            </li>
+                            <li>Time axis now works with Dates and not formatted strings
+                            </li>
+                            <li>Move Ext.util.Date methods over to Ext.Date. Changed all references to Ext.Date in code, examples and tests
+                            </li>
+                            <li>Add workaround to Ext.core.Element#getWidth to avoid Gecko bug where it returns an offsetWidth that rounds down the actual width due to <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=458617" target="_blank">subpixel font rendering</a>. This logic was previously in a couple of components, this commit moves that up to Element.getWidth
+                            </li>
+                            <li>Fix AbstractPanel.bodyCls to also support array values
+                            </li>
+                            <li>Created an AbstractMixedCollection which MixedCollection extends from
+                            </li>
+                            <li>Sortable refactored as a mixin
+                            </li>
+                            <li>Refactored Sorting on MixedCollection, TreeStore, and TreePanel to use the new Sortable mixin
+                            </li>
+                            <li>Absolute Layout will now always use setItemSize even if an anchor property isn't specified
+                            </li>
+                            <li>Ensure the page parameter gets sent on remote data loading
+                            </li>
+                            <li>Remove any trace of applyTo throughout the framework
+                            </li>
+                            <li>Updating the BoundList selection on setValue for ComboBox is now the default behavior
+                            </li>
+                            <li>Selection models are now consistent: Moved grid/CellSelectionModel.js to selection/CellModel.js, grid/RowSelectionModel.js to selection/RowModel.js, and grid/CheckBoxSelectionModel to selection/CheckBoxModel.js. Namespace moved to Ext.selection as well
+                            </li>
+                            <li>Set AjaxProxy as the default proxy
+                            </li>
+                            <li>Normalize store aliases to be store.name. Added the ability to specify a store configuration when creating a data bound class. Note that this requires all of the stores to be looked up using StoreMgr.lookup so that we can determine whether we have received an id, a config or an instance
+                            </li>
+                            <li>Enhance DataView UI event handling
+                            </li>
+                            <li>Remove dependency of CellEditing on CellSelectionModel
+                            </li>
+                        </ul>
+                    </li>
+                    <li>Compatibility Changes
+                        <ul>
+                            <li>Implemented compat layer for PagingToolbar and MemoryProxy
+                            </li>
+                            <li>Significant update to AbstractStore compat layer to handle different store/proxy/reader config setups
+                            </li>
+                            <li>Updates to compat layer for AbstractStore and MemoryProxy to support filtering correctly
+                            </li>
+                            <li>Aliased row[de]select to [de]select
+                            </li>
+                            <li>Tweaked message formatting in compat layer for deprecating events
+                            </li>
+                            <li>The bodyStyle config types from 3.x are all now fully supported on Panel
+                            </li>
+                            <li>Compat code was using Array.indexOf, which did not agree with IE6. Switched to use Ext.Array.indexOf
+                            </li>
+                            <li>Alias Panel.bodyCssClass config to bodyCls
+                            </li>
+                            <li>Added Slider compat override to convert the SliderTip plugin to tipText config
+                            </li>
+                        </ul>
+                    </li>
+                    <li>Documentation Changes
+                        <ul>
+                            <li>Updated Ext.Date
+                            </li>
+                            <li>Fix the link to Ext Direct specification
+                            </li>
+                            <li>Correct spelling of 'resizable' and not 'resizeable'
+                            </li>
+                            <li>Updated Controller
+                            </li>
+                            <li>Updated Advanced DataView
+                            </li>
+                            <li>Update Ext.Window
+                            </li>
+                            <li>Added ActionHeader
+                            </li>
+                            <li>Added Ext.Base.override
+                            </li>
+                            <li>Updated AbstractDataView
+                            </li>
+                            <li>Updated Draw.Component
+                            </li>
+                            <li>Fix ComboBox docs error
+                            </li>
+                        </ul>
+                    </li>
+                    <li>Known Issues
+                        <ul>
+                            <li>Various styling fixes are ongoing
+                            </li>
+                            <li>Buttons are not part of the focusable items in a form
+                            </li>
+                            <li>Shadows to be implemented in the next release
+                            </li>
+                            <li>Tree Filtering and Editing to be implemented in the next release
+                            </li>
+                            <li>Performance and memory optimizations to be implemented in the next release
+                            </li>
+                            <li>Cleanup of API naming conventions to be implemented in the next release
+                            </li>
+                            <li>IE9 is not detected as supporting CSS3BorderRadius, which it only does in strict mode.
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="release">
+                <h1>
                     Release Notes for Ext JS 4 PR5
                 </h1>
                 <p class="notes">
@@ -711,7 +1283,7 @@
                             </li>
                             <li>Removed unused getHead method from Ext.data
                             </li>
-                            <li>Ext.util.Date.parseDate changed to Ext.util.Date.parse. Add deprecaton for the older parseDate API.
+                            <li>Ext.Date.parseDate changed to Ext.Date.parse. Add deprecaton for the older parseDate API.
                             </li>
                             <li>Unified Element and Element.static addUnits method which checks for a valid number or unitized String and throws a wraning message if a NaN is passed
                             </li>
@@ -745,7 +1317,7 @@
                             </li>
                             <li>Added additional non-Core JS object prototype aliases
                             </li>
-                            <li>Ext.util.Date compat overrides
+                            <li>Ext.Date compat overrides
                             </li>
                             <li>Additional msg for instance methods becoming statics
                             </li>

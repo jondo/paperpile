@@ -143,7 +143,6 @@ Ext.define('Ext.chart.Mask', {
             width = maskMouseDown.x - staticX;
             height = maskMouseDown.y - staticY;
             path = ['M', staticX, staticY, 'l', width, 0, 0, height, -width, 0, 'z'];
-            me.mask
             me.maskSelection = {
                 x: width > 0 ? staticX : staticX + width,
                 y: height > 0 ? staticY : staticY + height,

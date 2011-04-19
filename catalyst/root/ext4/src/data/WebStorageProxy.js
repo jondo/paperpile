@@ -218,14 +218,16 @@ Ext.define('Ext.data.WebStorageProxy', {
             id = record.getId();
         }
 
-        var rawData = record.data,
+        var me = this,
+            rawData = record.data,
             data    = {},
-            model   = this.model,
+            model   = me.model,
             fields  = model.prototype.fields.items,
             length  = fields.length,
-            i, field, name;
+            i = 0,
+            field, name, obj, key;
 
-        for (i = 0; i < length; i++) {
+        for (; i < length; i++) {
             field = fields[i];
             name  = field.name;
 
@@ -236,11 +238,11 @@ Ext.define('Ext.data.WebStorageProxy', {
             }
         }
 
-        var obj = this.getStorageObject(),
-            key = this.getRecordKey(id);
+        obj = me.getStorageObject(),
+        key = me.getRecordKey(id);
         
         //keep the cache up to date
-        this.cache[id] = record;
+        me.cache[id] = record;
         
         //iPad bug requires that we remove the item before setting it
         obj.removeItem(key);
@@ -254,17 +256,20 @@ Ext.define('Ext.data.WebStorageProxy', {
      * @param {String|Number|Ext.data.Model} id The id of the record to remove, or an Ext.data.Model instance
      */
     removeRecord: function(id, updateIds) {
-        if (id instanceof Ext.data.Model) {
+        var me = this,
+            ids;
+            
+        if (id.isModel) {
             id = id.getId();
         }
 
         if (updateIds !== false) {
-            var ids = this.getIds();
-            ids.remove(id);
-            this.setIds(ids);
+            ids = me.getIds();
+            Ext.Array.remove(ids, id);
+            me.setIds(ids);
         }
 
-        this.getStorageObject().removeItem(this.getRecordKey(id));
+        me.getStorageObject().removeItem(me.getRecordKey(id));
     },
 
     /**
@@ -275,7 +280,7 @@ Ext.define('Ext.data.WebStorageProxy', {
      * @return {String} The unique key for this record
      */
     getRecordKey: function(id) {
-        if (id instanceof Ext.data.Model) {
+        if (id.isModel) {
             id = id.getId();
         }
 
@@ -341,7 +346,7 @@ Ext.define('Ext.data.WebStorageProxy', {
             last = obj[key],
             ids, id;
         
-        if (last === undefined) {
+        if (!Ext.isNumber(last)) {
             ids = this.getIds();
             last = ids[ids.length - 1] || 0;
         }

@@ -215,15 +215,212 @@ store.load();
  * @param {Object} data An object containing keys corresponding to this model's fields, and their associated values
  * @param {Number} id Optional unique ID to assign to this model instance
  */
+(function(){
+
+var isModelSubclass = function(cls){
+    var proto = cls.prototype;
+    if (proto) {
+        return !!(proto.isModel && proto.$className != 'Ext.data.Model');
+    }
+    return false;
+};    
+
+Ext.ClassManager.registerPostprocessor('modelType', function(name, cls, data, fn) {
+    if (isModelSubclass(cls)) {
+        cls.modelName = name;
+    }
+    if (fn) {
+        fn.call(this, name, cls, data);
+    }
+}).insertDefaultPostprocessor('modelType', 'last');
+
+// TODO: Implement this later  
+/*
+Ext.ClassManager.registerPostprocessor('modelPlugins', function(name, cls, data, fn) {
+    if (isModelSubclass(cls)) {
+        var PluginMgr = Ext.PluginMgr,
+            plugins = PluginMgr.findByType('model', true),
+            modelPlugins = data.plugins || [],
+            length = modelPlugins.length,
+            i = 0;
+            
+        for (; i < length; +i) {
+            plugins.push(PluginMgr.create(modelPlugins[i]));
+        }
+        cls.override({
+            plugins: plugins
+        });
+        
+        for (i = 0, length = plugins.length; i < length; i++) {
+            plugins[i].bootstrap(cls, config);
+        }
+    }
+    if (fn) {
+        fn.call(this, name, cls, data);
+    }
+}).insertDefaultPostprocessor('modelPlugins', 'last');
+*/
+
+Ext.ClassManager.registerPostprocessor('modelValidations', function(name, cls, data, fn) {
+    if (isModelSubclass(cls)) {
+        var validations = data.validations || [],
+            superValidations = cls.prototype.superclass.validations;
+            
+        if (superValidations) {
+            validations = superValidations.concat(validations);
+        } 
+        cls.override({
+            validations: validations
+        });
+    }
+    if (fn) {
+        fn.call(this, name, cls, data);
+    }
+}).insertDefaultPostprocessor('modelValidations', 'last');
+
+Ext.ClassManager.registerPostprocessor('modelFields', function(name, cls, data, fn) {
+    if (isModelSubclass(cls)) {
+        var proto = cls.prototype,
+            fields = data.fields || [],
+            superFields = proto.superclass.fields,
+            fieldsMC = Ext.create('Ext.util.MixedCollection', false, function(field) {
+                return field.name;
+            }),
+            i = 0,
+            length;
+            
+        if (superFields) {
+            fields = superFields.items.concat(fields);
+        }
+        
+        for (length = fields.length; i < length; ++i) {
+            fieldsMC.add(Ext.create('Ext.data.Field', fields[i]));
+        }
+        
+        cls.override({
+            fields: fieldsMC
+        });        
+    }
+    if (fn) {
+        fn.call(this, name, cls, data);
+    }
+}).insertDefaultPostprocessor('modelFields', 'last');
+
+Ext.ClassManager.registerPostprocessor('modelProxy', function(name, cls, data, fn) {
+    if (isModelSubclass(cls)) {
+        var proto = cls.prototype,
+            superProto = proto.superclass,
+            proxy = data.proxy || superProto.proxy,
+            Model = Ext.data.Model,
+            ModelProto = Model.prototype;
+            
+        Model.setProxy.call(cls, proxy || ModelProto.defaultProxyType);
+        cls.getProxy = proto.getProxy;
+        proto.self.setProxy = ModelProto.self.setProxy;
+        
+        cls.load = function() {
+            Model.load.apply(this, arguments);
+        };
+    }
+    if (fn) {
+        fn.call(this, name, cls, data);
+    }
+}).insertDefaultPostprocessor('modelProxy', 'last');
+
+Ext.ClassManager.registerPostprocessor('modelAssociations', function(name, cls, data, fn) {
+    if (isModelSubclass(cls)) {
+        var associations = data.associations || [],
+            belongsTo = data.belongsTo,
+            hasMany = data.hasMany,
+            superAssociations = cls.prototype.superclass.associations,
+            associationsMC = Ext.create('Ext.util.MixedCollection', false, function(association) {
+                return association.name;
+            }),
+            i = 0,
+            length,
+            association;
+            
+        //associations can be specified in the more convenient format (e.g. not inside an 'associations' array).
+        //we support that here
+        if (belongsTo) {
+            if (!Ext.isArray(belongsTo)) {
+                belongsTo = [belongsTo];
+            }
+            
+            for (i = 0, length = belongsTo.length; i < length; ++i) {
+                association = belongsTo[i];   
+                if (!Ext.isObject(association)) {
+                    association = {model: association};
+                }
+                Ext.apply(association, {type: 'belongsTo'});
+                associations.push(association);
+            }
+            delete cls.prototype.belongsTo;
+        }
+        
+        if (hasMany) {
+            if (!Ext.isArray(hasMany)) {
+                hasMany = [hasMany];
+            }
+            for (i = 0, length = hasMany.length; i < length; ++i) {
+                association = hasMany[i];
+                if (!Ext.isObject(association)) {
+                    association = {model: association};
+                }
+                Ext.apply(association, {type: 'hasMany'});   
+                associations.push(association);
+            }
+            delete cls.prototype.hasMany;
+        }
+            
+        if (superAssociations) {
+            associations = superAssociations.items.concat(associations);
+        }
+        
+        Ext.ModelMgr.registerType(name, cls);
+        
+        for (i = 0, length = associations.length; i < length; ++i) {
+            association = associations[i];
+            Ext.apply(association, {
+                ownerModel: name,
+                associatedModel: association.model
+            });
+            
+            if (Ext.ModelMgr.getModel(association.model) === undefined) {
+                Ext.ModelMgr.registerDeferredAssociation(association);
+            } else {
+                associationsMC.add(Ext.data.Association.create(association));
+            }
+        }
+        cls.override({
+            associations: associationsMC
+        });
+    }
+    if (fn) {
+        fn.call(this, name, cls, data);
+    }
+}).insertDefaultPostprocessor('modelAssociations', 'last');
+
+Ext.ClassManager.registerPostprocessor('modelDefined', function(name, cls, data, fn) {
+    if (isModelSubclass(cls)) {
+        Ext.ModelMgr.onModelDefined(cls);
+    }
+    if (fn) {
+        fn.call(this, name, cls, data);
+    }
+}).insertDefaultPostprocessor('modelDefined', 'last');
+
 Ext.define('Ext.data.Model', {
     extend: 'Ext.util.Stateful',
     alternateClassName: 'Ext.data.Record',
     
     requires: [
-        'Ext.data.Errors', 
-        'Ext.data.Operation', 
-        'Ext.data.Proxy', 
-        'Ext.data.validations'
+        'Ext.ModelMgr',
+        'Ext.data.Field',
+        'Ext.data.Errors',
+        'Ext.data.Operation',
+        'Ext.data.validations',
+        'Ext.data.AjaxProxy'
     ],
     
     statics: {
@@ -347,6 +544,13 @@ Ext.define('Ext.data.Model', {
      */
     idProperty: 'id',
     
+    /**
+     * The string type of the default Model Proxy. Defaults to 'ajax'
+     * @property defaultProxyType
+     * @type String
+     */
+    defaultProxyType: 'ajax',
+    
     constructor: function(data, id) {
         data = data || {};
         
@@ -423,6 +627,14 @@ Ext.define('Ext.data.Model', {
         }
         
         return errors;
+    },
+    
+    /**
+     * Checks if the model is valid. See {@link #validate}.
+     * @return {Boolean} True if the model is valid.
+     */
+    isValid: function(){
+        return this.validate().isValid();    
     },
     
     /**
@@ -540,9 +752,8 @@ Ext.define('Ext.data.Model', {
     
     /**
      * Tells this model instance that it has been removed from the store
-     * @param {Ext.data.Store} store The store to unjoin
      */
-    unjoin: function(store) {
+    unjoin: function() {
         delete this.store;
     },
     
@@ -586,6 +797,78 @@ Ext.define('Ext.data.Model', {
         if (store !== undefined && typeof store[fn] == "function") {
             store[fn](this);
         }
+    },
+    
+    /**
+     * Gets all of the data from this Models *loaded* associations.
+     * It does this recursively - for example if we have a User which
+     * hasMany Orders, and each Order hasMany OrderItems, it will return an object like this:
+     * {
+     *     orders: [
+     *         {
+     *             id: 123,
+     *             status: 'shipped',
+     *             orderItems: [
+     *                 ...
+     *             ]
+     *         }
+     *     ]
+     * }
+     * @return {Object} The nested data set for the Model's loaded associations
+     */
+    getAssociatedData: function(){
+        return this.prepareAssociatedData(this, []);
+    },
+    
+    /**
+     * @private
+     * This complex-looking method takes a given Model instance and returns an object containing all data from
+     * all of that Model's *loaded* associations. See (@link #getAssociatedData}
+     * @param {Ext.data.Model} record The Model instance
+     * @param {Array} ids PRIVATE. The set of Model instance internalIds that have already been loaded
+     * @return {Object} The nested data set for the Model's loaded associations
+     */
+    prepareAssociatedData: function(record, ids) {
+        //we keep track of all of the internalIds of the models that we have loaded so far in here        
+        var associations     = record.associations.items,
+            associationCount = associations.length,
+            associationData  = {},
+            associatedStore, associatedName, associatedRecords, associatedRecord,
+            associatedRecordCount, association, id, i, j;
+        
+        for (i = 0; i < associationCount; i++) {
+            association = associations[i];
+            
+            //this is the hasMany store filled with the associated data
+            associatedStore = record[association.storeName];
+            
+            //we will use this to contain each associated record's data
+            associationData[association.name] = [];
+            
+            //if it's loaded, put it into the association data
+            if (associatedStore && associatedStore.data.length > 0) {
+                associatedRecords = associatedStore.data.items;
+                associatedRecordCount = associatedRecords.length;
+            
+                //now we're finally iterating over the records in the association. We do this recursively
+                for (j = 0; j < associatedRecordCount; j++) {
+                    associatedRecord = associatedRecords[j];
+                    // Use the id, since it is prefixed with the model name, guaranteed to be unique
+                    id = associatedRecord.id;
+                    
+                    //when we load the associations for a specific model instance we add it to the set of loaded ids so that
+                    //we don't load it twice. If we don't do this, we can fall into endless recursive loading failures.
+                    if (Ext.Array.indexOf(ids, id) == -1) {
+                        ids.push(id);
+                        
+                        associationData[association.name][j] = associatedRecord.data;
+                        Ext.apply(associationData[association.name][j], this.prepareAssociatedData(associatedRecord, ids));
+                    }
+                }
+            }
+        }
+        
+        return associationData;
     }
 }, function() {
     // TODO
@@ -609,3 +892,4 @@ Ext.ns('Ext.data.Record');
 //Backwards compat
 // Ext.data.Record.id = Ext.data.Model.id;
 //[end]
+})();

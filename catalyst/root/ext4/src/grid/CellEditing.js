@@ -1,163 +1,245 @@
 /**
  * @class Ext.grid.CellEditing
  * @extends Ext.grid.Editing
+ *
+ * The Ext.grid.CellEditing plugin injects editing capabilities into a GridPanel.
+ *
+ * The field that will be used for the editor is defined at the {@link Ext.grid.Header#field field}
+ *
  */
-// currently does not support keyboard navigation
-// must be implemented in SelectionModel code
 Ext.define('Ext.grid.CellEditing', {
+    alias: 'plugin.cellediting',
     extend: 'Ext.grid.Editing',
-    alias: 'editing.cellediting',    
+    requires: ['Ext.grid.CellEditor'],
     
-    editStyle: 'cell',
-
-    getKey: function(obj) {
-        if (obj.field) {
-            return obj.field.name;
-        } else {
-            return obj.name;
-        }
+    /**
+     * @cfg {Number} clicksToEdit
+     * <p>The number of clicks on a cell required to display the cell's editor (defaults to 2).</p>
+     */
+    clicksToEdit: 2,
+    
+    constructor: function() {
+        this.addEvents(
+            'afteredit'
+        );
+        this.callParent(arguments);
+        this.editors = new Ext.util.MixedCollection(false, function(editor) {
+            return editor.headerId;
+        });
     },
 
+    // setup event handlers for what triggers an edit
     initEditTrigger: function() {
-        var grid = this.grid;
-        if (this.clicksToEdit === 1){
-            grid.on("cellclick", this.onCellDblClick, this);
-        }else {
-            grid.on('celldblclick', this.onCellDblClick, this);
-        }
+        var me    = this,
+            grid  = me.grid,
+            event = me.clicksToEdit === 1 ? 'cellclick' : 'celldblclick',
+            view  = grid.getView(),
+            viewEl = view.el;
+            
+        me.keyNav = new Ext.util.KeyNav(viewEl, {
+            enter: me.onEnterKey,
+            scope: me
+        });
+        
+        view.on(event, me.triggerEditByClick, this);
     },
-
-    getEditor: function(name, dontCreate) {
-        var ed = this.editors.get(name);
-        if (!ed) {
-            return false;
-        }
-        if (ed.field || dontCreate) {
-            return ed;
-        } else {
-            ed = new Ext.grid.GridEditor({
-                field: ed
-            });
-            // constrain to the gridview
-            ed.parentEl = this.grid.view.getEditorParent(ed);
-            ed.on({
-                scope: this,
-                render: {
-                    fn: function(c){
-                        c.field.focus(false, true);
-                    },
-                    single: true,
-                    scope: this
-                },
-                specialkey: this.onSpecialKey,
-                complete: this.onEditComplete,
-                canceledit: this.stopEditing.createDelegate(this, [true])
-            });
-            this.editors.add(ed);
-            return ed;
-        }
+    
+    // triggers an edit by clicking or double clicking
+    triggerEditByClick: function(view, cell, cellIndex, record, row, rowIndex, e) {
+        var headerCt = view.headerCt,
+            store    = view.store,
+            header   = headerCt.getHeaderByIndex(cellIndex);
+            
+        this.startEdit(record, header);
     },
-
-    onSpecialKey: function(field, e) {
-        var grid = this.grid;
-        grid.getSelectionModel().onEditorKey(field, e);
-    },
-
-    // Implementation of calculateLocation for CellEditing.
-    // This will pick the first column that is bound to the dataIndex/field
-    // in the column model as the location
-    calculateLocation: function(record, dataIndex) {
-        var grid   = this.grid,
-            rowIdx = grid.getStore().indexOf(record),
-            colIdx = grid.getColumnModel().findColumnIndex(dataIndex);
-
-        return grid.view.getCell(row, col).firstChild;
-    },
-
-    // private
-    onCellDblClick : function(grid, rowIdx, colIdx){
-        var store = grid.getStore(),
-            record = store.getAt(rowIdx),
-            colModel = grid.getColumnModel(),
-            dataIdx = colModel.getDataIndex(colIdx),
-            // manually calculate location to ensure its the correct column
-            location = grid.view.getCell(rowIdx, colIdx).firstChild;
-
-        this.startEditing(record, dataIdx, location);
-    },
-
-
-    ensureVisible: function(record, dataIndex, location) {
-        //var view = this.grid.view;
-        //view.ensureVisible(row, col, true);
-    },
-
-
-    performEdit: function(record, dataIndex, location, e) {
-        var ed = this.getEditor(dataIndex),
-            v = this.preEditValue(record, dataIndex);
-
-        if (!ed) {
+    
+    /**
+     * Starts editing the specified record and header.
+     * @param {Ext.data.Model} record
+     * @param {Ext.grid.Header} header
+     */
+    startEdit: function(record, header) {
+        if (!record) {
             return;
         }
-
+        this.completeEdit();
+        var ed   = this.getEditor(header),
+            cell = this.getCell(record, header);
+            
+        if (ed) {
+            this.setActiveEditor(ed);
+            this.setActiveRecord(record);
+            this.setActiveHeader(header);
+            ed.startEdit(cell, record.get(header.dataIndex));
+        } else {
+            // BrowserBug: WebKit & IE refuse to focus the element, rather
+            // it will focus it and then immediately focus the body. This
+            // temporary hack works for Webkit and IE6. IE7 and 8 are still
+            // broken
+            this.grid.getView().el.focus((Ext.isWebKit || Ext.isIE) ? 10 : false);
+        }
+    },
+    
+    /**
+     * Complete the edit if there is an activeEditor.
+     */
+    completeEdit: function() {
+        var activeEd = this.getActiveEditor();
+        if (activeEd) {
+            activeEd.completeEdit();
+        }
+    },
+    
+    // internal getters/setters
+    setActiveEditor: function(ed) {
         this.activeEditor = ed;
-        ed.startEdit(location, Ext.isDefined(v) ? v : '');
+    },
+    
+    getActiveEditor: function() {
+        return this.activeEditor;
+    },
+    
+    setActiveHeader: function(header) {
+        this.activeHeader = header;
+    },
+    
+    getActiveHeader: function() {
+        return this.activeHeader;
+    },
+    
+    setActiveRecord: function(record) {
+        this.activeRecord = record;
+    },
+    
+    getActiveRecord: function() {
+        return this.activeRecord;
+    },
+    
+    /**
+     * Get an Ext.grid.CellEditor with the appropriate editing field
+     * for a Header.
+     * @param {Ext.grid.Header} header
+     * @returns {Ext.grid.CellEditor} editor Returns false if there is no editing field configured for the header.
+     */
+    getEditor: function(header) {
+        var editors = this.editors,
+            ed = editors.getByKey(header.id),
+            field;
+            
+        if (ed) {
+            return ed;
+        } else {
+            field = header.getEditingField();
+            if (!field) {
+                return false;
+            }
+            ed = new Ext.grid.CellEditor({
+                field: header.getEditingField()
+            });
+            ed.headerId = header.id;
+            ed.parentEl = this.grid.getEditorParent();
+            // ed.parentEl should be set here.
+            ed.on({
+                scope: this,
+                specialkey: this.onSpecialKey,
+                complete: this.onEditComplete,
+                canceledit: this.cancelEdit
+            });
+            editors.add(ed);
+            return ed;
+        }
     },
 
     /**
-     * Stops any active editing
-     * @param {Boolean} cancel (optional) True to cancel any changes
+     * Get the cell (td) for a particular record and header.
+     * @param {Ext.data.Record} record
+     * @param {Ext.grid.Header} header
+     * @private
      */
-    stopEditing : function(cancel){
-        var view = this.grid.view;
-        if (this.editing) {
-            var activeEditor = this.activeEditor;
-            if (activeEditor) {
-                activeEditor[cancel === true ? 'cancelEdit' : 'completeEdit']();
-                //view.focusCell(ae.row, ae.col);
+    getCell: function(record, header) {
+        var view = this.grid.getView(),
+            row  = view.getNode(record);
+
+        return Ext.fly(row).down(header.getCellSelector());
+    },  
+    
+    onSpecialKey: function(ed, field, e) {
+        var grid = this.grid,
+            sm;
+        if (e.getKey() === e.TAB) {
+            //this.stopEditing();
+            sm = grid.getSelectionModel();
+            if (sm.onEditorTab) {
+                sm.onEditorTab(this, e);
             }
-            this.activeEditor = null;
         }
-        this.editing = false;
     },
-
-
-    // private
+    
     onEditComplete : function(ed, value, startValue){
-        this.editing = false;
-        this.lastActiveEditor = this.activeEditor;
-        this.activeEditor = null;
-
-        var record = this.currRecord,
-            dataIndex = this.currDataIndex,
-            grid = this.grid;
-
-        value = this.postEditValue(value, startValue, record, dataIndex);
-        if (this.forceValidation === true || String(value) !== String(startValue)) {
-            var e = {
-                grid: grid,
-                record: record,
-                field: dataIndex,
-                originalValue: startValue,
-                value: value,
-                //row: ed.row,
-                //column: ed.col,
-                cancel: false
-            };
-            if (grid.fireEvent("validateedit", e) !== false && !e.cancel && String(value) !== String(startValue)) {
-                record.set(dataIndex, value);
-                delete e.cancel;
-                grid.fireEvent("afteredit", e);
-            }
-        }
-        //grid.view.focusCell(ed.row, ed.col);
+        var me = this,
+            grid = me.grid,
+            activeHeader = me.getActiveHeader(),
+            activeRecord = me.getActiveRecord(),
+            dataIndex = activeHeader.dataIndex,
+            row = grid.store.indexOf(activeRecord),
+            col = grid.getView().headerCt.getIndexOfHeader(activeHeader);
+            
+        activeRecord.set(dataIndex, value);
+        
+        me.setActiveEditor(null);
+        me.setActiveHeader(null);
+        me.setActiveRecord(null);
+        
+        me.fireEvent('afteredit', me, {
+           grid: grid, 
+           record: activeRecord,
+           field: dataIndex,
+           value: value,
+           originalValue: startValue,
+           row: row,
+           col: col
+        });
     },
+    
+    cancelEdit: function() {
+        var me = this,
+            viewEl = me.grid.getView().el;
 
-    onGridResize: function() {
-        var ae = this.activeEditor;
-        if(this.editing && ae){
-            ae.realign(true);
+        me.completeEdit();
+        viewEl.focus();
+    },
+    
+    /**
+     * Starts editing by position (row/column)
+     * @param {Object} position A position with keys of row and column.
+     */
+    startEditByPosition: function(position) {
+        var sm = this.grid.getSelectionModel();
+        if (sm.selectByPosition) {
+            sm.selectByPosition(position);
+        }
+        
+        var row    = position.row,
+            col    = position.column,
+            view   = this.grid.getView(),
+            store  = view.store,
+            record = store.getAt(row),
+            header = view.headerCt.getHeaderByIndex(col);
+
+        this.startEdit(record, header);
+    },
+    
+    /**
+     * Begin editing the currently selected cell.
+     * @private
+     */
+    onEnterKey: function(e, t) {
+        var me       = this,
+            grid     = me.grid,
+            selModel = grid.getSelectionModel();
+            
+        if (selModel.getCurrentPosition) {
+            me.startEditByPosition(selModel.getCurrentPosition());
         }
     }
 });

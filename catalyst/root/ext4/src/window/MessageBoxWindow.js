@@ -302,11 +302,9 @@ Ext.define('Ext.window.MessageBoxWindow', {
             me.setTitle(cfg.title||'&#160;');
         }
 
-        me.hidden = false;
         if (!me.rendered) {
             me.width = initialWidth;
             me.render(Ext.getBody());
-            me.frameWidth = me.el.getWidth() - me.body.getWidth();
         } else {
             me.setSize(initialWidth, me.maxHeight);
         }
@@ -481,6 +479,10 @@ icon: Ext.window.MessageBoxWindow.INFO
 
     doAutoSize: function() {
         var me = this;
+
+        if (!Ext.isDefined(me.frameWidth)) {
+            me.frameWidth = me.el.getWidth() - me.body.getWidth();
+        }
 
         // Allow per-invocation override of minWidth
         me.minWidth = me.cfg.minWidth || Ext.getClass(this).prototype.minWidth;

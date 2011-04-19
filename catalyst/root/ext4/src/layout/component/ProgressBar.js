@@ -24,7 +24,7 @@ Ext.define('Ext.layout.component.ProgressBar', {
         me.setElementSize(owner.el, width, height);
         textEl.setWidth(owner.el.getWidth(true));
         
-        Ext.layout.component.ProgressBar.superclass.onLayout.call(this, width, height);
+        me.callParent([width, height]);
         
         owner.updateProgress(owner.value);
     }

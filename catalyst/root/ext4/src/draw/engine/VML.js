@@ -315,7 +315,7 @@ Ext.define('Ext.draw.engine.VML', {
 
         // Handle text (special handling required)
         if (sprite.type == "text") {
-            me.setText(sprite, scrubbedAttrs);
+            me.setTextAttributes(sprite, scrubbedAttrs);
         }
 
         // Handle fill and opacity
@@ -497,7 +497,7 @@ Ext.define('Ext.draw.engine.VML', {
         }
     },
 
-    setText: function(sprite, params) {
+    setTextAttributes: function(sprite, params) {
         var me = this,
             vml = sprite.vml,
             textStyle = vml.textpath.style,
@@ -527,7 +527,8 @@ Ext.define('Ext.draw.engine.VML', {
                 }
             }
 
-            vml.textpath.string = params.text;
+            me.setText(sprite, params.text);
+            
             if (vml.textpath.string) {
                 me.span.innerHTML = String(vml.textpath.string).replace(/</g, "&#60;").replace(/&/g, "&#38;").replace(/\n/g, "<br>");
             }
@@ -554,6 +555,10 @@ Ext.define('Ext.draw.engine.VML', {
         sprite.bbox.plain = null;
         sprite.bbox.transform = null;
         sprite.dirtyFont = false;
+    },
+    
+    setText: function(sprite, text) {
+        sprite.vml.textpath.string = Ext.htmlDecode(text);
     },
 
     hide: function() {

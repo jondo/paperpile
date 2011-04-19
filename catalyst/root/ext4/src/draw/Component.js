@@ -22,7 +22,7 @@ Ext.define('Ext.draw.Component', {
      * Defines the priority order for which Surface implementation to use. The first
      * one supported by the current environment will be used.
      */
-    implOrder: ['SVG', 'Canvas', 'VML'],
+    implOrder: ['SVG', 'VML'],
 
     baseCls: Ext.baseCSSPrefix + 'surface',
 
@@ -31,7 +31,7 @@ Ext.define('Ext.draw.Component', {
     /**
      * @cfg {Boolean} viewBox
      * Turn on view box support which will scale and position items in the draw component to fit to the component while
-     * maintaining aspect ratio. Defaults to true.
+     * maintaining aspect ratio. Note that this scaling can override other sizing settings on yor items. Defaults to true.
      */
     viewBox: true,
 
@@ -93,7 +93,8 @@ Ext.define('Ext.draw.Component', {
         items.setAttributes({
             translate: {
                 x: -bbox.x,
-                y: -bbox.y
+                //Opera has a slight offset in the y axis.
+                y: -bbox.y + (+Ext.isOpera)
             }
         }, true);
         if (me.rendered) {

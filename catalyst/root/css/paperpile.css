@@ -2267,32 +2267,26 @@ a.x-item-text-disabled {
     font-size: 11pt;
 }
 
-td.pp-meta-label {
+.pp-meta-label {
     width: 100px;
     vertical-align:top;
     text-align:right;
     padding: 8px 5px 8px 0px;
 }
 
-td.pp-meta-field {
+.pp-meta-field {
     padding: 8px 0px 8px 0px;
 }
 
-td.pp-meta-field {
+.pp-meta-field {
     width: 100px;
 } 
-
-
-
-.pp-facebox {
-
-}
 
 
 /* meta data entry form */
 
 
-table.pp-meta-form {
+.pp-meta-form {
     border-spacing:0px;
 }
 
@@ -2304,7 +2298,7 @@ table.pp-meta-form {
 }
 
 /* apply to all tds directly below <table> (don't mess up buttons within tds)*/
-.pp-meta-form > tbody > tr > td {
+.pp-meta-form tbody tr td {
     font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
     vertical-align:top;
     margin:0px;

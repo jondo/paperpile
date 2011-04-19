@@ -112,6 +112,56 @@ Ext.define('Ext.util.Stateful', {
             }
         }
     },
+    
+    /**
+     * Begin an edit. While in edit mode, no events (e.g.. the <code>update</code> event)
+     * are relayed to the containing store. When an edit has begun, it must be followed
+     * by either {@link #endEdit} or {@link #cancelEdit}.
+     */
+    beginEdit : function(){
+        var me = this;
+        if (!me.editing) {
+            me.editing = true;
+            me.dirtySave = me.dirty;
+            me.dataSave = Ext.apply({}, me[me.persistanceProperty]);
+            me.modifiedSave = Ext.apply({}, me.modified);
+        }
+    },
+
+    /**
+     * Cancels all changes made in the current edit operation.
+     */
+    cancelEdit : function(){
+        var me = this;
+        if (me.editing) {
+            me.editing = false;
+            // reset the modified state, nothing changed since the edit began
+            me.modified = me.modifiedSave;
+            me[me.persistanceProperty] = me.dataSave;
+            me.dirty = me.dirtySave;
+            delete me.modifiedSave;
+            delete me.dataSave;
+            delete me.dirtySave;
+        }
+    },
+
+    /**
+     * End an edit. If any data was modified, the containing store is notified
+     * (ie, the store's <code>update</code> event will fire).
+     * @param {Boolean} silent True to not notify the store of the change
+     */
+    endEdit : function(silent){
+        var me = this;
+        if (me.editing) {
+            me.editing = false;
+            delete me.modifiedSave;
+            delete me.dataSave;
+            delete me.dirtySave;
+            if (silent !== true && me.dirty) {
+                me.afterEdit();
+            }
+        }
+    },
 
     /**
      * Gets a hash of only the fields that have been modified since this Model was created or commited.

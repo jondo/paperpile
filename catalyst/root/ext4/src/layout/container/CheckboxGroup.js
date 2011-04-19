@@ -16,6 +16,7 @@ Ext.define('Ext.layout.container.CheckboxGroup', {
             shadowCt = this.getShadowCt(),
             owner = this.owner,
             items = owner.items,
+            shadowItems = shadowCt.items,
             numItems = items.length,
             colIndex = 0,
             i, numRows;
@@ -24,30 +25,49 @@ Ext.define('Ext.layout.container.CheckboxGroup', {
         // containers' items collection rather than calling container.add(), because we need the
         // checkboxes to maintain their original ownerCt. The distribution is done on each layout
         // in case items have been added, removed, or reordered.
-        shadowCt.items.each(function(col) {
+
+        shadowItems.each(function(col) {
             col.items.clear();
         });
+
+        // If columns="auto", then the number of required columns may change as checkboxes are added/removed
+        // from the CheckboxGroup; adjust to match.
+        while (shadowItems.length > numCols) {
+            shadowCt.remove(shadowItems.last());
+        }
+        while (shadowItems.length < numCols) {
+            shadowCt.add({
+                xtype: 'container',
+                cls: owner.groupCls,
+                flex: 1
+            });
+        }
+
         if (owner.vertical) {
             numRows = Math.ceil(numItems / numCols);
             for (i = 0; i < numItems; i++) {
                 if (i > 0 && i % numRows === 0) {
                     colIndex++;
                 }
-                shadowCt.items.getAt(colIndex).items.add(items.getAt(i));
+                shadowItems.getAt(colIndex).items.add(items.getAt(i));
             }
         } else {
             for (i = 0; i < numItems; i++) {
                 colIndex = i % numCols;
-                shadowCt.items.getAt(colIndex).items.add(items.getAt(i));
+                shadowItems.getAt(colIndex).items.add(items.getAt(i));
             }
         }
 
-        // Ensure all items are rendered in the correct place in the correct column - this won't
-        // get done by the column containers themselves if their dimensions are not changing.
-        shadowCt.items.each(function(col) {
-            var layout = col.getLayout();
-            layout.renderItems(layout.getLayoutItems(), layout.getRenderTarget());
-        });
+        if (!shadowCt.rendered) {
+            shadowCt.render(this.getRenderTarget());
+        } else {
+            // Ensure all items are rendered in the correct place in the correct column - this won't
+            // get done by the column containers themselves if their dimensions are not changing.
+            shadowItems.each(function(col) {
+                var layout = col.getLayout();
+                layout.renderItems(layout.getLayoutItems(), layout.getRenderTarget());
+            });
+        }
 
         shadowCt.doComponentLayout();
     },
@@ -95,14 +115,12 @@ Ext.define('Ext.layout.container.CheckboxGroup', {
                 items.push(item);
             }
 
+            // Create the shadow container; delay rendering until after items are added to the columns
             shadowCt = me.shadowCt = Ext.createWidget('container', {
                 layout: 'hbox',
-                renderTo: me.getRenderTarget(),
-                items: items
+                items: items,
+                ownerCt: owner
             });
-
-            // set the ownerCt, but after the initial render so it doesn't short-circuit rendering of children
-            shadowCt.ownerCt = owner;
         }
         
         return shadowCt;

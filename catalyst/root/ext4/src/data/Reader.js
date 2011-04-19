@@ -256,9 +256,13 @@ Ext.define('Ext.data.Reader', {
         // If we pass an array as the data, we dont use getRoot on the data.
         // Instead the root equals to the data.
         var root    = Ext.isArray(data) ? data : me.getRoot(data),
-            total   = root.length,
             success = true,
-            value, records, message, recordCount;
+            recordCount = 0,
+            total, value, records, message;
+            
+        if (root) {
+            total = root.length;
+        }
 
         if (me.totalProperty) {
             value = parseInt(me.getTotal(data), 10);
@@ -277,9 +281,14 @@ Ext.define('Ext.data.Reader', {
         if (me.messageProperty) {
             message = me.getMessage(data);
         }
-
-        records = me.extractData(root);
-        recordCount = records.length;
+        
+        if (root) {
+            records = me.extractData(root);
+            recordCount = records.length;
+        } else {
+            recordCount = 0;
+            records = [];
+        }
 
         return Ext.create('Ext.data.ResultSet', {
             total  : total || recordCount,

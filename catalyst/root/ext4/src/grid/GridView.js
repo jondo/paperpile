@@ -5,9 +5,6 @@
 Ext.define('Ext.grid.GridView', {
     extend: 'Ext.view.TableView',
     alias: 'widget.gridview',
-    requires: [
-        'Ext.util.DelayedTask'
-    ],
 
     /**
      * @cfg {Boolean} stripeRows <tt>true</tt> to stripe the rows. Default is <tt>false</tt>.
@@ -18,15 +15,21 @@ Ext.define('Ext.grid.GridView', {
      */
     stripeRows: true,
     
+    invalidateScrollerOnRefresh: true,
+    
     /**
      * Scroll the GridView to the top by scrolling the scroller.
      * @private
      */
     scrollToTop : function(){
-        var section = this.ownerCt,
-            verticalScroller = section.verticalScroller;
-        
-        verticalScroller.scrollToTop();
+        if (this.rendered) {
+            var section = this.ownerCt,
+                verticalScroller = section.verticalScroller;
+                
+            if (verticalScroller) {
+                verticalScroller.scrollToTop();
+            }
+        }
     },
 
     // after adding a row stripe rows from then on
@@ -71,7 +74,7 @@ Ext.define('Ext.grid.GridView', {
         this.doStripeRows(0);
         // TODO: Remove gridpanel dependency
         var g = this.up('gridpanel');
-        if (g) {
+        if (g && this.invalidateScrollerOnRefresh) {
             g.invalidateScroller();
         }
     }

@@ -167,18 +167,24 @@ Ext.define('Ext.panel.Header', {
      */
     setTitle: function(title) {
         var me = this;
-        me.title = title || '&#160;';
         if (me.rendered) {
             if (me.titleCmp.surface) {
-                var sprite = me.titleCmp.surface.items.items[0];
+                me.title = title || '';
+                var sprite = me.titleCmp.surface.items.items[0],
+                    surface = me.titleCmp.surface;
+                
+                surface.remove(sprite);
+                me.textConfig.type = 'text';
+                me.textConfig.text = title;
+                sprite = surface.add(me.textConfig);
                 sprite.setAttributes({
-                    text: me.title,
-                    rotate: null
-                });
-                if (me.titleCmp.rendered) {
-                    me.titleCmp.surface.redraw(sprite);
-                }
+                    rotate: {
+                        degrees: 90
+                    }    
+                }, true);
+                me.titleCmp.autoSizeSurface();
             } else {
+                me.title = title || '&#160;';
                 me.titleCmp.textEl.update(me.title);
             }
         } else {

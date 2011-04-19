@@ -96,8 +96,9 @@ Ext.define('Ext.form.BaseField', {
      * <p>The type attribute for input fields -- e.g. radio, text, password, file (defaults to <tt>'text'</tt>).
      * The extended types supported by HTML5 inputs (url, email, etc.) may also be used, though using them
      * will cause older browsers to fall back to 'text'.</p>
-     * <p>The types 'file' and 'password' must be used to render those field types currently -- there are
-     * no separate Ext components for those.</p>
+     * <p>The type 'password' must be used to render that field type currently -- there is no separate Ext
+     * component for that. You can use {@link Ext.form.File} which creates a custom-rendered file upload
+     * field, but if you want a plain unstyled file input you can use a BaseField with inputType:'file'.</p>
      */
     inputType: 'text',
 
@@ -339,12 +340,20 @@ var form = new Ext.form.FormPanel({
         return this.inputEl;
     },
 
+    isFileUpload: function() {
+        return this.inputType === 'file';
+    },
+
+    getFileInput: function() {
+        return this.isFileUpload() ? this.inputEl : null;
+    },
+
     // private override to use getSubmitValue() as a convenience
     getSubmitData: function() {
         var me = this,
             data = null,
             val;
-        if (!me.disabled && me.submitValue && me.inputType !== 'file') {
+        if (!me.disabled && me.submitValue && !me.isFileUpload()) {
             data = {};
             val = me.getSubmitValue();
             if (val !== null) {
@@ -498,7 +507,7 @@ var form = new Ext.form.FormPanel({
     // private
     fireKey: function(e){
         if(e.isSpecialKey()){
-            this.fireEvent('specialkey', this, e);
+            this.fireEvent('specialkey', this, new Ext.EventObjectImpl(e));
         }
     },
 

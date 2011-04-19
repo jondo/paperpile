@@ -5,7 +5,7 @@ module ExtJS4
         def theme_image(theme, path, without_url = false)
           path = path.value
          
-          images_path = File.join("..", "themes", "images", theme.value)
+          images_path = File.join($image_path, "themes", "images", theme.value)
           real_path = File.join(images_path, path)
           
           if !without_url

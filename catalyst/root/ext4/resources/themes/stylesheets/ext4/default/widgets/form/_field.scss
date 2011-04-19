@@ -5,36 +5,46 @@
         
         margin: 0 0 0 0;
         
-        font: normal 12px tahoma, arial, helvetica, sans-serif;
+        font: $form-field-font;
     }
     
     .#{$prefix}form-text,
     textarea.#{$prefix}form-field {
-        padding: 1px 3px;
+        padding: $form-field-padding;
         
         background: repeat-x 0 0;
-        border: 1px solid;
+        border: $form-field-border-width solid;
         
-        background-color: #fff;
-        background-image: theme-image($theme-name, 'form/text-bg.gif');
+        background-color: $form-field-background-color;
+        @if $form-field-background-image {
+            background-image: theme-image($theme-name, $form-field-background-image);
+        }
         
-        border-color: adjust-color($neutral-color, $hue: 234.545deg, $saturation: -41.453%, $lightness: -14.706%);
+        border-color: $form-field-border-color;
     }
     
-    textarea.#{$prefix}form-field {
-        padding: 2px 3px;
+    textarea {
+        color: $form-field-color;
+        
+        background: repeat-x 0 0;
+        background-color: $form-field-background-color;
+        @if $form-field-background-image {
+            background-image: theme-image($theme-name, $form-field-background-image);
+        }
     }
     
     .#{$prefix}form-text {
-        height: 21px;
+        height: $form-field-height;
         
         line-height: 18px;
         
         vertical-align: middle;
     }
     
-    .#{$prefix}safari.#{$prefix}mac textarea.#{$prefix}form-field {
-        margin-bottom: -2px; // another bogus margin bug, safari/mac only
+    @if $include-safari {
+        .#{$prefix}safari.#{$prefix}mac textarea.#{$prefix}form-field {
+            margin-bottom: -2px; // another bogus margin bug, safari/mac only
+        }
     }
     
     textarea {
@@ -43,17 +53,22 @@
     
     .#{$prefix}form-focus,
     textarea.#{$prefix}form-focus {
-  	  	border-color: adjust-color($base-color, $hue: -4.322deg, $saturation: -1.065%, $lightness: -16.863%);
+  	  	border-color: $form-field-focus-border-color;
     }
     
     .#{$prefix}form-invalid-field,
     textarea.#{$prefix}form-invalid-field {
-        background: #fff theme-image($theme-name, 'grid/invalid_line.gif') repeat-x bottom;
-        border-color: #c30;
+        background-color: $form-field-invalid-background-color;
+        @if $form-field-invalid-background-image {
+            background-image: theme-image($theme-name, $form-field-invalid-background-image);
+            background-repeat: $form-field-invalid-background-repeat;
+            background-position: $form-field-invalid-background-position;
+        }
+        border-color: $form-field-invalid-border-color;
     }
     
     .#{$prefix}form-item {
-        font: normal 12px tahoma, arial, helvetica, sans-serif;
+        font: $form-label-font;
     }
 
     .#{$prefix}form-error-msg {
@@ -67,19 +82,19 @@
 		padding: 2px;
         padding-left: 18px;
 
-		color: #c0272b;
-        font: normal 11px tahoma, arial, helvetica, sans-serif;
-        line-height: 16px;
+		color: $form-error-msg-color;
+        font: $form-error-msg-font;
+        line-height: $form-error-msg-line-height;
         
-        background-image: theme-image($theme-name, 'form/exclamation.gif');
+        background-image: theme-image($theme-name, $form-exclamation-icon);
 	}
 
 	.#{$prefix}form-invalid-icon {
-        background-image: theme-image($theme-name, 'form/exclamation.gif');
+        background-image: theme-image($theme-name, $form-exclamation-icon);
 	}
 
     .#{$prefix}form-empty-field {
-        color: gray;
+        color: $form-field-empty-color;
     }
     
     .#{$prefix}form-display-field {
@@ -126,3 +141,38 @@
         }
     }
 }
+
+@mixin x-form-field($ui,
+    $border: null,
+    $border-width: 1px,
+    $border-style: solid,
+    $border-color: #000,
+    $border-radius: null,
+    
+    $background-color: null,
+    $background-gradient: null,
+    
+    $color: null,
+    
+    $padding: null
+) {
+    .#{$prefix}form-text,
+    textarea.#{$prefix}form-field {
+        @if $padding { padding: $padding; }
+        
+        @if $background-color {
+            @include background-gradient($background-color, $background-gradient);
+        }
+        
+        @if $border { border: $border-width $border-style $border-color; }
+        @if $border-radius { @include border-radius($border-radius); }
+    }
+    
+    .#{$prefix}form-text {
+        height: $form-field-height;
+        
+        line-height: 18px;
+        
+        vertical-align: middle;
+    }
+};

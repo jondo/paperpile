@@ -18,8 +18,8 @@ Ext.define('Ext.grid.GridViewDropZone', {
             }
         }
 
-        // No copy flag: remove the Models from the source Store
-        else {
+        // No copy flag: remove the Models from the source Store if it's not the destination Store
+        else if (data.view !== view) {
             data.view.store.remove(data.records);
         }
 

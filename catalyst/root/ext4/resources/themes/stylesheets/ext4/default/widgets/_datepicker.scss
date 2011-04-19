@@ -69,6 +69,8 @@
     }    
                 
     .#{$prefix}datepicker-month {
+        padding-top: 1px;
+        
         .#{$prefix}btn,
         button,
         .#{$prefix}btn-tc,
@@ -114,7 +116,7 @@
             background: repeat-x left top;
             background-color: $datepicker-footer-color;
             background-image: theme-image($theme-name, 'shared/glass-bg.gif');
-            font: normal 10px arial, helvetica,tahoma,sans-serif;
+            font: normal 10px $font-family;
             color: #233d6d;
             text-align: right !important;
             border-bottom: 1px solid #a3bad9;
@@ -146,7 +148,7 @@
             text-decoration: none;
             text-align: right;
             zoom: 1;
-            font: normal 11px arial, helvetica,tahoma,sans-serif;
+            font: normal ceil($font-size * .9) $font-family;
             color: #000;
         }
         
@@ -235,22 +237,23 @@
     }
         
     .#{$prefix}monthpicker-item {
-        @include inline-block;
+        float: left;
         margin: 4px 0 5px 0;
-        font: normal 11px arial, helvetica,tahoma,sans-serif;
+        font: normal ceil($font-size * .9) $font-family;
         height: 18px;
         border: 0 none;
         text-align: center;
         vertical-align: middle;
         width: 43px;
+        
         a {
             display: block;
             margin: 0 5px 0 5px;
-            border: $datepicker-border;
+            border: $datepicker-item-border;
             $height: 18px;
             line-height: $height - 1;
             &:hover {
-                background-color: #ddecfe;
+                background-color: $datepicker-item-hover-background-color;
             }
             
             &.#{$prefix}monthpicker-selected {
@@ -308,12 +311,12 @@
         cursor: hand;
         background-position: -15px -105px;
     }
-
         
     @if $include-ie OR $compile-all {
         .#{$prefix}ie8 .#{$prefix}datepicker-header {
             line-height: 21px;
             .#{$prefix}datepicker-month {
+                padding-top: 0;
                 vertical-align: top;
                 line-height: 19px;
             }

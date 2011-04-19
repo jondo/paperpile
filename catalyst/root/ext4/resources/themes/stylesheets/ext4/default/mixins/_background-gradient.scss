@@ -54,8 +54,7 @@
             adjust-color($bg-color, $hue: 0.175deg, $saturation: 0.967%, $lightness: 14.118%),
             adjust-color($bg-color, $hue: 0.175deg, $saturation: 0.967%, $lightness: 14.118%) 39%,
             adjust-color($bg-color, $hue: 0.372deg, $saturation: 0.101%, $lightness: 10.196%) 40%,
-            adjust-color($bg-color, $hue: 0.372deg, $saturation: 0.101%, $lightness: 10.196%) 96%,
-            $bg-color 98%
+            adjust-color($bg-color, $hue: 0.372deg, $saturation: 0.101%, $lightness: 10.196%)
         )));
     } @else if $type == grid-row-over {
         @include background-image(linear-gradient($direction, color_stops(
@@ -73,12 +72,26 @@
             $bg-color
         )));
     } @else if $type == glossy-button {
-        @include background-image(linear-gradient($direction, color_stops(#F7F7F7, #F1F1F1 48%, #DADADA 52%, #DFDFDF)));
+        @include background-image(linear-gradient($direction, color_stops(
+            $bg-color,
+            adjust-color($bg-color, $hue: 0deg, $saturation: 0%, $lightness: -2.353%) 48%,
+            adjust-color($bg-color, $hue: 0deg, $saturation: 0%, $lightness: -11.373%) 52%,
+            adjust-color($bg-color, $hue: 0deg, $saturation: 0%, $lightness: -9.412%)
+        )));
     } @else if $type == glossy-button-over {
-        @include background-image(linear-gradient($direction, color_stops(#E4F3FF, #D9EDFF 48%, #C2D8F2 52%, #C6DCF6)));
+        @include background-image(linear-gradient($direction, color_stops(
+            $bg-color,
+            adjust-color($bg-color, $hue: 1.754deg, $saturation: 0.0%, $lightness: -2.157%) 48%,
+            adjust-color($bg-color, $hue: 5.833deg, $saturation: -35.135%, $lightness: -9.216%) 52%,
+            adjust-color($bg-color, $hue: 5.833deg, $saturation: -27.273%, $lightness: -7.647%)
+        )));
     } @else if $type == glossy-button-pressed {
-        @include background-image(linear-gradient($direction, color_stops(#B6CBE4, #BFD2E6 48%, #8DC0F5 52%, #98C5F5)));
-        
+        @include background-image(linear-gradient($direction, color_stops(
+            $bg-color,
+            adjust-color($bg-color, $hue: -1.839deg, $saturation: -2.18%, $lightness: 2.157%) 48%,
+            adjust-color($bg-color, $hue: -2.032deg, $saturation: 37.871%, $lightness: -4.706%) 52%,
+            adjust-color($bg-color, $hue: -1.641deg, $saturation: 36.301%, $lightness: -2.549%)
+        )));
     } @else if $type == glossy {
         @include background-image(linear-gradient($direction, color_stops(lighten($bg-color, 15%), lighten($bg-color, 5%) 50%, $bg-color 51%, darken($bg-color, 5%))));
     } @else if $type == recessed {

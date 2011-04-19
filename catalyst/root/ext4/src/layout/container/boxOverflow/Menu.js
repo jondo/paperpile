@@ -290,8 +290,12 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
      * @param {Ext.core.Element} target The target Element
      */
     createInnerElements: function() {
+        var me = this,
+            target = me.layout.getRenderTarget();
+
         if (!this.afterCt) {
-            this.afterCt  = this.layout.innerCt.insertSibling({cls: Ext.layout.container.Box.prototype.innerCls + ' ' + this.afterCtCls}, 'before');
+            target.addCls(Ext.baseCSSPrefix + me.layout.direction + '-box-overflow-body');
+            this.afterCt  = target.insertSibling({cls: Ext.layout.container.Box.prototype.innerCls + ' ' + this.afterCtCls}, 'before');
         }
     },
 

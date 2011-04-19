@@ -88,6 +88,7 @@ Ext.define('Ext.layout.container.Card', {
 
         // If the card is not a child of the owner, then add it
         if (newIndex == -1) {
+            newIndex = owner.items.items.length;
             owner.add(newCard);
         }
 
@@ -98,6 +99,8 @@ Ext.define('Ext.layout.container.Card', {
                 me.renderItem(newCard, me.getRenderTarget(), owner.items.length);
                 me.configureItem(newCard, 0);
             }
+
+            me.activeItem = newCard;
 
             // Fire the beforeactivate and beforedeactivate events on the cards
             if (newCard.fireEvent('beforeactivate', newCard, oldCard) === false) {
@@ -113,8 +116,10 @@ Ext.define('Ext.layout.container.Card', {
             if (!me.sizeAllCards) {
                 me.setItemBox(newCard, me.getTargetBox());
             }
-
-            me.activeItem = newCard;
+            else {
+                // onLayout calls setItemBox which sizes the active item via setCalculatedSize.
+                me.onLayout();
+            }
 
             if (oldCard) {
                 oldCard.fireEvent('deactivate', oldCard, newCard);
@@ -128,17 +133,17 @@ Ext.define('Ext.layout.container.Card', {
                 newCard.show();
             }
 
-            // onLayout calls setItemBox which sizes the active item via setCalculatedSize.
-            me.onLayout();
-
             newCard.fireEvent('activate', newCard, oldCard);
 
             me.layoutBusy = false;
 
-            // A card activation is a layout operation.
-            // Client code may hook into afterlayout to ascertain when sizing has been completed.
-            me.owner.afterLayout();
-
+            // The conditional upward call to the owner's doComponentLayout from the newCard's layout's afterLayout will have been prevented by our layoutBusy flag
+            // Call it now.
+            if (!me.sizeAllCards) {
+                if (!me.owner.componentLayout.layoutBusy) {
+                    me.owner.doComponentLayout();
+                }
+            }
             return newCard;
         }
 

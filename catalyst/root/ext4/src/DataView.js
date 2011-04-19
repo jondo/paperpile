@@ -64,85 +64,255 @@ var panel = new Ext.panel.Panel({
 Ext.define('Ext.DataView', {
     extend: 'Ext.AbstractDataView',
     alias: 'widget.dataview',
-        
+    
+    inheritableStatics: {
+        EventMap: {
+            mousedown: 'MouseDown',
+            mouseup: 'MouseUp',
+            click: 'Click',
+            dblclick: 'DblClick',
+            contextmenu: 'ContextMenu',
+            mouseover: 'MouseOver',
+            mouseout: 'MouseOut',
+            mouseenter: 'MouseEnter',
+            mouseleave: 'MouseLeave'
+        }
+    },
+    
     addCmpEvents: function() {
         this.addEvents(
             /**
-             * @event beforeclick
-             * Fires before a click is processed. Returns false to cancel the default action.
+             * @event beforeitemmousedown
+             * Fires before the mousedown event on an item is processed. Returns false to cancel the default action.
              * @param {Ext.DataView} this
-             * @param {Number} index The index of the target node
-             * @param {HTMLElement} node The target node
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
              * @param {Ext.EventObject} e The raw event object
              */
-            'beforeclick',
-
+            'beforeitemmousedown',
             /**
-             * @event click
-             * Fires when a template node is clicked.
+             * @event beforeitemmouseup
+             * Fires before the mouseup event on an item is processed. Returns false to cancel the default action.
              * @param {Ext.DataView} this
-             * @param {Number} index The index of the target node
-             * @param {HTMLElement} node The target node
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
              * @param {Ext.EventObject} e The raw event object
              */
-            'click',
-
+            'beforeitemmouseup',
             /**
-             * @event mouseenter
-             * Fires when the mouse enters a template node. trackOver:true and an overItemCls must be set to enable this event.
+             * @event beforeitemmouseenter
+             * Fires before the mouseenter event on an item is processed. Returns false to cancel the default action.
              * @param {Ext.DataView} this
-             * @param {Number} index The index of the target node
-             * @param {HTMLElement} node The target node
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
              * @param {Ext.EventObject} e The raw event object
              */
-            'mouseenter',
-
+            'beforeitemmouseenter',
             /**
-             * @event mouseleave
-             * Fires when the mouse leaves a template node. trackOver:true and an overItemCls must be set to enable this event.
+             * @event beforeitemmouseleave
+             * Fires before the mouseleave event on an item is processed. Returns false to cancel the default action.
              * @param {Ext.DataView} this
-             * @param {Number} index The index of the target node
-             * @param {HTMLElement} node The target node
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
              * @param {Ext.EventObject} e The raw event object
              */
-            'mouseleave',
-
+            'beforeitemmouseleave',
+            /**
+             * @event beforeitemclick
+             * Fires before the click event on an item is processed. Returns false to cancel the default action.
+             * @param {Ext.DataView} this
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'beforeitemclick',
+            /**
+             * @event beforeitemdblclick
+             * Fires before the dblclick event on an item is processed. Returns false to cancel the default action.
+             * @param {Ext.DataView} this
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'beforeitemdblclick',
+            /**
+             * @event beforeitemcontextmenu
+             * Fires before the contextmenu event on an item is processed. Returns false to cancel the default action.
+             * @param {Ext.DataView} this
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'beforeitemcontextmenu',            
+            /**
+             * @event itemmousedown
+             * Fires when there is a mouse down on an item
+             * @param {Ext.DataView} this
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'itemmousedown',
+            /**
+             * @event itemmouseup
+             * Fires when there is a mouse up on an item
+             * @param {Ext.DataView} this
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'itemmouseup',
+            /**
+             * @event itemmouseenter
+             * Fires when the mouse enters an item.
+             * @param {Ext.DataView} this
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'itemmouseenter',
+            /**
+             * @event itemmouseleave
+             * Fires when the mouse leaves an item.
+             * @param {Ext.DataView} this
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'itemmouseleave',
+            /**
+             * @event itemclick
+             * Fires when an item is clicked.
+             * @param {Ext.DataView} this
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'itemclick',
+            /**
+             * @event itemdblclick
+             * Fires when an item is double clicked.
+             * @param {Ext.DataView} this
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'itemdblclick',
+            /**
+             * @event itemcontextmenu
+             * Fires when an item is right clicked.
+             * @param {Ext.DataView} this
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'itemcontextmenu',            
+            /**
+             * @event beforecontainermousedown
+             * Fires before the mousedown event on the container is processed. Returns false to cancel the default action.
+             * @param {Ext.DataView} this
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'beforecontainermousedown',
+            /**
+             * @event beforecontainermouseup
+             * Fires before the mouseup event on the container is processed. Returns false to cancel the default action.
+             * @param {Ext.DataView} this
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'beforecontainermouseup',
+            /**
+             * @event beforecontainermouseover
+             * Fires before the mouseover event on the container is processed. Returns false to cancel the default action.
+             * @param {Ext.DataView} this
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'beforecontainermouseover',
+            /**
+             * @event beforecontainermouseout
+             * Fires before the mouseout event on the container is processed. Returns false to cancel the default action.
+             * @param {Ext.DataView} this
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'beforecontainermouseout',
+            /**
+             * @event beforecontainerclick
+             * Fires before the click event on the container is processed. Returns false to cancel the default action.
+             * @param {Ext.DataView} this
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'beforecontainerclick',
+            /**
+             * @event beforecontainerdblclick
+             * Fires before the dblclick event on the container is processed. Returns false to cancel the default action.
+             * @param {Ext.DataView} this
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'beforecontainerdblclick',
+            /**
+             * @event beforecontainercontextmenu
+             * Fires before the contextmenu event on the container is processed. Returns false to cancel the default action.
+             * @param {Ext.DataView} this
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'beforecontainercontextmenu',
+            /**
+             * @event containermouseup
+             * Fires when there is a mouse up on the container
+             * @param {Ext.DataView} this
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'containermouseup',
+            /**
+             * @event containermouseover
+             * Fires when you move the mouse over the container.
+             * @param {Ext.DataView} this
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'containermouseover',
+            /**
+             * @event containermouseout
+             * Fires when you move the mouse out of the container.
+             * @param {Ext.DataView} this
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'containermouseout',
             /**
              * @event containerclick
-             * Fires when a click occurs and it is not on a template node.
+             * Fires when the container is clicked.
              * @param {Ext.DataView} this
              * @param {Ext.EventObject} e The raw event object
              */
             'containerclick',
-
             /**
-             * @event dblclick
-             * Fires when a template node is double clicked.
+             * @event containerdblclick
+             * Fires when the container is double clicked.
              * @param {Ext.DataView} this
-             * @param {Number} index The index of the target node
-             * @param {HTMLElement} node The target node
              * @param {Ext.EventObject} e The raw event object
              */
-            'dblclick',
-
-            /**
-             * @event contextmenu
-             * Fires when a template node is right clicked.
-             * @param {Ext.DataView} this
-             * @param {Number} index The index of the target node
-             * @param {HTMLElement} node The target node
-             * @param {Ext.EventObject} e The raw event object
-             */
-            'contextmenu',
-
+            'containerdblclick',
             /**
              * @event containercontextmenu
-             * Fires when a right click occurs that is not on a template node.
+             * Fires when the container is right clicked.
              * @param {Ext.DataView} this
              * @param {Ext.EventObject} e The raw event object
              */
             'containercontextmenu',
-
+                      
             /**
              * @event selectionchange
              * Fires when the selected nodes change. Relayed event from the underlying selection model.
@@ -150,7 +320,6 @@ Ext.define('Ext.DataView', {
              * @param {Array} selections Array of the selected nodes
              */
             'selectionchange',
-
             /**
              * @event beforeselect
              * Fires before a selection is made. If any handlers return false, the selection is cancelled.
@@ -164,153 +333,153 @@ Ext.define('Ext.DataView', {
     // private
     afterRender: function(){
         var me = this, 
-            listeners = {
-                scope: me,
-                click: me.onClick,
-                mousedown: me.onMouseDown,
-                mouseup: me.onMouseUp,
-                dblclick: me.onDblClick,
-                contextmenu: me.onContextMenu
-            };
+            listeners;
         
         me.callParent();
 
-        if (me.overItemCls && me.trackOver) {
-            Ext.apply(listeners, {
-                mouseover: me.onMouseOver,
-                mouseout: me.onMouseOut
-            });
-        }
+        listeners = {
+            scope: me,
+            click: me.handleEvent,
+            mousedown: me.handleEvent,
+            mouseup: me.handleEvent,
+            dblclick: me.handleEvent,
+            contextmenu: me.handleEvent,
+            mouseover: me.handleEvent,
+            mouseout: me.handleEvent
+        };
         
         me.mon(me.getTargetEl(), listeners);
+        
         if (me.store) {
             me.bindStore(me.store, true);
         }
     },
-
-    // private
-    onClick: function(e){
+    
+    handleEvent: function(e) {
+        if (this.processUIEvent(e) !== false) {
+            this.processSpecialEvent(e);
+        }
+    },
+    
+    // Private template method
+    processItemEvent: Ext.emptyFn,
+    processContainerEvent: Ext.emptyFn,
+    processSpecialEvent: Ext.emptyFn,
+    
+    processUIEvent: function(e, type) {
         var me = this,
             item = e.getTarget(me.getItemSelector(), me.getTargetEl()),
-            index;
-
-        if (item) {
-            index = me.indexOf(item);
-            if (me.onItemClick(item, index, e) !== false) {
-                me.fireEvent('click', me, index, item, e);
-            }
-        } else {
-            if(me.fireEvent('containerclick', me, e) !== false){
-                me.onContainerClick(e);
-            }
+            type = type || e.type,
+            map = this.statics().EventMap,
+            index, record;
+        
+        // There is this weird bug when you hover over the border of a cell it is saying
+        // the target is the table.        
+        if (!item && type == 'mouseover' && me.mouseOverItem && Ext.fly(me.mouseOverItem).getRegion().contains(e.getPoint())) {
+            item = me.mouseOverItem;
         }
-    },
-    
-    onMouseDown: function(e) {
-        var me = this,
-            item = e.getTarget(me.itemSelector, me.getTargetEl()),
-            index;
-
+        
         if (item) {
             index = me.indexOf(item);
-            if (me.onItemMouseDown(item, index, e) !== false) {
-                me.fireEvent('mousedown', me, index, item, e);
+            record = me.getRecord(item);
+            
+            if (me.processItemEvent(type, record, item, index, e) === false) {
+                return false;
             }
-        } else {
-            if(me.fireEvent('containermousedown', me, e) !== false) {
-                me.onContainerMouseDown(e);
+            
+            type = me.isNewItemEvent(type, item, e);
+            if (type === false) {
+                return false;
             }
-        }        
-    },
-    
-    onMouseUp: function(e) {
-        var me = this,
-            item = e.getTarget(me.itemSelector, me.getTargetEl()),
-            index;
-
-        if (item) {
-            index = me.indexOf(item);
-            if (me.onItemMouseUp(item, index, e) !== false) {
-                me.fireEvent('mouseup', me, index, item, e);
+            
+            if (
+                (me['onBeforeItem' + map[type]](record, item, index, e) === false) ||
+                (me.fireEvent('beforeitem' + type, me, record, item, index, e) === false) ||
+                (me['onItem' + map[type]](record, item, index, e) === false)
+            ) { 
+                return false;
             }
-        } else {
-            if(me.fireEvent('containermouseup', me, e) !== false) {
-                me.onContainerMouseUp(e);
+            
+            me.fireEvent('item' + type, me, record, item, index, e);
+        } 
+        else {
+            if (
+                (me.processContainerEvent(type, e) === false) ||
+                (me['onBeforeContainer' + map[type]](e) === false) ||
+                (me.fireEvent('beforecontainer' + type, me, e) === false) ||
+                (me['onContainer' + map[type]](e) === false)
+            ) {
+                return false;
             }
-        }        
-    },
-    
-    // @private, template method
-    onItemMouseDown: function(item, index, e) {
-        if (this.fireEvent('beforemousedown', this, index, item, e) === false) {
-            return false;
+            
+            me.fireEvent('container' + type, me, e);
         }
+        
         return true;
     },
     
-    // @private, template method
-    onItemMouseUp: function(item, index, e){
-        if (this.fireEvent('beforemouseup', this, index, item, e) === false) {
-            return false;
+    isNewItemEvent: function(type, item, e) {
+        var me = this;
+        switch (type) {
+            case 'mouseover':
+                if (item === me.mouseOverItem) {
+                    return false;
+                }
+                me.mouseOverItem = item;
+                return 'mouseenter';
+            break;
+            
+            case 'mouseout':
+                if (Ext.fly(me.mouseOverItem).getRegion().contains(e.getPoint())) {
+                    return false;
+                }
+                me.mouseOverItem = null;
+                return 'mouseleave';
+            break;
         }
-        return true;
+        return type;
     },
     
-    // @private, template method
+    // private
+    onItemMouseEnter: function(record, item, index, e) {
+        this.highlightItem(item);
+    },
+
+    // private
+    onItemMouseLeave : function(record, item, index, e) {
+        this.clearHighlight();
+    },
+
+    // @private, template methods
+    onItemMouseDown: Ext.emptyFn,
+    onItemMouseUp: Ext.emptyFn,
+    onItemClick: Ext.emptyFn,
+    onItemDblClick: Ext.emptyFn,
+    onItemContextMenu: Ext.emptyFn,
+    onBeforeItemMouseDown: Ext.emptyFn,
+    onBeforeItemMouseUp: Ext.emptyFn,
+    onBeforeItemMouseEnter: Ext.emptyFn,
+    onBeforeItemMouseLeave: Ext.emptyFn,
+    onBeforeItemClick: Ext.emptyFn,
+    onBeforeItemDblClick: Ext.emptyFn,
+    onBeforeItemContextMenu: Ext.emptyFn,
+    
+    // @private, template methods
     onContainerMouseDown: Ext.emptyFn,
-    
-    // @private, template method
     onContainerMouseUp: Ext.emptyFn,
-      
-    // @private, template method
+    onContainerMouseOver: Ext.emptyFn,
+    onContainerMouseOut: Ext.emptyFn,
     onContainerClick: Ext.emptyFn,
-
-    // private
-    onContextMenu: function(e){
-        var me = this,
-            item = e.getTarget(me.getItemSelector(), me.getTargetEl());
-            
-        if (item) {
-            me.fireEvent('contextmenu', me, me.indexOf(item), item, e);
-        } else {
-            me.fireEvent('containercontextmenu', me, e);
-        }
-    },
-
-    // private
-    onDblClick: function(e){
-        var me = this,
-            item = e.getTarget(me.getItemSelector(), me.getTargetEl());
-            
-        if (item) {
-            me.fireEvent('dblclick', me, me.indexOf(item), item, e);
-        }
-    },
-
-    // private
-    onMouseOver: function(e){
-        var me = this,
-            item = e.getTarget(me.getItemSelector(), me.getTargetEl());
-            
-        if (item && item !== me.highlightedItem) {
-            me.highlightItem(item);
-            me.fireEvent('mouseenter', me, me.indexOf(item), item, e);
-        }
-    },
-
-    // private
-    onMouseOut : function(e){
-        var me = this,
-            highlighted = me.highlightedItem;
-            
-        if (highlighted) {
-            if (!e.within(highlighted, true, true)) {
-                me.clearHighlight();
-                me.fireEvent('mouseleave', me, me.indexOf(highlighted), highlighted, e);
-            }
-        }
-    },
-
+    onContainerDblClick: Ext.emptyFn,
+    onContainerContextMenu: Ext.emptyFn,
+    onBeforeContainerMouseDown: Ext.emptyFn,
+    onBeforeContainerMouseUp: Ext.emptyFn,
+    onBeforeContainerMouseOver: Ext.emptyFn,
+    onBeforeContainerMouseOut: Ext.emptyFn,
+    onBeforeContainerClick: Ext.emptyFn,
+    onBeforeContainerDblClick: Ext.emptyFn,
+    onBeforeContainerContextMenu: Ext.emptyFn,
+    
     /**
      * Highlight a given item in the DataView. This is called by the mouseover handler if {@link #overItemCls}
      * and {@link #trackOver} are configured, but can also be called manually by other code, for instance to
@@ -337,11 +506,8 @@ Ext.define('Ext.DataView', {
         }
     },
 
-    // private
-    onItemClick: function(item, index, e){
-        if (this.fireEvent('beforeclick', this, index, item, e) === false) {
-            return false;
-        }
-        return true;
+    refresh: function() {
+        this.clearHighlight();
+        this.callParent(arguments);
     }
 });

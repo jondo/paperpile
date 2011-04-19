@@ -642,9 +642,52 @@ Ext.define('Ext.draw.Draw', {
         return {
             x: xmin,
             y: ymin,
+            path: path,
             width: Math.max.apply(0, X) - xmin,
             height: Math.max.apply(0, Y) - ymin
         };
+    },
+    
+    intersect: function(subjectPolygon, clipPolygon) {
+        var cp1, cp2, s, e, point;
+        var inside = function(p) {
+            return (cp2[0]-cp1[0]) * (p[1]-cp1[1]) > (cp2[1]-cp1[1]) * (p[0]-cp1[0]);
+        };
+        var intersection = function() {
+            var p = [];
+            var dcx = cp1[0]-cp2[0],
+                dcy = cp1[1]-cp2[1],
+                dpx = s[0]-e[0],
+                dpy = s[1]-e[1],
+                n1 = cp1[0]*cp2[1] - cp1[1]*cp2[0],
+                n2 = s[0]*e[1] - s[1]*e[0],
+                n3 = 1 / (dcx*dpy - dcy*dpx);
+            p[0] = (n1*dpx - n2*dcx) * n3,
+            p[1] = (n1*dpy - n2*dcy) * n3;
+            return p;
+        };
+        var outputList = subjectPolygon;
+        cp1 = clipPolygon[clipPolygon.length -1];
+        for (var i = 0, l = clipPolygon.length; i < l; ++i) {
+            cp2 = clipPolygon[i];
+            var inputList = outputList;
+            outputList = [];
+            s = inputList[inputList.length -1];
+            for (var j = 0, ln = inputList.length; j < ln; j++) {
+                e = inputList[j];
+                if (inside(e)) {
+                    if (!inside(s)) {
+                        outputList.push(intersection());
+                    }
+                    outputList.push(e);
+                } else if (inside(s)) {
+                    outputList.push(intersection());
+                }
+                s = e;
+            }
+            cp1 = cp2;
+        }
+        return outputList;
     },
     
     curveDim: function (p1x, p1y, c1x, c1y, c2x, c2y, p2x, p2y) {

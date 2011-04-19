@@ -18,8 +18,12 @@ Ext.define('Paperpile.Tabs', {
   extend: 'Ext.tab.TabPanel',
   alias: 'widget.pp-tabs',
   initComponent: function() {
-    Ext.apply(this, {});
 
+    Ext.apply(this, {
+	    items: [this.createMainLibraryTab()
+	    ]
+    });
+       
     this.callParent(arguments);
   },
 
@@ -64,11 +68,8 @@ Ext.define('Paperpile.Tabs', {
     newView.show();
   },
 
-  newMainLibraryTab: function() {
+  createMainLibraryTab: function() {
     var itemId = 'MAIN'; // Main library always has this itemID.
-    if (this.findAndActivateOpenTab(itemId)) {
-      return;
-    }
 
     var gridParams = {
       plugin_name: 'DB',
@@ -77,13 +78,13 @@ Ext.define('Paperpile.Tabs', {
       plugin_base_query: ''
     };
 
-    var item = this.add({
+    var params = {
       xtype: 'ViewMainLibrary',
       title: 'Library',
       closable: true,
       gridParams: gridParams
-    });
-    this.setActiveTab(item);
+    };
+    return params;
   },
 
   newTrashTab: function() {
@@ -241,6 +242,9 @@ Ext.define('Paperpile.Tabs', {
   },
 
   findAndActivateOpenTab: function(itemId) {
+	    if (!this.items) {
+		return false;
+	    }
     var openTab = this.getComponent(itemId);
     //    var openTab = this.getItem(itemId);
     if (!openTab) {

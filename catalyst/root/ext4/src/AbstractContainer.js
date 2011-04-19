@@ -12,10 +12,7 @@ Ext.define('Ext.AbstractContainer', {
 
     requires: [
         'Ext.util.MixedCollection',
-        'Ext.layout.Manager',
         'Ext.layout.container.Auto',
-        'Ext.ComponentMgr',
-        'Ext.ComponentQuery',
         'Ext.ZIndexManager'
     ],
 
@@ -675,29 +672,67 @@ for more details.
     // which can potentially be considered a child of this Container.
     // This should be overriden by components which have child items
     // that are not contained in items. For example dockedItems, menu, etc
+    // IMPORTANT note for maintainers:
+    //  Items are returned in tree traversal order. Each item is appended to the result array
+    //  followed by the results of that child's getRefItems call.
+    //  Floating child items are appended after internal child items.
     getRefItems : function(deep) {
-        var items = this.items.items.slice(),
+        var items = this.items.items,
             len = items.length,
             i = 0,
-            item;
+            item,
+            childItems,
+            result = [];
 
-        // Include floating items in the list.
-        // These will only be present after they are rendered.
-        if (this.floatingItems) {
-            items = items.concat(this.floatingItems.accessList);
-            len = items.length;
-        }
-
-        if (deep) {
-            for (; i < len; i++) {
-                item = items[i];
-                if (item.getRefItems) {
-                    items = items.concat(item.getRefItems(true));
-                }
+        for (; i < len; i++) {
+            item = items[i];
+            result.push(item);
+            if (deep && item.getRefItems) {
+                result.push.apply(result, item.getRefItems(true));
             }
         }
 
-        return items;
+        // Append floating items to the list.
+        // These will only be present after they are rendered.
+        if (this.floatingItems) {
+            result.push.apply(result, this.floatingItems.accessList);
+        }
+
+        return result;
+    },
+
+    /**
+     * Cascades down the component/container heirarchy from this component (passed in the first call), calling the specified function with
+     * each component. The scope (<code>this</code> reference) of the
+     * function call will be the scope provided or the current component. The arguments to the function
+     * will be the args provided or the current component. If the function returns false at any point,
+     * the cascade is stopped on that branch.
+     * @param {Function} fn The function to call
+     * @param {Object} scope (optional) The scope of the function (defaults to current component)
+     * @param {Array} args (optional) The args to call the function with. The current component always passed as the last argument.
+     * @return {Ext.Container} this
+     */
+    cascade : function(fn, scope, origArgs){
+        var me = this,
+            cs = me.items ? me.items.items : [],
+            len = cs.length,
+            i = 0,
+            c,
+            args = origArgs ? origArgs.concat(me) : [me],
+            componentIndex = args.length - 1;
+
+        if (fn.apply(scope || me, args) !== false) {
+            for(; i < len; i++){
+                c = cs[i];
+                if (c.cascade) {
+                    c.cascade(fn, scope, origArgs);
+                } else {
+                    args[componentIndex] = c;
+                    fn.apply(scope || cs, args);
+                }
+            }
+        }
+        return this;
     },
 
     /**
@@ -755,6 +790,7 @@ for more details.
     show : function() {
         this.callParent(arguments);
         this.performDeferredLayouts();
+        return this;
     },
 
     // Lay out any descendant containers who queued a layout operation during the time this was hidden

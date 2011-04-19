@@ -319,11 +319,15 @@ Ext.define('Ext.form.Number', {
 
     onSpinUp: function() {
         var me = this;
-        me.setValue(Ext.Number.constrain(me.getValue() + me.step, me.minValue, me.maxValue));
+        if (!me.readOnly) {
+            me.setValue(Ext.Number.constrain(me.getValue() + me.step, me.minValue, me.maxValue));
+        }
     },
 
     onSpinDown: function() {
         var me = this;
-        me.setValue(Ext.Number.constrain(me.getValue() - me.step, me.minValue, me.maxValue));
+        if (!me.readOnly) {
+            me.setValue(Ext.Number.constrain(me.getValue() - me.step, me.minValue, me.maxValue));
+        }
     }
 });

@@ -427,7 +427,7 @@ myGridPanel.on({
             managedListener.item.un(managedListener.ename, managedListener.fn, managedListener.scope);
         }
 
-        this.managedListener = [];
+        this.managedListeners = [];
     },
 
     //<debug>
@@ -728,7 +728,9 @@ listeners: {
 
             toggleEventLogging: function(toggle) {
                 Ext.util.Observable[toggle ? 'capture' : 'releaseCapture'](this, function(en) {
-                    console.log(en, arguments);
+                    if (Ext.isDefined(Ext.global.console)) {
+                        Ext.global.console.log(en, arguments);
+                    }
                 });
             }
         };

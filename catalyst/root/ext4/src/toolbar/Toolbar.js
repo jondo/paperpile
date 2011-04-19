@@ -194,8 +194,7 @@ Ext.define('Ext.toolbar.Toolbar', {
         'Ext.toolbar.Fill',
         'Ext.layout.container.HBox',
         'Ext.layout.container.VBox',
-        'Ext.FocusManager',
-        'Ext.util.KeyNav'
+        'Ext.FocusManager'
     ],
     alias: 'widget.toolbar',
     alternateClassName: 'Ext.Toolbar',
@@ -234,7 +233,8 @@ Ext.define('Ext.toolbar.Toolbar', {
     trackMenus: true,
     
     initComponent: function() {
-        var me = this;
+        var me = this,
+            keys;
 
         me.layout = Ext.applyIf(Ext.isString(me.layout) ? {
             type: me.layout
@@ -251,6 +251,12 @@ Ext.define('Ext.toolbar.Toolbar', {
          * @param {Boolean} lastOverflow overflow state
          */
         me.addEvents('overflowchange');
+        
+        // Subscribe to Ext.FocusManager for key navigation
+        keys = me.vertical ? ['up', 'down'] : ['left', 'right'];
+        Ext.FocusManager.subscribe(me, {
+            keys: keys
+        });
     },
 
     /**
@@ -323,32 +329,6 @@ Ext.define('Ext.toolbar.Toolbar', {
     // private
     constructButton: function(item) {
         return item.events ? item : this.createComponent(item, item.split ? 'splitbutton' : this.defaultType);
-    },
-    
-    // private
-    onRender: function() {
-        var me = this;
-        me.callParent(arguments);
-        
-        me.keyNav = Ext.create('Ext.util.KeyNav', me.el, {
-            left: me.onNavKey,
-            right: me.onNavKey,
-            scope: me
-        });
-    },
-    
-    // @private
-    onNavKey: function(e) {
-        var me = this;
-        me.focusedCmp = Ext.FocusManager.navigateSiblings(e, me, me);
-    },
-    
-    // private
-    onDestroy: function() {
-        var me = this;
-        Ext.destroy(me.keyNav);
-        delete me.keyNav;
-        me.callParent(arguments);
     },
 
     // private

@@ -195,7 +195,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
             padding = info.padding,
             border = info.border,
             frameSize = me.frameSize,
-            item, i, box, rect, w;
+            item, i, box, rect;
         
         // If this Panel is inside an AutoContainerLayout, we will base all the calculations
         // around the height of the body and the width of the panel.
@@ -206,18 +206,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
             size.height = target.getHeight();
         }
         if (autoWidth) {
-            // Gecko will in some cases report an offsetWidth that is actually less than the width of the
-            // text contents, because it measures fonts with sub-pixel precision but rounds the calculated
-            // value down. Using getBoundingClientRect instead of offsetWidth allows us to get the precise
-            // subpixel measurements so we can force them to always be rounded up. See
-            // https://bugzilla.mozilla.org/show_bug.cgi?id=458617
-            if (Ext.supports.BoundingClientRect) {
-                rect = bodyEl.dom.getBoundingClientRect();
-                w = Math.ceil(rect.right - rect.left);
-            } else {
-                w = bodyEl.getWidth();
-            }
-            size.width = w + padding.left + border.left + padding.right + border.right + frameSize.left + frameSize.right;
+            size.width = bodyEl.getWidth() + padding.left + border.left + padding.right + border.right + frameSize.left + frameSize.right;
         }
         else {
             size.width = target.getWidth();

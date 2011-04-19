@@ -18,6 +18,7 @@
  */
 Ext.define('Ext.grid.RowNumberer', {
     extend: 'Ext.grid.Header',
+    alias: 'widget.rownumberer',
     /**
      * @cfg {String} text Any valid text or HTML fragment to display in the header cell for the row
      * number column (defaults to '&#160').
@@ -59,7 +60,6 @@ Ext.define('Ext.grid.RowNumberer', {
         }
         
         metaData.tdCls = Ext.baseCSSPrefix + 'grid-cell-special';
-        
-        return store.indexOf(record) + 1;
+        return store.indexOfTotal(record) + 1;
     }
 });

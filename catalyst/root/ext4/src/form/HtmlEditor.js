@@ -403,7 +403,7 @@ Ext.define('Ext.form.HtmlEditor', {
         var me = this,
             body;
 
-        me.callParent(arguments);
+        me.readOnly = readOnly;
         if (me.initialized) {
             if (Ext.isIE) {
                 me.getEditorBody().contentEditable = !readOnly;
@@ -414,6 +414,7 @@ Ext.define('Ext.form.HtmlEditor', {
             if (body) {
                 body.style.cursor = readOnly ? 'default' : 'text';
             }
+            me.textareaEl.dom.readOnly = readOnly;
             me.disableItems(readOnly);
         }
     },
@@ -461,6 +462,8 @@ Ext.define('Ext.form.HtmlEditor', {
         });
 
         me.callParent(arguments);
+        
+        me.textareaEl.dom.value = me.value || '';
 
         // Start polling for when the iframe document is ready to be manipulated
         me.monitorTask = Ext.TaskMgr.start({
@@ -617,8 +620,12 @@ Ext.define('Ext.form.HtmlEditor', {
 
     // docs inherit from Field
     setValue: function(value) {
-        var me = this;
+        var me = this,
+            textarea = me.textareaEl;
         me.mixins.field.setValue.call(me, value);
+        if (textarea) {
+            textarea.dom.value = value;
+        }
         me.pushValue();
         return this;
     },
@@ -691,7 +698,7 @@ Ext.define('Ext.form.HtmlEditor', {
         var me = this,
             v;
         if(me.initialized){
-            v = me.textareaEl.dom.value;
+            v = me.textareaEl.dom.value || '';
             if (!me.activated && v.length < 1) {
                 v = me.defaultValue;
             }
@@ -767,7 +774,7 @@ Ext.define('Ext.form.HtmlEditor', {
             me.pushValue();
             me.setReadOnly(me.readOnly);
             me.fireEvent('initialize', me);
-        } catch(e) {}
+        } catch(ex) {}
     },
 
     // private
@@ -785,7 +792,9 @@ Ext.define('Ext.form.HtmlEditor', {
                 try {
                     Ext.EventManager.removeAll(doc);
                     for (prop in doc) {
-                        delete doc[prop];
+                        if (doc.hasOwnProperty(prop)) {
+                            delete doc[prop];
+                        }
                     }
                 } catch(e) {}
             }

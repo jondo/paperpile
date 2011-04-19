@@ -16,10 +16,10 @@ Ext.define('Ext.chart.Tips', {
             sprites,
             tipSurface;
         if (config.tips) {
-            this.tipTimeout = null;
-            me.tipConfig = Ext.apply({},
-            config.tips, {
-                renderer: Ext.emptyFn
+            me.tipTimeout = null;
+            me.tipConfig = Ext.apply({}, config.tips, {
+                renderer: Ext.emptyFn,
+                constrainPosition: false
             });
             me.tooltip = new Ext.tip.ToolTip(me.tipConfig);
             Ext.getBody().on('mousemove', me.tooltip.onMouseMove, me.tooltip);
@@ -35,7 +35,7 @@ Ext.define('Ext.chart.Tips', {
                     tipSurface.setSize(surface.width, surface.height);
                 }
                 me.tooltip.add(tipSurface);
-                this.spriteTip = tipSurface;
+                me.spriteTip = tipSurface;
             }
         }
     },

@@ -10,39 +10,55 @@
     .#{$prefix}tab-bar-body {
         border-style: solid;
         height: $tabbar-body-height;
-        border-color: $panel-header-border-color;
+        border-color: $tabbar-border-color;
         background-color: transparent;
         @include background-gradient($tabbar-base-color, $tabbar-background-gradient);
+        
         position: relative;
-/*        z-index: 2;*/
         zoom: 1;
+    }
+    
+    .x-border-box { 
+        .#{$prefix}tab-bar-body {
+             height: $tabbar-body-height + 1;
+        }
     }
 
     .#{$prefix}tab-bar-top {
         .#{$prefix}tab-bar-body {
             border-width: 1px 1px 0;
-/*            z-index: 2;*/
+            height: $tabbar-body-height + 1px;
+            
             .#{$prefix}box-item {
                 margin-bottom: 2px;
             }
         }
+        
         .#{$prefix}tab-bar-strip {
             bottom: 0;
             zoom: 1;
+            
             border-width: 1px 1px 0 1px;
+        }
+        
+        .#{$prefix}tab-bar-body-plain {
+            height: $tabbar-body-height;
         }
     }
 
     .#{$prefix}tab-bar-bottom {
         .#{$prefix}tab-bar-body {
             border-width: 0 1px 1px;
+            
             .#{$prefix}box-item {
                 margin-top: 2px;
             }
         }
+        
         .#{$prefix}tab-bar-strip {
             top: 0;
             zoom: 1;
+            
             border-width: 0 1px 1px 1px;
         }
     }
@@ -62,12 +78,14 @@
     .#{$prefix}tab-bar-plain {
         .#{$prefix}tab-bar-body {
             background: transparent none;
-            border-color: #fff;
+            border-width: 0;
         }
     }
 
     .#{$prefix}tab-bar-strip {
-        height: 3px;
+        height: 2px;
+        font-size: 0;
+        line-height: 0;
         position: absolute;
         z-index: 2;
         border-style: solid;
@@ -76,18 +94,118 @@
         background-color: $tab-base-color;
     }
 
-    @if $include-ie OR $compile-all {
-        .#{$prefix}strict .#{$prefix}tab-bar-strip {
-            height: 2px;
+    .#{$prefix}border-box .#{$prefix}tab-bar-strip {
+        height: 3px;
+    }
+    
+    .x-ie6 {
+        .#{$prefix}tab-bar-top {
+            .#{$prefix}tab-bar-body {
+                height: $tabbar-body-height;
+            }
+            
+            .#{$prefix}tab-bar-strip {
+                bottom: 1px;
+                height: 1px;
+            }
+            
+            .#{$prefix}tab-bar-strip-plain {
+                bottom: -1px;
+                height: 2px;
+            }
         }
-
-        .#{$prefix}ie8 .#{$prefix}tab-bar-body {
-            height: $tabbar-body-height;
+    }
+    
+    .x-quirks {
+        .x-ie6 {
+            .#{$prefix}tab-bar-body {
+                height: $tabbar-body-height + 1;
+            }
+            
+            .#{$prefix}tab-bar-strip {
+                height: 2px;
+            }
+            
+            .#{$prefix}tab-bar-body-plain {
+                height: $tabbar-body-height;
+            }
+            
+            .#{$prefix}tab-bar-strip-plain {
+                height: 3px;
+            }
+            
+            .#{$prefix}tab-bar-bottom {
+                .#{$prefix}tab-bar-body {
+                    height: $tabbar-body-height;
+                }
+                
+                .#{$prefix}tab-bar-strip {
+                    top: 1px;
+                }
+                
+                .#{$prefix}tab-bar-strip-plain {
+                    top: 0;
+                }
+            }
         }
-
-        .#{$prefix}ie6 .#{$prefix}tab-bar-body,
-        .#{$prefix}ie7 .#{$prefix}tab-bar-body {
-            height: $tabbar-body-height - 1;
+    }
+    
+    .x-ie7 {
+        .#{$prefix}tab-bar-top {
+            .#{$prefix}tab-bar-body {
+                height: $tabbar-body-height;
+            }
+            
+            .#{$prefix}tab-bar-strip {
+                bottom: 1px;
+                height: 1px;
+            }
+            
+            .#{$prefix}tab-bar-strip-plain {
+                bottom: 0;
+                height: 2px;
+            }
+        }
+        
+        .#{$prefix}tab-bar-bottom {
+            .#{$prefix}tab-bar-body {
+                height: $tabbar-body-height - 1;
+            }
+        }
+    }
+    
+    .x-quirks {
+        .x-ie7 {
+            .#{$prefix}tab-bar-body {
+                height: $tabbar-body-height + 1;
+            }
+            
+            .#{$prefix}tab-bar-strip {
+                height: 2px;
+            }
+            
+            .#{$prefix}tab-bar-body-plain {
+                height: $tabbar-body-height;
+            }
+            
+            .#{$prefix}tab-bar-strip-plain {
+                bottom: -1px;
+                height: 3px;
+            }
+            
+            .#{$prefix}tab-bar-bottom {
+                .#{$prefix}tab-bar-body {
+                    height: $tabbar-body-height;
+                }
+                
+                .#{$prefix}tab-bar-strip {
+                    top: 1px;
+                }
+                
+                .#{$prefix}tab-bar-strip-plain {
+                    top: 0;
+                }
+            }
         }
     }
 }

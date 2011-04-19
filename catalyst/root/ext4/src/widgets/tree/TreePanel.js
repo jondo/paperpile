@@ -955,10 +955,6 @@ a handler for this event:
      * @hide
      */
     /**
-     * @method applyToMarkup
-     * @hide
-     */
-    /**
      * @method enable
      * @hide
      */

@@ -120,7 +120,7 @@ myGrid.on('render', function(grid) {
     // private
     initComponent: function() {
         var me = this;
-        me.callParent();
+        me.callParent(arguments);
         me.lastActive = new Date();
         me.initTarget(me.target);
         me.origAnchor = me.anchor;
@@ -140,8 +140,8 @@ myGrid.on('render', function(grid) {
     afterRender: function() {
         var me = this,
             zIndex;
-            
-        me.callParent();
+
+        me.callParent(arguments);
         zIndex = parseInt(me.el.getZIndex(), 10) || 0;
         me.anchorEl.setStyle('z-index', zIndex + 1).setVisibilityMode(Ext.core.Element.DISPLAY);
     },
@@ -431,7 +431,7 @@ myGrid.on('render', function(grid) {
         if (me.anchorEl) {
             me.anchorEl.hide();
         }
-        me.callParent();
+        me.callParent(arguments);
         delete me.triggerElement;
     },
 
@@ -469,6 +469,9 @@ myGrid.on('render', function(grid) {
         // Show may have been vetoed.
         if (me.isVisible()) {
             me.setPagePosition(xy[0], xy[1]);
+            if (me.constrainPosition || me.constrain) {
+                me.doConstrain();
+            }
             me.toFront(true);
         }
 

@@ -6,7 +6,8 @@
         $buttongroup-border-radius,
         $buttongroup-border-width,
         $buttongroup-padding,
-        $buttongroup-background-color
+        $buttongroup-background-color,
+        $table: true
     );
     
     .#{$prefix}btn-group {
@@ -44,5 +45,6 @@
     
     .x-btn-group-body {
         position: relative;
+        zoom: 1;
     }
 }

@@ -13,6 +13,7 @@
     
         cursor: pointer;
         cursor: hand;
+        position: relative; /*allow hover in IE on empty items*/
 
         border-width: $boundlist-item-border-width;
         border-style: $boundlist-item-border-style;

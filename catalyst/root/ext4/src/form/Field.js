@@ -203,6 +203,7 @@ Ext.define('Ext.form.Field', {
      */
     resetOriginalValue: function() {
         this.originalValue = this.getValue();
+        this.checkDirtyChange();
     },
 
     /**
@@ -330,6 +331,26 @@ Ext.define('Ext.form.Field', {
         fn();
         this.suspendCheckChange--;
         this.checkChange();
+    },
+
+    /**
+     * Returns whether this Field is a file upload field; if it returns true, forms will use
+     * special techniques for {@link Ext.form.Basic#submit submitting the form} via AJAX. See
+     * {@link Ext.form.Basic#hasUpload} for details. If this returns true, the {@link #getFileInput}
+     * method must also be implemented to return the corresponding file input element.
+     * @return {Boolean}
+     */
+    isFileUpload: function() {
+        return false;
+    },
+
+    /**
+     * Returns a reference to the file input DOM element, if this Field is a file upload field.
+     * Only relevant if the instance's {@link #isFileUpload} method returns true.
+     * @return {HTMLInputElement}
+     */
+    getFileInput: function() {
+        return null;
     }
 
 });

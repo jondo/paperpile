@@ -9,6 +9,13 @@ Ext.define('Ext.selection.DataViewModel', {
 
     deselectOnContainerClick: true,
     
+    /**
+     * @cfg {Boolean} enableKeyNav
+     * 
+     * Turns on/off keyboard navigation within the DataView. Defaults to true.
+     */
+    enableKeyNav: true,
+    
     constructor: function(cfg){
         this.addEvents(
             /**
@@ -34,38 +41,50 @@ Ext.define('Ext.selection.DataViewModel', {
         var me = this,
             eventListeners = {
                 refresh: me.refresh,
-                render: me.onViewRender,
-                scope: me,
-                el: {
-                    scope: me
-                }
+                scope: me
             };
-            
+
         me.view = view;
         me.bind(view.getStore());
-        
-        eventListeners.el[view.triggerEvent] = me.onItemClick;
-        eventListeners.el[view.triggerCtEvent] = me.onContainerClick;
-        
+
+        view.on(view.triggerEvent, me.onItemClick, me);
+        view.on(view.triggerCtEvent, me.onContainerClick, me);
+
         view.on(eventListeners);
+
+        if (me.enableKeyNav) {
+            me.initKeyNav(view);
+        }
     },
 
-
-    onItemClick: function(e) {
-        var view   = this.view,
-            node   = view.findTargetByEvent(e);
-        
-        if (node) {
-            this.selectWithEvent(view.getRecord(node), e);
-        } else {
-            return false;
-        }
+    onItemClick: function(view, record, item, index, e) {
+        this.selectWithEvent(record, e);
     },
 
     onContainerClick: function() {
         if (this.deselectOnContainerClick) {
             this.deselectAll();
         }
+    },
+    
+    initKeyNav: function(view) {
+        var me = this;
+        
+        if (!view.rendered) {
+            view.on('render', Ext.Function.bind(me.initKeyNav, me, [view], 0), me, {single: true});
+            return;
+        }
+        
+        view.el.set({
+            tabIndex: -1
+        });
+        me.keyNav = Ext.create('Ext.util.KeyNav', view.el, {
+            down: Ext.pass(me.onNavKey, [1], me),
+            right: Ext.pass(me.onNavKey, [1], me),
+            left: Ext.pass(me.onNavKey, [-1], me),
+            up: Ext.pass(me.onNavKey, [-1], me),
+            scope: me
+        });
     },
     
     onNavKey: function(step) {
@@ -113,16 +132,5 @@ Ext.define('Ext.selection.DataViewModel', {
                 me.fireEvent('deselect', me, record);
             }
         }
-    },
-    
-    onViewRender: function() {
-        var me = this;
-        me.keyNav = Ext.create('Ext.util.KeyNav', me.view.el, {
-            down: Ext.pass(me.onNavKey, [1], me),
-            right: Ext.pass(me.onNavKey, [1], me),
-            left: Ext.pass(me.onNavKey, [-1], me),
-            up: Ext.pass(me.onNavKey, [-1], me),
-            scope: me
-        });
     }
 });

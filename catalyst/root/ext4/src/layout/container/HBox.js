@@ -11,7 +11,7 @@ Ext.define('Ext.layout.container.HBox', {
 
     alias: ['layout.hbox'],
     extend: 'Ext.layout.container.Box',
-    alternatClassName: 'Ext.layout.HBoxLayout',
+    alternateClassName: 'Ext.layout.HBoxLayout',
     
     /* End Definitions */
 

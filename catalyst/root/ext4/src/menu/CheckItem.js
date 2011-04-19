@@ -86,9 +86,30 @@ Ext.define('Ext.menu.CheckItem', {
         }
     },
 
+    /**
+     * Disables just the checkbox functionality of this menu Item. If this menu item has a submenu, that submenu
+     * will still be accessible
+     */
+    disableCheckChange: function() {
+        var me = this;
+
+        me.iconEl.addCls(me.disabledCls);
+        me.checkChangeDisabled = true;
+    },
+
+    /**
+     * Reenables the checkbox functionality of this menu item after having been disabled by {@link #disableCheckChange}
+     */
+    enableCheckChange: function() {
+        var me = this;
+
+        me.iconEl.removeCls(me.disabledCls);
+        me.checkChangeDisabled = false;
+    },
+
     onClick: function(e) {
         var me = this;
-        if(!me.disabled && !(me.checked && me.group)) {
+        if(!me.disabled && !me.checkChangeDisabled && !(me.checked && me.group)) {
             me.setChecked(!me.checked);
         }
         Ext.menu.CheckItem.superclass.onClick.call(me, e);

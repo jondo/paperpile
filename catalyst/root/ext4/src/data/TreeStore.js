@@ -5,7 +5,7 @@
  */
 Ext.define('Ext.data.TreeStore', {
     extend: 'Ext.data.AbstractStore',
-    alias: 'data.treestore',
+    alias: 'store.tree',
     requires: ['Ext.data.Tree', 'Ext.data.NodeInterface', 'Ext.data.NodeStore'],
 
     /**
@@ -25,7 +25,12 @@ Ext.define('Ext.data.TreeStore', {
      * The default root id. Defaults to 'root'
      */
     defaultRootId: 'root',
-        
+
+    /**
+     * @cfg {Boolean} folderSort Set to true to automatically prepend a leaf sorter (defaults to <tt>undefined</tt>)
+     */
+    folderSort: false,
+    
     constructor: function(config) {
         var me = this, root;
         config = config || {};
@@ -46,7 +51,7 @@ Ext.define('Ext.data.TreeStore', {
         }
 
         me.callParent([config]);
-    
+        
         // We create our data tree.
         me.tree = Ext.create('Ext.data.Tree');
         
@@ -55,16 +60,143 @@ Ext.define('Ext.data.TreeStore', {
             beforecollapse: this.onBeforeNodeCollapse,
             scope: this
         });
-        
+
+        me.onBeforeSort();
+                
         root = me.root;
         delete me.root;
         me.setRootNode(root);
+
+        me.relayEvents(me.tree, [
+            /**
+             * @event append
+             * Fires when a new child node is appended to a node in this store's tree.
+             * @param {Tree} tree The owner tree
+             * @param {Node} parent The parent node
+             * @param {Node} node The newly appended node
+             * @param {Number} index The index of the newly appended node
+             */
+            "append",
+            
+            /**
+             * @event remove
+             * Fires when a child node is removed from a node in this store's tree.
+             * @param {Tree} tree The owner tree
+             * @param {Node} parent The parent node
+             * @param {Node} node The child node removed
+             */
+            "remove",
+            
+            /**
+             * @event move
+             * Fires when a node is moved to a new location in the store's tree
+             * @param {Tree} tree The owner tree
+             * @param {Node} node The node moved
+             * @param {Node} oldParent The old parent of this node
+             * @param {Node} newParent The new parent of this node
+             * @param {Number} index The index it was moved to
+             */
+            "move",
+            
+            /**
+             * @event insert
+             * Fires when a new child node is inserted in a node in this store's tree.
+             * @param {Tree} tree The owner tree
+             * @param {Node} parent The parent node
+             * @param {Node} node The child node inserted
+             * @param {Node} refNode The child node the node was inserted before
+             */
+            "insert",
+            
+            /**
+             * @event beforeappend
+             * Fires before a new child is appended to a node in this store's tree, return false to cancel the append.
+             * @param {Tree} tree The owner tree
+             * @param {Node} parent The parent node
+             * @param {Node} node The child node to be appended
+             */
+            "beforeappend",
+            
+            /**
+             * @event beforeremove
+             * Fires before a child is removed from a node in this store's tree, return false to cancel the remove.
+             * @param {Tree} tree The owner tree
+             * @param {Node} parent The parent node
+             * @param {Node} node The child node to be removed
+             */
+            "beforeremove",
+            
+            /**
+             * @event beforemove
+             * Fires before a node is moved to a new location in the store's tree. Return false to cancel the move.
+             * @param {Tree} tree The owner tree
+             * @param {Node} node The node being moved
+             * @param {Node} oldParent The parent of the node
+             * @param {Node} newParent The new parent the node is moving to
+             * @param {Number} index The index it is being moved to
+             */
+            "beforemove",
+            
+            /**
+             * @event beforeinsert
+             * Fires before a new child is inserted in a node in this store's tree, return false to cancel the insert.
+             * @param {Tree} tree The owner tree
+             * @param {Node} parent The parent node
+             * @param {Node} node The child node to be inserted
+             * @param {Node} refNode The child node the node is being inserted before
+             */
+            "beforeinsert",
+             
+             /**
+              * @event expand
+              * Fires when this node is expanded.
+              * @param {Node} this The expanding node
+              */
+             "expand",
+             
+             /**
+              * @event collapse
+              * Fires when this node is collapsed.
+              * @param {Node} this The collapsing node
+              */
+             "collapse",
+             
+             /**
+              * @event beforeexpand
+              * Fires before this node is expanded.
+              * @param {Node} this The expanding node
+              */
+             "beforeexpand",
+             
+             /**
+              * @event beforecollapse
+              * Fires before this node is collapsed.
+              * @param {Node} this The collapsing node
+              */
+             "beforecollapse",
+
+             /**
+              * @event sort
+              * Fires when this TreeStore is sorted.
+              * @param {Node} node The node that is sorted.
+              */             
+             "sort"          
+        ]);
         
         //<deprecated since=0.99>
         if (Ext.isDefined(me.nodeParameter)) {
             throw "Ext.data.TreeStore: nodeParameter has been renamed to nodeParam for consistency";
         }
         //</deprecated>
+    },
+    
+    onBeforeSort: function() {
+        if (this.folderSort) {
+            this.sort({
+                property: 'leaf',
+                direction: 'ASC'
+            }, 'prepend', false);    
+        }
     },
     
     onBeforeNodeExpand: function(node, callback, scope) {
@@ -116,7 +248,6 @@ Ext.define('Ext.data.TreeStore', {
 
         // If the user has set expanded: true on the root, we want to call the expand function
         if (root.isExpanded()) {
-            root.set('expanded', false);
             root.expand();
         }
     },
@@ -164,8 +295,9 @@ Ext.define('Ext.data.TreeStore', {
     // @private
     // fills an Ext.data.RecordNode with records
     fillNode: function(node, records) {
-        var ln = records.length,
-            reader = this.proxy.reader,        
+        var me = this,
+            ln = records ? records.length : 0,
+            reader = me.proxy.reader,
             recordNode,
             record,
             dataRoot,
@@ -173,101 +305,64 @@ Ext.define('Ext.data.TreeStore', {
             i = 0,
             raw;
 
+        if (ln && me.sortOnLoad && !me.remoteSort && me.sorters && me.sorters.items) {
+            sortCollection = Ext.create('Ext.util.MixedCollection');
+            sortCollection.addAll(records);
+            sortCollection.sort(me.sorters.items);
+            records = sortCollection.items;
+        }
+
         node.loaded = true;
         for (; i < ln; i++) {
             record = records[i];
+            node.appendChild(record, true);
             
-            // While we are going to fill this record, set its state to not expanded
-            // expanded = false;
-            // if (record.isExpanded()) {
-            //     record.set('expanded', false);
-            //     expanded = true;
-            // }
-
-            node.appendChild(record);
-                        
+            // Since we are suppressing the event, we have to manually register the node with the tree
+            me.tree.registerNode(record);
+            
             // If the record contains any children then extract them and add them
             if (record.raw) {
                 dataRoot = reader.getRoot(record.raw);
                 if (dataRoot) {
                     preloadChildren = reader.extractData(dataRoot);
-                    this.fillNode(record, preloadChildren);    
+                    me.fillNode(record, preloadChildren);    
                 }
             }
-            
-            // If the data came back with expanded true on a child, then expand it
-            // if (expanded) {                
-            //     record.expand();
-            // }
         }
-    },
         
+        return records;
+    },
+
     onProxyLoad: function(operation) {
         var me = this,
             successful = operation.wasSuccessful(),
             records = operation.getRecords(),
             node = operation.node,
-            sortCollection = this.sortCollection;
+            sortCollection;
 
         if (successful) {
-            if (me.sortOnLoad && !this.remoteSort && me.sorters && me.sorters.items) {
-                if (!sortCollection) {
-                    sortCollection = this.sortCollection = Ext.create('Ext.util.MixedCollection');
-                }
-                sortCollection.clear();
-                sortCollection.addAll(records);
-                sortCollection.sort(me.sorters.items);
-                records = sortCollection.items;
-                node.sorters = me.sorters.items;
-            }
-            me.fillNode(node, records);
+            records = me.fillNode(node, records);
         }
-
+        // deprecate read?
         me.fireEvent('read', me, operation.node, records, successful);
+        me.fireEvent('load', me, operation.node, records, successful);
         //this is a callback that would have been passed to the 'read' function and is optional
         Ext.callback(operation.callback, operation.scope || me, [records, operation, successful]);
     },
-    
+
     removeAll: function() {
         this.getRootNode().destroy();
+    },
+
+    doSort: function(sorterFn) {
+        var me = this;
+        if (me.remoteSort) {
+            //the load function will pick up the new sorters and request the sorted data from the proxy
+            me.load();
+        } else {
+            me.tree.sort(sorterFn, true);
+            me.fireEvent('datachanged', me);
+        }   
+        me.fireEvent('sort', me);
     }
-    
-    // 
-    // sort: function(sorters, direction) {
-    //     var me = this,
-    //         property,
-    //         sortToggle,
-    //         toggle;
-    //         
-    //     if (Ext.isString(sorters)) {
-    //         property = sorters;
-    //         sortToggle = me.sortToggle;
-    //         toggle = Ext.String.toggle;
-    // 
-    //         if (direction === undefined) {
-    //             sortToggle[property] = toggle(sortToggle[property] || "", "ASC", "DESC");
-    //             direction = sortToggle[property];
-    //         }
-    // 
-    //         sorters = {
-    //             property : property,
-    //             direction: direction
-    //         };
-    //     }
-    //     
-    //     if (arguments.length !== 0) {
-    //         me.sorters.clear();
-    //     }
-    //     
-    //     me.sorters.addAll(me.decodeSorters(sorters));
-    //     // 
-    //     // if (me.remoteSort) {
-    //     //     //the load function will pick up the new sorters and request the sorted data from the proxy
-    //     //     me.load();
-    //     // } else {
-    //     // console.log(me.sorters.items);
-    //     // me.data.sort(me.sorters.items);
-    //     me.fireEvent('datachanged', me);
-    //     // }        
-    // }
 });

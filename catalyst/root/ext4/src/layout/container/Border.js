@@ -69,7 +69,7 @@ Ext.define('Ext.layout.container.Border', {
     alias: ['layout.border'],
     extend: 'Ext.layout.Container',
     requires: ['Ext.resizer.Splitter', 'Ext.container.Container', 'Ext.fx.Anim'],
-    alternatClassName: 'Ext.layout.BorderLayout',
+    alternateClassName: 'Ext.layout.BorderLayout',
     
     targetCls: Ext.baseCSSPrefix + 'border-layout-ct',
 
@@ -176,6 +176,7 @@ Ext.define('Ext.layout.container.Border', {
                     destroy: me.onRegionDestroy,
                     scope: me
                 });
+                me.setupState(comp);
             }
         }
         if (!regions.center) {
@@ -366,6 +367,25 @@ Ext.define('Ext.layout.container.Border', {
         me.shadowLayout = me.shadowContainer.getLayout();
 
         me.borderLayoutInitialized = true;
+    },
+    
+    
+    setupState: function(comp){
+        var getState = comp.getState;
+        comp.getState = function(){
+            // call the original getState
+            var state = getState.call(comp) || {},
+                region = comp.region;
+                
+            state.collapsed = !!comp.collapsed;
+            if (region == 'west' || region == 'east') {
+                state.width = comp.getWidth();
+            } else {
+                state.height = comp.getHeight();
+            }
+            return state;
+        };
+        comp.addStateEvents(['collapse', 'expand', 'resize']);
     },
     
     /**

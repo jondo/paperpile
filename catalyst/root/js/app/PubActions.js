@@ -522,7 +522,7 @@ Ext.define('Paperpile.app.PubActions', {
             var pub = grid.getSingleSelection();
             if (pub.get('pdf')) {
               var pdf = pub.get('pdf_name');
-              var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
+              var path = Paperpile.utils.catPath(Paperpile.Settings.get('paper_root'), pdf);
               var parts = Paperpile.utils.splitPath(path);
               Ext.defer(Paperpile.utils.openFile, 20, Paperpile.utils, [parts.dir]);
             }
@@ -540,7 +540,7 @@ Ext.define('Paperpile.app.PubActions', {
             var pub = grid.getSingleSelection();
             if (pub.get('pdf')) {
               var pdf = pub.get('pdf_name');
-              var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
+              var path = Paperpile.utils.catPath(Paperpile.Settings.get('paper_root'), pdf);
               Paperpile.main.tabs.newPdfTab({
                 file: path,
                 filename: pdf
@@ -562,7 +562,7 @@ Ext.define('Paperpile.app.PubActions', {
             var pub = grid.getSingleSelection();
             if (pub.get('pdf')) {
               var pdf = pub.get('pdf_name');
-              var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
+              var path = Paperpile.utils.catPath(Paperpile.Settings.get('paper_root'), pdf);
               Ext.defer(Paperpile.utils.openFile, 20, Paperpile.utils, [path]);
             }
           },

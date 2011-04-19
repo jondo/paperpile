@@ -25,14 +25,14 @@ Ext.define('Ext.layout.container.Fit', {
 
     extend: 'Ext.layout.container.AbstractFit',
     alias: 'layout.fit',
-    alternatClassName: 'Ext.layout.FitLayout',
+    alternateClassName: 'Ext.layout.FitLayout',
 
     /* End Definitions */
    
     // @private
     onLayout : function() {
         var me = this;
-        Ext.layout.container.Fit.superclass.onLayout.call(me);
+        me.callParent();
 
         if (me.owner.items.length) {
             me.setItemBox(me.owner.items.get(0), me.getLayoutTargetSize());

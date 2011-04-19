@@ -87,7 +87,6 @@ Ext.define('Ext.tip.QuickTips', function() {
                     return;
                 }
                 tip = new Ext.tip.QuickTip({
-                    elements:'header,body', 
                     disabled: disabled,
                     renderTo: autoRender !== false ? document.body : undefined
                 });
@@ -182,6 +181,4 @@ Ext.define('Ext.tip.QuickTips', function() {
             tip.register.apply(tip, arguments);
         }
     };
-}(), function() {
-    Ext.QuickTips = this;
-});
+}());

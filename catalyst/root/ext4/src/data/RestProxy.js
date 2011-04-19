@@ -126,6 +126,12 @@ Ext.define('Ext.data.RestProxy', {
      */
     
     /**
+     * @cfg {Boolean} batchActions True to batch actions of a particular type when synchronizing the store.
+     * Defaults to <tt>false</tt>.
+     */
+    batchActions: false,
+    
+    /**
      * Specialized version of buildUrl that incorporates the {@link #appendId} and {@link #format} options into the
      * generated url. Override this to provide further customizations, but remember to call the superclass buildUrl
      * so that additional parameters like the cache buster string are appended
@@ -156,34 +162,7 @@ Ext.define('Ext.data.RestProxy', {
         
         request.url = url;
         
-        return Ext.data.RestProxy.superclass.buildUrl.apply(this, arguments);
-    },
-    
-    /*
-     * Inherit docs. We are overriding this so that the we can break off
-     * each record into its own request
-     */
-    batch: function(operations, listeners) {
-        var batch = Ext.create('Ext.data.Batch', {
-            proxy: this,
-            listeners: listeners || {}
-        }), records;
-        
-        Ext.each(this.batchOrder.split(','), function(action) {
-            records = operations[action];
-            if (records) {
-                Ext.each(records, function(record){
-                    batch.add(Ext.create('Ext.data.Operation', {
-                        action : action, 
-                        records: [record]
-                    }));
-                });
-            }
-        }, this);
-        
-        batch.start();
-        
-        return batch;
+        return this.callParent(arguments);
     }
 }, function() {
     Ext.apply(this.prototype, {

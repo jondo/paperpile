@@ -101,8 +101,12 @@ new Ext.Application({
  * profile changes, calling the {@link #determineProfile} function will force it to re-check.</p>
  */
 Ext.define('Ext.Application', {
-    extend: 'Ext.util.Observable',
-    
+    requires: ['Ext.ApplicationManager', 'Ext.util.History'],
+
+    mixins: {
+        observable: 'Ext.util.Observable'
+    },
+
     /**
      * @cfg {String} name The name of the Application. This should be the same as the single global variable that the
      * application uses, and should not contain spaces
@@ -169,7 +173,7 @@ Ext.define('Ext.Application', {
             'profilechange'
         );
 
-        Ext.Application.superclass.constructor.call(this, config);
+        this.mixins.observable.constructor.call(this, config);
 
         this.bindReady();
 
@@ -334,7 +338,7 @@ Ext.define('Ext.Application', {
      */
     onReady: function() {
         var EventManager = Ext.EventManager;
-        
+
         if (this.useLoadMask) {
             this.initLoadMask();
         }
@@ -393,7 +397,7 @@ Ext.define('Ext.Application', {
                 if (component.setProfile) {
                     component.setProfile(profile);
                 }
-            });            
+            });
         }
 
     },

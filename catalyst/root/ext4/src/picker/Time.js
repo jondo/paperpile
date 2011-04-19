@@ -20,7 +20,7 @@
 Ext.define('Ext.picker.Time', {
     extend: 'Ext.view.BoundList',
     alias: 'widget.timepicker',
-    requires: ['Ext.data.Store', 'Ext.util.Date'],
+    requires: ['Ext.data.Store', 'Ext.Date'],
 
     /**
      * @cfg {Date} minValue
@@ -43,7 +43,7 @@ Ext.define('Ext.picker.Time', {
     /**
      * @cfg {String} format
      * The default time format string which can be overriden for localization support. The format must be
-     * valid according to {@link Ext.util.Date#parse} (defaults to 'g:i A', e.g., '3:15 PM'). For 24-hour time
+     * valid according to {@link Ext.Date#parse} (defaults to 'g:i A', e.g., '3:15 PM'). For 24-hour time
      * format try 'H:i' instead.
      */
     format : "g:i A",

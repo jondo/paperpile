@@ -10,7 +10,7 @@ Ext.define('Ext.layout.Container', {
     /* Begin Definitions */
 
     extend: 'Ext.layout.AbstractContainer',
-    alternatClassName: 'Ext.layout.ContainerLayout',
+    alternateClassName: 'Ext.layout.ContainerLayout',
     
     /* End Definitions */
 

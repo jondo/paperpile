@@ -64,7 +64,7 @@ Ext.define('Ext.form.CheckboxGroup', {
      * of each column will be evenly distributed based on the width of the overall field container. This is the default.</p></li>
      * <li><b>Number</b> : <p class="sub-desc">If you specific a number (e.g., 3) that number of columns will be
      * created and the contained controls will be automatically distributed based on the value of {@link #vertical}.</p></li>
-     * <li><b>Array</b> : Object<p class="sub-desc">You can also specify an array of column widths, mixing integer
+     * <li><b>Array</b> : <p class="sub-desc">You can also specify an array of column widths, mixing integer
      * (fixed width) and float (percentage width) values as needed (e.g., [100, .25, .75]). Any integer values will
      * be rendered first, then any float values will be calculated as a percentage of the remaining space. Float
      * values do not have to add up to 1 (100%) although if you want the controls to take up the entire field

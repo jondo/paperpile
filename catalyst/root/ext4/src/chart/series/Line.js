@@ -252,7 +252,7 @@ Ext.define('Ext.chart.series.Line', {
                         x: markerAux.attr.translation.x,
                         y: markerAux.attr.translation.y
                     }
-                });
+                }, true);
             }
         }
         
@@ -267,6 +267,7 @@ Ext.define('Ext.chart.series.Line', {
         for (i = 0, ln = axes.length; i < ln; i++) { 
             axis = chart.axes.get(axes[i]);
             if (axis) {
+                axis = axis.calcEnds();
                 if (axis.position == 'top' || axis.position == 'bottom') {
                     minX = axis.from;
                     maxX = axis.to;
@@ -321,6 +322,15 @@ Ext.define('Ext.chart.series.Line', {
             if (typeof yValue == 'string') {
                 yValue = i;
             }
+            //skip undefined values
+            if (typeof yValue == 'undefined') {
+                //<debug warn>
+                if (Ext.isDefined(Ext.global.console)) {
+                    Ext.global.console.warn("[Ext.chart.series.Line]  Skipping a store element with an undefined value at ", record, xValue, yValue);
+                }
+                //</debug>
+                return;
+            }
             xValues.push(xValue);
             yValues.push(yValue);
         }, me);
@@ -343,6 +353,7 @@ Ext.define('Ext.chart.series.Line', {
                     path = [];
                 }
                 onbreak = true;
+                me.items.push(false);
                 continue;
             } else {
                 x = (bbox.x + (xValue - minX) * xScale).toFixed(2);
@@ -541,10 +552,16 @@ Ext.define('Ext.chart.series.Line', {
                 for(i = 0; i < ln; i++) {
                     item = markerGroup.getAt(i);
                     if (item) {
-                        rendererAttributes = me.renderer(item, store.getAt(i), item._to, i, store);
-                        me.onAnimate(item, {
-                            to: Ext.apply(rendererAttributes, endMarkerStyle || {})
-                        });
+                        if (me.items[i]) {
+                            rendererAttributes = me.renderer(item, store.getAt(i), item._to, i, store);
+                            me.onAnimate(item, {
+                                to: Ext.apply(rendererAttributes, endMarkerStyle || {})
+                            });
+                        } else {
+                            item.setAttributes(Ext.apply({
+                                hidden: true 
+                            }, item._to), true);
+                        }
                     }
                 }
                 for(; i < markerCount; i++) {
@@ -582,21 +599,18 @@ Ext.define('Ext.chart.series.Line', {
                 for(i = 0; i < ln; i++) {
                     item = markerGroup.getAt(i);
                     if (item) {
-                        rendererAttributes = me.renderer(item, store.getAt(i), item._to, i, store);
-                        item.setAttributes(Ext.apply(endMarkerStyle || {}, rendererAttributes || {}), true);
-//                        me.onAnimate(item, {
-//                            to: Ext.apply(rendererAttributes, endMarkerStyle || {})
-//                        });
+                        if (me.items[i]) {
+                            rendererAttributes = me.renderer(item, store.getAt(i), item._to, i, store);
+                            item.setAttributes(Ext.apply(endMarkerStyle || {}, rendererAttributes || {}), true);
+                        } else {
+                            item.hide(true);
+                        }
                     }
                 }
                 for(; i < markerCount; i++) {
                     item = markerGroup.getAt(i);
                     item.hide(true);
                 }
-//                for(i = 0; i < (chart.markerIndex || 0); i++) {
-//                    item = markerGroup.getAt(i);
-//                    item.hide(true);
-//                }
             }
         }
 
@@ -604,7 +618,6 @@ Ext.define('Ext.chart.series.Line', {
             path.splice(1, 0, path[1], path[2]);
             me.previousPath = path;
         }
-
         me.renderLabels();
         me.renderCallouts();
     },

@@ -205,5 +205,13 @@ Ext.define('Ext.data.Tree', {
 
     toString : function() {
         return "[Tree"+(this.id?" "+this.id:"")+"]";
-    } 
+    },
+    
+    sort: function(sorterFn, recursive) {
+        this.getRootNode().sort(sorterFn, recursive);
+    },
+    
+    filter: function(filters, recursive) {
+        this.getRootNode().filter(filters, recursive);
+    }
 });

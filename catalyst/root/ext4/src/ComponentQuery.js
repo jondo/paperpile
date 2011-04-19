@@ -417,7 +417,7 @@ Ext.define('Ext.ComponentQuery', {
                 matchedChar,
                 modeMatch,
                 selectorMatch,
-                i, matcher;
+                i, matcher, method;
 
             // We are going to parse the beginning of the selector over and
             // over again, slicing off the selector any portions we converted into an

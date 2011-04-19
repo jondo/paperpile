@@ -13,8 +13,7 @@ Ext.define('Ext.tab.TabBar', {
 
     requires: [
         'Ext.tab.Tab',
-        'Ext.FocusManager',
-        'Ext.util.KeyNav'
+        'Ext.FocusManager'
     ],
 
     // @private
@@ -29,7 +28,7 @@ Ext.define('Ext.tab.TabBar', {
     // @private
     renderTpl: [
         '<div class="{baseCls}-body<tpl if="ui"> {baseCls}-body-{ui}</tpl>"<tpl if="bodyStyle"> style="{bodyStyle}"</tpl>></div>',
-        '<div class="{baseCls}-strip"></div>'
+        '<div class="{baseCls}-strip<tpl if="ui"> {baseCls}-strip-{ui}</tpl>"></div>'
     ],
 
     /**
@@ -44,7 +43,8 @@ Ext.define('Ext.tab.TabBar', {
 
     // @private
     initComponent: function() {
-        var me = this;
+        var me = this,
+            keys;
 
         if (me.plain) {
             me.ui = 'plain';
@@ -62,6 +62,7 @@ Ext.define('Ext.tab.TabBar', {
         );
 
         Ext.applyIf(this.renderSelectors, {
+            body : '.' + this.baseCls + '-body',
             strip: '.' + this.baseCls + '-strip'
         });
         me.callParent(arguments);
@@ -69,8 +70,15 @@ Ext.define('Ext.tab.TabBar', {
         // TabBar must override the Header's align setting.
         me.layout.align = (me.orientation == 'vertical') ? 'left' : 'top';
         me.layout.overflowHandler = Ext.create('Ext.layout.container.boxOverflow.Scroller', me.layout);
+        me.layout.overflowHandler.on('scroll', me.updateStrip, me);
         me.items.removeAt(me.items.getCount() - 1);
         me.items.removeAt(me.items.getCount() - 1);
+        
+        // Subscribe to Ext.FocusManager for key navigation
+        keys = me.orientation == 'vertical' ? ['up', 'down'] : ['left', 'right'];
+        Ext.FocusManager.subscribe(me, {
+            keys: keys
+        });
     },
 
     // @private
@@ -89,14 +97,6 @@ Ext.define('Ext.tab.TabBar', {
         }
         tab.maxWidth = me.maxTabWidth || (hasOwner ? tabPanel.maxTabWidth : undefined);
     },
-    
-    // @private
-    onDestroy: function() {
-        var me = this;
-        Ext.destroy(me.keyNav);
-        delete me.keyNav;
-        me.callParent(arguments);
-    },
 
     // @private
     afterRender: function() {
@@ -108,25 +108,13 @@ Ext.define('Ext.tab.TabBar', {
             delegate: '.' + Ext.baseCSSPrefix + 'tab'
         });
         me.callParent(arguments);
-        
-        me.keyNav = Ext.create('Ext.util.KeyNav', me.el, {
-            left: me.onNavKey,
-            right: me.onNavKey,
-            scope: me
-        });
     },
 
     afterComponentLayout : function() {
         var me = this;
 
         me.callParent(arguments);
-        me.strip.setWidth(me.el.getWidth());
-    },
-    
-    // @private
-    onNavKey: function(e) {
-        var me = this;
-        me.focusedCmp = Ext.FocusManager.navigateSiblings(e, me, me);
+        me.updateStrip();
     },
 
     // @private
@@ -138,7 +126,7 @@ Ext.define('Ext.tab.TabBar', {
         target = e.getTarget();
 
         if (tab && tab.isDisabled && !tab.isDisabled()) {
-            if (target === tab.btnWrap.dom && target != tab.btnEl.dom) {
+            if (tab.closable && target === tab.closeEl.dom) {
                 tab.onCloseClick();
             } else {
                 this.setActiveTab(tab);
@@ -194,10 +182,36 @@ Ext.define('Ext.tab.TabBar', {
                 me.activeTab.deactivate();
             }
             tab.activate();
-            me.doLayout();
+            me.layout.layout();
             tab.el.scrollIntoView(me.layout.getRenderTarget());
         }
         me.activeTab = tab;
+        me.updateStrip();
         me.fireEvent('change', me, tab, tab.card);
+    },
+    
+    /**
+     * @private
+     * Makes the strip border move under the active tab.
+     */
+    updateStrip: function() {
+        var me = this,
+            stripBorder,
+            activeTab = me.activeTab,
+            top = (me.dock == 'top');
+
+        // @TODO: clean up this super nasty (really nasty) uber nasty hack
+        Ext.defer(function() {
+            if (me.rendered && activeTab && activeTab.rendered) {
+                me.strip.setWidth(me.el.getWidth());
+                if (!me.stripBorder) {
+                    me.stripBorder = me.body.createChild({
+                        cls: me.baseCls + '-strip-border'
+                    });
+                }
+                me.stripBorder.setWidth(activeTab.getWidth());
+                me.stripBorder.alignTo(activeTab.el, (top ? 'bl' : 'tl'));
+            }
+        }, 1);
     }
 });

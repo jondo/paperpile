@@ -49,7 +49,7 @@ __Example usage:__
                         boxLabel  : 'Artichoke Hearts',
                         name      : 'topping',
                         inputValue: '2',
-    					checked   : true,
+                        checked   : true,
                         id        : 'checkbox2'
                     }, {
                         boxLabel  : 'Bacon',
@@ -60,40 +60,40 @@ __Example usage:__
                 ]
             }
         ],
-    	bbar: [
-    		{
-    			text: 'Select Bacon',
-    			handler: function() {
-    			    var checkbox = Ext.getCmp('checkbox3');
-    		        checkbox.setValue(true);
-    			}
-    		},
-    		'-',
-    		{
-    			text: 'Select All',
-    			handler: function() {
-    			    var checkbox1 = Ext.getCmp('checkbox1'),
-    			        checkbox2 = Ext.getCmp('checkbox2'),
-    			        checkbox3 = Ext.getCmp('checkbox3');
+        bbar: [
+            {
+                text: 'Select Bacon',
+                handler: function() {
+                    var checkbox = Ext.getCmp('checkbox3');
+                    checkbox.setValue(true);
+                }
+            },
+            '-',
+            {
+                text: 'Select All',
+                handler: function() {
+                    var checkbox1 = Ext.getCmp('checkbox1'),
+                        checkbox2 = Ext.getCmp('checkbox2'),
+                        checkbox3 = Ext.getCmp('checkbox3');
 
-    		        checkbox1.setValue(true);
-    		        checkbox2.setValue(true);
-    		        checkbox3.setValue(true);
-    			}
-    		},
-    		{
-    			text: 'Deselect All',
-    			handler: function() {
-    			    var checkbox1 = Ext.getCmp('checkbox1'),
-    			        checkbox2 = Ext.getCmp('checkbox2'),
-    			        checkbox3 = Ext.getCmp('checkbox3');
+                    checkbox1.setValue(true);
+                    checkbox2.setValue(true);
+                    checkbox3.setValue(true);
+                }
+            },
+            {
+                text: 'Deselect All',
+                handler: function() {
+                    var checkbox1 = Ext.getCmp('checkbox1'),
+                        checkbox2 = Ext.getCmp('checkbox2'),
+                        checkbox3 = Ext.getCmp('checkbox3');
 
-    		        checkbox1.setValue(false);
-    		        checkbox2.setValue(false);
-    		        checkbox3.setValue(false);
-    			}
-    		}
-    	]
+                    checkbox1.setValue(false);
+                    checkbox2.setValue(false);
+                    checkbox3.setValue(false);
+                }
+            }
+        ]
     });
 
  * @constructor
@@ -118,7 +118,14 @@ Ext.define('Ext.form.Checkbox', {
     /**
      * @cfg {String} fieldCls The default CSS class for the checkbox (defaults to <tt>'x-form-field'</tt>)
      */
-    
+
+    /**
+     * @cfg {String} fieldBodyCls
+     * An extra CSS class to be applied to the body content element in addition to {@link #fieldBodyCls}.
+     * Defaults to 'x-form-cb-wrap.
+     */
+    fieldBodyCls: Ext.baseCSSPrefix + 'form-cb-wrap',
+
     /**
      * @cfg {Boolean} checked <tt>true</tt> if the checkbox should render initially checked (defaults to <tt>false</tt>)
      */
@@ -311,17 +318,7 @@ Ext.define('Ext.form.Checkbox', {
             whitespace = 'white-space',
             width, rect;
         bodyEl.setStyle(whitespace, 'nowrap');
-        // Gecko will in some cases report an offsetWidth that is actually less than the width of the
-        // text contents, because it measures fonts with sub-pixel precision but rounds the calculated
-        // value down. Using getBoundingClientRect instead of offsetWidth allows us to get the precise
-        // subpixel measurements so we can force them to always be rounded up. See
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=458617
-        if (Ext.supports.BoundingClientRect) {
-            rect = bodyEl.dom.getBoundingClientRect();
-            width = Math.ceil(rect.right - rect.left);
-        } else {
-            width = bodyEl.getWidth();
-        }
+        width = bodyEl.getWidth();
         bodyEl.setStyle(whitespace, '');
         return width;
     }

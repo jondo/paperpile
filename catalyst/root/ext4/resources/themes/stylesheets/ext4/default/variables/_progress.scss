@@ -12,5 +12,5 @@ $progress-bar-color: #73A1E0 !default;
 $progress-text-color-front: #fff !default;
 $progress-text-color-back: #396095 !default;
 $progress-text-text-align: left !default;
-$progress-text-font-size: 11px !default;
+$progress-text-font-size: ceil($font-size * .9) !default;
 $progress-text-font-weight: bold !default;

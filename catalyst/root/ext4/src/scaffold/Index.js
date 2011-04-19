@@ -196,7 +196,7 @@ Ext.scaffold.Index = Ext.extend(Ext.DataView, {
      * Handler tied to the Edit button's click or tap event.
      */
     onEditButtonClick: function() {
-        console.log('test');
+
     },
     
     /**

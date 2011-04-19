@@ -20,8 +20,8 @@
         aggregateOp: 'sum',
 
         constrain: true,
-        fromDate: '1/1/11',
-        toDate: '1/7/11'
+        fromDate: new Date('1/1/11'),
+        toDate: new Date('1/7/11')
     }]
   </code></pre>
  *
@@ -117,58 +117,79 @@ Ext.define('Ext.chart.axis.Time', {
         'year': function(date) {
             return date.getFullYear();
         },
+        'month': function(date) {
+            return date.getMonth() + 1;
+        },
         'day': function(date) {
             return date.getDate();
         },
-        'month': function(date) {
-            return date.getMonth() + 1;
+        'hour': function(date) {
+            return date.getHours();
+        },
+        'minute': function(date) {
+            return date.getMinutes();
+        },
+        'second': function(date) {
+            return date.getSeconds();
+        },
+        'millisecond': function(date) {
+            return date.getMilliseconds();
         }
     },
     
     // @private holds aggregate functions.
-    aggregateFn: {
-        'sum': function(list) {
-            var i = 0, l = list.length, acum = 0;
-            if (!list.length || isNaN(list[0])) {
-                return list[0];
+    aggregateFn: (function() {
+        var etype = (function() {
+            var rgxp = /^\[object\s(.*)\]$/,
+                toString = Object.prototype.toString;
+            return function(e) {
+                return toString.call(e).match(rgxp)[1];
+            };
+        })();
+        return {
+            'sum': function(list) {
+                var i = 0, l = list.length, acum = 0;
+                if (!list.length || etype(list[0]) != 'Number') {
+                    return list[0];
+                }
+                for (; i < l; i++) {
+                    acum += list[i];
+                }
+                return acum;
+            },
+            'max': function(list) {
+                if (!list.length || etype(list[0]) != 'Number') {
+                    return list[0];
+                }
+                return Math.max.apply(Math, list);
+            },
+            'min': function(list) {
+                if (!list.length || etype(list[0]) != 'Number') {
+                    return list[0];
+                }
+                return Math.min.apply(Math, list);
+            },
+            'avg': function(list) {
+                var i = 0, l = list.length, acum = 0;
+                if (!list.length || etype(list[0]) != 'Number') {
+                    return list[0];
+                }
+                for (; i < l; i++) {
+                    acum += list[i];
+                }
+                return acum / l;
             }
-            for (; i < l; i++) {
-                acum += list[i];
-            }
-            return acum;
-        },
-        'max': function(list) {
-            if (!list.length || isNaN(list[0])) {
-                return list[0];
-            }
-            return Math.max.apply(Math, list);
-        },
-        'min': function(list) {
-            if (!list.length || isNaN(list[0])) {
-                return list[0];
-            }
-            return Math.min.apply(Math, list);
-        },
-        'avg': function(list) {
-            var i = 0, l = list.length, acum = 0;
-            if (!list.length || isNaN(list[0])) {
-                return list[0];
-            }
-            for (; i < l; i++) {
-                acum += list[i];
-            }
-            return acum / l;
-        }
-    },
+        };
+    })(),
     
     // @private normalized the store to fill date gaps in the time interval.
     constrainDates: function() {
-        var fromDate = new Date(this.fromDate),
-            toDate = new Date(this.toDate),
+        var fromDate = Ext.Date.clone(this.fromDate),
+            toDate = Ext.Date.clone(this.toDate),
             step = this.step,
             field = this.fields,
             store = this.chart.store,
-            record, recObj, fieldNames = [], 
+            record, recObj, fieldNames = [],
             newStore = new Ext.data.Store({
                 model: store.model
             });
@@ -179,7 +200,7 @@ Ext.define('Ext.chart.axis.Time', {
                 var rec, recDate;
                 for (; index < l; index++) {
                     rec = store.getAt(index);
-                    recDate = new Date(rec.get(field));
+                    recDate = rec.get(field);
                     if (+recDate > +date) {
                         return false;
                     } else if (+recDate == +date) {
@@ -194,7 +215,7 @@ Ext.define('Ext.chart.axis.Time', {
             this.chart.filteredStore = this.chart.store;
             return;
         }
-        
+
         while(+fromDate <= +toDate) {
             record = getRecordByDate(fromDate);
             recObj = {};
@@ -209,7 +230,7 @@ Ext.define('Ext.chart.axis.Time', {
             }
             fromDate = Ext.Date.add(fromDate, step[0], step[1]);
         }
-        
+         
         this.chart.filteredStore = newStore;
     },
     
@@ -240,7 +261,7 @@ Ext.define('Ext.chart.axis.Time', {
                 recFieldsLen = recFields.length;
             }
             //get record date value
-            value = new Date(rec.get(field));
+            value = rec.get(field);
             //generate key for grouping records
             for (i = 0; i < l; i++) {
                 if (i == 0) {
@@ -277,7 +298,6 @@ Ext.define('Ext.chart.axis.Time', {
             }
             json.push(obj);
         }
-        
         this.chart.substore = new Ext.data.JsonStore({
             fields: recFields,
             data: json
@@ -293,7 +313,6 @@ Ext.define('Ext.chart.axis.Time', {
             format = this.dateFormat,
             labels, i, dates = this.dates,
             formatFn = Ext.Date.format;
-    
         this.labels = labels = [];
         store.each(function(record, i) {
             if (!format) {
@@ -319,7 +338,8 @@ Ext.define('Ext.chart.axis.Time', {
          return {
              from: 0,
              to: count,
-             steps: count - 1
+             steps: count - 1,
+             step: 1
          };
      }
  });

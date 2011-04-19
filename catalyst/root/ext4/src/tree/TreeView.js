@@ -22,13 +22,17 @@ Ext.define('Ext.tree.TreeView', {
     /** 
      * @cfg {Boolean} animate <tt>true</tt> to enable animated expand/collapse (defaults to the value of {@link Ext#enableFx Ext.enableFx})
      */
-    animate: Ext.enableFx,
     
     expandDuration: 250,
     collapseDuration: 250,
     
     initComponent: function() {
         var me = this;
+        
+        if (me.initialConfig.animate === undefined) {
+            me.animate = Ext.enableFx;
+        }
+        
         me.store = Ext.create('Ext.data.NodeStore', {
             node: me.treeStore.getRootNode(),
             recursive: true,
@@ -56,18 +60,28 @@ Ext.define('Ext.tree.TreeView', {
         el.on({
             scope: me,
             delegate: me.expanderSelector,
-            click: me.onExpanderClick,
             mouseover: me.onExpanderMouseOver,
             mouseout: me.onExpanderMouseOut
         });
+        el.on({
+            scope: me,
+            delegate: me.checkboxSelector,
+            change: me.onCheckboxChange
+        });
     },
     
-    onDblClick: function(e) {
-        this.callParent(arguments);
-        var item = e.getTarget(this.getItemSelector(), this.getTargetEl());
+    onCheckboxChange: function(e, t) {
+        var item = e.getTarget(this.getItemSelector(), this.getTargetEl()),
+            record;
         if (item) {
-            this.toggle(this.getRecord(item));
+            record = this.getRecord(item);
+            record.set('checked', !record.get('checked'));
         }
+    },
+    
+    getChecked: function() {
+        //return this.getTreeStore().filter('checked', true);
+        // @TODO: implement this function
     },
     
     afterRender: function(){
@@ -78,23 +92,24 @@ Ext.define('Ext.tree.TreeView', {
         }    
     },
     
-    createAnimWrap: function(parent, index) {
+    createAnimWrap: function(record, index) {
         var thHtml = '',
             headerCt = this.panel.headerCt,
             headers = headerCt.query('gridheader'),
             i = 0, ln = headers.length, item,
-            tmpEl;
+            node = this.getNode(record),
+            tmpEl, parentEl;
             
         for (; i < ln; i++) {
             item = headers[i];
             thHtml += '<th style="width: ' + (item.hidden ? 0 : item.getDesiredWidth()) + 'px; height: 0px;"></th>';
         }
         
-        parent = Ext.get(parent);        
-        tmpEl = parent.insertSibling({
+        nodeEl = Ext.get(node);        
+        tmpEl = nodeEl.insertSibling({
             tag: 'tr',
             html: [
-                '<td colspan="' + headerCt.getCount() + '">',
+                '<td colspan="' + headerCt.getColumnCount() + '">',
                     '<div class="' + Ext.baseCSSPrefix + 'tree-animator-wrap' + '">',
                         '<table class="' + Ext.baseCSSPrefix + 'grid-table" style="width: ' + headerCt.getFullWidth() + 'px;"><tbody>',
                             thHtml,
@@ -105,14 +120,22 @@ Ext.define('Ext.tree.TreeView', {
         }, 'after');
         
         return {
-            index: index,
+            record: record,
+            node: node,
             el: tmpEl,
+            expanding: false,
+            collapsing: false,
+            animating: false,
             animateEl: tmpEl.down('div'),
             targetEl: tmpEl.down('tbody')      
         };
     },
     
     getAnimWrap: function(parent) {
+        if (!this.animate) {
+            return null;
+        }
+        
         // We are checking to see which parent is having the animation wrap
         while (parent) {
             if (parent.animWrap) {
@@ -137,6 +160,9 @@ Ext.define('Ext.tree.TreeView', {
             return this.callParent(arguments);
         }
 
+        // We need the parent that has the animWrap, not the nodes parent
+        parent = animWrap.record;
+        
         // If there is an anim wrap we do our special magic logic
         targetEl = animWrap.targetEl;
         children = targetEl.dom.childNodes;
@@ -145,7 +171,7 @@ Ext.define('Ext.tree.TreeView', {
         ln = children.length-1;
         
         // The relative index is the index in the full flat collection minus the index of the wraps parent
-        relativeIndex = index - animWrap.index;
+        relativeIndex = index - this.indexOf(parent);
         
         // If we are adding records to the wrap that have a higher relative index then there are currently children
         // it means we have to append the nodes to the wrap
@@ -166,6 +192,12 @@ Ext.define('Ext.tree.TreeView', {
         else {            
             a.push.apply(a, nodes);
         }
+        
+        // If we were in an animation we need to now change the animation
+        // because the targetEl just got higher.
+        if (animWrap.isAnimating) {
+            this.onExpand(parent);
+        }
     },
     
     doRemove: function(record, index) {
@@ -185,34 +217,47 @@ Ext.define('Ext.tree.TreeView', {
     },
     
     onBeforeExpand: function(parent, records, index) {
-        parentNode = this.getNode(parent);
-        if (parentNode) {
+        if (!this.animate) {
+            return;
+        }
+
+        if (this.getNode(parent)) {
             var animWrap = this.getAnimWrap(parent);
             if (!animWrap) {
-                parent.animWrap = this.createAnimWrap(parentNode, index);
-                parent.animWrap.animateEl.setHeight(0);
-                parent.animWrap.collapsing = false;
+                parent.animWrap = this.createAnimWrap(parent);
+                // @TODO: we are setting it to 1 because quirks mode on IE seems to have issues with 0
+                parent.animWrap.animateEl.setHeight(1);
                 parent.animWrap.expanding = true;
             }
             else {
                 animWrap.targetEl.select(this.itemSelector).remove();
-            }
+            }            
         }
     },
-        
+    
     onExpand: function(parent) {
+        if (this.singleExpand) {
+            this.ensureSingleExpand(parent);
+        }
+        
         var animWrap = this.getAnimWrap(parent),
             animateEl, targetEl;
 
         if (!animWrap) {
+            this.panel.determineScrollbars();
+            this.panel.invalidateScroller();
             return;
         }
         
         animateEl = animWrap.animateEl;
         targetEl = animWrap.targetEl;
-        
+
         animateEl.stopFx();
+        // @TODO: we are setting it to 1 because quirks mode on IE seems to have issues with 0
         animateEl.animate({
+            from: {
+                height: animateEl.getHeight() + 'px'
+            },
             to: {
                 height: targetEl.getHeight() + 'px'
             },
@@ -222,26 +267,30 @@ Ext.define('Ext.tree.TreeView', {
                     // Move all the nodes out of the anim wrap to their proper location
                     animWrap.el.insertSibling(targetEl.query(this.itemSelector), 'before');
                     animWrap.el.remove();
+                    this.panel.determineScrollbars();
                     this.panel.invalidateScroller();
                     delete parent.animWrap;
                 },
                 scope: this                
             }
         });
+        animWrap.isAnimating = true;
     },
 
     onBeforeCollapse: function(parent, records, index) {
-        parentNode = this.getNode(parent);
-        if (parentNode) {
+        if (!this.animate) {
+            return;
+        }
+
+        if (this.getNode(parent)) {
             var animWrap = this.getAnimWrap(parent);
             if (!animWrap) {
-                parent.animWrap = this.createAnimWrap(parentNode, index);
+                parent.animWrap = this.createAnimWrap(parent, index);
                 parent.animWrap.collapsing = true;
-                parent.animWrap.expanding = false;
             }
             else {
                 animWrap.targetEl.select(this.itemSelector).remove();
-            }
+            }            
         }
     },
     
@@ -250,27 +299,35 @@ Ext.define('Ext.tree.TreeView', {
             animateEl, targetEl;
 
         if (!animWrap) {
+            this.panel.determineScrollbars();
+            this.panel.invalidateScroller();
             return;
         }
         
         animateEl = animWrap.animateEl;
         targetEl = animWrap.targetEl;
 
+        // @TODO: we are setting it to 1 because quirks mode on IE seems to have issues with 0
         animateEl.stopFx();
         animateEl.animate({
+            from: {
+                height: animateEl.getHeight() + 'px'
+            },
             to: {
-                height: '0px'
+                height: '1px'
             },
             duration: this.collapseDuration,
             listeners: {
                 lastframe: function() {
                     animWrap.el.remove();
                     delete parent.animWrap;
+                    this.panel.determineScrollbars();
                     this.panel.invalidateScroller();
                 },
                 scope: this                
             }
         });
+        animWrap.isAnimating = true;
     },
         
     // maintain expanded status when a record is updated.
@@ -307,35 +364,32 @@ Ext.define('Ext.tree.TreeView', {
         this[record.isExpanded() ? 'collapse' : 'expand'](record);
     },
     
-    // toggle the record
-    onExpanderClick: function(e, t) {
-        e.stopEvent();
-        var node = e.getTarget(this.getItemSelector());
-        this.toggle(this.getRecord(node));
+    onItemDblClick: function(record, item, index) {
+        this.callParent(arguments);
+        this.toggle(record);
+    },
+    
+    onBeforeItemMouseDown: function(record, item, index, e) {
+        if (e.getTarget(this.expanderSelector, item)) {
+            return false;
+        }
+        return this.callParent(arguments);
+    },
+    
+    onItemClick: function(record, item, index, e) {
+        if (e.getTarget(this.expanderSelector, item)) {
+            this.toggle(record);
+            return false;
+        }
+        return this.callParent(arguments);
     },
     
     onExpanderMouseOver: function(e, t) {
-        Ext.fly(t).up(this.cellSelector).addCls(this.expanderIconOverCls);
+        e.getTarget(this.cellSelector, 10, true).addCls(this.expanderIconOverCls);
     },
     
     onExpanderMouseOut: function(e, t) {
-        Ext.fly(t).up(this.cellSelector).removeCls(this.expanderIconOverCls);
-    },
-    
-    // cancel click events from being fired when a user clicks on
-    // the expander.
-    onItemClick: function(item, index, e) {
-        var result = this.callParent(arguments),
-            isExpander = e.getTarget(this.expanderSelector);
-        return result && !isExpander;
-    },
-    
-    // cancel mousedown events from being fired when a user clicks on
-    // the expander.
-    onItemMouseDown: function(item, index, e) {
-        var result = this.callParent(arguments),
-            isExpander = e.getTarget(this.expanderSelector);
-        return result && !isExpander;
+        e.getTarget(this.cellSelector, 10, true).removeCls(this.expanderIconOverCls);
     },
     
     /**
@@ -343,5 +397,16 @@ Ext.define('Ext.tree.TreeView', {
      */
     getTreeStore: function() {
         return this.panel.store;
+    },    
+    
+    ensureSingleExpand: function(node) {
+        var parent = node.parentNode;
+        if (parent) {
+            parent.eachChild(function(child) {
+                if (child !== node && child.isExpanded()) {
+                    child.collapse();
+                }
+            });
+        }
     }
 });

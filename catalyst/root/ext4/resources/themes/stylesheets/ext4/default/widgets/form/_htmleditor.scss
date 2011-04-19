@@ -1,8 +1,8 @@
 @mixin extjs-form-htmleditor {
     .#{$prefix}html-editor-wrap {
-        border:1px solid #a9bfd3;
+        border: 1px solid $html-editor-border-color;
         
-        background-color:#fff;
+        background-color: #fff;
         
         .#{$prefix}toolbar {
             border-top-width: 0;

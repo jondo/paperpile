@@ -2,7 +2,7 @@
     .#{$prefix}window {
         outline: none;
         border-color: $window-border-color;
-        @include inner-border($window-border-inner-width, $window-border-inner-color);
+        @include inner-border($window-inner-border-width, $window-inner-border-color);
         .#{$prefix}window-wrap {
             position: relative;
 
@@ -23,6 +23,17 @@
         border-width: $window-body-border-width;
         border-style: solid;
         background: $window-body-background-color;
+        color: $window-body-color;
+    }
+    
+    .#{$prefix}window-noborder-body {
+        border-width: 0;
+    }
+
+    // border:false on a Window means no borders on the body
+    // Supercede above rules.
+    .#{$prefix}window-noborder-body {
+        border: 0 none;
     }
 
     //maximized window
@@ -76,19 +87,19 @@
     @include x-frame('window-header-left', null, top($window-border-radius) 0 0 left($window-border-radius), $window-border-width, 5px 0px 5px 5px, $window-background-color);
 
     .#{$prefix}window-header-top {
-        @include inner-border(1px 1px 0, $window-border-inner-color);
+        @include inner-border(1px 1px 0, $window-inner-border-color);
     }
 
     .#{$prefix}window-header-right {
-        @include inner-border(1px 1px 1px 0, $window-border-inner-color);
+        @include inner-border(1px 1px 1px 0, $window-inner-border-color);
     }
 
     .#{$prefix}window-header-bottom {
-        @include inner-border(0px 1px 1px, $window-border-inner-color);
+        @include inner-border(0px 1px 1px, $window-inner-border-color);
     }
 
     .#{$prefix}window-header-left {
-        @include inner-border(1px 0 1px 1px, $window-border-inner-color);
+        @include inner-border(1px 0 1px 1px, $window-inner-border-color);
     }
 
     .#{$prefix}window-header-text {
@@ -96,6 +107,13 @@
         line-height: $window-header-font-size;
         color: $window-header-color;
         font-weight: $window-header-font-weight;
-        overflow: hidden;
+        overflow: visible;
+    }
+    
+    .x-ie {
+        .#{$prefix}window-header-text {
+            overflow: auto;
+            position: relative;
+        }
     }
 }

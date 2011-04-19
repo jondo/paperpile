@@ -142,6 +142,7 @@ Ext.define('Ext.draw.engine.SVG', {
     getBBoxText: function (sprite) {
         var bbox = {},
             bb, height, width, i, ln, el;
+
         if (sprite && sprite.el) {
             el = sprite.el.dom;
             try {
@@ -191,7 +192,7 @@ Ext.define('Ext.draw.engine.SVG', {
             transformsLength = transforms.length,
             i = 0,
             transform, type;
-
+            
         for (; i < transformsLength; i++) {
             transform = transforms[i];
             type = transform.type;
@@ -255,8 +256,10 @@ Ext.define('Ext.draw.engine.SVG', {
     },
     
     setViewBox: function(x, y, width, height) {
-        this.callParent(arguments);
-        this.el.dom.setAttribute("viewBox", [x, y, width, height].join(" "));
+        if (isFinite(x) && isFinite(y) && isFinite(width) && isFinite(height)) {
+            this.callParent(arguments);
+            this.el.dom.setAttribute("viewBox", [x, y, width, height].join(" "));
+        }
     },
 
     render: function (container) {
@@ -339,26 +342,11 @@ Ext.define('Ext.draw.engine.SVG', {
     
      tuneText: function (sprite, attrs) {
          var el = sprite.el.dom,
-             x = el.getAttribute("x"),
              tspans = [],
              height, tspan, text, i, ln, texts;
 
          if (attrs.hasOwnProperty("text")) {
-             while (el.firstChild) {
-                 el.removeChild(el.firstChild);
-             }
-             // Wrap each row into tspan to emulate rows
-             texts = String(attrs.text).split("\n");
-             for (i = 0, ln = texts.length; i < ln; i++) {
-                 text = texts[i];
-                 if (text) {
-                     tspan = this.createSVGElement("tspan");
-                     tspan.appendChild(Ext.getDoc().dom.createTextNode(text));
-                     tspan.setAttribute("x", x);
-                     el.appendChild(tspan);
-                     tspans[i] = tspan;
-                 }
-             }
+            tspans = this.setText(sprite, attrs.text);
          }
          // Normalize baseline via a DY shift of first tspan. Shift other rows by height * line height (1.2)
          if (tspans.length) {
@@ -369,6 +357,31 @@ Ext.define('Ext.draw.engine.SVG', {
              sprite.dirty = true;
          }
      },
+     
+    setText: function(sprite, textString) {
+         var me = this,
+             el = sprite.el.dom,
+             x = el.getAttribute("x"),
+             tspans = [],
+             height, tspan, text, i, ln, texts;
+        
+        while (el.firstChild) {
+            el.removeChild(el.firstChild);
+        }
+        // Wrap each row into tspan to emulate rows
+        texts = String(textString).split("\n");
+        for (i = 0, ln = texts.length; i < ln; i++) {
+            text = texts[i];
+            if (text) {
+                tspan = me.createSVGElement("tspan");
+                tspan.appendChild(document.createTextNode(Ext.htmlDecode(text)));
+                tspan.setAttribute("x", x);
+                el.appendChild(tspan);
+                tspans[i] = tspan;
+            }
+        }
+        return tspans;
+    },
 
     renderAll: function() {
         this.items.each(this.renderItem, this);

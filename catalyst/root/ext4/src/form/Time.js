@@ -40,7 +40,7 @@
 Ext.define('Ext.form.Time', {
     extend:'Ext.form.Picker',
     alias: 'widget.timefield',
-    requires: ['Ext.form.Date', 'Ext.picker.Time', 'Ext.view.BoundListKeyNav', 'Ext.util.Date'],
+    requires: ['Ext.form.Date', 'Ext.picker.Time', 'Ext.view.BoundListKeyNav', 'Ext.Date'],
     alternateClassName: 'Ext.form.TimeField',
 
     /**
@@ -87,14 +87,14 @@ Ext.define('Ext.form.Time', {
     /**
      * @cfg {String} format
      * The default time format string which can be overriden for localization support.  The format must be
-     * valid according to {@link Ext.util.Date#parse} (defaults to 'g:i A', e.g., '3:15 PM').  For 24-hour time
+     * valid according to {@link Ext.Date#parse} (defaults to 'g:i A', e.g., '3:15 PM').  For 24-hour time
      * format try 'H:i' instead.
      */
     format : "g:i A",
     
     /**
      * @cfg {String} submitFormat The date format string which will be submitted to the server.  
-     * The format must be valid according to {@link Ext.util.Date#parse} (defaults to <tt>{@link #format}</tt>).
+     * The format must be valid according to {@link Ext.Date#parse} (defaults to <tt>{@link #format}</tt>).
      */
 
     /**
@@ -272,7 +272,7 @@ Ext.define('Ext.form.Time', {
     
     safeParse: function(value, format){
         var me = this,
-            utilDate = Ext.util.Date,
+            utilDate = Ext.Date,
             parsedDate,
             result = null;
             

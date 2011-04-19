@@ -10,6 +10,9 @@ Ext.define('Ext.layout.container.boxOverflow.Scroller', {
     extend: 'Ext.layout.container.boxOverflow.None',
     requires: ['Ext.util.ClickRepeater', 'Ext.core.Element'],
     alternateClassName: 'Ext.layout.boxOverflow.Scroller',
+    mixins: {
+        observable: 'Ext.util.Observable'
+    },
     
     /* End Definitions */
 
@@ -70,7 +73,22 @@ Ext.define('Ext.layout.container.boxOverflow.Scroller', {
      * @cfg {String} afterScrollerCls
      * CSS class added to the right scroller element if enableScroll is used
      */
-
+    
+    constructor: function(layout, config) {
+        this.layout = layout;
+        Ext.apply(this, config || {});
+        
+        this.addEvents(
+            /**
+             * @event scroll
+             * @param {Ext.layout.container.boxOverflow.Scroller} scroller The layout scroller
+             * @param {Number} newPosition The new position of the scroller
+             * @param {Boolean/Object} animate If animating or not. If true, it will be a animation configuration, else it will be false
+             */
+            'scroll'
+        );
+    },
+    
     initCSSClasses: function() {
         var me = this,
         layout = me.layout;
@@ -110,7 +128,7 @@ Ext.define('Ext.layout.container.boxOverflow.Scroller', {
         //normal items will be rendered to the innerCt. beforeCt and afterCt allow for fixed positioning of
         //special items such as scrollers or dropdown menu triggers
         if (!me.beforeCt) {
-            target.addCls(Ext.baseCSSPrefix + me.layout.direction + '-box-scroller-body');
+            target.addCls(Ext.baseCSSPrefix + me.layout.direction + '-box-overflow-body');
             me.beforeCt = target.insertSibling({cls: Ext.layout.container.Box.prototype.innerCls + ' ' + me.beforeCtCls}, 'before');
             me.afterCt  = target.insertSibling({cls: Ext.layout.container.Box.prototype.innerCls + ' ' + me.afterCtCls},  'after');
             me.createWheelListener();
@@ -214,7 +232,7 @@ Ext.define('Ext.layout.container.boxOverflow.Scroller', {
      * @private
      */
     destroy: function() {
-        Ext.destroy(this.beforeScroller, this.afterScroller, this.beforeRepeater, this.afterRepeater, this.beforeCt, this.afterCt);
+        Ext.destroy(this.beforeRepeater, this.afterRepeater, this.beforeScroller, this.afterScroller, this.beforeCt, this.afterCt);
     },
 
     /**
@@ -334,6 +352,8 @@ Ext.define('Ext.layout.container.boxOverflow.Scroller', {
                 me.scrolling = false;
                 me.updateScrollButtons();
             }
+            
+            me.fireEvent('scroll', me, newPosition, animate ? me.getScrollAnim() : false);
         }
     },
 

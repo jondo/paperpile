@@ -132,7 +132,13 @@ Ext.define('Ext.form.action.Submit', {
             formEl,
             basicForm = this.form,
             params = this.getParams(),
-            uploadFields = basicForm.getFields().filter('inputType', 'file');
+            uploadFields = [];
+
+        basicForm.getFields().each(function(field) {
+            if (field.isFileUpload()) {
+                uploadFields.push(field);
+            }
+        });
 
         function addField(name, val) {
             fieldsSpec.push({
@@ -175,16 +181,16 @@ Ext.define('Ext.form.action.Submit', {
         // their values programatically, and prevent carrying their selected values over when cloning,
         // we have to move the actual field instances out of their components and into the form. We
         // create a clone to replace it with to maintain correct layout.
-        uploadFields.each(function(field) {
+        Ext.Array.each(uploadFields, function(field) {
             if (field.rendered) { // can only have a selected file value after being rendered
-                var input = field.inputEl.dom,
+                var input = field.getFileInput(),
                     clone = input.cloneNode(true),
                     previous = input.previousSibling,
                     parent = input.parentNode;
                     
                 formEl.appendChild(input);
                 if (previous) {
-                    Ext.fly(clone).insertAfter(previousSibling);
+                    Ext.fly(clone).insertAfter(previous);
                 } else {
                     parent.appendChild(clone);
                 }

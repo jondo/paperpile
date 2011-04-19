@@ -241,7 +241,8 @@ Ext.define('Ext.menu.Item', {
     
     initComponent: function() {
         var me = this,
-            prefix = Ext.baseCSSPrefix;
+            prefix = Ext.baseCSSPrefix,
+            cls = [prefix + 'menu-item'];
         
         me.addEvents(
             /**
@@ -267,10 +268,12 @@ Ext.define('Ext.menu.Item', {
             'deactivate'
         );
         
-        var cls = [prefix + 'menu-item'];
-        
         if (me.plain) {
             cls.push(prefix + 'menu-item-plain');
+        }
+        
+        if (me.cls) {
+            cls.push(me.cls);
         }
         
         me.cls = cls.join(' ');

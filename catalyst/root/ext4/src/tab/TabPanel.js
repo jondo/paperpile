@@ -264,13 +264,33 @@ Ext.define('Ext.tab.TabPanel', {
      * @cfg {Number} minTabWidth The minimum width for a tab in the {@link #tabBar}. Defaults to <code>30</code>.
      */
 
+    /**
+     * @cfg {Boolean} deferredRender
+     * <p><tt>true</tt> by default to defer the rendering of child <tt>{@link Ext.Container#items items}</tt>
+     * to the browsers DOM until a tab is activated. <tt>false</tt> will render all contained
+     * <tt>{@link Ext.Container#items items}</tt> as soon as the {@link Ext.layout.container.Card layout}
+     * is rendered. If there is a significant amount of content or a lot of heavy controls being
+     * rendered into panels that are not displayed by default, setting this to <tt>true</tt> might
+     * improve performance.</p>
+     * <br><p>The <tt>deferredRender</tt> property is internally passed to the layout manager for
+     * TabPanels ({@link Ext.layout.container.Card}) as its {@link Ext.layout.container.Card#deferredRender}
+     * configuration value.</p>
+     * <br><p><b>Note</b>: leaving <tt>deferredRender</tt> as <tt>true</tt> means that the content
+     * within an unactivated tab will not be available</p>
+     */
+    deferredRender : true,
+
     //inherit docs
     initComponent: function() {
-        var me          = this,
+        var me = this,
             dockedItems = me.dockedItems || [],
-            activeTab   = me.activeTab || 0;
+            activeTab = me.activeTab || 0;
 
-        me.layout = Ext.create('Ext.layout.container.Card', Ext.applyIf({owner: me, itemCls: me.itemCls}, me.layout));
+        me.layout = Ext.create('Ext.layout.container.Card', Ext.apply({
+            owner: me,
+            deferredRender: me.deferredRender,
+            itemCls: me.itemCls
+        }, me.layout));
 
         /**
          * @property tabBar

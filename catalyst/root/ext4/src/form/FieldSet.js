@@ -306,10 +306,12 @@ Ext.define('Ext.form.FieldSet', {
     getRefItems: function(deep) {
         var refItems = this.callParent(arguments),
             legend = this.legend;
+
+        // Prepend legend items to ensure correct order
         if (legend) {
-            refItems.push(legend);
+            refItems.unshift(legend);
             if (deep) {
-                refItems = refItems.concat(legend.getRefItems(true));
+                refItems.unshift.apply(refItems, legend.getRefItems(true));
             }
         }
         return refItems;

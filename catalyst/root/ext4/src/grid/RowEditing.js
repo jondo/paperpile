@@ -3,240 +3,409 @@
  * @extends Ext.grid.Editing
  */
 Ext.define('Ext.grid.RowEditing', {
-    extend: 'Ext.grid.Editing',
-    alias: 'editing.rowediting',
+    // extend: 'Ext.grid.Editing',
+    alias: 'plugin.rowediting',
+    requires: [
+        'Ext.grid.Header',
+        'Ext.grid.RowEditor',
+        'Ext.util.KeyNav',
+        'Ext.XTemplate'
+    ],
+    mixins: {
+        observable: 'Ext.util.Observable'
+    },
+    
+    /**********************************
+     * Abstract properties & methods
+     **********************************/
+    clicksToEdit: 2,
     editStyle: 'row',
-
-    init: function(grid) {
-        Ext.grid.RowEditing.superclass.init.call(this, grid);
-
-        // setup event handlers to mirror the columnmodel
-        //var cm = grid.getColumnModel();
-        //cm.on({
-        //    add: this.onColAdd,
-        //    remove: this.onColRemove,
-        //    widthchange: this.onColWidthChange,
-        //    hiddenchange: this.onColHiddenChange,
-        //    scope: this
-        //});
+    
+    constructor: function(config) {
+        var me = this;
+        Ext.apply(me, config);
+        me.mixins.observable.constructor.call(me);
     },
-
-    getEditor: function() {
-        var ed = Ext.grid.RowEditing.superclass.getEditor.apply(this, arguments);
-        // if no editor was created, create a default
-        if (!ed) {
-            ed = Ext.ComponentMgr.create({
-                //html: arguments[0],
-                name: arguments[0]
-            }, 'displayfield');
-            this.editors.add(ed);
-        }
-        return ed;
-    },
-
-
-    onColAdd: function(ct, column) {
-        if (this.rowEditor) {
-            var rowEditor = this.rowEditor,
-                colIdx = ct.items.indexOf(column),
-                grid = this.grid,
-                editor = this.getEditor(column.dataIndex);
-
-            rowEditor.add(colIdx, editor);
-        }
-
-    },
-
-    onColRemove: function(ct, column, colIdx, autoDestroy) {
-        if (this.rowEditor) {
-            var rowEditor = this.rowEditor,
-                grid = this.grid,
-                ed = this.getEditor(column.dataIndex);
-
-            rowEditor.remove(ed, autoDestroy);
-        }
-    },
-
-    onColWidthChange: function(cm, colIdx, newWidth) {
-        var col = cm.getColumnAt(colIdx),
-            ed = this.getEditor(col.dataIndex);
-
-        if (ed && this.rowEditor) {
-            if (newWidth) {
-                delete ed.width;
-                ed.setWidth(newWidth);
-            } else {
-                ed.hide();
-            }
-            this.rowEditor.setWidth(cm.getTotalWidth());
-        }
-    },
-
-    onColHiddenChange: function(cm, colIdx, hidden) {
-        var col = cm.getColumnAt(colIdx),
-            ed = this.getEditor(col.dataIndex),
-            width;
-
-        if (ed && this.rowEditor) {
-            ed[hidden ? 'hide' : 'show']();
-            width = cm.getColumnWidth(colIdx);
-            if (width) {
-                ed.setWidth(width);
-            } else {
-                ed.hide();
-            }
-            this.rowEditor.setWidth(cm.getTotalWidth());
-            // layout if already visible, otherwise
-            // always laid out when shown due to event handler.
-            //if (this.rowEditor.isVisible()) {
-                this.rowEditor.doLayout();
-            //}
-        }
-    },
-
-    initEditTrigger: function() {
-        var view = this.grid.down('gridview');
-        this.view = view;
-        if (this.clicksToEdit === 1) {
-            view.on("cellclick", this.onRowDblClick, this);
-        } else {
-            view.on('celldblclick', this.onRowDblClick, this);
-        }
-    },
-
-    // Implementation of calculateLocation for RowEditing
-    // Retrieves the row that a particular record represents
-    calculateLocation: function(record, dataIndex) {
-        var grid   = this.grid,
-            view   = this.view,
-            rowIdx = grid.getStore().indexOf(record);
-
-        return view.getRow(rowIdx);
-    },
-
-    // private
-    onRowDblClick : function(view, cell, rowIdx, colIdx, e) {
-        var store    = view.store,
-            record   = store.getAt(rowIdx),
-            grid     = view.up('gridsection'),
+    
+    destroy: function() {
+        var me = this,
+            grid = me.grid,
             headerCt = grid.headerCt,
-            header   = headerCt.items.getAt(colIdx),
-            //colIdx = view.findCellIndex(e.getTarget()),
-            // manually calculate location to ensure its the correct column
-            location = view.getNode(rowIdx),
-            dataIdx;
-
-        // when user clicks on borders, colIdx will not be found
-        if (colIdx === false) {
-            return;
-        } else {
-            dataIdx = header.dataIndex;
-            //dataIdx = grid.getColumnModel().getDataIndex(colIdx);
+            events = grid.events;
+        
+        Ext.destroy(
+            me.editor,
+            me.keyNav
+        );
+        me.removeFieldAccessors(grid.headerCt.getGridColumns());
+        
+        // Remove the events we added
+        if (events.beforeedit.isEvent) {
+            events.beforeedit.clearListeners();
         }
-
-        this.startEditing(record, dataIdx, location);
-    },
-
-
-    performEdit: function(record, dataIndex, location, e) {
-        var rowEd  = this.getRowEditor(),
-            values = {},
-            data   = record.data,
-            key;
-
-        if (!rowEd) {
-            return;
+        if (events.edit.isEvent) {
+            events.edit.clearListeners();
         }
-
-        for (key in data) {
-            values[key] = this.preEditValue(record, key);
-        }
-
-        // why pass record.data instead of record
-        // then we wouldnt have to track currRecord?
-        rowEd.startEdit(location, values, dataIndex);
-    },
-
-    /**
-     * Stops any active editing
-     * @param {Boolean} cancel (optional) True to cancel any changes
-     */
-    stopEditing : function(cancel) {
-        if (this.editing) {
-            var rowEditor = this.getRowEditor();
-            rowEditor[cancel ? 'cancelEdit' : 'completeEdit']();
-            this.editing = false;
-        }
+        delete events.beforeedit;
+        delete events.edit;
+        
+        delete me.grid;
+        delete me.view;
+        delete me.editor;
+        delete me.keyNav;
     },
     
-    isDirty: function() {
-        var dirty;
-        if (!this.currRecord) {
-            return;
+    getEditor: function() {
+        var me = this;
+        
+        if (!me.editor) {
+            me.editor = me.initEditor();
         }
-        this.editors.each(function(f){
-            if(f.getValue && String(this.currRecord.get(f.name)) !== String(f.getValue())){
-                dirty = true;
-                return false;
-            }
-        }, this);
-        return dirty;
+        
+        return me.editor;
     },
     
-    beforeEdit: function(record) {
-        return !(this.getRowEditor().isVisible() && this.isDirty(record));
+    getEditStyle: function() {
+        return this.editStyle;
     },
-
-    getRowEditor: function() {
-        if (!this.rowEditor) {
-            var items = [],
-                grid = this.grid,
-                view = this.view,
-                section = grid.down('gridsection'),
-                headerCt = section.headerCt,
-                //view = grid.view,
-                //cm = this.grid.getColumnModel(),
-                ln = headerCt.getCount(),
-                i = 0,
-                width,
-                column,
-                ed;
-
-            for (;i < ln; i++) {
-                column = headerCt.items.getAt(i);
-                ed = this.getEditor(column.dataIndex);
-
-                if (i === 0) {
-                    ed.margins = '0 1 2 1';
-                } else if (i === ln - 1) {
-                    ed.margins = '0 0 2 1';
-                } else {
-                    if (Ext.isIE) {
-                        ed.margins = '0 0 2 0';
-                    }
-                    else {
-                        ed.margins = '0 1 2 0';
-                    }
-                }
-                width = column.getDesiredWidth();
-                if (width) {
-                    ed.setWidth(width);
-                } else {
-                    ed.hide();
-                }
-
-                items.push(ed);
-            }
-
-            this.rowEditor = new Ext.grid.RowEditor({
-                items: items,
-                floating: true,
-                width: headerCt.getFullWidth(),
-                // keep a reference..
-                editingPlugin: this,
-                renderTo: view.getEl()
+    
+    // initEditor: Ext.emptyFn,
+    
+    initEvents: function() {
+        var me = this,
+            grid = me.grid,
+            view = me.view,
+            headerCt = grid.headerCt,
+            clickEvent = me.clicksToEdit === 1 ? 'click' : 'dblclick';
+        
+        // Start editing
+        me.mon(view, 'cell' + clickEvent, me.onCellDblClick, me);
+        view.on('render', function() {
+            me.keyNav = Ext.create('Ext.util.KeyNav', view.el, {
+                enter: me.onEnterKey,
+                esc: me.onEscKey,
+                scope: me
             });
+        
+            // Column events
+            me.mon(headerCt, {
+                add: me.onColumnAdd,
+                remove: me.onColumnRemove,
+                headerresize: me.onColumnResize,
+                headerhide: me.onColumnHide,
+                headershow: me.onColumnShow,
+                headermove: me.onColumnMove,
+                scope: me
+            });
+        }, me, { single: true });
+        
+        // Cleanup
+        me.mon(grid, 'beforedestroy', me.destroy, me);
+    },
+    
+    onCellDblClick: function(view, cell, colIdx, record, row, rowIdx, e) {
+        var me = this,
+            params = {
+                cell: cell,
+                colIdx: colIdx,
+                row: row,
+                rowIdx: rowIdx,
+                record: record
+            };
+        
+        me.startEdit(params);
+    },
+    
+    onColumnAdd: function(ct, column) {
+        var me = this,
+            editor = me.getEditor();
+        
+        me.initFieldAccessors(column);
+        if (editor && editor.onColumnAdd) {
+            editor.onColumnAdd(column);
         }
-        return this.rowEditor;
+    },
+    
+    onColumnRemove: function(ct, column) {
+        var me = this,
+            editor = me.getEditor();
+        
+        if (editor && editor.onColumnRemove) {
+            editor.onColumnRemove(column);
+        }
+        me.removeFieldAccessors(column);
+    },
+    
+    onColumnResize: function(ct, column, width) {
+        var me = this,
+            editor = me.getEditor();
+        
+        if (editor && editor.onColumnResize) {
+            editor.onColumnResize(column, width);
+        }
+    },
+    
+    onColumnHide: function(ct, column) {
+        var me = this,
+            editor = me.getEditor();
+        
+        if (editor && editor.onColumnHide) {
+            editor.onColumnHide(column);
+        }
+    },
+    
+    onColumnShow: function(ct, column) {
+        var me = this,
+            editor = me.getEditor();
+        
+        if (editor && editor.onColumnShow) {
+            editor.onColumnShow(column);
+        }
+    },
+    
+    onColumnMove: function(ct, column, fromIdx, toIdx) {
+        var me = this,
+            editor = me.getEditor();
+        
+        if (editor && editor.onColumnMove) {
+            editor.onColumnMove(column, fromIdx, toIdx);
+        }
+    },
+    
+    onEnterKey: function(e) {
+        var me = this,
+            grid = me.grid,
+            selModel = grid.getSelectionModel(),
+            params, pos;
+        
+        if (selModel.getCurrentPosition) {
+            // CellSelectionModel
+            pos = selModel.getCurrentPosition();
+            params = {
+                colIdx: pos.column,
+                rowIdx: pos.row
+            };
+        } else {
+            // RowSelectionModel
+            params = {
+                colIdx: 0,
+                rowIdx: grid.view.store.indexOf(selModel.getLastSelected())
+            };
+        }
+        
+        me.startEdit(params);
+    },
+    
+    onEscKey: function(e) {
+        this.cancelEdit();
+    },
+    
+    initFieldAccessors: function(column) {
+        var me = this;
+        
+        if (Ext.isArray(column)) {
+            Ext.Array.forEach(column, me.initFieldAccessors, me);
+            return;
+        }
+        
+        // Augment the Header class to have a getField and setField method
+        Ext.apply(column, {
+            getField: function(defaultField) {
+                return me.getColumnField(this, defaultField);
+            },
+            
+            setField: function(field) {
+                me.setColumnField(this, field);
+            }
+        });
+    },
+    
+    removeFieldAccessors: function(column) {
+        var me = this;
+        
+        if (Ext.isArray(column)) {
+            Ext.Array.forEach(column, me.removeFieldAccessors, me);
+            return;
+        }
+        
+        delete column.getField;
+        delete column.setField;
+    },
+    
+    getColumnField: function(column, defaultField) {
+        var field = column.field;
+            
+        if (!field && column.editor) {
+            field = column.editor;
+            delete column.editor;
+        }
+        
+        if (!field && defaultField) {
+            field = defaultField;
+        }
+        
+        if (field) {
+            if (Ext.isObject(field) && !field.isFormField) {
+                field = Ext.ComponentMgr.create(field);
+                column.field = field;
+            }
+            
+            Ext.apply(field, {
+                name: column.dataIndex,
+                hideLabel: true
+            });
+            
+            return field;
+        }
+    },
+    
+    // setColumnField: function(column, field) {
+    //     if (Ext.isObject(field) && !field.isFormField) {
+    //         field = Ext.ComponentMgr.create(field);
+    //     }
+    //     column.field = field;
+    // },
+    
+    beforeEdit: Ext.emptyFn,
+    
+    startEdit: function() {
+        var me = this,
+            args = Ext.Array.toArray(arguments),
+            params = args.shift(),
+            grid = me.grid,
+            view = me.view,
+            store = view.store,
+            headerCt = grid.headerCt,
+            rowIdx, colIdx;
+        
+        // Support simpler signature
+        //   (rowIdx, [colIdx])
+        if (!Ext.isObject(params)) {
+            rowIdx = params;
+            colIdx = args.shift(); // can be null
+            params = {
+                rowIdx: rowIdx,
+                colIdx: colIdx
+            };
+        } else {
+            rowIdx = params.rowIdx;
+            colIdx = params.colIdx;
+        }
+        
+        if (Ext.isNumber(colIdx)) {
+            if (!params.column) {
+                params.column = headerCt.getHeaderByIndex(colIdx);
+            }
+            
+            if (!params.cell) {
+                params.cell = view.getCellByPosition({ row: rowIdx, column: colIdx });
+            }
+        }
+        
+        if (Ext.isNumber(rowIdx)) {
+            if (!params.row) {
+                params.row = view.getNode(rowIdx);
+            }
+            
+            if (!params.record) {
+                params.record = store.getAt(rowIdx);
+            }
+        }
+        
+        Ext.apply(params, {
+            grid: grid,
+            view: view,
+            store: store
+        });
+        
+        if (me.beforeEdit() === false || me.fireEvent('beforeedit', params) === false) {
+            return;
+        }
+        
+        me.params = params;
+        me.editing = true;
+        
+        // Fire off our editor
+        me.getEditor().startEdit(params);
+    },
+    
+    cancelEdit: function() {
+        var me = this;
+        
+        if (me.editing) {
+            me.getEditor().cancelEdit();
+            me.editing = false;
+        }
+    },
+    
+    completeEdit: function() {
+        var me = this;
+        
+        if (me.editing && me.getEditor().completeEdit()) {
+            me.editing = false;
+            me.fireEvent('edit', me.params);
+        }
+    },
+
+
+    /**********************************
+     * RowEditing specific
+     **********************************/
+    errorSummary: true,
+     
+    init: function(grid) {
+        var me = this;
+        
+        /**
+         * Abstract, place in parent
+         */
+        
+        me.grid = grid;
+        me.view = grid.view;
+        me.initEvents();
+        me.initFieldAccessors(grid.headerCt.getGridColumns());
+        
+        me.addEvents(
+            'beforeedit',
+            
+            'edit'
+        );
+        grid.relayEvents(me, ['beforeedit', 'edit']);
+        
+        /**
+         * End of abstract
+         */
+    },
+
+    initEditor: function() {
+        var me = this,
+            grid = me.grid,
+            view = me.view,
+            headerCt = grid.headerCt;
+
+        return Ext.create('Ext.grid.RowEditor', {
+            errorSummary: me.errorSummary,
+            fields: headerCt.getGridColumns(),
+            floating: true,
+            hidden: true,
+            
+            // keep a reference..
+            editingPlugin: me,
+            renderTo: view.el
+        });
+    },
+    
+    setColumnField: function(column, field) {
+        var me = this;
+        
+        // Abstract
+        // me.callParent(arguments);
+        if (Ext.isObject(field) && !field.isFormField) {
+            field = Ext.ComponentMgr.create(field);
+        }
+        column.field = field;
+        // End Abstract
+        
+        me.getEditor().setField(field, column);
     }
 });

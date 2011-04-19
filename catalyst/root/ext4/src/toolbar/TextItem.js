@@ -34,7 +34,7 @@ Ext.define('Ext.toolbar.TextItem', {
         Ext.apply(this.renderData, {
             text: this.text
         });
-        Ext.toolbar.TextItem.superclass.onRender.apply(this, arguments);
+        this.callParent(arguments);
     },
 
     /**

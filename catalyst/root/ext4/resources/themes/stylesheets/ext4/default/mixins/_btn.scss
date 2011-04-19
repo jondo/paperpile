@@ -58,6 +58,10 @@
         background-repeat: no-repeat;
     }
     
+    .#{$prefix}btn-#{$ui}-disabled em {
+        @include opacity(.4);
+    }
+    
     .#{$prefix}btn-#{$ui}-icon button,
     .#{$prefix}btn-#{$ui}-noicon button {
         height: $icon-size;

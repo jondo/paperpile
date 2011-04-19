@@ -73,7 +73,7 @@
 
     .#{$prefix}menu-item-text {
         position: relative;
-        font-size: 11px;
+        font-size: ceil($font-size * .9);
         color: $menu-text-color;
         top: -4px;
     }

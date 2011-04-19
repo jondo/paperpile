@@ -12,7 +12,7 @@
  */
 Ext.define('Ext.picker.Month', {
     extend: 'Ext.Component',
-    requires: ['Ext.XTemplate', 'Ext.util.ClickRepeater', 'Ext.util.Date', 'Ext.button.Button'],
+    requires: ['Ext.XTemplate', 'Ext.util.ClickRepeater', 'Ext.Date', 'Ext.button.Button'],
     alias: 'widget.monthpicker',
     alternateClassName: 'Ext.MonthPicker',
     

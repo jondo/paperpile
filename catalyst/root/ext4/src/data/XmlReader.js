@@ -249,7 +249,10 @@ Ext.define('Ext.data.XmlReader', {
         
         if (!root || (nodeName && nodeName == root)) {
             return data;
-        } else {
+        } else if (Ext.DomQuery.isXml(data)) {
+            // This fix ensures we have XML data
+            // Related to TreeStore calling getRoot with the root node, which isn't XML
+            // Probably should be resolved in TreeStore at some point
             return Ext.DomQuery.selectNode(root, data);
         }
     },

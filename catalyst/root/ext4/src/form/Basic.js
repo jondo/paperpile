@@ -74,7 +74,8 @@ Note: File uploads are not performed using normal 'Ajax' techniques; see the des
 Ext.define('Ext.form.Basic', {
     extend: 'Ext.util.Observable',
     alternateClassName: 'Ext.form.BasicForm',
-    requires: ['Ext.util.MixedCollection', 'Ext.form.action.Load', 'Ext.form.action.Submit', 'Ext.window.MessageBoxWindow'],
+    requires: ['Ext.util.MixedCollection', 'Ext.form.action.Load', 'Ext.form.action.Submit',
+               'Ext.window.MessageBoxWindow', 'Ext.data.Errors'],
 
     constructor: function(owner, config) {
         var me = this,
@@ -446,7 +447,7 @@ paramOrder: 'param1|param2|param'
      */
     hasUpload: function() {
         return !!this.getFields().findBy(function(f) {
-            return f.inputType === 'file';
+            return f.isFileUpload();
         });
     },
 
@@ -582,19 +583,32 @@ myFormPanel.getForm().submit({
      * @return {Ext.form.Basic} this
      */
     updateRecord: function(record) {
-        //record.beginEdit();
         var fields = record.fields,
-            values = this.getValues(),
+            values = {},
             name,
             obj = {};
+        
+        // We don't use getValues() here because the getSubmitValue() override for
+        // some field types have a string format that is not parsable by Model
+        // fields and their convert methods, e.g., Date fields.  We want the actual
+        // value for updating records, not the string submit-friendly equivalent.
+        this.getFields().each(function(field) {
+            if (!field.disabled && field.submitValue && !field.isFileUpload()) {
+                values[field.getName()] = field.getValue();
+            }
+        });
+        
         fields.each(function(f) {
             name = f.name;
             if (name in values) {
                 obj[name] = values[name];
             }
         });
+        
+        record.beginEdit();
         record.set(obj);
-        //record.endEdit();
+        record.endEdit();
+        
         return this;
     },
 
@@ -686,8 +700,8 @@ myFormPanel.getForm().submit({
 
     /**
      * Mark fields in this form invalid in bulk.
-     * @param {Array/Object} errors Either an array in the form <code>[{id:'fieldId', msg:'The message'}, ...]</code>
-     * or an object hash of <code>{id: msg, id2: msg2}</code>
+     * @param {Array/Object} errors Either an array in the form <code>[{id:'fieldId', msg:'The message'}, ...]</code>,
+     * an object hash of <code>{id: msg, id2: msg2}</code>, or a {@link Ext.data.Errors} object.
      * @return {Ext.form.Basic} this
      */
     markInvalid: function(errors) {
@@ -704,7 +718,13 @@ myFormPanel.getForm().submit({
             Ext.each(errors, function(err) {
                 mark(err.id, err.msg);
             });
-        } else {
+        }
+        else if (errors instanceof Ext.data.Errors) {
+            errors.each(function(err) {
+                mark(err.field, err.message);
+            });
+        }
+        else {
             Ext.iterate(errors, mark);
         }
         return this;

@@ -497,31 +497,6 @@ input[type="checkbox"]:disabled
     color: #D8000C;
 }
 
-.pp-edit .x-form-item {
-    padding-top: .5em;
-    padding-bottom: .5em;
-}
-
-.pp-edit .x-form-item-label {
-    font-weight: bold;
-}
-
-.pp-edit .focused {
-    background-color: #FFF1A8;
-}
-
-.pp-edit .x-form-dirty {
-    background-color: #EEE;
-}
-
-.pp-edit .pp-qmark {
-    padding-top: .5em;
-    padding-bottom: .5em;
-    margin-left: .5em;
-    width: 15;
-    color: gray;
-}
-
 .pp-grid-snippets{
     color: #585858;
     padding-left:10px;
@@ -537,12 +512,106 @@ input[type="checkbox"]:disabled
 }
 
 
+
+.x-resizable-proxy {
+  border: 1px solid #3b5a82;
+}
+
+
+/* meta data entry form */
+table.pp-meta-form {
+    border-spacing:0px;
+    margin-top: 2em;
+}
+
+.pp-meta-form tbody.style1 {
+}
+
+
+.pp-meta-form tbody.style2{
+}
+
+/* apply to all tds directly below <table> (don't mess up buttons within tds)*/
+.pp-meta-form tbody tr td {
+    font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
+    vertical-align:top;
+    margin:0px;
+    padding: 8px 5px 8px 5px;
+    font-size: 14px;
+}
+
+.pp-meta-form caption {
+    background-color:#FFF1A8;
+    font-size:12px;
+    padding:4px;
+    margin-bottom:10px;
+}
+
+.pp-qmark {
+    text-decoration:none;
+    display:inline;
+    color: #BDBDBD;
+    cursor:default;
+    font-style: normal;
+    font-weight:normal;
+}
+.pp-qmark:hover {
+    color: black;
+}
+
+.pp-tooltip-link {
+    color: #BDBDBD!important;
+    cursor:default;
+    font-style: normal;
+    font-weight:normal;
+}
+
+.pp-tooltip-link {
+    display:inline;
+    padding-left: 5px;
+    vertical-align:top;
+} 
+
 .pp-meta-form .pp-lookup-status {
     font-size:12px;
 }
 
 .pp-meta-form .pp-lookup-status-success {
+    color: #088A08;
 }
 
 .pp-meta-form .pp-lookup-status-failed {
+    color: red;
+}
+
+.pp-meta-form div.pp-tooltip-link:hover {
+    color: black!important;
+}
+
+
+.pp-meta-form td.label {
+    text-align:right;
+    font-weight: bold;
+    width: 100px;
+} 
+
+.pp-meta-form td.field {
+    text-align:left;
+    width: 100px;
+} 
+
+.pp-meta-form td.separator {
+    padding: 5px;
+} 
+
+.pp-meta-form td.dirty {
+    background-color: #EEE;
+}
+
+.pp-meta-form td.active {
+    background-color: #FFF1A8 !important;
+}
+
+.pp-meta-form a.pp-textlink {
+    font-size: 12px;
 }

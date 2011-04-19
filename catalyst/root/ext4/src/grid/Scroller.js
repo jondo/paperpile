@@ -51,12 +51,8 @@ Ext.define('Ext.grid.Scroller', {
         me.el.on('scroll', me.onElScroll, me);
     },
     
-    invalidate: function(firstPass) {
-        if (!this.el || !this.ownerCt) {
-            return;
-        }
-        
-        var owner  = this.ownerCt,
+    getSizeCalculation: function() {
+        var owner  = this.getPanel(),
             dock   = this.dock,
             elDom  = this.el.dom,
             width  = 1,
@@ -69,7 +65,7 @@ Ext.define('Ext.grid.Scroller', {
                 center = items[1] || items[0];
             
             if (!center) {
-                return;
+                return false;
             }
             
             var centerEl          = center.el.dom,
@@ -91,7 +87,7 @@ Ext.define('Ext.grid.Scroller', {
         } else {
             var tbl = owner.el.down('.' + Ext.baseCSSPrefix + 'grid-view');
             if (!tbl) {
-                return;
+                return false;
             }
             
             // needs to also account for header and scroller (if still in picture)
@@ -104,14 +100,27 @@ Ext.define('Ext.grid.Scroller', {
         if (isNaN(height)) {
             height = 1;
         }
-        this.stretchEl.setSize(width, height);
-        
-        // BrowserBug: IE7
-        // This makes the scroller enabled, when initially rendering.
-        elDom.scrollTop = elDom.scrollTop;
+        return {
+            width: width,
+            height: height
+        };
     },
     
-    
+    invalidate: function(firstPass) {
+        if (!this.el || !this.ownerCt) {
+            return;
+        }
+        var size  = this.getSizeCalculation(),
+            elDom = this.el.dom;
+        if (size) {
+            this.stretchEl.setSize(size);
+        
+            // BrowserBug: IE7
+            // This makes the scroller enabled, when initially rendering.
+            elDom.scrollTop = elDom.scrollTop;
+        }
+    },
+
     onOwnerAfterLayout: function(owner, layout) {
         if (Ext.isIE) {
             Ext.Function.defer(this.invalidate, 1, this);
@@ -119,29 +128,30 @@ Ext.define('Ext.grid.Scroller', {
             this.invalidate();
         }
     },
-    
-        
+
     /**
      * Sets the scrollTop and constrains the value between 0 and max.
      * @param {Number} scrollTop
      */
     setScrollTop: function(scrollTop) {
-        if (this.el) {
+        if (!this.scrollInProgress && this.el) {
             var elDom = this.el.dom;
             elDom.scrollTop = Ext.Number.constrain(scrollTop, 0, elDom.scrollHeight - elDom.clientHeight);
         }
         
     },
-    
+
     /**
      * Sets the scrollLeft and constrains the value between 0 and max.
      * @param {Number} scrollTop
      */
     setScrollLeft: function(scrollLeft) {
-        var elDom = this.el.dom;
-        elDom.scrollLeft = Ext.Number.constrain(scrollLeft, 0, elDom.scrollWidth - elDom.clientWidth);
+        if (!this.scrollInProgress && this.el) {
+            var elDom = this.el.dom;
+            elDom.scrollLeft = Ext.Number.constrain(scrollLeft, 0, elDom.scrollWidth - elDom.clientWidth);
+        }
     },
-    
+
     /**
      * Scroll by deltaY
      * @param {Number} delta
@@ -151,9 +161,8 @@ Ext.define('Ext.grid.Scroller', {
             var elDom = this.el.dom;
             this.setScrollTop(elDom.scrollTop + delta);    
         }
-        
     },
-    
+
     /**
      * Scroll by deltaX
      * @param {Number} delta
@@ -176,7 +185,7 @@ Ext.define('Ext.grid.Scroller', {
     // synchronize the scroller with the bound gridviews
     onElScroll: function(event, target) {
         var dock = this.dock,
-            owner = this.ownerCt,
+            owner = this.getPanel(),
             items = owner.query('tableview'),
             i = 0,
             len = items.length,
@@ -185,7 +194,10 @@ Ext.define('Ext.grid.Scroller', {
             centerScrollWidth,
             centerClientWidth,
             width;
-            
+
+        // Set a flag so we refuse to respond to outside control while we are scrolling the client.
+        this.scrollInProgress = true;
+
         if (dock === 'top' || dock === 'bottom') {
             center = items[1] || items[0];
             centerEl = center.el.dom;
@@ -199,6 +211,21 @@ Ext.define('Ext.grid.Scroller', {
                 items[i].el.dom.scrollTop = target.scrollTop;
             }
         }
+
+        // Clear barrier flag in 100 miliseconds (Unless this is called again, ie: they are dragging the bar)
+        this.clearScrollInProgress();
+    },
+
+    clearScrollInProgress: Ext.Function.createBuffered(function() {
+        this.scrollInProgress = false;
+    }, 10),
+
+    getPanel: function() {
+        var me = this;
+        if (!me.panel) {
+            me.panel = this.up('[scrollerOwner]');
+        }
+        return me.panel;
     }
 });
 

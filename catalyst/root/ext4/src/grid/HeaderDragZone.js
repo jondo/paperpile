@@ -26,7 +26,7 @@ Ext.define('Ext.grid.HeaderDragZone', {
                 ddel.innerHTML = Ext.getCmp(header.id).text;
                 return {
                     ddel: ddel,
-                    header: header
+                    header: headerCmp
                 };
             }
         }

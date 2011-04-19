@@ -35,7 +35,7 @@ var accordion = new Ext.panel.Panel({
 Ext.define('Ext.layout.container.Accordion', {
     extend: 'Ext.layout.container.VBox',
     alias: ['layout.accordion'],
-    alternatClassName: 'Ext.layout.AccordionLayout',
+    alternateClassName: 'Ext.layout.AccordionLayout',
     
     align: 'stretch',
 
@@ -181,7 +181,7 @@ Ext.define('Ext.layout.container.Accordion', {
         }
 
         // If no collapsed:false Panels found, make the first one expanded.
-        if (me.expandedItem === undefined) {
+        if (ln && me.expandedItem === undefined) {
             me.expandedItem = 0;
             comp = items[0];
             comp.collapsed = false;

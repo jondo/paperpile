@@ -320,15 +320,17 @@ Ext.define('Ext.button.Button', {
         '<em class="{splitCls}">' +
             '<tpl if="href">' +
                 '<a href="{href}" target="{target}"' +
-                    '<tpl if="tabIndex"> tabIndex="{tabIndex}"</tpl> role="button">{text}' +
+                    '<tpl if="tabIndex"> tabIndex="{tabIndex}"</tpl> role="link">{text}' +
                 '</a>' +
             '</tpl>' +
             '<tpl if="!href">' +
                 '<button type="{type}"' +
-                    '<tpl if="tabIndex"> tabIndex="{tabIndex}"</tpl> role="button">{text}' +
+                    // the autocomplete="off" is required to prevent Firefox from remembering
+                    // the button's disabled state between page reloads.
+                    '<tpl if="tabIndex"> tabIndex="{tabIndex}"</tpl> role="button" autocomplete="off">{text}' +
                 '</button>' +
             '</tpl>' +
-        '</em>',
+        '</em>' ,
 
     /**
      * @cfg {String} scale
@@ -501,6 +503,11 @@ Ext.define('Ext.button.Button', {
             me.href = me.url;
         }
 
+        // preventDefault defaults to false for links
+        if (me.href && !me.hasOwnProperty('preventDefault')) {
+            me.preventDefault = false;
+        }
+
         if (Ext.isString(me.toggleGroup)) {
             me.enableToggle = true;
         }
@@ -575,7 +582,7 @@ Ext.define('Ext.button.Button', {
 
         // Extract the button and the button wrapping element
         Ext.applyIf(me.renderSelectors, {
-            btnEl: me.href ? 'a' : 'button',
+            btnEl  : me.href ? 'a' : 'button',
             btnWrap: 'em'
         });
 
@@ -917,7 +924,7 @@ Ext.define('Ext.button.Button', {
     // private
     onClick: function(e) {
         var me = this;
-        if (me.preventDefault && e) {
+        if (me.preventDefault || (me.disabled && me.getHref()) && e) {
             e.preventDefault();
         }
         if (e.button !== 0) {

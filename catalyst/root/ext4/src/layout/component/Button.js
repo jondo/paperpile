@@ -86,7 +86,7 @@ Ext.define('Ext.layout.component.Button', {
             Ext.apply(me, {
                 // Width adjustment must take into account the arrow area. The btnWrap is the <em> which has padding to accommodate the arrow.
                 adjWidth: frameSize.left + frameSize.right + ownerEl.getBorderWidth('lr') + ownerEl.getPadding('lr') + owner.btnWrap.getPadding('lr'),
-                adjHeight: frameSize.top + frameSize.bottom + ownerEl.getBorderWidth('tb') + ownerEl.getPadding('tb'),
+                adjHeight: frameSize.top + frameSize.bottom + ownerEl.getBorderWidth('tb') + ownerEl.getPadding('tb') + owner.btnWrap.getPadding('tb'),
                 btnFrameWidth: owner.btnEl.getFrameWidth('lr')
             });
         }

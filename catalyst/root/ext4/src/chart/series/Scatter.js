@@ -113,6 +113,7 @@ Ext.define('Ext.chart.series.Scatter', {
         for (i = 0, ln = axes.length; i < ln; i++) { 
             axis = chart.axes.get(axes[i]);
             if (axis) {
+                axis = axis.calcEnds();
                 if (axis.position == 'top' || axis.position == 'bottom') {
                     minX = axis.from;
                     maxX = axis.to;
@@ -197,6 +198,15 @@ Ext.define('Ext.chart.series.Scatter', {
             if (typeof yValue == 'string') {
                 yValue = i;
             }
+            //skip undefined values
+            if (typeof yValue == 'undefined') {
+                //<debug warn>
+                if (Ext.isDefined(Ext.global.console)) {
+                    Ext.global.console.warn("[Ext.chart.series.Scatter]  Skipping a store element with an undefined value at ", record, xValue, yValue);
+                }
+                //</debug>
+                return;
+            }
             x = boxX + (xValue - minX) * xScale;
             y = boxY + boxHeight - (yValue - minY) * yScale;
             attrs.push({
@@ -279,18 +289,14 @@ Ext.define('Ext.chart.series.Scatter', {
     },
 
     // @private create a new set of shadows for a sprite
-    createShadow: function(sprite) {
+    createShadow: function(sprite, endMarkerStyle, type) {
         var me = this,
             chart = me.chart,
             shadowGroups = me.shadowGroups,
             shadowAttributes = me.shadowAttributes,
             lnsh = shadowGroups.length,
             bbox = me.bbox,
-            i, shadow, shadows, attr, endMarkerStyle, type;
-
-        endMarkerStyle = Ext.apply(me.markerStyle, me.markerCfg);
-        type = endMarkerStyle.type;
-        delete endMarkerStyle.type;
+            i, shadow, shadows, attr;
 
         sprite.shadows = shadows = [];
 
@@ -356,7 +362,7 @@ Ext.define('Ext.chart.series.Scatter', {
             if (!sprite) {
                 sprite = me.createPoint(attr, type);
                 if (enableShadows) {
-                    me.createShadow(sprite);
+                    me.createShadow(sprite, endMarkerStyle, type);
                 }
             }
 

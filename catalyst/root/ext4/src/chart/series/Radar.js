@@ -116,7 +116,11 @@ Ext.define('Ext.chart.series.Radar', {
             i, nfields,
             seriesStyle = me.seriesStyle,
             seriesLabelStyle = me.seriesLabelStyle,
-            first = chart.resizing || !me.radar;
+            first = chart.resizing || !me.radar,
+            axis = chart.axes && chart.axes.get(0),
+            aggregate = !(axis && axis.maximum);
+        
+        maxValue = aggregate? 0 : (axis.maximum || 0);
         
         Ext.apply(seriesStyle, me.style || {});
         
@@ -133,16 +137,19 @@ Ext.define('Ext.chart.series.Radar', {
         me.radius = radius = Math.min(chartBBox.width, chartBBox.height) /2;
         me.items = items = [];
 
-        //get all renderer fields
-        chart.series.each(function(series) {
-            fields.push(series.yField);
-        });
-        //get maxValue to interpolate
-        store.each(function(record, i) {
-            for (i = 0, nfields = fields.length; i < nfields; i++) {
-                maxValue = max(+record.get(fields[i]), maxValue);
-            }
-        });
+        if (aggregate) {
+            //get all renderer fields
+            chart.series.each(function(series) {
+                fields.push(series.yField);
+            });
+            //get maxValue to interpolate
+            store.each(function(record, i) {
+                for (i = 0, nfields = fields.length; i < nfields; i++) {
+                    maxValue = max(+record.get(fields[i]), maxValue);
+                }
+            });
+        }
+
         //create path and items
         startPath = []; path = [];
         store.each(function(record, i) {

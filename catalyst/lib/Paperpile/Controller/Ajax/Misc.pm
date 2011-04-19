@@ -168,6 +168,10 @@ sub journal_list : Local {
     push @data, $entry;
   }
 
+  if (scalar(@data) > 8) {
+      @data = @data[1..8];
+  }
+
   $c->stash->{data} = [@data];
 
 }

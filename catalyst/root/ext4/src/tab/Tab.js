@@ -51,6 +51,13 @@ Ext.define('Ext.tab.Tab', {
     closable: true,
 
     /**
+     * @cfg {String} closeText 
+     * The accessible text label for the close button link; only used when {@link #closable} = true.
+     * Defaults to 'Close Tab'.
+     */
+    closeText: 'Close Tab',
+
+    /**
      * @property Boolean
      * Read-only property indicating that this tab is currently active. This is NOT a public configuration.
      */
@@ -99,7 +106,6 @@ Ext.define('Ext.tab.Tab', {
         );
         
         me.callParent(arguments);
-        me.setClosable(me.closable);
 
         if (me.card) {
             me.setCard(me.card);
@@ -115,7 +121,18 @@ Ext.define('Ext.tab.Tab', {
         if (me.active) {
             me.activate(true);
         }
+        me.setClosable(me.closable);
         me.callParent(arguments);
+
+        if (me.closable) {
+            me.closeEl = me.el.createChild({
+                tag: 'a',
+                cls: me.baseCls + '-close-btn',
+                href: '#',
+                html: me.closeText,
+                title: me.closeText
+            }).on('click', Ext.EventManager.preventDefault);
+        }
         
         me.keyNav = Ext.create('Ext.util.KeyNav', me.el, {
             enter: me.onEnterKey,
@@ -141,20 +158,21 @@ Ext.define('Ext.tab.Tab', {
      */
     setClosable: function(closable) {
         var me  = this,
-            cls = me.closableCls;
+            cls = me.closableCls,
+            cls2 = cls + '-' + me.position;
 
         // Closable must be true if no args
         closable = !arguments.length || !!closable;
         me.closable = closable;
 
         if (closable) {
-            me.addCls(cls);
+            me.addCls(cls, cls2);
         } else {
-            me.removeCls(cls);
+            me.removeCls(cls, cls2);
         }
  
         // Tab will change width to accommodate close icon
-        if (me.ownerCt) {
+        if (me.ownerCt && me.rendered) {
             me.ownerCt.doLayout();
         }
     },

@@ -14,10 +14,10 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Ext.define('Paperpile.Viewport', {
+Ext.define('Paperpile.main.Viewport', {
   extend: 'Ext.container.Viewport',
+	    alias: 'widget.pp-viewport',
   initComponent: function() {
-
     this.createStores();
 
     this.status = Ext.createByAlias('widget.status');
@@ -28,8 +28,7 @@ Ext.define('Paperpile.Viewport', {
         type: 'border'
       },
       enableKeyEvents: true,
-		autoScroll: false,
-      keys: {},
+      autoScroll: false,
       items: [this.createTabs()],
     });
 
@@ -94,6 +93,7 @@ Ext.define('Paperpile.Viewport', {
       border: false,
       flex: 5
     });
+    Paperpile.log("Tabs!");
     return this.tabs;
   },
 
@@ -275,8 +275,12 @@ Ext.define('Paperpile.Viewport', {
     this.alwaysKeys.bindCallback('ctrl-y', this.keyControlY, this);
     this.alwaysKeys.bindCallback('ctrl-tab', this.keyControlTab, this);
     this.alwaysKeys.bindCallback('ctrl-w', this.keyControlW);
-    this.alwaysKeys.bindCallback('shift-[?,191]', this.keys.showKeyHelp);
+    this.alwaysKeys.bindCallback('shift-[?,191]', this.showKeyHelp);
     this.alwaysKeys.bindCallback('ctrl-n', this.forwardToGrid, this);
+  },
+
+  showKeyHelp: function() {
+
   },
 
   keyControlShiftX: function() {
@@ -381,55 +385,7 @@ Ext.define('Paperpile.Viewport', {
   },
 
   getSetting: function(key) {
-    return this.globalSettings[key];
-  },
-
-  setSettings: function(settings, commitToBackend) {
-    for (key in settings) {
-      this.setSetting(key, settings[key], commitToBackend);
-    }
-  },
-
-  setSetting: function(key, value, commitToBackend) {
-    if (commitToBackend === undefined) {
-      commitToBackend = true;
-    }
-    this.globalSettings[key] = value;
-
-    var s = {};
-    s[key] = Ext.JSON.encode(value);
-
-    if (commitToBackend) {
-      this.storeSettings(s);
-    }
-  },
-
-  storeSettings: function(newSettings, callback, scope) {
-    Paperpile.Ajax({
-      url: '/ajax/settings/set_settings',
-      params: newSettings,
-      success: function(response) {
-        if (callback) {
-          callback.createDelegate(scope)();
-        }
-      },
-      scope: this
-    });
-  },
-
-  loadSettings: function(callback, scope) {
-    Paperpile.Ajax({
-      url: '/ajax/misc/get_settings',
-      success: function(response) {
-        var json = Ext.JSON.decode(response.responseText);
-        this.globalSettings = json.data;
-        if (callback) {
-          var f = Ext.Function.bind(callback, scope);
-          f();
-        }
-      },
-      scope: this
-    });
+	    return Paperpile.Settings.get(key);
   },
 
   onPDFtabToggle: function(button, pressed) {
@@ -450,7 +406,7 @@ Ext.define('Paperpile.Viewport', {
     // folder, otherwise it is stored under the paper_root folder and
     // we need to append the paper_root
     if (!Paperpile.utils.isAbsolute(path)) {
-      path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
+	path = Paperpile.utils.catPath(Paperpile.Settings.get('paper_root'), path);
     }
 
     Paperpile.utils.openFile(path);
@@ -927,8 +883,6 @@ Ext.define('Paperpile.Viewport', {
   },
 
   onFolderStoreLoad: function() {
-    // Do the tree.
-    //this.tree.refreshFolders();
     // Now tab panel and grids.
     if (this.getTabs()) {
       var tabs = this.getTabs().items.items;
@@ -942,11 +896,6 @@ Ext.define('Paperpile.Viewport', {
   },
 
   onLabelStoreLoad: function() {
-    // Do the tree.
-    if (Paperpile.main.tree) {
-      //Paperpile.main.tree.refreshLabels();
-    }
-
     // Now tab panel and grids.
     if (this.getTabs()) {
       var tabs = this.getTabs().items.items;
@@ -1337,7 +1286,7 @@ Ext.define('Paperpile.Viewport', {
 
   checkForUpdates: function(silent) {
 
-    if ((Paperpile.main.globalSettings['check_updates'] == 0) && silent) {
+	    if ((Paperpile.Settings.get('check_updates') == 0) && silent) {
       return;
     }
 

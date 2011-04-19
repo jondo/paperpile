@@ -1,20 +1,18 @@
 @mixin extjs-toolbar {
     .#{$prefix}toolbar {
-        font-size: 11px;
+        font-size: $toolbar-font-size;
 
         border: 1px solid;
         border-color: $toolbar-border-color;
         background-color: $toolbar-background-color;
-        
-        //TODO this needs to move into an inner border in the frame or something..
-/*        .\#{$prefix}box-inner {
-            border-style: solid;
-            border-width: $toolbar-border-inner-width;
-            border-color: $toolbar-border-inner-color;
-        }*/
 
         .#{$prefix}btn {
             margin: $toolbar-margin;
+        }
+        
+        .#{$prefix}form-item-label{
+            font-size: $toolbar-font-size;
+            line-height: 15px;
         }
     }
     
@@ -22,6 +20,8 @@
         background: transparent;
         border: 0px none;
         margin-top: 3px;
+        
+        padding: 3px;
         
         .#{$prefix}box-inner {
             border-width: 0;
@@ -32,12 +32,12 @@
     }
 
     .#{$prefix}toolbar-text {
-        line-height: 22px;
         margin-top: -1px;
+        padding: $toolbar-text-padding;
+        
         white-space: nowrap;
-        color: mix($mix-color, #000, 30) !important;
-        text-shadow: 0 1px 0 lighten($mix-color, 24);
-        padding: 0 4px 0 0;
+        color: $toolbar-text-color !important;
+        line-height: 22px;
     }
 
     .#{$prefix}ie6 .#{$prefix}toolbar-text,

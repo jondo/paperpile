@@ -112,10 +112,5 @@ Ext.define('Ext.util.ComponentDragger', {
         if (this.proxy && !this.comp.liveDrag) {
             this.comp.unghost();
         }
-
-        // Windows save their state on drag
-        if (this.comp.isXType('window')) {
-            this.comp.saveState();
-        }
     }
 });

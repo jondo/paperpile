@@ -38,7 +38,7 @@ Ext.define('Ext.util.Sorter', {
             throw "A Sorter requires either a property or a sorter function";
         }
         
-        me.sort = me.createSortFunction(me.sorterFn || me.defaultSorterFn);
+        me.updateSortFunction();
     },
     
     /**
@@ -85,5 +85,23 @@ Ext.define('Ext.util.Sorter', {
      */
     getRoot: function(item) {
         return this.root == undefined ? item : item[this.root];
+    },
+    
+    // @TODO: Add docs for these three methods
+    setDirection: function(direction) {
+        var me = this;
+        me.direction = direction;
+        me.updateSortFunction();
+    },
+    
+    toggle: function() {
+        var me = this;
+        me.direction = Ext.String.toggle(me.direction, "ASC", "DESC");
+        me.updateSortFunction();
+    },
+    
+    updateSortFunction: function() {
+        var me = this;
+        me.sort = me.createSortFunction(me.sorterFn || me.defaultSorterFn);
     }
 });

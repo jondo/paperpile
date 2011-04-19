@@ -6,8 +6,8 @@
  * @param {Object} config
  */
 Ext.define('Ext.dd.StatusProxy', {
-    // EAC: 1/20/11 temporarily turned off while Ext.Fx gets updated.
     animRepair: false,
+    
     constructor: function(config){
         Ext.apply(this, config);
         this.id = this.id || Ext.id();

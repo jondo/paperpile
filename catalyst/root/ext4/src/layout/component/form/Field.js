@@ -255,7 +255,7 @@ Ext.define('Ext.layout.component.form.Field', {
                     var errorEl = owner.errorEl;
                     errorEl.addCls(Ext.baseCSSPrefix + 'form-invalid-icon');
                     errorEl.dom.qtip = owner.activeError || '';
-                    errorEl.dom.qclass = Ext.baseCSSPrefix + 'form-invalid-tip';
+                    errorEl.dom.setAttribute('ext:qclass', Ext.baseCSSPrefix + 'form-invalid-tip');
                     Ext.tip.QuickTips.init();
                     errorEl.setDisplayed(owner.hasActiveError());
                 },
@@ -305,7 +305,7 @@ Ext.define('Ext.layout.component.form.Field', {
                     var elDom = owner.getActionEl().dom;
                     owner.errorEl.setDisplayed(false);
                     elDom.qtip = owner.activeError || '';
-                    elDom.qclass = Ext.baseCSSPrefix + 'form-invalid-tip';
+                    elDom.setAttribute('ext:qclass', Ext.baseCSSPrefix + 'form-invalid-tip');
                     Ext.tip.QuickTips.init();
                 }
             }, base),

@@ -36,7 +36,7 @@ Ext.define('Ext.grid.RowWrapFeature', {
     
     getAdditionalData: function(data, idx, record, orig) {
         var headerCt = this.view.headerCt,
-            colspan  = headerCt.getCount(),
+            colspan  = headerCt.getColumnCount(),
             fullWidth = headerCt.getFullWidth(),
             items    = headerCt.query('gridheader'),
             itemsLn  = items.length,

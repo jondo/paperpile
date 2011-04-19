@@ -700,6 +700,16 @@ Ext.define('Ext.slider.Multi', {
         var me = this;
         return (me.disabled || !me.submitValue) ? null : me.getValue();
     },
+
+    reset: function() {
+        var me = this,
+            Array = Ext.Array;
+        Array.forEach(Array.from(me.originalValue), function(val, i) {
+            me.setValue(i, val);
+        });
+        me.clearInvalid();
+        me.wasValid = true;
+    },
     
     // private
     beforeDestroy : function() {

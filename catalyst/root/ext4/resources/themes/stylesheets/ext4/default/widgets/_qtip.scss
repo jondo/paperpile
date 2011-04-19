@@ -30,7 +30,6 @@
         color: $tip-header-color;
         font-size: $tip-header-font-size;
         font-weight: $tip-header-font-weight;
-        text-shadow: $tip-header-text-shadow;
     }
 
     .#{$prefix}tip-header-draggable {
@@ -40,7 +39,7 @@
     }
 
     // Tip is a Panel. It uses dock layout. Body style must be the same
-  .#{$prefix}tip-body {
+    .#{$prefix}tip-body {
         overflow: hidden;
         position: relative;
         padding: $tip-body-padding;
@@ -51,7 +50,6 @@
         color: $tip-body-color;
         font-size: $tip-body-font-size;
         font-weight: $tip-body-font-weight;
-        text-shadow: $tip-body-text-shadow;
         a {
             color: $tip-body-link-color;
         }
@@ -128,4 +126,29 @@
             _filter: chroma(color=pink);
         }
     }
+    
+    //error qtip
+    .#{$prefix}form-invalid-tip {
+        border-color: $tip-error-border-color;
+        
+        @include inner-border(
+            $width: 1px,
+            $color: $tip-error-inner-border-color
+        );
+        
+        .#{$prefix}tip-body {
+            background: theme-image($theme-name, 'form/exclamation.gif') 1px 1px no-repeat;
+            
+            padding-left: 22px;
+        }
+    }
+    
+    @include x-frame(
+        $cls: 'form-invalid-tip',
+        $border-radius: $tip-error-border-radius,
+        $border-width: $tip-error-border-width,
+        $background-color: $tip-background-color,
+        $background-gradient: $tip-background-gradient,
+        $table: true
+    );
 }

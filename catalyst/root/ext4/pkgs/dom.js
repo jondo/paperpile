@@ -1,4 +1,3 @@
-(function(){
 /**
  * @class Ext.core.DomHelper
  * <p>The DomHelper class provides a layer of abstraction from DOM and transparently supports creating
@@ -315,8 +314,28 @@ Ext.core.DomHelper = function(){
         el.insertBefore(node, before);
         return node;
     }
+    
+    /**
+     * @ignore
+     * Fix for IE9 createContextualFragment missing method
+     */   
+    function createContextualFragment(html){
+        var div = document.createElement("div"),
+            fragment = document.createDocumentFragment(),
+            i = 0,
+            length, childNodes;
+        
+        div.innerHTML = html;
+        childNodes = div.childNodes;
+        length = childNodes.length;
 
+        for (; i < length; i++) {
+            fragment.appendChild(childNodes[i].cloneNode(true));
+        }
 
+        return fragment;
+    }
+    
     pub = {
         /**
          * Returns the markup for the passed Element(s) config.
@@ -358,10 +377,10 @@ Ext.core.DomHelper = function(){
         insertHtml : function(where, el, html){
             var hash = {},
                 hashVal,
-                setStart,
                 range,
-                frag,
                 rangeEl,
+                setStart,
+                frag,
                 rs;
 
             where = where.toLowerCase();
@@ -385,14 +404,24 @@ Ext.core.DomHelper = function(){
                 setStart = 'setStart' + (endRe.test(where) ? 'After' : 'Before');
                 if (hash[where]) {
                     range[setStart](el);
-                    frag = range.createContextualFragment(html);
+                    if (!range.createContextualFragment) {
+                        frag = createContextualFragment(html);
+                    }
+                    else {
+                        frag = range.createContextualFragment(html);
+                    }
                     el.parentNode.insertBefore(frag, where == beforebegin ? el : el.nextSibling);
                     return el[(where == beforebegin ? 'previous' : 'next') + 'Sibling'];
                 } else {
                     rangeEl = (where == afterbegin ? 'first' : 'last') + 'Child';
                     if (el.firstChild) {
                         range[setStart](el[rangeEl]);
-                        frag = range.createContextualFragment(html);
+                        if (!range.createContextualFragment) {
+                            frag = createContextualFragment(html);
+                        }
+                        else {
+                            frag = range.createContextualFragment(html);
+                        }
                         if(where == afterbegin){
                             el.insertBefore(frag, el.firstChild);
                         }else{
@@ -2043,32 +2072,14 @@ el.un('click', this.handlerFn);
 
             // Otherwise, warn if it's not a valid CSS measurement
             if (!unitPattern.test(size)) {
+                //<debug>
                 if (Ext.isDefined(Ext.global.console)) {
-                    console.warn("Warning, size detected as NaN on Element.addUnits.");
+                    Ext.global.console.warn("Warning, size detected as NaN on Element.addUnits.");
                 }
+                //</debug>
                 return size || '';
             }
             return size;
-        },
-
-        /**
-         * <p>Updates the <a href="http://developer.mozilla.org/en/DOM/element.innerHTML">innerHTML</a> of this Element
-         * from a specified URL. Note that this is subject to the <a href="http://en.wikipedia.org/wiki/Same_origin_policy">Same Origin Policy</a></p>
-         * <p>Updating innerHTML of an element will <b>not</b> execute embedded <tt>&lt;script></tt> elements. This is a browser restriction.</p>
-         * @param {Mixed} options. Either a sring containing the URL from which to load the HTML, or an {@link Ext.Ajax#request} options object specifying
-         * exactly how to request the HTML.
-         * @return {Ext.core.Element} this
-         */
-        load: function(url, params, cb) {
-            Ext.Ajax.request(Ext.apply({
-                params: params,
-                url: url,
-                callback: cb,
-                el: this.dom,
-                indicatorText: ''
-            },
-            Ext.isObject(url) ? url: {}));
-            return this;
         },
 
         /**
@@ -2205,6 +2216,14 @@ el.un('click', this.handlerFn);
      * @method clearListeners
      */
     ep.clearListeners = ep.removeAllListeners;
+    
+    /**
+     * Removes this element's dom reference.  Note that event and cache removal is handled at {@link Ext#removeNode Ext.removeNode}.
+     * Alias to {@link #remove}.
+     * @member Ext.core.Element
+     * @method destroy
+     */
+    ep.destroy = ep.remove;
 
     /**
      * true to automatically adjust width and height settings for box-model issues (default to true)
@@ -3099,8 +3118,13 @@ Ext.core.Element.addMethods({
          * @return {Ext.core.Element} this
          */
         setStyle : function(prop, value){
-            var tmp, style;
-            
+            var me = this,
+                tmp, style;
+
+            if (!me.dom) {
+                return me;
+            }
+
             if (!Ext.isObject(prop)) {
                 tmp = {};
                 tmp[prop] = value;
@@ -3110,13 +3134,14 @@ Ext.core.Element.addMethods({
                 if (prop.hasOwnProperty(style)) {
                     value = Ext.value(prop[style], '');
                     if (style == 'opacity') {
-                        this.setOpacity(value);
-                    } else {
-                        this.dom.style[Ext.core.Element.normalize(style)] = value;
+                        me.setOpacity(value);
+                    }
+                    else {
+                        me.dom.style[Ext.core.Element.normalize(style)] = value;
                     }
                 }
             }
-            return this;
+            return me;
         },
 
         /**
@@ -3213,11 +3238,11 @@ Ext.core.Element.addMethods({
          * @param {Boolean} contentWidth (optional) true to get the width minus borders and padding
          * @return {Number} The element's width
          */
-        getWidth: function(contentHeight) {
+        getWidth: function(contentWidth) {
             var me = this,
                 dom = me.dom,
                 hidden = Ext.isIE && me.isStyle('display', 'none'),
-                width, overflow, style;
+                rect, width, overflow, style;
 
             // IE Quirks mode acts more like a max-size measurement unless overflow is hidden during measurement.
             // We will put the overflow back to it's original value when we are done measuring.
@@ -3227,9 +3252,20 @@ Ext.core.Element.addMethods({
                 me.setStyle({ overflow: 'hidden'});
             }
 
-            width = MATH.max(dom.offsetWidth, width ? 0 : dom.clientWidth) || 0;
+            // Gecko will in some cases report an offsetWidth that is actually less than the width of the
+            // text contents, because it measures fonts with sub-pixel precision but rounds the calculated
+            // value down. Using getBoundingClientRect instead of offsetWidth allows us to get the precise
+            // subpixel measurements so we can force them to always be rounded up. See
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=458617
+            if (Ext.supports.BoundingClientRect) {
+                rect = dom.getBoundingClientRect();
+                width = Math.ceil(rect.right - rect.left);
+            } else {
+                width = dom.offsetWidth;
+            }
+            width = MATH.max(width, hidden ? 0 : dom.clientWidth) || 0;
 
-            if (contentHeight) {
+            if (contentWidth) {
                 width -= (me.getBorderWidth("lr") + me.getPadding("lr"));
             }
 
@@ -3922,7 +3958,8 @@ Ext.core.Element.addMethods(function(){
 
                 }else{
                     me.fixDisplay();
-                    dom.style.visibility = visible ? "visible" : HIDDEN;
+                    // Show by clearing visibility style. Explicitly setting to "visible" overrides parent visibility setting.
+                    dom.style.visibility = visible ? '' : HIDDEN;
                 }
             }else{
                 // closure for composites
@@ -4029,12 +4066,7 @@ Ext.core.Element.addMethods(function(){
 }());
 Ext.applyIf(Ext.core.Element.prototype, {
     // @private override base Ext.util.Animate mixin for animate for backwards compatibility
-    animate: function(args, duration, onComplete, easing) {
-        if (arguments.length > 1) {
-            if (Ext.isDefined(Ext.global.console)) {
-                console.warn("animate should only be called with a single configuration object.");
-            }
-        }
+    animate: function(config) {
         var me = this;
         if (!me.id) {
             me = Ext.get(me.dom);
@@ -4042,34 +4074,18 @@ Ext.applyIf(Ext.core.Element.prototype, {
         if (Ext.fx.Manager.hasFxBlock(me.id)) {
             return me;
         }
-        args = args || {};
-        if (duration) {
-            args.duration = duration;
-        }
-        if (onComplete) {
-            args.callback = onComplete;
-        }
-        if (easing) {
-            args.easing = easing;
-        }
-        Ext.fx.Manager.queueFx(Ext.create('Ext.fx.Anim', me.anim(args)));
+        Ext.fx.Manager.queueFx(Ext.create('Ext.fx.Anim', me.anim(config)));
         return this;
     },
 
     // @private override base Ext.util.Animate mixin for animate for backwards compatibility
     anim: function(config) {
-        if (arguments.length > 1) {
-            if (Ext.isDefined(Ext.global.console)) {
-                console.warn("anim now only accepts one configuration object.");
-            }
-        }
-
         if (!Ext.isObject(config)) {
             return (config) ? {} : false;
         }
 
         var me = this,
-            duration = config.duration || 250,
+            duration = config.duration || Ext.fx.Anim.prototype.duration,
             easing = config.easing || 'ease',
             animConfig;
 
@@ -4083,31 +4099,6 @@ Ext.applyIf(Ext.core.Element.prototype, {
         Ext.fx.Manager.setFxDefaults(me.id, {
             delay: 0
         });
-
-        // Convert durations in seconds to milliseconds
-        if (config.delay && config.delay < 10) {
-            if (Ext.isDefined(Ext.global.console)) {
-                console.warn("Detected an extremely small animation delay, assuming the deprecated unit 'seconds were used.  Please change to milliseconds.");
-            }
-            config.delay *= 1000;
-        }
-
-        // Convert durations in seconds to milliseconds
-        if (duration < 10) {
-            if (Ext.isDefined(Ext.global.console)) {
-                console.warn("Detected an extremely small animation duration, assuming the deprecated unit seconds were used.  Please change to milliseconds.");
-            }
-            duration *= 1000;
-        }
-
-        // Convert endOpacity to opacity
-        if (config.endOpacity) {
-            if (Ext.isDefined(Ext.global.console)) {
-                console.warn("Detected the deprecated endOpacity property.  Please use opacity.");
-            }
-            config.opacity = config.endOpacity;
-            delete config.endOpacity;
-        }
 
         animConfig = {
             target: me,
@@ -4205,8 +4196,11 @@ el.slideIn('t', {
             me.clearPositioning('auto');
             wrap.clip();
 
+            // This element is temporarily positioned absolute within its wrapper.
+            // Restore to its default, CSS-inherited visibility setting.
+            // We cannot explicitly poke visibility:visible into its style because that overrides the visibility of the wrap.
             me.setStyle({
-                visibility: 'visible',
+                visibility: '',
                 position: 'absolute'
             });
             if (slideOut) {
@@ -5425,12 +5419,12 @@ Ext.require('Ext.util.DelayedTask', function() {
                 var me = this,
                     listener;
                     scope = scope || me.observable;
-                
-                // <debug>
+
+                //<debug error>
                 if (!fn) {
-                    throw "Ext.util.Event: Attempted to bind an event listener to a function that does not exist.";
+                    throw new Error("["+Ext.getClassName(this.observable)+"#addListener -> Ext.util.Event#addListener] Invalid callback function: " + fn);
                 }
-                // </debug>
+                //</debug>
 
                 if (!me.isListening(fn, scope)) {
                     listener = me.createListener(fn, scope, options);
@@ -5680,7 +5674,7 @@ Ext.EventManager = {
                 document.removeEventListener('DOMContentLoaded', me.fireDocReady, false);
                 window.removeEventListener('load', me.fireDocReady, false);
             } else {
-                if (me.readyTimeout != null) {
+                if (me.readyTimeout !== null) {
                     clearTimeout(me.readyTimeout);
                 }
                 if (me.hasOnReadyStateChange) {
@@ -5692,7 +5686,7 @@ Ext.EventManager = {
         }
         if (!Ext.isReady) {
             Ext.isReady = true;
-
+            me.onWindowUnload();
             me.readyEvent.fire();
         }
     },
@@ -5758,7 +5752,7 @@ Ext.EventManager = {
 
         if (!Ext.cache[id]){
             Ext.core.Element.addToCache(new Ext.core.Element(element), id);
-            if(skip){
+            if (skip) {
                 Ext.cache[id].skipGarbageCollection = true;
             }
         }
@@ -5779,26 +5773,25 @@ Ext.EventManager = {
 
         // loop over all the keys in the object
         for (key in config) {
-            if (!config.hasOwnProperty(key)) {
-                continue;
-            }
-            // if the key is something else then an event option
-            if (!propRe.test(key)) {
-                value = config[key];
-                // if the value is a function it must be something like click: function(){}, scope: this
-                // which means that there might be multiple event listeners with shared options
-                if (Ext.isFunction(value)) {
-                    // shared options
-                    args = [element, key, value, config.scope, config];
-                } else {
-                    // if its not a function, it must be an object like click: {fn: function(){}, scope: this}
-                    args = [element, key, value.fn, value.scope, value];
-                }
-
-                if (isRemove === true) {
-                    me.removeListener.apply(this, args);
-                } else {
-                    me.addListener.apply(me, args);
+            if (config.hasOwnProperty(key)) {
+                // if the key is something else then an event option
+                if (!propRe.test(key)) {
+                    value = config[key];
+                    // if the value is a function it must be something like click: function(){}, scope: this
+                    // which means that there might be multiple event listeners with shared options
+                    if (Ext.isFunction(value)) {
+                        // shared options
+                        args = [element, key, value, config.scope, config];
+                    } else {
+                        // if its not a function, it must be an object like click: {fn: function(){}, scope: this}
+                        args = [element, key, value.fn, value.scope, value];
+                    }
+                    
+                    if (isRemove === true) {
+                        me.removeListener.apply(this, args);
+                    } else {
+                        me.addListener.apply(me, args);
+                    }
                 }
             }
         }
@@ -5991,14 +5984,16 @@ Ext.EventManager = {
     */
     removeAll : function(element){
         var dom = Ext.getDom(element),
-            cache = this.getElementEventCache(dom),
-            ev;
+            cache, ev;
+        if (!dom) {
+            return;
+        }
+        cache = this.getElementEventCache(dom);
 
         for (ev in cache) {
-            if (!cache.hasOwnProperty(ev)) {
-                continue;
+            if (cache.hasOwnProperty(ev)) {
+                this.removeListener(dom, ev);
             }
-            this.removeListener(dom, ev);
         }
         Ext.cache[dom.id].events = {};
     },
@@ -6315,25 +6310,40 @@ Ext.EventManager = {
         }
     },
 
-    onWindowUnload: function(){
+    onWindowUnload: function() {
         var unload = this.unloadEvent;
-        if(!resize){
+        if (!unload) {
             this.unloadEvent = unload = new Ext.util.Event();
-            this.on(window, 'unload', this.fireUnload, this);
+            this.addListener(window, 'unload', this.fireUnload, this);
         }
-        unload.addListener(fn, scope, options);
     },
 
     /**
      * Fires the unload event for items bound with onWindowUnload
      * @private
      */
-    fireUnload: function(){
+    fireUnload: function() {
         // wrap in a try catch, could have some problems during unload
         try {
-            me.unloadEvent.fire();
+            this.removeUnloadListener();
+            // Work around FF3 remembering the last scroll position when refreshing the grid and then losing grid view
+            if (Ext.isGecko3) {
+                var gridviews = Ext.ComponentQuery.query('gridview'),
+                    i = 0,
+                    ln = gridviews.length;
+                for (; i < ln; i++) {
+                    gridviews[i].scrollToTop();
+                }
+            }
+            // Purge all elements in the cache
+            var el,
+                cache = Ext.cache;
+            for (el in cache) {
+                if (cache.hasOwnProperty(el)) {
+                    Ext.EventManager.removeAll(el);
+                }
+            }
         } catch(e) {
-
         }
     },
 
@@ -6344,7 +6354,7 @@ Ext.EventManager = {
      */
     removeUnloadListener: function(){
         if (this.unloadEvent) {
-            this.unloadEvent.removeListener(fn, scope);
+            this.removeListener(window, 'unload', this.fireUnload);
         }
     },
 
@@ -6482,7 +6492,7 @@ Ext.EventManager.un = Ext.EventManager.removeListener;
             else {
                 Ext.isBorderBox = true;
             }
-            
+
             htmlCls.push(baseCSSPrefix + (Ext.isBorderBox ? 'border-box' : 'strict'));
             if (!Ext.isStrict) {
                 htmlCls.push(baseCSSPrefix + 'quirks');
@@ -6497,9 +6507,7 @@ Ext.EventManager.un = Ext.EventManager.removeListener;
         return true;
     };
 
-    if (!initExtCss()) {
-        Ext.onReady(initExtCss);
-    }
+    Ext.onReady(initExtCss);
 })();
 
 /**
@@ -7321,23 +7329,31 @@ this.menuEl.un(this.mouseLeaveMonitor);
     },
 
     /**
-     * Direct access to the Updater {@link Ext.Updater#update} method. The method takes the same object
-     * parameter as {@link Ext.Updater#update}
+     * Direct access to the Ext.ElementLoader {@link Ext.ElementLoader#load} method. The method takes the same object
+     * parameter as {@link Ext.ElementLoader#load}
      * @return {Ext.core.Element} this
      */
-    load : function() {
-        var updateManager = this.getUpdater();
-        updateManager.update.apply(updateManager, arguments);
-        
+    load : function(options) {
+        this.getLoader().load(options);
         return this;
     },
 
     /**
-    * Gets this element's {@link Ext.Updater Updater}
-    * @return {Ext.Updater} The Updater
+    * Gets this element's {@link Ext.ElementLoader ElementLoader}
+    * @return {Ext.ElementLoader} The loader
     */
-    getUpdater : function() {
-        return this.updateManager || (this.updateManager = new Ext.Updater(this));
+    getLoader : function() {
+        var dom = this.dom,
+            data = Ext.core.Element.data,
+            loader = data(dom, 'loader');
+            
+        if (!loader) {
+            loader = new Ext.ElementLoader({
+                target: this
+            });
+            data(dom, 'loader', loader);
+        }
+        return loader;
     },
 
     /**
@@ -7444,8 +7460,6 @@ this.menuEl.un(this.mouseLeaveMonitor);
         return proxy;
     }
 });
-
-Ext.core.Element.prototype.getUpdateManager = Ext.core.Element.prototype.getUpdater;
 Ext.core.Element.prototype.clearListeners = Ext.core.Element.prototype.removeAllListeners;
 
 /**
@@ -8161,10 +8175,7 @@ Ext.override(Ext.core.Element, {
             top,
             getBorderWidth = me.getBorderWidth,
             getPadding = me.getPadding,
-            l,
-            r,
-            t,
-            b;
+            l, r, t, b, w, h, bx;
         if (!local) {
             xy = me.getXY();
         } else {
@@ -8172,10 +8183,8 @@ Ext.override(Ext.core.Element, {
             top = parseInt(me.getStyle("top"), 10) || 0;
             xy = [left, top];
         }
-        var el = me.dom,
-        w = el.offsetWidth,
-        h = el.offsetHeight,
-        bx;
+        w = me.getWidth();
+        h = me.getHeight();
         if (!contentBox) {
             bx = {
                 x: xy[0],
@@ -8267,9 +8276,9 @@ Ext.override(Ext.core.Element, {
     getViewRegion: function() {
         var pos = this.getXY(),
             top = pos[1] + this.getBorderWidth('t') + this.getPadding('t'),
-            left = pos[0] + this.getBorderWidth('l') + this.getPadding('l'),
-            size = this.getViewSize();
-        return new Ext.util.Region(top, left + size.width - 1 - this.getPadding('lr'), top + size.height - 1 - this.getPadding('tb'), left);
+            left = pos[0] + this.getBorderWidth('l') + this.getPadding('l');
+        
+        return new Ext.util.Region(top, left + this.getWidth(true), top + this.getHeight(true), left);
     },
 
     /**
@@ -8297,8 +8306,8 @@ Ext.override(Ext.core.Element, {
             h = isDoc ? Ext.core.Element.getViewHeight() : el.offsetHeight,
             xy = me.getXY(),
             t = xy[1],
-            r = xy[0] + w - 1,
-            b = xy[1] + h - 1,
+            r = xy[0] + w,
+            b = xy[1] + h,
             l = xy[0];
 
         if (getRegion) {
@@ -8663,7 +8672,8 @@ Ext.core.Element.addMethods(
              */
             isMasked : function() {
                 var m = data(this.dom, 'mask');
-                return m && m.isVisible();
+                // force to bool
+                return !!(m && m.isVisible());
             },
 
             /**
@@ -8913,4 +8923,3 @@ Ext.core.Element.select = function(selector, unique, root){
  * @method select
  */
 Ext.select = Ext.core.Element.select;
-})();

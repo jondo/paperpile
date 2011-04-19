@@ -211,8 +211,10 @@ new Ext.DataView({
  */
 Ext.define('Ext.data.Store', {
     extend: 'Ext.data.AbstractStore',
+    
+    alias: 'store.store',
 
-    requires: ['Ext.ModelMgr'],
+    requires: ['Ext.ModelMgr', 'Ext.data.Model'],
     uses: ['Ext.data.MemoryProxy'],
 
     /**
@@ -550,6 +552,10 @@ new Ext.data.Store({
 
             me.data.insert(index + i, record);
             record.join(me);
+            
+            if (me.autoSync && record.phantom === true) {
+                me.sync();
+            }
         }
 
         if (me.snapshot) {
@@ -586,11 +592,6 @@ myStore.add({some: 'data'}, {some: 'other data'});
 
         for (; i < length; i++) {
             record = me.createModel(records[i]);
-
-            if (record.phantom === false) {
-                record.needsAdd = true;
-            }
-
             records[i] = record;
         }
 
@@ -606,7 +607,7 @@ myStore.add({some: 'data'}, {some: 'other data'});
      * @return {Ext.data.Model}
      */
     createModel: function(record) {
-        if (! (record instanceof Ext.data.Model)) {
+        if (!record.isModel) {
             record = Ext.ModelMgr.create(record, this.model);
         }
 
@@ -646,6 +647,7 @@ myStore.add({some: 'data'}, {some: 'other data'});
 
             if (index > -1) {
                 me.removed.push(record);
+                record.lastIndex = index;
 
                 if (me.snapshot) {
                     me.snapshot.remove(record);
@@ -653,6 +655,10 @@ myStore.add({some: 'data'}, {some: 'other data'});
 
                 record.unjoin(me);
                 me.data.remove(record);
+                
+                if (me.autoSync && record.phantom !== true) {
+                    me.sync();
+                }
 
                 me.fireEvent('remove', me, record, index);
             }
@@ -713,6 +719,7 @@ store.load(function(records, operation, success) {
                 field: me.groupField,
                 direction: me.groupDir
             },
+            page: me.currentPage,
             start: (me.currentPage - 1) * me.pageSize,
             limit: me.pageSize,
             addRecords: false
@@ -744,7 +751,7 @@ store.load(function(records, operation, success) {
         }
 
         if (successful) {
-            me.loadRecords(records, operation.addRecords);
+            me.loadRecords(records, operation);
         }
 
         me.loading = false;
@@ -765,41 +772,102 @@ store.load(function(records, operation, success) {
      */
     onProxyWrite: function(operation) {
         var me = this,
-            data = me.data,
-            action = operation.action,
-            i = 0,
-            records = operation.getRecords(),
-            length = records.length,
-            successful = operation.wasSuccessful(),
-            record;
+            success = operation.wasSuccessful(),
+            records = operation.getRecords();
 
-        if (successful) {
-            if (action === 'create' || action === 'update') {
-                for (; i < length; i++) {
-                    record = records[i];
-
-                    record.phantom = false;
-                    record.join(me);
-                    data.replace(record);
-                }
-            }
-
-            else if (action === 'destroy') {
-                for (; i < length; i++) {
-                    record = records[i];
-
-                    record.unjoin(me);
-                    data.remove(record);
-                }
-
-                me.removed = [];
-            }
-
-            me.fireEvent('datachanged');
+        switch (operation.action) {
+            case 'create':
+                me.onCreateRecords(records, operation, success);
+                break;
+            case 'update':
+                me.onUpdateRecords(records, operation, success);
+                break;
+            case 'destroy':
+                me.onDestroyRecords(records, operation, success);
+                break;
         }
-
+        
+        if (success) {
+            me.fireEvent('write', me, operation);
+            me.fireEvent('datachanged', me);
+        }
         //this is a callback that would have been passed to the 'create', 'update' or 'destroy' function and is optional
-        Ext.callback(operation.callback, operation.scope || me, [records, operation, successful]);
+        Ext.callback(operation.callback, operation.scope || me, [records, operation, success]);
+    },
+    
+    /**
+     * Create any new records when a write is returned from the server.
+     * @private
+     * @param {Array} records The array of new records
+     * @param {Ext.data.Operation} operation The operation that just completed
+     * @param {Boolean} success True if the operation was successful
+     */
+    onCreateRecords: function(records, operation, success) {
+        if (success) {
+            var i = 0,
+                length = records.length,
+                originalRecords = operation.records,
+                record,
+                original;
+                
+            /**
+             * Loop over each record returned from the server. Assume they are
+             * returned in order of how they were sent. If we find a matching
+             * record, replace it with the newly created one.
+             */
+            for (; i < length; ++i) {
+                record = records[i];
+                original = originalRecords[i];
+                if (original) {
+                    this.data.replace(original.internalId, record);
+                    record.phantom = false;
+                    record.join(this);
+                }
+            }
+        }
+    },
+    
+    /**
+     * Update any records when a write is returned from the server.
+     * @private
+     * @param {Array} records The array of updated records
+     * @param {Ext.data.Operation} operation The operation that just completed
+     * @param {Boolean} success True if the operation was successful
+     */
+    onUpdateRecords: function(records, operation, success){
+        if (success) {
+            var i = 0,
+                length = records.length,
+                record;
+            
+            for (; i < length; ++i) {
+                record = records[i];
+                this.data.replace(record);
+                record.join(this);
+            }
+        }
+    },
+    
+    /**
+     * Remove any records when a write is returned from the server.
+     * @private
+     * @param {Array} records The array of removed records
+     * @param {Ext.data.Operation} operation The operation that just completed
+     * @param {Boolean} success True if the operation was successful
+     */
+    onDestroyRecords: function(records, operation, success){
+        if (success) {
+            var i = 0,
+                length = records.length,
+                record;
+                
+            for (; i < length; ++i) {
+                record = records[i];
+                record.unjoin(this);
+                this.data.remove(record);
+            }
+            this.removed = [];
+        }
     },
 
     //inherit docs
@@ -809,81 +877,8 @@ store.load(function(records, operation, success) {
 
     //inherit docs
     getUpdatedRecords: function() {
-        return this.data.filterBy(this.filterDirty).items;
+        return this.data.filterBy(this.filterUpdated).items;
     },
-
-    /**
-     * <p>Sorts the data in the Store by one or more of its properties. Example usage:</p>
-<pre><code>
-//sort by a single field
-myStore.sort('myField', 'DESC');
-
-//sorting by multiple fields
-myStore.sort([
-    {
-        property : 'age',
-        direction: 'ASC'
-    },
-    {
-        property : 'name',
-        direction: 'DESC'
-    }
-]);
-</code></pre>
-     * <p>Internally, Store converts the passed arguments into an array of {@link Ext.util.Sorter} instances, and delegates the actual
-     * sorting to its internal {@link Ext.util.MixedCollection}.</p>
-     * <p>When passing a single string argument to sort, Store maintains a ASC/DESC toggler per field, so this code:</p>
-<pre><code>
-store.sort('myField');
-store.sort('myField');
-     </code></pre>
-     * <p>Is equivalent to this code, because Store handles the toggling automatically:</p>
-<pre><code>
-store.sort('myField', 'ASC');
-store.sort('myField', 'DESC');
-</code></pre>
-     * @param {String|Array} sorters Either a string name of one of the fields in this Store's configured {@link Ext.data.Model Model},
-     * or an Array of sorter configurations.
-     * @param {String} direction The overall direction to sort the data by. Defaults to "ASC".
-     */
-    sort: function(sorters, direction) {
-        var me = this,
-            property,
-            sortToggle,
-            toggle;
-
-        if (Ext.isString(sorters)) {
-            property = sorters;
-            sortToggle = me.sortToggle;
-            toggle = Ext.String.toggle;
-
-            if (direction === undefined) {
-                sortToggle[property] = toggle(sortToggle[property] || "", "ASC", "DESC");
-                direction = sortToggle[property];
-            }
-
-            sorters = {
-                property: property,
-                direction: direction
-            };
-        }
-
-        if (arguments.length !== 0) {
-            me.sorters.clear();
-        }
-
-        me.sorters.addAll(me.decodeSorters(sorters));
-
-        if (me.remoteSort) {
-            //the load function will pick up the new sorters and request the sorted data from the proxy
-            me.load();
-        } else {
-            me.data.sort(me.sorters.items);
-
-            me.fireEvent('datachanged', me);
-        }
-    },
-
 
     /**
      * Filters the loaded set of records by a given set of filters.
@@ -904,6 +899,7 @@ store.sort('myField', 'DESC');
         var me = this,
             decoded = me.decodeFilters(filters),
             i = 0,
+            doLocalSort = me.sortOnFilter && !me.remoteSort,
             length = decoded.length;
 
         for (; i < length; i++) {
@@ -924,9 +920,11 @@ store.sort('myField', 'DESC');
 
             me.data = me.data.filter(me.filters.items);
 
-            if (me.sortOnFilter && !me.remoteSort) {
+            if (doLocalSort) {
                 me.sort();
-            } else {
+            }
+            // fire datachanged event if it hasn't already been fired by doSort
+            if (!doLocalSort || me.sorters.length < 1) {
                 me.fireEvent('datachanged', me);
             }
         }
@@ -1020,29 +1018,36 @@ store.sort('myField', 'DESC');
             }
         }
 
-        this.loadRecords(data, append);
+        this.loadRecords(data, {addRecords: append});
     },
 
     /**
      * Loads an array of {@Ext.data.Model model} instances into the store, fires the datachanged event. This should only usually
      * be called internally when loading from the {@link Ext.data.Proxy Proxy}, when adding records manually use {@link #add} instead
      * @param {Array} records The array of records to load
-     * @param {Boolean} add True to add these records to the existing records, false to remove the Store's existing records first
+     * @param {Object} options {addRecords: true} to add these records to the existing records, false to remove the Store's existing records first
      */
-    loadRecords: function(records, add) {
-        var me = this,
-            i = 0,
+    loadRecords: function(records, options) {
+        var me     = this,
+            i      = 0,
             length = records.length;
-
-        if (!add) {
+            
+        options = options || {};
+            
+        
+        if (!options.addRecords) {
+            delete me.snapshot;
             me.data.clear();
         }
-
+        
         me.data.addAll(records);
 
         //FIXME: this is not a good solution. Ed Spencer is totally responsible for this and should be forced to fix it immediately.
         for (; i < length; i++) {
-            records[i].needsAdd = false;
+            if (options.start !== undefined) {
+                records[i].index = options.start + i;
+            
+            }
             records[i].join(me);
         }
 
@@ -1064,7 +1069,7 @@ store.sort('myField', 'DESC');
         me.resumeEvents();
         me.fireEvent('datachanged', me, records);
     },
-
+    
     // PAGING METHODS
     /**
      * Loads a given 'page' of data by setting the start and limit values appropriately. Internally this just causes a normal
@@ -1265,6 +1270,16 @@ store.sort('myField', 'DESC');
     indexOf: function(record) {
         return this.data.indexOf(record);
     },
+    
+    
+    /**
+     * Get the index within the entire dataset. From 0 to the totalCount.
+     * @param {Ext.data.Model} record The Ext.data.Model object to find.
+     * @return {Number} The index of the passed Record. Returns -1 if not found.
+     */
+    indexOfTotal: function(record) {
+        return record.index || this.indexOf(record);
+    },
 
     /**
      * Get the index within the cache of the Record with the passed id.
@@ -1312,8 +1327,7 @@ store.sort('myField', 'DESC');
         if (grouped && me.groupField) {
             return me.aggregate(function(records) {
                 return records.length ? records[0] : undefined;
-            },
-            me);
+            }, me, true);
         } else {
             return me.data.first();
         }
@@ -1334,8 +1348,7 @@ store.sort('myField', 'DESC');
             return me.aggregate(function(records) {
                 var len = records.length;
                 return len ? records[len - 1] : undefined;
-            },
-            me);
+            }, me, true);
         } else {
             return me.data.last();
         }
@@ -1352,24 +1365,26 @@ store.sort('myField', 'DESC');
      * @return {Number} The sum
      */
     sum: function(field, grouped) {
-        var me = this,
-            getSum = function(records) {
-                var total = 0,
-                    i = 0,
-                    len = records.length;
-
-                for (; i < len; ++i) {
-                    total += records[i].get(field);
-                }
-
-                return total;
-            };
+        var me = this;
 
         if (grouped && me.groupField) {
-            return me.aggregate(getSum, me);
+            return me.aggregate(me.getSum, me, true, [field]);
         } else {
-            return getSum(me.data.items);
+            return me.getSum(me.data.items, field);
         }
+    },
+    
+    // @private, see sum
+    getSum: function(records, field) {
+        var total = 0,
+            i = 0,
+            len = records.length;
+
+        for (; i < len; ++i) {
+            total += records[i].get(field);
+        }
+
+        return total;
     },
 
     /**
@@ -1386,8 +1401,7 @@ store.sort('myField', 'DESC');
         if (grouped && me.groupField) {
             return me.aggregate(function(records) {
                 return records.length;
-            },
-            me);
+            }, me, true);
         } else {
             return me.getCount();
         }
@@ -1403,31 +1417,32 @@ store.sort('myField', 'DESC');
      * @return {Mixed/undefined} The minimum value, if no items exist, undefined.
      */
     min: function(field, grouped) {
-        var me = this,
-            getMin = function(records) {
-                var i = 1,
-                    len = records.length,
-                    value,
-                    min;
-
-                if (len > 0) {
-                    min = records[0].get(field);
-                }
-
-                for (; i < len; ++i) {
-                    value = records[i].get(field);
-                    if (value < min) {
-                        min = value;
-                    }
-                }
-                return min;
-            };
+        var me = this;
 
         if (grouped && me.groupField) {
-            return me.aggregate(getMin, me);
+            return me.aggregate(me.getMin, me, true, [field]);
         } else {
-            return getMin(me.data.items);
+            return me.getMin(me.data.items, field);
         }
+    },
+    
+    // @private, see min
+    getMin: function(records, field){
+        var i = 1, 
+            len = records.length, 
+            value, min;
+        
+        if (len > 0) {
+            min = records[0].get(field);
+        }
+        
+        for (; i < len; ++i) {
+            value = records[i].get(field);
+            if (value < min) {
+                min = value;
+            }
+        }
+        return min;
     },
 
     /**
@@ -1440,31 +1455,33 @@ store.sort('myField', 'DESC');
      * @return {Mixed/undefined} The maximum value, if no items exist, undefined.
      */
     max: function(field, grouped) {
-        var me = this,
-            getMax = function(records) {
-                var i = 1,
-                    len = records.length,
-                    value,
-                    max;
-
-                if (len > 0) {
-                    max = records[0].get(field);
-                }
-
-                for (; i < len; ++i) {
-                    value = records[i].get(field);
-                    if (value > max) {
-                        max = value;
-                    }
-                }
-                return max;
-            };
+        var me = this;
 
         if (grouped && me.groupField) {
-            return me.aggregate(getMax, me);
+            return me.aggregate(me.getMax, me, true, [field]);
         } else {
-            return getMax(me.data.items);
+            return me.getMax(me.data.items, field);
         }
+    },
+    
+    // @private, see max
+    getMax: function(records, field) {
+        var i = 1, 
+            len = records.length, 
+            value, 
+            max;
+        
+        if (len > 0) {
+            max = records[0].get(field);
+        }
+        
+        for (; i < len; ++i) {
+            value = records[i].get(field);
+            if (value > max) {
+                max = value;
+            }
+        }
+        return max;
     },
 
     /**
@@ -1477,48 +1494,58 @@ store.sort('myField', 'DESC');
      * @return {Mixed/undefined} The average value, if no items exist, 0.
      */
     average: function(field, grouped) {
-        var me = this,
-            getAverage = function(records) {
-                var i = 0,
-                    len = records.length,
-                    sum = 0;
-
-                if (records.length > 0) {
-                    for (; i < len; ++i) {
-                        sum += records[i].get(field);
-                    }
-                    return sum / len;
-                }
-                return 0;
-            };
+        var me = this;
 
         if (grouped && me.groupField) {
-            return me.aggregate(getAverage, me);
+            return me.aggregate(me.getAverage, me, true, [field]);
         } else {
-            return getAverage(me.data.items);
+            return me.getAverage(me.data.items, field);
         }
+    },
+    
+    // @private, see average
+    getAverage: function(records, field) {
+        var i = 0,
+            len = records.length,
+            sum = 0;
+
+        if (records.length > 0) {
+            for (; i < len; ++i) {
+                sum += records[i].get(field);
+            }
+            return sum / len;
+        }
+        return 0;
     },
 
     /**
-     * Runs the aggregate function for each group of records in the store. The result
-     * is an object literal with the key being the group name and the value being the
-     * result of the aggregate function for that group.
+     * Runs the aggregate function for all the records in the store.
      * @param {Function} fn The function to execute. The function is called with a single parameter,
      * an array of records for that group.
-     * @param {Object} scope The scope to execute the function in. Defaults to the store.
+     * @param {Object} scope (optional) The scope to execute the function in. Defaults to the store.
+     * @param {Boolean} grouped (Optional) True to perform the operation for each group
+     * in the store. The value returned will be an object literal with the key being the group
+     * name and the group average being the value. The grouped parameter is only honored if
+     * the store has a groupField.
+     * @param {Array} args (optional) Any arguments to append to the function call
      * @return {Object} An object literal with the group names and their appropriate values.
      */
-    aggregate: function(fn, scope) {
-        var groups = this.getGroups(),
-            i = 0,
-            len = groups.length,
-            out = {},
-            group;
-
-        for (; i < len; ++i) {
-            group = groups[i];
-            out[group.name] = fn.call(scope || this, group.children);
+    aggregate: function(fn, scope, grouped, args) {
+        args = args || [];
+        if (grouped && this.groupField) {
+            var groups = this.getGroups(),
+                i = 0,
+                len = groups.length,
+                out = {},
+                group;
+                
+            for (; i < len; ++i) {
+                group = groups[i];
+                out[group.name] = fn.apply(scope || this, [group.children].concat(args));
+            }
+            return out;
+        } else {
+            return fn.apply(scope || this, [this.data.items].concat(args));
         }
-        return out;
     }
 });

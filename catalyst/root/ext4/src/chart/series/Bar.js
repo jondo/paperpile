@@ -185,6 +185,7 @@ Ext.define('Ext.chart.series.Bar', {
         if (me.axis) {
             axis = chart.axes.get(me.axis);
             if (axis) {
+                axis = axis.calcEnds();
                 minY = axis.from;
                 maxY = mmax(axis.to, 0);
             }
@@ -223,7 +224,7 @@ Ext.define('Ext.chart.series.Bar', {
             });
             plus = mmax.apply(math, total[0]);
             minus = mmax.apply(math, total[1]);
-            scale = (column ? bbox.height - ypadding * 2 : bbox.width - xpadding * 2) / (plus + minus);
+            scale = (column ? bbox.height - ypadding * 2 : bbox.width - xpadding * 2) / mmax(plus + minus, maxY - minY);
             zero = zero + plus * scale * (column ? -1 : 1);
         }
         else if (minY / maxY < 0) {

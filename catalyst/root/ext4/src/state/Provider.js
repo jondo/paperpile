@@ -14,8 +14,16 @@ Ext.define('Ext.state.Provider', {
         observable: 'Ext.util.Observable'
     },
     
-    constructor : function(){
+    /**
+     * @cfg {String} prefix A string to prefix to items stored in the underlying state store. 
+     * Defaults to <tt>'ext-'</tt>
+     */
+    prefix: 'ext-',
+    
+    constructor : function(config){
+        config = config || {};
         var me = this;
+        Ext.apply(me, config);
         /**
          * @event statechange
          * Fires when a state change occurs.
@@ -65,7 +73,7 @@ Ext.define('Ext.state.Provider', {
      * @param {String} value The value to decode
      * @return {Mixed} The decoded value
      */
-    decodeValue : function(cookie){
+    decodeValue : function(value){
         /**
          * a -> Array
          * n -> Number
@@ -77,14 +85,14 @@ Ext.define('Ext.state.Provider', {
          */
         var me = this,
             re = /^(a|n|d|b|s|o|e)\:(.*)$/,
-            matches = re.exec(unescape(cookie)),
+            matches = re.exec(unescape(value)),
             all,
             type,
             value,
             keyValue;
             
         if(!matches || !matches[1]){
-            return; // non state cookie
+            return; // non state
         }
         
         type = matches[1];

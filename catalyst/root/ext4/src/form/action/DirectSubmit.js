@@ -56,7 +56,7 @@ var myFormPanel = new Ext.form.FormPanel({
         "id":{
             "extAction":"Profile","extMethod":"updateBasicInfo",
             "extType":"rpc","extTID":"6","extUpload":"false",
-            "name":"Aaron Conran","email":"aaron@extjs.com","company":"Ext JS, LLC"
+            "name":"Aaron Conran","email":"aaron@sencha.com","company":"Sencha Inc."
         }
     }
 }

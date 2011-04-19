@@ -1,4 +1,3 @@
-(function(){
 /**
  * @class Ext.JSON
  * Modified version of Douglas Crockford"s json.js that doesn"t
@@ -226,14 +225,16 @@ Ext.apply(Ext, {
      * @return {String} The generated Id.
      */
     id: function(el, prefix) {
-        el = Ext.getDom(el) || {};
+        el = Ext.getDom(el, true) || {};
         if (el === document) {
             el.id = this.documentId;
         }
         else if (el === window) {
             el.id = this.windowId;
         }
-        el.id = el.id || ((prefix || 'ext-gen') + (++Ext.idSeed));
+        if (!el.id) {
+            el.id = (prefix || "ext-gen") + (++Ext.idSeed);
+        }
         return el.id;
     },
 
@@ -558,7 +559,6 @@ Ext.ns("Ext.grid", "Ext.list", "Ext.dd", "Ext.tree", "Ext.form", "Ext.menu",
         isGecko4 = isGecko && check(/rv:2\.0/),
         isWindows = check(/windows|win32/),
         isMac = check(/macintosh|mac os x/),
-        isAir = check(/adobeair/),
         isLinux = check(/linux/),
         scrollWidth = null;
 
@@ -567,7 +567,7 @@ Ext.ns("Ext.grid", "Ext.list", "Ext.dd", "Ext.tree", "Ext.form", "Ext.menu",
         document.execCommand("BackgroundImageCache", false, true);
     } catch(e) {}
 
-    Ext.setVersion('extjs', '4.0.0pr5');
+    Ext.setVersion('extjs', '4.0.0beta1');
     Ext.apply(Ext, {
         /**
          * URL to a blank file used by Ext when in secure mode for iframe src and onReady src to prevent
@@ -661,8 +661,7 @@ function(el){
                     var e = document.getElementById(el);
                     // IE returns elements with the 'name' and 'id' attribute.
                     // we do a strict check to return the element with only the id attribute
-                    if (e && strict) {
-                        return;
+                    if (e && isIE && strict) {
                         if (el == e.getAttribute('id')) {
                             return e;
                         } else {
@@ -812,18 +811,12 @@ function(el){
         isMac : isMac,
 
         /**
-         * True if the detected platform is Adobe Air.
-         * @type Boolean
-         */
-        isAir : isAir,
-
-        /**
          * URL to a 1x1 transparent gif image used by Ext to create inline icons with CSS background images.
-         * In older versions of IE, this defaults to "http://extjs.com/s.gif" and you should change this to a URL on your server.
+         * In older versions of IE, this defaults to "http://sencha.com/s.gif" and you should change this to a URL on your server.
          * For other browsers it uses an inline data URL.
          * @type String
          */
-        BLANK_IMAGE_URL : (isIE6 || isIE7 || isAir) ? 'http:/' + '/www.extjs.com/s.gif' : 'data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==',
+        BLANK_IMAGE_URL : (isIE6 || isIE7) ? 'http:/' + '/www.sencha.com/s.gif' : 'data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==',
 
         /**
          * <p>Utility method for returning a default value if the passed value is empty.</p>
@@ -2255,13 +2248,11 @@ Ext.supports = {
                 var domPrefixes = ['borderRadius', 'BorderRadius', 'MozBorderRadius', 'WebkitBorderRadius', 'OBorderRadius', 'KhtmlBorderRadius'],
                     pass = false,
                     i;
-                
                 for (i = 0; i < domPrefixes.length; i++) {
                     if (document.body.style[domPrefixes[i]] !== undefined) {
                         return true;
                     }
                 }
-                
                 return pass;
             }
         },
@@ -2341,4 +2332,3 @@ Ext.supports = {
     ]
 };
 
-})();

@@ -40,11 +40,12 @@
 Ext.define('Ext.data.Proxy', {
     alias: 'proxy.proxy',
     alternateClassName: 'Ext.data.DataProxy',
-    requires: [
+    uses: [
         'Ext.data.Batch', 
         'Ext.data.Operation', 
         'Ext.data.JsonReader', 
-        'Ext.data.JsonWriter'
+        'Ext.data.JsonWriter',
+        'Ext.data.Model'
     ],
     mixins: {
         observable: 'Ext.util.Observable'
@@ -56,6 +57,12 @@ Ext.define('Ext.data.Proxy', {
      * to set a different order for the batched CRUD actions to be executed in. Defaults to 'create,update,destroy'
      */
     batchOrder: 'create,update,destroy',
+    
+    /**
+     * @cfg {Boolean} batchActions True to batch actions of a particular type when synchronizing the store.
+     * Defaults to <tt>true</tt>.
+     */
+    batchActions: true,
     
     /**
      * @cfg {String} defaultReaderType The default registered reader type. Defaults to 'json'
@@ -125,27 +132,28 @@ Ext.define('Ext.data.Proxy', {
      * @return {Ext.data.Reader} The attached Reader object
      */
     setReader: function(reader) {
+        var me = this;
+        
         if (reader === undefined || typeof reader == 'string') {
             reader = {
                 type: reader
             };
         }
 
-        if (reader instanceof Ext.data.Reader) {
-            reader.setModel(this.model);
+        if (reader.isReader) {
+            reader.setModel(me.model);
         } else {
             Ext.applyIf(reader, {
-                proxy: this,
-                model: this.model,
-                type : this.defaultReaderType
+                proxy: me,
+                model: me.model,
+                type : me.defaultReaderType
             });
 
             reader = Ext.createByAlias('reader.' + reader.type, reader);
         }
         
-        this.reader = reader;
-        
-        return this.reader;
+        me.reader = reader;
+        return me.reader;
     },
     
     /**
@@ -240,22 +248,34 @@ Ext.define('Ext.data.Proxy', {
      * @return {Ext.data.Batch} The newly created Ext.data.Batch object
      */
     batch: function(operations, listeners) {
-        var batch = Ext.create('Ext.data.Batch', {
-            proxy: this,
-            listeners: listeners || {}
-        });
+        var me = this,
+            batch = Ext.create('Ext.data.Batch', {
+                proxy: me,
+                listeners: listeners || {}
+            }),
+            useBatch = me.batchActions, 
+            records;
         
-        Ext.each(this.batchOrder.split(','), function(action) {
-            if (operations[action]) {
-                batch.add(Ext.create('Ext.data.Operation', {
-                    action : action, 
-                    records: operations[action]
-                }));
+        Ext.each(me.batchOrder.split(','), function(action) {
+            records = operations[action];
+            if (records) {
+                if (useBatch) {
+                    batch.add(Ext.create('Ext.data.Operation', {
+                        action: action,
+                        records: records
+                    }));
+                } else {
+                    Ext.each(records, function(record){
+                        batch.add(Ext.create('Ext.data.Operation', {
+                            action : action, 
+                            records: [record]
+                        }));
+                    });
+                }
             }
-        }, this);
+        }, me);
         
         batch.start();
-        
         return batch;
     }
 }, function() {

@@ -87,7 +87,7 @@ Ext.define('Paperpile.csl.CSLWrapper', {
         var date = {
           'date-parts': [
             [
-            data.year, Ext.util.Date.getMonthNumber(data.month), data.day]]
+            data.year, Ext.Date.getMonthNumber(data.month), data.day]]
         };
         cur_json.issued = date;
 

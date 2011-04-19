@@ -69,15 +69,16 @@ Ext.define('Ext.fx.Manager', {
         if (Ext.isString(target)) {
             target = Ext.get(target);
         }
+        // dom element
+        if (target && target.tagName) {
+            target = Ext.get(target);
+            targetObj = Ext.create('Ext.fx.target.' + 'Element' + (useCSS3 ? 'CSS' : ''), target);
+            me.targets.add(targetObj);
+            return targetObj;
+        }
         if (Ext.isObject(target)) {
-            // dom element
-            if (target.tagName) {
-                targetObj = Ext.get(target);
-                me.targets.add(targetObj);
-                return targetObj;
-            }
             // Element
-            else if (target.dom) {
+            if (target.dom) {
                 targetObj = Ext.create('Ext.fx.target.' + 'Element' + (useCSS3 ? 'CSS' : ''), target);
             }
             // Element Composite

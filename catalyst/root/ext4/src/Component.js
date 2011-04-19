@@ -127,8 +127,7 @@ Ext.define('Ext.Component', {
     uses: [
         'Ext.Layer',
         'Ext.resizer.Resizer',
-        'Ext.util.ComponentDragger',
-        'Ext.state.Manager'
+        'Ext.util.ComponentDragger'
     ],
 
     mixins: {
@@ -266,9 +265,11 @@ new Ext.Component({
     constructor: function(config) {
         config = config || {};
         if (config.initialConfig) {
-            /*if(config.isAction){           // actions
+
+            // Being initialized from an Ext.Action instance...
+            if (config.isAction) {
                 this.baseAction = config;
-            }*/
+            }
             config = config.initialConfig;
             // component cloning / action set up
         }
@@ -282,38 +283,28 @@ new Ext.Component({
 
         Ext.Component.superclass.constructor.call(this, config);
 
-        /*
-        if(this.baseAction){
+        // If we were configured from an instance of Ext.Action, (or configured with a baseAction option),
+        // register this Component as one of its items
+        if (this.baseAction){
             this.baseAction.addComponent(this);
-        }*/
-
-        if (this.stateful !== false) {
-            this.initState();
         }
     },
 
     initComponent: function() {
-        if (this.listeners) {
-            this.on(this.listeners);
-            delete this.listeners;
+        var me = this;
+        
+        if (me.listeners) {
+            me.on(me.listeners);
+            delete me.listeners;
         }
-        this.enableBubble(this.bubbleEvents);
-        this.mons = [];
-    },
-
-    render: function(ct, position, overwrite) {
-        Ext.Component.superclass.render.apply(this, arguments);
-        if (this.stateful !== false) {
-            this.initStateEvents();
-        }
-        return this;
+        me.enableBubble(me.bubbleEvents);
+        me.mons = [];
     },
 
     // private
     afterRender: function() {
         var me = this,
-            // not sure which is spelled properly. lets use both
-            resizeable = me.resizable || me.resizeable;
+            resizable = me.resizable;
 
         if (me.floating) {
             me.makeFloating(me.floating);
@@ -322,14 +313,14 @@ new Ext.Component({
         }
 
         me.setAutoScroll(me.autoScroll);
-        Ext.Component.superclass.afterRender.apply(me, arguments);
+        me.callParent();
 
         if (!(me.x && me.y) && (me.pageX || me.pageY)) {
             me.setPagePosition(me.pageX, me.pageY);
         }
 
-        if (resizeable) {
-            me.initResizable(resizeable);
+        if (resizable) {
+            me.initResizable(resizable);
         }
 
         if (me.draggable) {
@@ -366,15 +357,15 @@ new Ext.Component({
         this.mixins.floating.constructor.call(this, cfg);
     },
 
-    initResizable: function(resizeable) {
-        resizeable = Ext.apply({
+    initResizable: function(resizable) {
+        resizable = Ext.apply({
             target: this,
             dynamic: false,
             constrainTo: this.constrainTo,
             handles: this.resizeHandles
-        }, resizeable);
-        resizeable.target = this;
-        this.resizer = new Ext.resizer.Resizer(resizeable);
+        }, resizable);
+        resizable.target = this;
+        this.resizer = new Ext.resizer.Resizer(resizable);
     },
 
     getDragEl: function() {
@@ -385,7 +376,7 @@ new Ext.Component({
         var me = this,
             ddConfig = Ext.applyIf({
                 el: this.getDragEl(),
-                constrainTo: me.constrainTo || me.floatParent ? me.floatParent.getTargetEl() : me.el.dom.parentNode
+                constrainTo: me.constrainTo || (me.floatParent ? me.floatParent.getTargetEl() : me.el.dom.parentNode)
             }, this.draggable);
 
         // Add extra configs if Component is specified to be constrained
@@ -628,11 +619,14 @@ new Ext.Component({
     },
 
     /**
-     * <p>Shows this Component, rendering it first if {@link Ext.Component#autoRender} is <code>true</code>.</p>
-     * <p>For a {@link Ext.window.Window Window}, it activates it and brings it to front if hidden.</p>
-     * @param {String/Element} animateTarget (optional) The target element or id from which the Component should
-     * animate while opening (defaults to null with no animation)
-     * @param {Function} callback (optional) A callback function to call after the window is displayed. <b>Only necessary if animation was specified.</b>
+     * <p>Shows this Component, rendering it first if {@link #autoRender} or {{@link "floating} are <code>true</code>.</p>
+     * <p>After being shown, a {@link #floating} Component (such as a {@link Ext.window.Window}), is activated it and brought to the front of
+     * its {@link #ZIndexManager z-index stack}.</p>
+     * @param {String/Element} animateTarget Optional, and <b>only valid for {@link #floating} Components such as
+     * {@link Ext.window.Window Window}s or {@link Ext.tip.ToolTip ToolTip}s, or regular Components which have been configured
+     * with <code>floating: true</code>.</b> The target from which the Component should
+     * animate from while opening (defaults to null with no animation)
+     * @param {Function} callback (optional) A callback function to call after the Component is displayed. Only necessary if animation was specified.
      * @param {Object} scope (optional) The scope (<code>this</code> reference) in which the callback is executed. Defaults to this Component.
      * @return {Component} this
      */
@@ -653,26 +647,89 @@ new Ext.Component({
                 if (this.ownerCt && !this.floating && !(this.ownerCt.suspendLayout || this.ownerCt.layout.layoutBusy)) {
                     this.ownerCt.doLayout();
                 }
+                this.afterShow.apply(this, arguments);
             }
-            this.afterShow();
         }
         return this;
     },
 
     beforeShow: Ext.emptyFn,
 
-    afterShow: function() {
+    // Private. Override in subclasses where more complex behaviour is needed.
+    onShow: function() {
+        var me = this;
+
+        me.el.show();
+        if (this.floating && this.constrain) {
+            this.doConstrain();
+        }
+        me.callParent(arguments);
+    },
+
+    afterShow: function(animateTarget, cb, scope) {
+        var me = this,
+            fromBox,
+            toBox,
+            targetBox,
+            ghostPanel;
+
+        // Default to configured animate target if none passed
+        animateTarget = animateTarget || me.animateTarget;
+
+        // Need to be able to ghost the Component
+        if (!me.ghost) {
+            animateTarget = null;
+        }
+        // If we're animating, kick of an animation of the ghost from the target to the current box
+        if (animateTarget) {
+            animateTarget = animateTarget.el ? animateTarget.el : Ext.get(animateTarget);
+            toBox = me.getBox();
+            fromBox = animateTarget.getBox();
+            fromBox.width += 'px';
+            fromBox.height += 'px';
+            toBox.width += 'px';
+            toBox.height += 'px';
+            me.el.addCls(Ext.baseCSSPrefix + 'hide-offsets');
+            ghostPanel = me.ghost();
+            ghostPanel.el.animate({
+                from: fromBox,
+                to: toBox,
+                listeners: {
+                    afteranimate: function() {
+                        delete ghostPanel.componentLayout.lastComponentSize;
+                        me.unghost();
+                        me.el.removeCls(Ext.baseCSSPrefix + 'hide-offsets');
+                        if (cb && cb.call) {
+                            cb.call(scope||me);
+                        }
+                    }
+                }
+            });
+        }
         if (this.floating) {
             this.toFront();
+        }
+        if (!animateTarget && cb && cb.call) {
+            cb.call(scope||me);
         }
         this.fireEvent('show', this);
     },
 
+    /**
+     * Hides this Component, setting it to invisible using the configured {@link #hideMode}.
+     * @param {String/Element/Component} animateTarget Optional, and <b>only valid for {@link #floating} Components such as
+     * {@link Ext.window.Window Window}s or {@link Ext.tip.ToolTip ToolTip}s, or regular Components which have been configured
+     * with <code>floating: true</code>.</b>.
+     * The target to which the Component should animate while hiding (defaults to null with no animation)
+     * @param {Function} callback (optional) A callback function to call after the Component is hidden.
+     * @param {Object} scope (optional) The scope (<code>this</code> reference) in which the callback is executed. Defaults to this Component.
+     * @return {Ext.Component} this
+     */
     hide: function() {
         if (!(this.rendered && !this.isVisible()) && this.fireEvent('beforehide', this) !== false) {
             this.hidden = true;
             if (this.rendered) {
-                this.onHide();
+                this.onHide.apply(this, arguments);
 
                 // Notify any owning Container unless it's suspended.
                 // Floating Components do not participate in layouts.
@@ -680,20 +737,52 @@ new Ext.Component({
                     this.ownerCt.doLayout();
                 }
             }
-            this.fireEvent('hide', this);
         }
         return this;
     },
 
-    // Private. Override in subclasses where more complex behaviour is needed.
-    onShow: function() {
-        this.el.show();
-        Ext.Component.superclass.onShow.call(this);
+    // Possibly animate down to a target element.
+    onHide: function(animateTarget, cb, scope) {
+        var me = this,
+            ghostPanel,
+            toBox;
+
+        // Default to configured animate target if none passed
+        animateTarget = animateTarget || me.animateTarget;
+
+        // Need to be able to ghost the Component
+        if (!me.ghost) {
+            animateTarget = null;
+        }
+        // If we're animating, kick of an animation of the ghost down to the target
+        if (animateTarget) {
+            animateTarget = animateTarget.el ? animateTarget.el : Ext.get(animateTarget);
+            ghostPanel = me.ghost();
+            toBox = animateTarget.getBox();
+            toBox.width += 'px';
+            toBox.height += 'px';
+            ghostPanel.el.animate({
+                to: toBox,
+                listeners: {
+                    afteranimate: function() {
+                        delete ghostPanel.componentLayout.lastComponentSize;
+                        ghostPanel.el.hide();
+                        me.afterHide(cb, scope);
+                    }
+                }
+            });
+        }
+        me.el.hide();
+        if (!animateTarget) {
+            me.afterHide(cb);
+        }
     },
 
-    // Private. Override in subclasses where more complex behaviour is needed.
-    onHide: function() {
-        this.el.hide();
+    afterHide: function(cb, scope) {
+        if (cb && cb.call) {
+            cb.call(scope||this);
+        }
+        this.fireEvent('hide', this);
     },
 
     destroy: function() {
@@ -703,10 +792,18 @@ new Ext.Component({
                 me.destroying = true;
                 me.beforeDestroy();
 
-                if (me.ownerCt && me.ownerCt.remove) {
-                    me.ownerCt.remove(me, false);
+                if (me.floating) {
+                    delete me.floatParent;
+                    // A zIndexManager is stamped into a *floating* Component when it is added to a Container.
+                    // If it has no zIndexManager at render time, it is assigned to the global Ext.WindowMgr instance.
+                    if (me.zIndexManager) {
+                        me.zIndexManager.unregister(me);
+                    }
+                } else {
+                    if (me.ownerCt && me.ownerCt.remove) {
+                        me.ownerCt.remove(me, false);
+                    }
                 }
-                delete me.floatParent;
 
                 // Ensure that any ancillary components are destroyed.
                 if (me.rendered) {
@@ -721,12 +818,6 @@ new Ext.Component({
                     }
                 }
 
-                // A zIndexManager is stamped into a *floating* Component when it is added to a Container.
-                // If it has no zIndexManager at render time, it is assigned to the global Ext.WindowMgr instance.
-                if (me.zIndexManager) {
-                    me.zIndexManager.unregister(me);
-                }
-
                 me.onDestroy();
 
                 Ext.ComponentMgr.unregister(me);
@@ -737,75 +828,6 @@ new Ext.Component({
                 me.isDestroyed = true;
             }
         }
-    },
-
-    // private
-    initState: function() {
-        if (Ext.state.Manager) {
-            var id = this.getStateId();
-            if (id) {
-                var state = Ext.state.Manager.get(id);
-                if (state) {
-                    if (this.fireEvent('beforestaterestore', this, state) !== false) {
-                        this.applyState(Ext.apply({},
-                        state));
-                        this.fireEvent('staterestore', this, state);
-                    }
-                }
-            }
-        }
-    },
-
-    // private
-    getStateId: function() {
-        return this.stateId || ((/^(ext-comp-|ext-gen)/).test(String(this.id)) ? null: this.id);
-    },
-
-    // private
-    initStateEvents: function() {
-        if (this.stateEvents) {
-            for (var i = 0, e; e = this.stateEvents[i]; i++) {
-                this.on(e, this.saveState, this, {
-                    delay: 100
-                });
-            }
-        }
-    },
-
-    // private
-    applyState: function(state) {
-        if (state) {
-            Ext.apply(this, state);
-        }
-    },
-
-    // private
-    getState: function() {
-        return null;
-    },
-
-    // private
-    saveState: function() {
-        if (Ext.state.Manager && this.stateful !== false) {
-            var id = this.getStateId();
-            if (id) {
-                var state = this.getState();
-                if (this.fireEvent('beforestatesave', this, state) !== false) {
-                    Ext.state.Manager.set(id, state);
-                    this.fireEvent('statesave', this, state);
-                }
-            }
-        }
-    },
-
-    // This needs to die a horrible death.  For now it's a replaceMarkup, I can't see supporting this methodology going forward.
-    /**
-     * Apply this component to existing markup that is valid. With this function, no call to render() is required.
-     * @param {String/HTMLElement} el
-     */
-    applyToMarkup: function(el) {
-        this.allowDomMove = false;
-        this.render(Ext.getDom(el).parentNode, null, true);
     },
 
     deleteMembers: function() {

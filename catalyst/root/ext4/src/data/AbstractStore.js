@@ -19,16 +19,30 @@
  * in {@link Ext.data.Store} the data is saved as a flat {@link Ext.util.MixedCollection MixedCollection}, whereas in
  * {@link Ext.data.TreeStore TreeStore} we use a {@link Ext.data.Tree} to maintain the data's hierarchy.</p>
  * 
+ * TODO: Update these docs to explain about the sortable and filterable mixins.
  * <p>Finally, AbstractStore provides an API for sorting and filtering data via its {@link #sorters} and {@link #filters}
  * {@link Ext.util.MixedCollection MixedCollections}. Although this functionality is provided by AbstractStore, there's a
  * good description of how to use it in the introduction of {@link Ext.data.Store}.
  * 
  */
 Ext.define('Ext.data.AbstractStore', {
-    requires: ['Ext.util.MixedCollection', 'Ext.data.Operation', 'Ext.util.Sorter', 'Ext.util.Filter', 'Ext.util.Grouper'],
+    requires: ['Ext.util.MixedCollection', 'Ext.data.Operation', 'Ext.util.Filter', 'Ext.util.Grouper'],
     
     mixins: {
-        observable: 'Ext.util.Observable'
+        observable: 'Ext.util.Observable',
+        sortable: 'Ext.util.Sortable'
+    },
+    
+    statics: {
+        create: function(store){
+            if (!store.isStore) {
+                if (!store.type) {
+                    store.type = 'store';
+                }
+                store = Ext.createByAlias('store.' + store.type, store);
+            }
+            return store;
+        }    
     },
     
     remoteSort  : false,
@@ -47,10 +61,10 @@ Ext.define('Ext.data.AbstractStore', {
     autoLoad: false,
 
     /**
-     * @cfg {Boolean} autoSave True to automatically sync the Store with its Proxy after every edit to one of its Records.
+     * @cfg {Boolean} autoSync True to automatically sync the Store with its Proxy after every edit to one of its Records.
      * Defaults to false.
      */
-    autoSave: false,
+    autoSync: false,
 
     /**
      * Sets the updating behavior based on batch synchronization. 'operation' (the default) will update the Store's
@@ -77,13 +91,6 @@ Ext.define('Ext.data.AbstractStore', {
      * @type Boolean
      */
     sortOnLoad: true,
-
-    /**
-     * The default sort direction to use if one is not specified (defaults to "ASC")
-     * @property defaultSortDirection
-     * @type String
-     */
-    defaultSortDirection: "ASC",
 
     /**
      * True if a model was created implicitly for this Store. This happens if a fields array is passed to the Store's constructor
@@ -116,6 +123,8 @@ Ext.define('Ext.data.AbstractStore', {
      * the {@link Ext.data.StoreMgr}, making it easy to reuse elsewhere. Defaults to undefined.
      */
 
+    sortRoot: 'data',
+    
     //documented above
     constructor: function(config) {
         var me = this;
@@ -197,17 +206,9 @@ Ext.define('Ext.data.AbstractStore', {
          */
         me.removed = [];
 
-        /**
-         * Stores the current sort direction ('ASC' or 'DESC') for each field. Used internally to manage the toggling
-         * of sort direction per field. Read only
-         * @property sortToggle
-         * @type Object
-         */
-        me.sortToggle = {};
-
         me.mixins.observable.constructor.apply(me, arguments);
-
-        me.model = Ext.ModelMgr.getModel(config.model);
+        
+        me.model = Ext.ModelMgr.getModel(config.model || me.model);
         
         /**
          * @property modelDefaults
@@ -224,7 +225,8 @@ Ext.define('Ext.data.AbstractStore', {
         //Supports the 3.x style of simply passing an array of fields to the store, implicitly creating a model
         if (!me.model && config.fields) {
             me.model = Ext.regModel('Ext.data.Store.ImplicitModel-' + (me.storeId || Ext.id()), {
-                fields: config.fields
+                fields: config.fields,
+                proxy: config.proxy
             });
 
             delete me.fields;
@@ -261,14 +263,8 @@ Ext.define('Ext.data.AbstractStore', {
         me.groupers = Ext.create('Ext.util.MixedCollection');
         me.groupers.addAll(me.decodeGroupers(config.groupers));
         
-        /**
-         * The collection of {@link Ext.util.Sorter Sorters} currently applied to this Store
-         * @property sorters
-         * @type Ext.util.MixedCollection
-         */
-        me.sorters = Ext.create('Ext.util.MixedCollection');
-        me.sorters.addAll(me.groupers.items);
-        me.sorters.addAll(me.decodeSorters(config.sorters));
+        me.mixins.sortable.initSortable.call(me);
+        me.sort(me.groupers.items, 'prepend', false);
         
         /**
          * The collection of {@link Ext.util.Filter Filters} currently applied to this Store
@@ -279,6 +275,9 @@ Ext.define('Ext.data.AbstractStore', {
         me.filters.addAll(me.decodeFilters(config.filters));
     },
 
+    onBeforeSort: function() {
+        this.sort(this.groupers.items, 'prepend', false);
+    },
 
     /**
      * Sets the Store's Proxy by string, config object or Proxy instance
@@ -417,7 +416,8 @@ Ext.define('Ext.data.AbstractStore', {
      * Filter function for new records.
      */
     filterNew: function(item) {
-        return item.phantom === true || item.needsAdd === true;
+        // only want phantom records that are valid
+        return item.phantom === true && item.isValid();
     },
 
     /**
@@ -439,80 +439,16 @@ Ext.define('Ext.data.AbstractStore', {
 
     /**
      * @private
-     * Filter function for dirty records.
+     * Filter function for updated records.
      */
-    filterDirty: function(item) {
-        return item.dirty === true;
+    filterUpdated: function(item) {
+        // only want dirty records, not phantoms that are valid
+        return item.dirty === true && item.phantom !== true && item.isValid();
     },
 
     //returns any records that have been removed from the store but not yet destroyed on the proxy
     getRemovedRecords: function() {
         return this.removed;
-    },
-
-
-    sort: function(sorters, direction) {
-
-    },
-
-    /**
-     * @private
-     * Normalizes an array of sorter objects, ensuring that they are all Ext.util.Sorter instances
-     * @param {Array} sorters The sorters array
-     * @return {Array} Array of Ext.util.Sorter objects
-     */
-    decodeSorters: function(sorters) {
-        if (!Ext.isArray(sorters)) {
-            if (sorters === undefined) {
-                sorters = [];
-            } else {
-                sorters = [sorters];
-            }
-        }
-
-        var length = sorters.length,
-            Sorter = Ext.util.Sorter,
-            fields = this.model ? this.model.prototype.fields : null,
-            field,
-            config, i;
-
-        for (i = 0; i < length; i++) {
-            config = sorters[i];
-
-            if (!(config instanceof Sorter)) {
-                if (Ext.isString(config)) {
-                    config = {
-                        property: config
-                    };
-                }
-                
-                Ext.applyIf(config, {
-                    root     : 'data',
-                    direction: "ASC"
-                });
-
-                //support for 3.x style sorters where a function can be defined as 'fn'
-                if (config.fn) {
-                    config.sorterFn = config.fn;
-                }
-
-                //support a function to be passed as a sorter definition
-                if (typeof config == 'function') {
-                    config = {
-                        sorterFn: config
-                    };
-                }
-
-                // ensure sortType gets pushed on if necessary
-                if (fields && !config.transform) {
-                    field = fields.get(config.property);
-                    config.transform = field ? field.sortType : undefined;
-                }
-                sorters[i] = new Sorter(config);
-            }
-        }
-
-        return sorters;
     },
 
     filter: function(filters, value) {
@@ -707,7 +643,7 @@ Ext.define('Ext.data.AbstractStore', {
         Ext.applyIf(options, {
             action : 'read',
             filters: me.filters.items,
-            sorters: me.sorters.items
+            sorters: me.getSorters()
         });
 
         operation = Ext.create('Ext.data.Operation', options);
@@ -726,7 +662,13 @@ Ext.define('Ext.data.AbstractStore', {
      * @param {Ext.data.Model} record The model instance that was edited
      */
     afterEdit : function(record) {
-        this.fireEvent('update', this, record, Ext.data.Model.EDIT);
+        var me = this;
+        
+        if (me.autoSync) {
+            me.sync()
+        }
+        
+        me.fireEvent('update', me, record, Ext.data.Model.EDIT);
     },
 
     /**
@@ -744,13 +686,7 @@ Ext.define('Ext.data.AbstractStore', {
      * @param {Ext.data.Model} record The model instance that was edited
      */
     afterCommit : function(record) {
-        var me = this;
-        
-        if (me.autoSave) {
-            me.sync();
-        }
-
-        me.fireEvent('update', me, record, Ext.data.Model.COMMIT);
+        this.fireEvent('update', this, record, Ext.data.Model.COMMIT);
     },
 
     clearData: Ext.emptyFn,
@@ -775,17 +711,16 @@ Ext.define('Ext.data.AbstractStore', {
             }
         }
     },
-
-    /**
-     * Returns an object describing the current sort state of this Store.
-     * @return {Object} The sort state of the Store. An object with two properties:<ul>
-     * <li><b>field : String<p class="sub-desc">The name of the field by which the Records are sorted.</p></li>
-     * <li><b>direction : String<p class="sub-desc">The sort order, 'ASC' or 'DESC' (case-sensitive).</p></li>
-     * </ul>
-     * See <tt>{@link #sortInfo}</tt> for additional details.
-     */
-    getSortState : function() {
-        return this.sortInfo;
+    
+    doSort: function(sorterFn) {
+        var me = this;
+        if (me.remoteSort) {
+            //the load function will pick up the new sorters and request the sorted data from the proxy
+            me.load();
+        } else {
+            me.data.sortBy(sorterFn);
+            me.fireEvent('datachanged', me);
+        }
     },
 
     getCount: function() {

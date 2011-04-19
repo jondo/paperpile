@@ -10,7 +10,7 @@ Ext.define('Ext.layout.container.Box', {
 
     alias: ['layout.box'],
     extend: 'Ext.layout.Container',
-    alternatClassName: 'Ext.layout.BoxLayout',
+    alternateClassName: 'Ext.layout.BoxLayout',
     
     requires: [
         'Ext.layout.container.boxOverflow.None',
@@ -177,10 +177,7 @@ Ext.define('Ext.layout.container.Box', {
      */
     calculateChildBox: function(child) {
         var me = this,
-            targetSize = me.getLayoutTargetSize(),
-            items = me.getVisibleItems(),
-            calcs = me.calculateChildBoxes(items, targetSize),
-            boxes = calcs.boxes,
+            boxes = me.calculateChildBoxes(me.getVisibleItems(), me.getLayoutTargetSize()).boxes,
             ln = boxes.length,
             i = 0;
 
@@ -274,6 +271,8 @@ Ext.define('Ext.layout.container.Box', {
 
             // Max height for align - force layout of non-laid out subcontainers without a numeric height
             if (typeof childPerpendicular != 'number') {
+                // Clear any static sizing and revert to flow so we can get a proper measurement
+                // child['set' + perpendicularPrefixCap](null);
                 childPerpendicular = child['get' + perpendicularPrefixCap]();
             }
 
@@ -483,7 +482,7 @@ Ext.define('Ext.layout.container.Box', {
      * when laying out
      */
     onLayout: function() {
-        Ext.layout.container.Box.superclass.onLayout.call(this);
+        this.callParent();
         // Clear the innerCt size so it doesn't influence the child items.
         if (this.clearInnerCtOnLayout === true && this.adjustmentPass !== true) {
             this.innerCt.setSize(null, null);
@@ -582,7 +581,8 @@ Ext.define('Ext.layout.container.Box', {
                     layoutAnimation: true,  // Component Target handler must use set*Calculated*Size
                     target: comp,
                     from: {},
-                    to: {}
+                    to: {},
+                    listeners: {}
                 };
                 // Only set from and to properties when there's a change.
                 // Perform as few Component setter methods as possible.
@@ -651,9 +651,7 @@ Ext.define('Ext.layout.container.Box', {
                 boxAnim = animQueue[i];
 
                 // Clean up the Component after. Clean up the *layout* after the last animation finishes
-                boxAnim.listeners = {
-                    afteranimate: afterAnimate
-                };
+                boxAnim.listeners.afteranimate = afterAnimate;
 
                 // The layout is busy during animation, and may not be called, so set the flag when the first animation begins
                 if (!i) {
@@ -770,7 +768,7 @@ Ext.define('Ext.layout.container.Box', {
 
     // private
     renderItem: function(item, target) {
-        Ext.layout.container.Box.superclass.renderItem.apply(this, arguments);
+        this.callParent(arguments);
         var me = this,
             itemEl = item.getEl(),
             style = itemEl.dom.style,
@@ -803,6 +801,6 @@ Ext.define('Ext.layout.container.Box', {
      */
     destroy: function() {
         Ext.destroy(this.overflowHandler);
-        Ext.layout.container.Box.superclass.destroy.apply(this, arguments);
+        this.callParent(arguments);
     }
 });

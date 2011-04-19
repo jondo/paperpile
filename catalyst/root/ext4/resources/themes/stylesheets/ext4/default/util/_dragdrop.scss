@@ -11,7 +11,7 @@
   	  	white-space: nowrap;
   	  	
   	  	color: #000;
-  	  	font: normal 11px arial, helvetica, sans-serif;
+  	  	font: normal ceil($font-size * .9) $font-family;
         
         border: 1px solid;
         border-color: #ddd #bbb #bbb #ddd;

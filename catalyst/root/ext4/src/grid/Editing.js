@@ -22,6 +22,10 @@
 Ext.define('Ext.grid.Editing', {
     alias: 'editing.editing',
     
+    mixins: {
+        observable: 'Ext.util.Observable'
+    },
+    
     /**
      * @cfg {Number} clicksToEdit
      * <p>The number of clicks on a cell required to display the cell's editor (defaults to 2).</p>
@@ -60,10 +64,8 @@ Ext.define('Ext.grid.Editing', {
     //trackMouseOver: false, // causes very odd FF errors
     activeEditor: false,
 
-    constructor: function(cfg) {
-        Ext.apply(this, cfg);
-        this.editors = new Ext.util.MixedCollection(false, this.getKey);
-        this.editors.addAll(cfg.editors);
+    constructor: function(config) {
+        this.mixins.observable.constructor.call(this, config);
     },
 
     // key getter for this.editors MixedCollection
@@ -257,10 +259,11 @@ grid.on('validateedit', function(e) {
 
     // Sets up event handlers to cancel the editing on scrolling/columnresize
     initCancelTrigger: function() {
-        var grid = this.grid;
-        var cancelEdit = Ext.Function.bind(this.stopEditing, this, [true]);
-        grid.on('dommousewheel', cancelEdit);
-        grid.on('columnresize', cancelEdit);
+        var me   = this,
+            grid = me.grid,
+            el   = grid.getEditorParent();
+        el.on('mousewheel', me.cancelEdit, me);
+        grid.on('columnresize', me.cancelEdit, me);
     },
 
 

@@ -137,9 +137,12 @@ Ext.define('Ext.ZIndexManager', {
             }
         }
 
-        // none to activate
-        this._setActiveChild(null);
+        // none to activate, so there must be no modal mask.
+        // And clear the currently active property
         this._hideModalMask();
+        if (!lastActivated) {
+            this._setActiveChild(null);
+        }
     },
 
     _showModalMask: function(zIndex) {

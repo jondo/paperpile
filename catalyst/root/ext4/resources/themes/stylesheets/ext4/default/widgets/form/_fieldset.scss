@@ -1,23 +1,22 @@
 @mixin extjs-form-fieldset {
     .#{$prefix}fieldset {
-        border: 1px solid;
-        border-color: adjust-color($base-color, $hue: 17.193deg, $saturation: -40.827%, $lightness: -9.412%);
+        border: $fieldset-border;
         
-        padding: 10px;
-        margin-bottom: 10px;
+        padding: $fieldset-padding;
+        margin-bottom: $fieldset-padding;
         
         display: block; /* preserve margins in IE */
     }
     
     .#{$prefix}ie .#{$prefix}fieldset {
         padding-top: 0;
-        padding-bottom: 10px;
+        padding-bottom: $fieldset-padding;
     }
     
     .#{$prefix}fieldset-header {
-        font: bold 11px tahoma, arial, helvetica, sans-serif;
-        color: #15428b;
-        padding: 0 3px;
+        font: $fieldset-header-font;
+        color: $fieldset-header-color;
+        padding: $fieldset-header-padding;
         line-height: 16px;
 
         .#{$prefix}form-item,

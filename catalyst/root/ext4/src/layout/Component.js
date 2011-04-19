@@ -22,7 +22,7 @@ Ext.define('Ext.layout.Component', {
         var me = this,
             owner = me.owner,
             ownerEl = owner.el;
-            
+
         if (!me.initialized) {
             if (owner.frameSize) {
                 me.frameSize = owner.frameSize;
@@ -33,21 +33,21 @@ Ext.define('Ext.layout.Component', {
                     left: 0,
                     bottom: 0,
                     right: 0
-                };                
-            }            
+                }; 
+            }
         }
         me.callParent(arguments);
     },
-    
+
     beforeLayout : function(width, height, isSetSize, layoutOwner) {
         this.callParent(arguments);
-        
+
         var owner = this.owner,
             ownerCt = owner.ownerCt,
             isVisible = owner.isVisible(true),
             ownerElChild = owner.el.child,
             layoutCollection;
-        
+
         /**
         * Do not layout calculatedSized components for fixedLayouts unless the ownerCt == layoutOwner
         */
@@ -138,25 +138,25 @@ Ext.define('Ext.layout.Component', {
     setTargetSize : function(width, height) {
         var me = this;
         me.setElementSize(me.owner.el, width, height);
-        
+
         if (me.owner.frameBody) {
             var targetInfo = me.getTargetInfo(),
                 padding = targetInfo.padding,
                 border = targetInfo.border,
                 frameSize = me.frameSize;
-            
+
             me.setElementSize(me.owner.frameBody,
                 Ext.isNumber(width) ? (width - frameSize.left - frameSize.right - padding.left - padding.right - border.left - border.right) : width,
                 Ext.isNumber(height) ? (height - frameSize.top - frameSize.bottom - padding.top - padding.bottom - border.top - border.bottom) : height
             );
         }
-        
+
         me.lastComponentSize = {
             width: width,
             height: height
         };
     },
-    
+
     getTargetInfo : function() {
         if (!this.targetInfo) {
             var target = this.getTarget(),
@@ -180,27 +180,27 @@ Ext.define('Ext.layout.Component', {
                     right: body.getMargin('r'),
                     bottom: body.getMargin('b'),
                     left: body.getMargin('l')
-                }            
-            };            
+                } 
+            };
         }
         return this.targetInfo;
     },
 
-    afterLayout : function() {
+    afterLayout : function(width, height, isSetSize, ownerCt) {
         var owner = this.owner,
             layout = owner.layout,
             ownerCt = owner.ownerCt,
             ownerCtSize, activeSize, ownerSize;
 
-        owner.afterComponentLayout(this.rawWidth, this.rawHeight);
+        owner.afterComponentLayout(this.rawWidth, this.rawHeight, isSetSize);
 
         // Run the container layout if it exists (layout for child items)
-        // **Unless automatic laying out is suspended**
-        if (!owner.suspendLayout && layout && layout.isLayout) {
+        // **Unless automatic laying out is suspended, or the layout is currently running**
+        if (!owner.suspendLayout && layout && layout.isLayout && !layout.layoutBusy) {
             layout.layout();
         }
 
-        if (ownerCt && ownerCt.componentLayout && ownerCt.componentLayout.monitorChildren && !ownerCt.componentLayout.layoutBusy) {
+        if (!owner.floating && ownerCt && ownerCt.componentLayout && ownerCt.componentLayout.monitorChildren && !ownerCt.componentLayout.layoutBusy) {
             ownerCt.componentLayout.childrenChanged = true;
 
             if (ownerCt.componentLayout.bindToOwnerCtComponent === true) {

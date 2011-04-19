@@ -1,8 +1,18 @@
 @mixin extjs-form-checkboxfield {
+    .#{$prefix}form-cb-wrap {
+        line-height: 18px;
+    }
+
     .#{$prefix}form-checkbox,
     .#{$prefix}form-radio {
         float: none;
-        margin-right: 5px;
+        vertical-align: bottom;
+    }
+
+    .#{$prefix}form-cb-label {
+        margin-left: 4px;
+        position: relative;
+        top: 2px;
     }
 
     @if $include-ie {
@@ -12,6 +22,21 @@
                 /* Removes extra margin around boxes to match other browsers */
                 width: 15px;
                 height: 15px;
+            }
+
+            .#{$prefix}form-cb-label {
+                top: 1px;
+            }
+        }
+
+        .#{$prefix}quirks .#{$prefix}ie {
+            .#{$prefix}form-checkbox,
+            .#{$prefix}form-radio {
+                margin-top: 3px;
+            }
+
+            .#{$prefix}form-cb-label {
+                top: 3px;
             }
         }
     }

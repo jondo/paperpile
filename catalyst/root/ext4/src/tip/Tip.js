@@ -45,7 +45,7 @@ Ext.define('Ext.tip.Tip', {
      * @cfg {Boolean} constrainPosition If true, then the tooltip will be automatically constrained to stay within
      * the browser viewport. Defaults to false.
      */
-    constrainPosition : false,
+    constrainPosition : true,
 
     // private panel overrides
     autoRender: true,
@@ -54,7 +54,7 @@ Ext.define('Ext.tip.Tip', {
     floating: {
         shadow: true,
         shim: true,
-        constrain: false
+        constrain: true
     },
     focusOnToFront: false,
     componentLayout: 'tip',
@@ -62,6 +62,13 @@ Ext.define('Ext.tip.Tip', {
     closeAction: 'hide',
 
     ariaRole: 'tooltip',
+
+    initComponent: function() {
+        this.callParent(arguments);
+
+        // Or in the deprecated config. Floating.doConstrain only constrains if the constrain property is truthy.
+        this.constrain = this.constrain || this.constrainPosition;
+    },
 
     /**
      * Shows this tip at the specified XY position.  Example usage:
@@ -76,10 +83,10 @@ tip.showAt([50,100]);
         Ext.tip.Tip.superclass.show.call(me);
         // Show may have been vetoed.
         if (me.isVisible()) {
-            if (me.constrainPosition) {
-                xy = me.el.adjustForConstraints(xy, me.el.dom.parentNode);
-            }
             me.setPagePosition(xy[0], xy[1]);
+            if (me.constrainPosition || me.constrain) {
+                me.doConstrain();
+            }
             me.toFront(true);
         }
     },

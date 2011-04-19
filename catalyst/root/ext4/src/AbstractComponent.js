@@ -11,7 +11,8 @@ Ext.define('Ext.AbstractComponent', {
 
     mixins: {
         observable: 'Ext.util.Observable',
-        animate: 'Ext.util.Animate'
+        animate: 'Ext.util.Animate',
+        state: 'Ext.state.Stateful'
     },
 
     requires: [
@@ -501,6 +502,8 @@ and a property `descEl` referencing the `div` Element which contains the descrip
      * @type {Boolean}
      */
     rendered: false,
+    
+    weight: 0,
 
     constructor : function(config) {
         var me = this,
@@ -509,7 +512,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
         config = config || {};
         me.initialConfig = config;
         Ext.apply(me, config);
-
+                
         me.addEvents(
             /**
              * @event beforeactivate
@@ -610,8 +613,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
              * @event afterrender
              * <p>Fires after the component rendering is finished.</p>
              * <p>The afterrender event is fired after this Component has been {@link #rendered}, been postprocesed
-             * by any afterRender method defined for the Component, and, if {@link #stateful}, after state
-             * has been restored.</p>
+             * by any afterRender method defined for the Component.</p>
              * @param {Ext.Component} this
              */
              'afterrender',
@@ -642,12 +644,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
              * @param {Number} x The new x position
              * @param {Number} y The new y position
              */
-             'move',
-
-             'beforestaterestore',
-             'staterestore',
-             'beforestatesave',
-             'statesave'
+             'move'
         );
 
         me.getId();
@@ -671,6 +668,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
 
         // Dont pass the config so that it is not applied to 'this' again
         me.mixins.observable.constructor.call(me);
+        me.mixins.state.constructor.call(me, config);
 
         // Move this into Observable?
         if (me.plugins) {
@@ -682,12 +680,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
 
         me.loader = me.getLoader();
 
-        // This won't work in Touch
-        if (me.applyTo) {
-            me.applyToMarkup(me.applyTo);
-            delete me.applyTo;
-        }
-        else if (me.renderTo) {
+        if (me.renderTo) {
             me.render(me.renderTo);
         }
 
@@ -699,7 +692,6 @@ and a property `descEl` referencing the `div` Element which contains the descrip
     },
 
     initComponent: Ext.emptyFn,
-    applyToMarkup: Ext.emptyFn,
 
     show: Ext.emptyFn,
 
@@ -886,8 +878,10 @@ and a property `descEl` referencing the `div` Element which contains the descrip
             }
 
             if (me.hidden) {
-                // call this so we don't fire initial hide events.
-                me.onHide(false); // no animation after render
+                // Hiding during the render process should not perform any ancillary
+                // actions that the full hide process does; It is not hiding, it begins in a hidden state.'
+                // So just make the element hidden according to the configured hideMode
+                me.el.hide();
             }
 
             if (me.disabled) {
@@ -912,7 +906,8 @@ and a property `descEl` referencing the `div` Element which contains the descrip
         if (!el) {
             if (position) {
                 el = Ext.core.DomHelper.insertBefore(position, me.getElConfig(), true);
-            } else {
+            }
+            else {
                 el = Ext.core.DomHelper.append(container, me.getElConfig(), true);
             }
         }
@@ -1031,21 +1026,21 @@ and a property `descEl` referencing the `div` Element which contains the descrip
         '<table><tbody>',
             '<tpl if="top">',
                 '<tr>',
-                    '<tpl if="left"><td class="{frameCls}-tl {baseCls}-tl" style="background-position: 0 -{tl}px; width: {frameWidth}px" role="presentation"></td></tpl>',
+                    '<tpl if="left"><td class="{frameCls}-tl {baseCls}-tl" style="background-position: 0 -{tl}px; padding-left:{frameWidth}px" role="presentation"></td></tpl>',
                     '<td class="{frameCls}-tc {baseCls}-tc" style="background-position: 0 0; height: {frameWidth}px" role="presentation"></td>',
-                    '<tpl if="right"><td class="{frameCls}-tr {baseCls}-tr" style="background-position: right -{tr}px; width: {frameWidth}px" role="presentation"></td></tpl>',
+                    '<tpl if="right"><td class="{frameCls}-tr {baseCls}-tr" style="background-position: right -{tr}px; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
                 '</tr>',
             '</tpl>',
             '<tr>',
-                '<tpl if="left"><td class="{frameCls}-ml {baseCls}-ml" style="background-position: 0 -{ml}px; width: {frameWidth}px" role="presentation"></td></tpl>',
+                '<tpl if="left"><td class="{frameCls}-ml {baseCls}-ml" style="background-position: 0 -{ml}px; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
                 '<td class="{frameCls}-mc {baseCls}-mc" style="background-position: 0 0;" role="presentation"></td>',
-                '<tpl if="right"><td class="{frameCls}-mr {baseCls}-mr" style="background-position: right 0; width: {frameWidth}px" role="presentation"></td></tpl>',
+                '<tpl if="right"><td class="{frameCls}-mr {baseCls}-mr" style="background-position: right 0; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
             '</tr>',
             '<tpl if="bottom">',
                 '<tr>',
-                    '<tpl if="left"><td class="{frameCls}-bl {baseCls}-bl" style="background-position: 0 -{bl}px; width: {frameWidth}px" role="presentation"></td></tpl>',
+                    '<tpl if="left"><td class="{frameCls}-bl {baseCls}-bl" style="background-position: 0 -{bl}px; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
                     '<td class="{frameCls}-bc {baseCls}-bc" style="background-position: 0 -{frameWidth}px; height: {frameWidth}px" role="presentation"></td>',
-                    '<tpl if="right"><td class="{frameCls}-br {baseCls}-br" style="background-position: right -{br}px; width: {frameWidth}px" role="presentation"></td></tpl>',
+                    '<tpl if="right"><td class="{frameCls}-br {baseCls}-br" style="background-position: right -{br}px; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
                 '</tr>',
             '</tpl>',
         '</tbody></table>'
@@ -1399,6 +1394,7 @@ var owningTabContainer = grid.up('tabcontainer');
      * <p>Returns the next sibling of this Component.</p>
      * <p>Optionally selects the next sibling which matches the passed {@link Ext.ComponentQuery ComponentQuery} selector.</p>
      * <p>May also be refered to as <code><b>prev()</b></code></p>
+     * <p>Note that this is limited to siblings, and if no siblings of the item match, <code>null</code> is returned. Contract with {@link #nextNode}</p>
      * @param selector Optional. A {@link Ext.ComponentQuery ComponentQuery} selector to filter the following items.
      * @returns The next sibling (or the next sibling which matches the selector). Returns null if there is no matching sibling.
      */
@@ -1428,6 +1424,7 @@ var owningTabContainer = grid.up('tabcontainer');
      * <p>Returns the previous sibling of this Component.</p>
      * <p>Optionally selects the previous sibling which matches the passed {@link Ext.ComponentQuery ComponentQuery} selector.</p>
      * <p>May also be refered to as <code><b>prev()</b></code></p>
+     * <p>Note that this is limited to siblings, and if no siblings of the item match, <code>null</code> is returned. Contract with {@link #previousNode}</p>
      * @param selector Optional. A {@link Ext.ComponentQuery ComponentQuery} selector to filter the preceding items.
      * @returns The previous sibling (or the previous sibling which matches the selector). Returns null if there is no matching sibling.
      */
@@ -1451,6 +1448,77 @@ var owningTabContainer = grid.up('tabcontainer');
             }
         }
         return null;
+    },
+
+    /**
+     * <p>Returns the previous node in the Component tree in tree traversal order.</p>
+     * <p>Note that this is not limited to siblings, and if invoked upon a node with no matching siblings, will
+     * walk the tree in reverse order to attempt to find a match. Contract with {@link #previousSibling}.</p>
+     * @param selector Optional. A {@link Ext.ComponentQuery ComponentQuery} selector to filter the preceding nodes.
+     * @returns The previous node (or the previous node which matches the selector). Returns null if there is no matching node.
+     */
+    previousNode: function(selector, includeSelf) {
+        var node = this,
+            result,
+            it, len, i;
+
+        // If asked to include self, test me
+        if (includeSelf && node.is(selector)) {
+            return node;
+        }
+        
+        result = this.prev(selector);
+        if (result) {
+            return result;
+        }
+
+        if (node.ownerCt) {
+            for (it = node.ownerCt.items.items, i = Ext.Array.indexOf(it, node) - 1; i > -1; i--) {
+                if (it[i].query) {
+                    result = it[i].query(selector);
+                    result = result[result.length - 1];
+                    if (result) {
+                        return result;
+                    }
+                }
+            }
+            return node.ownerCt.previousNode(selector, true);
+        }
+    },
+
+    /**
+     * <p>Returns the next node in the Component tree in tree traversal order.</p>
+     * <p>Note that this is not limited to siblings, and if invoked upon a node with no matching siblings, will
+     * walk the tree in reverse order to attempt to find a match. Contract with {@link #previousSibling}.</p>
+     * @param selector Optional. A {@link Ext.ComponentQuery ComponentQuery} selector to filter the following nodes.
+     * @returns The next node (or the next node which matches the selector). Returns null if there is no matching node.
+     */
+    nextNode: function(selector, includeSelf) {
+        var node = this,
+            result,
+            it, len, i;
+
+        // If asked to include self, test me
+        if (includeSelf && node.is(selector)) {
+            return node;
+        }
+
+        result = this.next(selector);
+        if (result) {
+            return result;
+        }
+
+        if (node.ownerCt) {
+            for (it = node.ownerCt.items, i = it.indexOf(node) + 1, it = it.items, len = it.length; i < len; i++) {
+                if (it[i].down) {
+                    result = it[i].down(selector);
+                    if (result) {
+                        return result;
+                    }
+                }
+            }
+            return node.ownerCt.nextNode(selector);
+        }
     },
 
     /**
@@ -2182,6 +2250,8 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
 
                 Ext.ComponentMgr.unregister(me);
                 me.fireEvent('destroy', me);
+                
+                me.mixins.state.destroy.call(me);
 
                 me.clearListeners();
                 me.destroying = false;

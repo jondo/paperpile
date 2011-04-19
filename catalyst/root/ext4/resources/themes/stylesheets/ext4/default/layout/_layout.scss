@@ -1,5 +1,4 @@
 @mixin extjs-layout {
-
     .#{$prefix}docked {
         position: absolute;
         z-index: 1;
@@ -36,7 +35,7 @@
     }
     
     .#{$prefix}border-layout-ct {
-        background-color: mix($base-color, #fff, 15);
+        background-color: $border-layout-ct-background;
     }
 
     .#{$prefix}border-region-slide-in {
@@ -116,14 +115,17 @@
     .#{$prefix}box-scroller-left {
         float: left;
         height: 100%;
+        
+        z-index: 5;
 
         .#{$prefix}tabbar-scroll-left {
             width: 18px;
             position: relative;
             top: 1px;
             cursor: pointer;
-            height: 25px;
+            height: 26px;
             background: theme-image($theme-name, 'tab-bar/scroll-left.gif') transparent no-repeat -18px 0;
+            border-bottom: 1px solid $tab-border-color;
         }
         .#{$prefix}tabbar-scroll-left-hover {
             background-position: 0 0;
@@ -134,20 +136,23 @@
         }
     }
 
-    .#{$prefix}horizontal-box-scroller-body {
+    .#{$prefix}horizontal-box-overflow-body {
         float: left;
     }
     .#{$prefix}box-scroller-right {
         float: right;
         height: 100%;
+        
+        z-index: 5;
 
         .#{$prefix}tabbar-scroll-right {
             width: 18px;
             position: relative;
             top: 1px;
             cursor: pointer;
-            height: 25px;
+            height: 26px;
             background: theme-image($theme-name, 'tab-bar/scroll-right.gif') transparent no-repeat 0 0;
+            border-bottom: 1px solid $tab-border-color;
         }
         .#{$prefix}tabbar-scroll-right-hover {
             background-position: -18px 0;

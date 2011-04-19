@@ -78,7 +78,7 @@ Ext.define('Ext.chart.Chart', {
      * Defines the priority order for which Surface implementation to use. The first
      * one supported by the current environment will be used.
      */
-    implOrder: ['SVG', 'VML', 'Canvas'],
+    implOrder: ['SVG', 'VML'],
 
     /**
      * @cfg {string} background (optional) Set the chart background. This can be a gradient name, image, or color.
@@ -150,6 +150,7 @@ Ext.define('Ext.chart.Chart', {
             }
         });
         me.maxGutter = [0, 0];
+        me.subDashes = [0, 0];
         me.store = Ext.data.StoreMgr.lookup(me.store);
         axes = me.axes;
         me.axes = new Ext.util.MixedCollection(false, function(a) { return a.position; });

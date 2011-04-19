@@ -57,6 +57,30 @@ Ext.define('Ext.data.Association', {
     
     defaultReaderType: 'json',
     
+    statics: {
+        create: function(association){
+            if (!association.isAssociation) {
+                if (Ext.isString(association)) {
+                    association = {
+                        type: association    
+                    };
+                }
+                
+                switch (association.type) {
+                    case 'belongsTo':
+                        return Ext.create('Ext.data.BelongsToAssociation', association);
+                    case 'hasMany': 
+                        return Ext.create('Ext.data.HasManyAssociation', association);
+                    case 'polymorphic':
+                        return Ext.create('Ext.data.PolymorphicAssociation', association);
+                    default:
+                        throw 'Unknown Association type';
+                }
+            }
+            return association;
+        }
+    },
+    
     constructor: function(config) {
         Ext.apply(this, config);
         

@@ -349,12 +349,20 @@ Ext.define('Ext.grid.GroupingFeature', {
         if (this.disabled) {
             return orig;
         }
+        // on individual record update
+        if (records.length === 1) {
+            return {
+                rows: Ext.view.TableView.superclass.collectData.apply(this.view, arguments),
+                fullWidth: fullWidth
+            };
+        }
+        
         var view   = this.view,
             groups = view.store.getGroups(),
             ln = groups.length,
             i  = 0,
             j, jln;
-            
+
         for (; i < ln; i++) {
             groups[i].fullWidth = fullWidth;
             // need additional check to determine if this is a group or not

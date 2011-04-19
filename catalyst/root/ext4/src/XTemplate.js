@@ -27,8 +27,8 @@
 var data = {
 name: 'Tommy Maintz',
 title: 'Lead Developer',
-company: 'Ext JS, Inc',
-email: 'tommy@extjs.com',
+company: 'Sencha Inc.',
+email: 'tommy@sencha.com',
 address: '5 Cups Drive',
 city: 'Palo Alto',
 state: 'CA',

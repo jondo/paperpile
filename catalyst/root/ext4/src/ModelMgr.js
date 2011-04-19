@@ -8,21 +8,11 @@
  */
 Ext.define('Ext.ModelMgr', {
     extend: 'Ext.AbstractManager',
-    requires: [
-        'Ext.PluginMgr', 'Ext.util.MixedCollection', 'Ext.data.Field', 'Ext.data.BelongsToAssociation', 
-        'Ext.data.HasManyAssociation', 'Ext.data.PolymorphicAssociation', 'Ext.data.Model', 'Ext.data.AjaxProxy'
-    ],
+    requires: ['Ext.data.Association'],
     
     singleton: true,
     
     typeName: 'mtype',
-    
-    /**
-     * The string type of the default Model Proxy. Defaults to 'ajax'
-     * @property defaultProxyType
-     * @type String
-     */
-    defaultProxyType: 'ajax',
     
     /**
      * @property associationStack
@@ -36,111 +26,19 @@ Ext.define('Ext.ModelMgr', {
      * immediately, as are any addition plugins defined in the model config.
      */
     registerType: function(name, config) {
-        /*
-         * This function does a lot. In order, it normalizes the configured associations (see the belongsTo/hasMany if blocks)
-         * then looks to see if we are extending another model, in which case it copies all of the fields, validations and 
-         * associations from the superclass model. Once we have collected all of these configurations, the actual creation
-         * is delegated to createFields and createAssociations. Finally we just link up a few convenience functions on the new model.
-         */
-        
-        var PluginMgr    = Ext.PluginMgr,
-            plugins      = PluginMgr.findByType('model', true),
-            fields       = config.fields || [],
-            associations = config.associations || [],
-            belongsTo    = config.belongsTo,
-            hasMany      = config.hasMany,
-            extendName   = config.extend,
-            modelPlugins = config.plugins || [],
-            association, model, length, i,
-            extendModel, extendModelProto, extendValidations, proxy;
-        
-        //associations can be specified in the more convenient format (e.g. not inside an 'associations' array).
-        //we support that here
-        if (belongsTo) {
-            if (!Ext.isArray(belongsTo)) {
-                belongsTo = [belongsTo];
-            }
-            
-            for (i = 0; i < belongsTo.length; i++) {
-                association = belongsTo[i];
-                
-                if (!Ext.isObject(association)) {
-                    association = {model: association};
-                }
-                Ext.apply(association, {type: 'belongsTo'});
-                
-                associations.push(association);
-            }
-            
-            delete config.belongsTo;
-        }
-        
-        if (hasMany) {
-            if (!Ext.isArray(hasMany)) {
-                hasMany = [hasMany];
-            }
-            
-            for (i = 0; i < hasMany.length; i++) {
-                association = hasMany[i];
-                
-                if (!Ext.isObject(association)) {
-                    association = {model: association};
-                }
-                
-                Ext.apply(association, {type: 'hasMany'});
-                
-                associations.push(association);
-            }
-            
-            delete config.hasMany;
-        }
-        
-        //if we're extending another model, inject its fields, associations and validations
-        if (extendName) {
-            extendModel       = this.types[extendName];
-            extendModelProto  = extendModel.prototype;
-            extendValidations = extendModelProto.validations;
-            
-            proxy              = extendModel.proxy;
-            fields             = extendModelProto.fields.items.concat(fields);
-            associations       = extendModelProto.associations.items.concat(associations);
-            config.validations = extendValidations ? extendValidations.concat(config.validations) : config.validations;
+        var proto = config.prototype,
+            model;
+        if (proto && proto.isModel) {
+            // registering an already defined model
+            model = config;
         } else {
-            extendModel = Ext.data.Model;
-            proxy = config.proxy;
+            // passing in a configuration
+            if (!config.extend) {
+                config.extend = 'Ext.data.Model';
+            }
+            model = Ext.define(name, config);
         }
-
-        config.extend = extendName ? extendName : 'Ext.data.Model';
-        model = Ext.define(name, config);
-        
-        for (i = 0, length = modelPlugins.length; i < length; i++) {
-            plugins.push(PluginMgr.create(modelPlugins[i]));
-        }
-        
         this.types[name] = model;
-        
-        model.override({
-            plugins     : plugins,
-            fields      : this.createFields(fields),
-            associations: this.createAssociations(associations, name)
-        });
-        
-        model.modelName = name;
-        Ext.data.Model.setProxy.call(model, proxy || this.defaultProxyType);
-        model.getProxy = model.prototype.getProxy;
-        model.prototype.self.setProxy = Ext.data.Model.prototype.self.setProxy;
-        
-        model.load = function() {
-            Ext.data.Model.load.apply(this, arguments);
-        };
-        
-        for (i = 0, length = plugins.length; i < length; i++) {
-            plugins[i].bootstrap(model, config);
-        }
-        
-        model.defined = true;
-        this.onModelDefined(model);
-        
         return model;
     },
     
@@ -154,7 +52,7 @@ Ext.define('Ext.ModelMgr', {
         var stack  = this.associationStack,
             length = stack.length,
             create = [],
-            association, i;
+            association, i, created;
         
         for (i = 0; i < length; i++) {
             association = stack[i];
@@ -164,86 +62,22 @@ Ext.define('Ext.ModelMgr', {
             }
         }
         
-        length = create.length;
-        for (i = 0; i < length; i++) {
-            this.addAssociation(create[i], this.types[create[i].ownerModel].prototype.associations);
-            Ext.Array.remove(stack, create[i]);
+        for (i = 0, length = create.length; i < length; i++) {
+            created = create[i];
+            this.types[created.ownerModel].prototype.associations.add(Ext.data.Association.create(created));
+            Ext.Array.remove(stack, created);
         }
     },
     
     /**
+     * Registers an association where one of the models defined doesn't exist yet.
+     * The ModelMgr will check when new models are registered if it can link them
+     * together
      * @private
-     * Creates and returns a MixedCollection representing the associations on a model
-     * @param {Array} associations The array of Association configs
-     * @param {String} name The string name of the owner model
-     * @return {Ext.util.MixedCollection} The Mixed Collection
+     * @param {Ext.data.Association} association The association
      */
-    createAssociations: function(associations, name) {
-        var length = associations.length,
-            i, associationsMC, association;
-        
-        associationsMC = Ext.create('Ext.util.MixedCollection', false, function(association) {
-            return association.name;
-        });
-        
-        for (i = 0; i < length; i++) {
-            association = associations[i];
-            Ext.apply(association, {
-                ownerModel: name,
-                associatedModel: association.model
-            });
-            
-            if (this.types[association.model] == undefined) {
-                this.associationStack.push(association);
-            } else {
-                this.addAssociation(association, associationsMC);
-            }
-        }
-        
-        return associationsMC;
-    },
-    
-    /**
-     * @private
-     * Creates an Association based on config and the supplied MixedCollection. TODO: this will
-     * probably need to be refactored into a more elegant solution - it was initially pulled out
-     * to support deferred Association creation when the associated model has not been defined yet.
-     */
-    addAssociation: function(association, associationsMC) {
-        var type = association.type;
-        
-        if (type == 'belongsTo') {
-            associationsMC.add(Ext.create('Ext.data.BelongsToAssociation', association));
-        }
-        
-        if (type == 'hasMany') {
-            associationsMC.add(Ext.create('Ext.data.HasManyAssociation', association));
-        }
-        
-        if (type == 'polymorphic') {
-            associationsMC.add(Ext.create('Ext.data.PolymorphicAssociation', association));
-        }
-    },
-    
-    /**
-     * @private
-     * Creates and returns a MixedCollection representing the fields in a model
-     * @param {Array} fields The array of field configurations
-     * @return {Ext.util.MixedCollection} The Mixed Collection
-     */
-    createFields: function(fields) {
-        var length = fields.length,
-            i, fieldsMC;
-        
-        fieldsMC = Ext.create('Ext.util.MixedCollection', false, function(field) {
-            return field.name;
-        });
-        
-        for (i = 0; i < length; i++) {
-            fieldsMC.add(Ext.create('Ext.data.Field', fields[i]));
-        }
-        
-        return fieldsMC;
+    registerDeferredAssociation: function(association){
+        this.associationStack.push(association);
     },
     
     /**

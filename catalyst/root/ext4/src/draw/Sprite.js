@@ -187,6 +187,10 @@ Ext.define('Ext.draw.Sprite', {
     getBBox: function() {
         return this.surface.getBBox(this);
     },
+    
+    setText: function(text) {
+        return this.surface.setText(this, text);
+    },
 
     /**
      * Hide the sprite.

@@ -410,9 +410,8 @@ Paperpile.stage2 = function() {
   Ext.QuickTips.init();
 
   Paperpile.startupProgress(0.5);
-  f = function(cmp) {
-    Paperpile.main = cmp;
-    Paperpile.main.loadSettings(function() {
+  var f = function() {
+  Paperpile.Settings.load(function() {
       Paperpile.main.afterLoadSettings();
       Paperpile.startupProgress(0.6);
       Paperpile.stage3();
@@ -421,7 +420,7 @@ Paperpile.stage2 = function() {
 
   Paperpile.app.Actions.loadActions();
 
-  Paperpile.main = new Paperpile.Viewport({
+  Paperpile.main = Ext.createByAlias('widget.pp-viewport', {
     listeners: {
       afterrender: {
         fn: f
@@ -441,7 +440,7 @@ Paperpile.stage3 = function() {
   Paperpile.startupProgress(0.7);
 
   Paperpile.main.on('mainGridLoaded', function() {
-    var version = 'Paperpile ' + Paperpile.main.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
+    var version = 'Paperpile ' + Paperpile.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
     //Ext.core.DomHelper.overwrite('version-tag', version);
     Paperpile.startupProgress(1.0);
     Ext.get('splash').remove();
@@ -451,7 +450,6 @@ Paperpile.stage3 = function() {
   });
 
   Paperpile.startupProgress(0.9);
-  Paperpile.main.getTabs().newMainLibraryTab();
 
   Ext.get('splash').remove();
 

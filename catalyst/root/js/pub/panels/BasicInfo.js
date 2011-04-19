@@ -73,8 +73,9 @@ Ext.define('Paperpile.pub.panel.BasicInfo', {
           return me.isDetailsMode();
         },
         getDetailsFields: function(values) {
-          var currType = Paperpile.main.globalSettings.pub_types[values.pubtype];
-          var fieldNames = Paperpile.main.globalSettings.pub_fields;
+	      var pubtypes = Paperpile.Settings.get('pub_types');
+	      var currType = pubtypes[values.pubtype];
+	      var fieldNames = Paperpile.Settings.get('pub_fields');
 
           var allFields = ['sortkey', 'title', 'booktitle', 'series',
             'authors', 'editors', 'journal', 'chapter',
@@ -151,7 +152,8 @@ Ext.define('Paperpile.pub.panel.BasicInfo', {
           return linkOuts;
         },
         getPubTypeName: function(pubType, all) {
-          var pt = Paperpile.main.globalSettings.pub_types[pubType];
+	      var pubtypes = Paperpile.Settings.get('pub_types');
+          var pt = pubtypes[pubType];
           if (pt) {
             return pt.name;
           } else {

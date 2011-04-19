@@ -143,7 +143,7 @@ Ext.define('Ext.form.Spinner', {
      * Since the triggers are stacked, only measure the width of one of them.
      */
     getTriggerWidth: function() {
-        return this.hideTrigger ? 0 : this.spinUpEl.getWidth() + this.triggerWrap.getFrameWidth('lr');
+        return this.hideTrigger || this.readOnly ? 0 : this.spinUpEl.getWidth() + this.triggerWrap.getFrameWidth('lr');
     },
 
     /**

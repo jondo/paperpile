@@ -28,6 +28,7 @@ Ext.define('Ext.dd.ScrollManager', {
         var ddm = Ext.dd.DragDropMgr;
         ddm.fireEvents = Ext.Function.createSequence(ddm.fireEvents, this.onFire, this);
         ddm.stopDrag = Ext.Function.createSequence(ddm.stopDrag, this.onStop, this);
+        this.doScroll = Ext.Function.bind(this.doScroll, this);
         this.ddmInstance = ddm;
         this.els = {};
         this.dragEl = null;

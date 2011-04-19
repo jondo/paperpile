@@ -242,7 +242,7 @@ Ext.define('Ext.dd.DropZone', {
      * @param {Ext.dd.DragSource} source The drag source that was dragged over this drop zone
      * @param {Event} e The event
      * @param {Object} data An object containing arbitrary data supplied by the drag source
-     * @return {Boolean} True if the drop was valid, else false
+     * @return {Boolean} False if the drop was invalid.
      */
     notifyDrop : function(dd, e, data){
         if(this.lastOverNode){

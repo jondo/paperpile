@@ -348,6 +348,10 @@ var panel = new Ext.panel.Panel({
         } else {
             me.updateHeader();
         }
+        
+        if (me.reExpander) {
+            me.reExpander.setTitle(title);
+        }
     },
 
     /**
@@ -626,9 +630,9 @@ is equivalent to
                     single: true
                 });
             } else {
-                me.componentLayout.afterLayout = function() {
+                me.getComponentLayout().afterLayout = function() {
                     delete me.componentLayout.afterLayout;
-                    this.constructor.afterLayout.apply(this, arguments);
+                    this.constructor.prototype.afterLayout.apply(this, arguments);
                     me.collapse(null, false, true);
                 };
             }
@@ -937,7 +941,7 @@ is equivalent to
 
         me.body.hide();
         for (; i < l; i++) {
-            me.hiddenDocked[i].hidden = true;
+            me.hiddenDocked[i].hide();
         }
         if (me.reExpander) {
             me.reExpander.show();
@@ -993,7 +997,7 @@ is equivalent to
         // Show any docked items that we hid on collapse
         // And hide the injected reExpander Header
         for (; i < l; i++) {
-            me.hiddenDocked[i].hidden = false;
+            me.hiddenDocked[i].show();
         }
         if (me.reExpander) {
             if (me.reExpander.temporary) {

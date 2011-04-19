@@ -82,7 +82,7 @@ Ext.define('Ext.container.ButtonGroup', {
         // Copy the component's columns config to the layout if specified
         var me = this,
             cols = me.columns;
-        
+
         me.noTitleCls = me.baseCls + '-notitle';
         if (cols) {
             me.layout = Ext.apply({}, {columns: cols}, me.layout);
@@ -91,10 +91,19 @@ Ext.define('Ext.container.ButtonGroup', {
         if (!me.title) {
             me.addCls(me.noTitleCls);
         }
-        
         me.callParent(arguments);
     },
-    
+
+    afterLayout: function() {
+        this.callParent(arguments);
+
+        // Pugly hack for a pugly browser:
+        // If not an explicitly set width, then size the width to match the inner table
+        if (this.layout.table && (!Ext.isStrict || Ext.isIE6) && !this.width) {
+            this.el.setWidth(this.layout.table.offsetWidth + this.frameSize.left + this.frameSize.right);
+        }
+    },
+
     afterRender: function() {
         //we need to add an addition item in here so the ButtonGroup title is centered
         if (this.header) {

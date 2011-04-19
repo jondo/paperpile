@@ -45,11 +45,11 @@ Ext.define('Ext.grid.RowBodyFeature', {
             rowBodyDivCls: this.rowBodyDivCls
         };
     },
-    
+
     mutateMetaRowTpl: function(metaRowTpl) {
         metaRowTpl.push('{[this.getRowBody(values)]}');
     },
-    
+
     /**
      * Provide additional data to the prepareData call within the grid view.
      * The rowbody feature adds 3 additional variables into the grid view's template.
@@ -61,8 +61,8 @@ Ext.define('Ext.grid.RowBodyFeature', {
      */
     getAdditionalData: function(data, idx, record, orig) {
         var headerCt = this.view.headerCt,
-            colspan  = headerCt.getCount();
-            
+            colspan  = headerCt.getColumnCount();
+
         return {
             rowBody: "",
             rowBodyCls: this.rowBodyCls,

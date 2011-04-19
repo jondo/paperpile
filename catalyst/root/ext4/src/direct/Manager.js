@@ -14,7 +14,7 @@
  * <p><b><u>Specification</u></b></p>
  *
  * <p>For additional information consult the
- * <a href="http://extjs.com/products/extjs/direct.php">Ext.Direct Specification</a>.</p>
+ * <a href="http://sencha.com/products/extjs/extdirect">Ext.Direct Specification</a>.</p>
  *
  * <p><b><u>Providers</u></b></p>
  *

@@ -11,7 +11,7 @@ Ext.define('Ext.draw.Surface', {
     },
 
     requires: ['Ext.draw.SpriteGroup'],
-    uses: ['Ext.draw.engine.SVG', 'Ext.draw.engine.VML', 'Ext.draw.engine.Canvas'],
+    uses: ['Ext.draw.engine.SVG', 'Ext.draw.engine.VML'],
 
     separatorRe: /[, ]+/,
 
@@ -21,10 +21,10 @@ Ext.define('Ext.draw.Surface', {
          * @param {Object} config Initial configuration for the Surface instance
          * @param {Array} implOrder Optional order of implementations to use; the first one that is
          *                available in the current environment will be used. Defaults to
-         *                <code>['SVG', 'Canvas', 'VML']</code>.
+         *                <code>['SVG', 'VML']</code>.
          */
         newInstance: function(config, implOrder) {
-            implOrder = implOrder || ['SVG', 'Canvas', 'VML'];
+            implOrder = implOrder || ['SVG', 'VML'];
 
             var i = 0,
                 len = implOrder.length,
@@ -383,6 +383,7 @@ Ext.define('Ext.draw.Surface', {
     applyTransformations: function(sprite) {
             sprite.bbox.transform = 0;
             this.transform(sprite);
+
         var me = this,
             dirty = false,
             attr = sprite.attr;
@@ -530,13 +531,17 @@ Ext.define('Ext.draw.Surface', {
         var item, i, ln;
         for (i = 0, ln = items.length; i < ln; i++) {
             item = items[i];
-            // Temporary, just take in configs...
-            item.surface = this;
-            items[i] = this.createItem(item);
+            if (!(item instanceof Ext.draw.Sprite)) {
+                // Temporary, just take in configs...
+                item.surface = this;
+                items[i] = this.createItem(item);
+            }
         }
         return items;
     },
-
+    
+    setText: Ext.emptyFn,
+    
     createItem: Ext.emptyFn,
 
     /**

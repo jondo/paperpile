@@ -25,8 +25,8 @@ Ext.util.OfflineDebug = function() {
         if (type == 'error' && navigator.onLine) {
             message += ' There was an unknown error, check your Cache Manifest.';
         }
-        if(console && console.log) {
-            console.log(message);
+        if(Ext.global.console) {
+            Ext.global.console.log(message);
         }
     };
 
@@ -39,7 +39,9 @@ Ext.util.OfflineDebug = function() {
         // Don't perform "swap" if this is the first cache
         if (cacheStatuses[cache.status] != 'idle') {
             cache.swapCache();
-            console.log('Swapped/updated the Cache Manifest.');
+            if(Ext.global.console) {
+                Ext.global.console.log('Swapped/updated the Cache Manifest.');
+            }
         }
     }, false);
 

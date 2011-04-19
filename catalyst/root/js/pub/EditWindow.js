@@ -16,7 +16,6 @@ Ext.define('Paperpile.pub.EditWindow', {
       shadow: false,
       layout: 'fit',
       plain: true,
-      bodyPadding: 5,
       width: 700,
       height: 600,
       minWidth: 400,

@@ -12,40 +12,49 @@ Ext.define('Ext.dd.DragSource', {
         'Ext.dd.StatusProxy',
         'Ext.dd.DragDropMgr'
     ],
-    
-    constructor: function(el, config) {
-        this.el = Ext.get(el);
-        if(!this.dragData){
-            this.dragData = {};
-        }
-        
-        Ext.apply(this, config);
-        
-        if(!this.proxy){
-            this.proxy = new Ext.dd.StatusProxy();
-        }
-        Ext.dd.DragSource.superclass.constructor.call(this, this.el.dom, this.ddGroup || this.group, 
-              {dragElId : this.proxy.id, resizeFrame: false, isTarget: false, scroll: this.scroll === true});
-        
-        this.dragging = false;
-    },
 
     /**
      * @cfg {String} ddGroup
      * A named drag drop group to which this object belongs.  If a group is specified, then this object will only
      * interact with other drag drop objects in the same group (defaults to undefined).
      */
-    
+
     /**
      * @cfg {String} dropAllowed
      * The CSS class returned to the drag source when drop is allowed (defaults to "x-dd-drop-ok").
      */
+
     dropAllowed : Ext.baseCSSPrefix + 'dd-drop-ok',
     /**
      * @cfg {String} dropNotAllowed
      * The CSS class returned to the drag source when drop is not allowed (defaults to "x-dd-drop-nodrop").
      */
     dropNotAllowed : Ext.baseCSSPrefix + 'dd-drop-nodrop',
+
+    /**
+     * @cfg {Boolean} animRepair
+     * Defaults to true. If true, animates the proxy element back to the position of the handle element used to trigger the drag.
+     */
+    animRepair: true,
+
+    constructor: function(el, config) {
+        this.el = Ext.get(el);
+        if(!this.dragData){
+            this.dragData = {};
+        }
+
+        Ext.apply(this, config);
+
+        if(!this.proxy){
+            this.proxy = new Ext.dd.StatusProxy({
+                animRepair: this.animRepair
+            });
+        }
+        Ext.dd.DragSource.superclass.constructor.call(this, this.el.dom, this.ddGroup || this.group, 
+              {dragElId : this.proxy.id, resizeFrame: false, isTarget: false, scroll: this.scroll === true});
+
+        this.dragging = false;
+    },
 
     /**
      * Returns the data object associated with this drag source
@@ -66,7 +75,7 @@ Ext.define('Ext.dd.DragSource', {
             } else {
                 this.proxy.setStatus(this.dropAllowed);
             }
-            
+
             if (this.afterDragEnter) {
                 /**
                  * An empty function by default, but provided so that you can perform a custom action
@@ -168,13 +177,13 @@ Ext.define('Ext.dd.DragSource', {
     beforeDragOut: function(target, e, id){
         return true;
     },
-    
+
     // private
     onDragDrop: function(e, id){
         var target = this.cachedTarget || Ext.dd.DragDropMgr.getDDById(id);
         if (this.beforeDragDrop(target, e, id) !== false) {
             if (target.isNotifyTarget) {
-                if (target.notifyDrop(this, e, this.dragData)) { // valid drop?
+                if (target.notifyDrop(this, e, this.dragData) !== false) { // valid drop?
                     this.onValidDrop(target, e, id);
                 } else {
                     this.onInvalidDrop(target, e, id);
@@ -182,7 +191,7 @@ Ext.define('Ext.dd.DragSource', {
             } else {
                 this.onValidDrop(target, e, id);
             }
-            
+
             if (this.afterDragDrop) {
                 /**
                  * An empty function by default, but provided so that you can perform a custom action
@@ -358,12 +367,12 @@ Ext.define('Ext.dd.DragSource', {
     // private
     onEndDrag : function(data, e){
     },
-    
+
     // private - pin to cursor
     autoOffset : function(x, y) {
         this.setDelta(-12, -20);
     },
-    
+
     destroy: function(){
         Ext.dd.DragSource.superclass.destroy.call(this);
         Ext.destroy(this.proxy);

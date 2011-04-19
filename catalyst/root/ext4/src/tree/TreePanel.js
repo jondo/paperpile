@@ -46,23 +46,18 @@ Ext.define('Ext.tree.TreePanel', {
     useArrows: false,
     
     /**
-     * @cfg {Boolean} sortableHeaders
-     * Hide this configuration. The TreeStore does not currently support sorting.
-     * @private
+     * @cfg {Boolean} singleExpand <tt>true</tt> if only 1 node per branch may be expanded
      */
-    sortableHeaders: false,
-    
-    // @TODO: implement following config options
     singleExpand: false,
+    
     ddConfig: {
         enableDrag: true,
         enableDrop: true
     },
+    
     /** 
      * @cfg {Boolean} animate <tt>true</tt> to enable animated expand/collapse (defaults to the value of {@link Ext#enableFx Ext.enableFx})
      */
-    animate: Ext.enableFx,
-    
             
     /** 
      * @cfg {Boolean} rootVisible <tt>false</tt> to hide the root node (defaults to <tt>true</tt>)
@@ -96,17 +91,29 @@ Ext.define('Ext.tree.TreePanel', {
     getRootNode : function(){},  
     getChecked : function(a, startNode){},
 
-   
+    constructor: function(config) {
+        if (config.animate === undefined) {
+            config.animate = Ext.enableFx;
+        }
+        this.enableAnimations = config.animate;
+        delete config.animate;
+        
+        this.callParent([config]);
+    },
+    
     initComponent: function() {
         var me = this,
-            optionalCls = '';
+            cls = [];
 
         if (me.useArrows) {
-            optionalCls += ' ' + Ext.baseCSSPrefix + 'tree-arrows';
+            cls.push(Ext.baseCSSPrefix + 'tree-arrows');
             me.lines = false;
         }
+        
         if (me.lines) {
-            optionalCls += ' ' + Ext.baseCSSPrefix + 'tree-lines';
+            cls.push(Ext.baseCSSPrefix + 'tree-lines');
+        } else if (!me.useArrows) {
+            cls.push(Ext.baseCSSPrefix + 'tree-no-lines');
         }
 
         if (!me.store) {
@@ -120,10 +127,136 @@ Ext.define('Ext.tree.TreePanel', {
                 
         me.viewConfig = Ext.applyIf(me.viewConfig || {}, {
             rootVisible: me.rootVisible,
-            animate: me.animate,
+            animate: me.enableAnimations,
             singleExpand: me.singleExpand,
             treeStore: me.store
         });
+    
+        me.relayEvents(me.store, [
+            /**
+             * @event beforeload
+             * Event description
+             * @param {Ext.data.Store} store This Store
+             * @param {Ext.data.Operation} operation The Ext.data.Operation object that will be passed to the Proxy to load the Store
+             */
+            'beforeload',
+
+            /**
+             * @event load
+             * Fires whenever the store reads data from a remote data source.
+             * @param {Ext.data.store} this
+             * @param {Array} records An array of records
+             * @param {Boolean} successful True if the operation was successful.
+             */
+            'load',
+            
+            /**
+             * @event append
+             * Fires when a new child node is appended to a node in this store's tree.
+             * @param {Tree} tree The owner tree
+             * @param {Node} parent The parent node
+             * @param {Node} node The newly appended node
+             * @param {Number} index The index of the newly appended node
+             */
+            "append",
+            
+            /**
+             * @event remove
+             * Fires when a child node is removed from a node in this store's tree.
+             * @param {Tree} tree The owner tree
+             * @param {Node} parent The parent node
+             * @param {Node} node The child node removed
+             */
+            "remove",
+            
+            /**
+             * @event move
+             * Fires when a node is moved to a new location in the store's tree
+             * @param {Tree} tree The owner tree
+             * @param {Node} node The node moved
+             * @param {Node} oldParent The old parent of this node
+             * @param {Node} newParent The new parent of this node
+             * @param {Number} index The index it was moved to
+             */
+            "move",
+            
+            /**
+             * @event insert
+             * Fires when a new child node is inserted in a node in this store's tree.
+             * @param {Tree} tree The owner tree
+             * @param {Node} parent The parent node
+             * @param {Node} node The child node inserted
+             * @param {Node} refNode The child node the node was inserted before
+             */
+            "insert",
+            
+            /**
+             * @event beforeappend
+             * Fires before a new child is appended to a node in this store's tree, return false to cancel the append.
+             * @param {Tree} tree The owner tree
+             * @param {Node} parent The parent node
+             * @param {Node} node The child node to be appended
+             */
+            "beforeappend",
+            
+            /**
+             * @event beforeremove
+             * Fires before a child is removed from a node in this store's tree, return false to cancel the remove.
+             * @param {Tree} tree The owner tree
+             * @param {Node} parent The parent node
+             * @param {Node} node The child node to be removed
+             */
+            "beforeremove",
+            
+            /**
+             * @event beforemove
+             * Fires before a node is moved to a new location in the store's tree. Return false to cancel the move.
+             * @param {Tree} tree The owner tree
+             * @param {Node} node The node being moved
+             * @param {Node} oldParent The parent of the node
+             * @param {Node} newParent The new parent the node is moving to
+             * @param {Number} index The index it is being moved to
+             */
+            "beforemove",
+            
+            /**
+             * @event beforeinsert
+             * Fires before a new child is inserted in a node in this store's tree, return false to cancel the insert.
+             * @param {Tree} tree The owner tree
+             * @param {Node} parent The parent node
+             * @param {Node} node The child node to be inserted
+             * @param {Node} refNode The child node the node is being inserted before
+             */
+            "beforeinsert",
+             
+             /**
+              * @event expand
+              * Fires when this node is expanded.
+              * @param {Node} this The expanding node
+              */
+             "expand",
+             
+             /**
+              * @event collapse
+              * Fires when this node is collapsed.
+              * @param {Node} this The collapsing node
+              */
+             "collapse",
+             
+             /**
+              * @event beforeexpand
+              * Fires before this node is expanded.
+              * @param {Node} this The expanding node
+              */
+             "beforeexpand",
+             
+             /**
+              * @event beforecollapse
+              * Fires before this node is collapsed.
+              * @param {Node} this The collapsing node
+              */
+             "beforecollapse"    
+        ]);
         
         // If the user specifies the headers collection manually then dont inject our own
         if (!me.headers) {
@@ -138,8 +271,113 @@ Ext.define('Ext.tree.TreePanel', {
             }];
         }
         
-        me.cls = me.cls + optionalCls;
+        if (me.cls) {
+            cls.push(me.cls);
+        }
+        me.cls = cls.join(' ');
         me.callParent();
+        
+        this.relayEvents(this.view, [
+            /**
+             * @event beforeclick
+             * Fires before a click is processed. Returns false to cancel the default action.
+             * @param {Ext.DataView} this
+             * @param {Number} index The index of the target node
+             * @param {HTMLElement} node The target node
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'beforeclick',
+
+            /**
+             * @event click
+             * Fires when a template node is clicked.
+             * @param {Ext.DataView} this
+             * @param {Number} index The index of the target node
+             * @param {HTMLElement} node The target node
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'click',
+
+            /**
+             * @event mouseenter
+             * Fires when the mouse enters a template node. trackOver:true and an overItemCls must be set to enable this event.
+             * @param {Ext.DataView} this
+             * @param {Number} index The index of the target node
+             * @param {HTMLElement} node The target node
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'mouseenter',
+
+            /**
+             * @event mouseleave
+             * Fires when the mouse leaves a template node. trackOver:true and an overItemCls must be set to enable this event.
+             * @param {Ext.DataView} this
+             * @param {Number} index The index of the target node
+             * @param {HTMLElement} node The target node
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'mouseleave',
+
+            /**
+             * @event containerclick
+             * Fires when a click occurs and it is not on a template node.
+             * @param {Ext.DataView} this
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'containerclick',
+
+            /**
+             * @event dblclick
+             * Fires when a template node is double clicked.
+             * @param {Ext.DataView} this
+             * @param {Number} index The index of the target node
+             * @param {HTMLElement} node The target node
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'dblclick',
+
+            /**
+             * @event contextmenu
+             * Fires when a template node is right clicked.
+             * @param {Ext.DataView} this
+             * @param {Number} index The index of the target node
+             * @param {HTMLElement} node The target node
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'contextmenu',
+
+            /**
+             * @event containercontextmenu
+             * Fires when a right click occurs that is not on a template node.
+             * @param {Ext.DataView} this
+             * @param {Ext.EventObject} e The raw event object
+             */
+            'containercontextmenu',
+
+            /**
+             * @event selectionchange
+             * Fires when the selected nodes change. Relayed event from the underlying selection model.
+             * @param {Ext.DataView} this
+             * @param {Array} selections Array of the selected nodes
+             */
+            'selectionchange',
+
+            /**
+             * @event beforeselect
+             * Fires before a selection is made. If any handlers return false, the selection is cancelled.
+             * @param {Ext.DataView} this
+             * @param {HTMLElement} node The node to be selected
+             * @param {Array} selections Array of currently selected nodes
+             */
+            'beforeselect'
+        ]);
+    },
+
+    getView: function() {
+        var me = this;
+        me.callParent(arguments);
+        me.store = me.view.treeStore;
+        return me.view;
     },
     
     /**

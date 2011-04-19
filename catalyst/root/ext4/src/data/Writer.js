@@ -90,7 +90,8 @@ new Ext.data.Writer({
      * By default this method returns the data property on the record.
      */
     getRecordData: function(record) {
-        var writeAll = this.writeAllFields || record.phantom,
+        var isPhantom = record.phantom === true,
+            writeAll = this.writeAllFields || isPhantom,
             nameProperty = this.nameProperty,
             fields = record.fields,
             data = {},
@@ -113,6 +114,10 @@ new Ext.data.Writer({
                     name = field[nameProperty] || field.name;
                     data[name] = changes[key];
                 }
+            }
+            if (!isPhantom) {
+                // always include the id for non phantoms
+                data[record.idProperty] = record.getId();
             }
         }
         return data;

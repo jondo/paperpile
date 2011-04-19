@@ -37,15 +37,14 @@ Ext.define('Ext.view.DragZone', {
     init: function(id, sGroup, config) {
         this.initTarget(id, sGroup, config);
         this.view.on({
-            beforemousedown: this.onBeforeMouseDown,
-            mouseup: this.onAfterMouseUp,
+            beforeitemmousedown: this.onBeforeMouseDown,
+            itemmouseup: this.onAfterMouseUp,
             scope: this
         });
     },
 
-    onBeforeMouseDown: function(view, index, item, e) {
-        var selectionModel = view.getSelectionModel(),
-            record = view.getRecord(item);
+    onBeforeMouseDown: function(view, record, item, index, e) {
+        var selectionModel = view.getSelectionModel();
         if (!this.isPreventDrag(e)) {
             if (!selectionModel.isSelected(record) || e.hasModifier()) {
                 selectionModel.selectWithEvent(record, e);
@@ -61,10 +60,8 @@ Ext.define('Ext.view.DragZone', {
         return false;
     },
 
-    onAfterMouseUp: function(view, index, item, e) {
-        var selectionModel = view.getSelectionModel(),
-            record = view.getRecord(item);
-
+    onAfterMouseUp: function(view, record, item, index, e) {
+        var selectionModel = view.getSelectionModel();
         if (!this.dragging && selectionModel.isSelected(record) && selectionModel.getSelection().length > 1 && !e.hasModifier()) {
             selectionModel.select(record);
         }
@@ -84,7 +81,8 @@ Ext.define('Ext.view.DragZone', {
                 view: view,
                 ddel: this.ddel,
                 item: item,
-                records: records
+                records: records,
+                fromPosition: Ext.fly(item).getXY()
             };
         }
     },
@@ -99,5 +97,9 @@ Ext.define('Ext.view.DragZone', {
     getDragText: function() {
         var count = this.dragData.records.length;
         return Ext.String.format(this.dragText, count, count == 1 ? '' : 's');
+    },
+
+    getRepairXY : function(e, data){
+        return data ? data.fromPosition : false;
     }
 });

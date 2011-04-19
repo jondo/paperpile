@@ -42,6 +42,30 @@ Ext.define('Ext.AbstractPanel', {
      * a number to be applied to all sides, or a normal css string describing borders.
      * Defaults to <code>undefined</code>.
      */
+    
+    /**
+     * @cfg {String/Object/Function} bodyStyle
+     * Custom CSS styles to be applied to the panel's body element, which can be supplied as a valid CSS style string,
+     * an object containing style property name/value pairs or a function that returns such a string or object.
+     * For example, these two formats are interpreted to be equivalent:<pre><code>
+bodyStyle: 'background:#ffc; padding:10px;'
+
+bodyStyle: {
+    background: '#ffc',
+    padding: '10px'
+}
+     * </code></pre>
+     */
+    
+    /**
+     * @cfg {String/Array} bodyCls
+     * A CSS class, space-delimited string of classes, or array of classes to be applied to the panel's body element.
+     * The following examples are all valid:<pre><code>
+bodyCls: 'foo'
+bodyCls: 'foo bar'
+bodyCls: ['foo', 'bar']
+     * </code></pre>
+     */
 
     isPanel: true,
 
@@ -65,7 +89,7 @@ var panel = new Ext.panel.Panel({
             text: 'Docked to the top'
         }]
     }]
-});</pre></code>
+});</code></pre>
      */
 
     initComponent : function() {
@@ -133,28 +157,63 @@ var panel = new Ext.panel.Panel({
     },
 
     /**
-     * Function description
-     * @return {String} A CSS style string with style, padding, margin and border.
+     * Parses the {@link bodyStyle} config if available to create a style string that will be applied to the body element.
+     * This also includes {@link bodyPadding}, {@link bodyMargin} and {@link bodyBorder} if available.
+     * @return {String} A CSS style string with body styles, padding, margin and border.
      * @private
      */
     initBodyStyles: function() {
         var me = this,
-            bodyStyle = Ext.isString(me.bodyStyle) ? me.bodyStyle.split(';') : [],
+            bodyStyle = me.bodyStyle,
+            styles = [];
             Element = Ext.core.Element;
 
+        if (Ext.isFunction(bodyStyle)) {
+            bodyStyle = bodyStyle();
+        }
+        if (Ext.isString(bodyStyle)) {
+            styles = bodyStyle.split(';');
+        }
+        else {
+            var prop;
+            for (prop in bodyStyle) {
+                styles.push(prop + ':' + bodyStyle[prop]);
+            }
+        }
+
         if (me.bodyPadding != undefined) {
-            bodyStyle.push('padding: ' + Element.unitizeBox((me.bodyPadding === true) ? 5 : me.bodyPadding));
+            styles.push('padding: ' + Element.unitizeBox((me.bodyPadding === true) ? 5 : me.bodyPadding));
         }
         if (me.bodyMargin != undefined) {
-            bodyStyle.push('margin: ' + Element.unitizeBox((me.bodyMargin === true) ? 5 : me.bodyMargin));
+            styles.push('margin: ' + Element.unitizeBox((me.bodyMargin === true) ? 5 : me.bodyMargin));
         }
         if (me.bodyBorder != undefined) {
-            bodyStyle.push('border-width: ' + Element.unitizeBox((me.bodyBorder === true) ? 1 : me.bodyBorder));
+            styles.push('border-width: ' + Element.unitizeBox((me.bodyBorder === true) ? 1 : me.bodyBorder));
         }
         delete me.bodyStyle;
-        return bodyStyle.length ? bodyStyle.join(';') : undefined;
+        return styles.length ? styles.join(';') : undefined;
     },
-
+    
+    /**
+     * Parse the {@link bodyCls} config if available to create a comma-delimited string of 
+     * CSS classes to be applied to the body element.
+     * @return {String} The CSS class(es)
+     * @private
+     */
+    initBodyCls: function() {
+        var me = this,
+            cls = '',
+            bodyCls = me.bodyCls;
+        
+        if (bodyCls) {
+            Ext.each(bodyCls, function(v) {
+                cls += " " + v;
+            });
+            delete me.bodyCls;
+        }
+        return cls.length > 0 ? cls : undefined;
+    },
+    
     /**
      * Initialized the renderData to be used when rendering the renderTpl.
      * @return {Object} Object with keys and values that are going to be applied to the renderTpl
@@ -163,7 +222,7 @@ var panel = new Ext.panel.Panel({
     initRenderData: function() {
         return Ext.applyIf(this.callParent(), {
             bodyStyle: this.initBodyStyles(),
-            bodyCls: this.bodyCls
+            bodyCls: this.initBodyCls()
         });
     },
 
@@ -175,10 +234,13 @@ var panel = new Ext.panel.Panel({
      * @param {Number} pos (optional) The index at which the Component will be added
      */
     addDocked : function(items, pos) {
-        var me = this, item, i, ln;
-        items = me.prepareItems(items);
+        var me = this,
+            items = me.prepareItems(items),
+            i = 0,
+            length = items.length,
+            item;
 
-        for (i = 0, ln = items.length; i < ln; i++) {
+        for (; i < length; i++) {
             item = items[i];
             item.dock = item.dock || 'top';
 
@@ -223,29 +285,36 @@ var panel = new Ext.panel.Panel({
      * @param {Boolean} autoDestroy (optional) Destroy the component after removal.
      */
     removeDocked : function(item, autoDestroy) {
-        if (!this.dockedItems.contains(item)) {
+        var me = this,
+            layout,
+            hasLayout;
+            
+        if (!me.dockedItems.contains(item)) {
             return item;
         }
 
-        var layout = this.componentLayout,
-            hasLayout = layout && this.rendered;
+        layout = me.componentLayout;
+        hasLayout = layout && me.rendered;
 
         if (hasLayout) {
             layout.onRemove(item);
         }
 
-        this.dockedItems.remove(item);
+        me.dockedItems.remove(item);
         item.onRemoved();
-        this.onDockedRemove(item);
+        me.onDockedRemove(item);
 
-        if (autoDestroy === true || (autoDestroy !== false && this.autoDestroy)) {
+        if (autoDestroy === true || (autoDestroy !== false && me.autoDestroy)) {
             item.destroy();
         }
 
         if (hasLayout && !autoDestroy) {
             layout.afterRemove(item);
         }
-        this.doComponentLayout();
+        
+        if (!this.destroying) {
+            me.doComponentLayout();
+        }
 
         return item;
     },

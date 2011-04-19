@@ -33,10 +33,13 @@
     
     .#{$prefix}panel-framed {
         border-color: $panel-frame-border-color;
-        @include inner-border(
-            $width: 1px, 
-            $color: $panel-header-inner-border-color
-        );
+        
+        @if $panel-header-inner-border {
+            @include inner-border(
+                $width: 1px, 
+                $color: $panel-header-inner-border-color
+            );
+        }
     }
             
     //panel header
@@ -49,11 +52,13 @@
 
         @if $supports-gradients or $compile-all {    
             @include background-gradient($panel-header-background-color, $panel-header-background-gradient);
-
-            @include inner-border(
-                $width: $panel-header-inner-border-width, 
-                $color: $panel-header-inner-border-color
-            );
+            
+            @if $panel-header-inner-border {
+                @include inner-border(
+                    $width: $panel-header-inner-border-width, 
+                    $color: $panel-header-inner-border-color
+                );
+            }
 
             .#{$prefix}box-layout-ct {
                 @include border-radius($panel-border-radius);
@@ -90,10 +95,13 @@
 
     .#{$prefix}panel-header.#{$prefix}panel-header-framed {
         border-bottom-width: 1px !important;
-        @include inner-border(
-            $width: 1px 1px 0, 
-            $color: $panel-header-inner-border-color
-        );
+        
+        @if $panel-header-inner-border {
+            @include inner-border(
+                $width: 1px 1px 0, 
+                $color: $panel-header-inner-border-color
+            );
+        }
     }
 
     .#{$prefix}panel-header-draggable,
@@ -159,17 +167,20 @@
         font-size: $panel-header-font-size;
         line-height: $panel-header-line-height;
         font-weight: $panel-header-font-weight;
-        text-shadow: $panel-header-text-shadow;
     }
 
     //panel body
     .#{$prefix}panel-body {
         overflow: hidden;
         position: relative;
+        
         background: $panel-body-background-color;
+        
         border-color: $panel-body-border-color;
         border-style: $panel-body-border-style;
         border-width: $panel-body-border-width;
+        
+        color: $panel-body-color;
     }
 
     .#{$prefix}panel-body-framed {

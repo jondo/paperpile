@@ -92,7 +92,8 @@ Ext.define('Ext.window.Window', {
 
     /**
      * @cfg {Mixed} resizable
-     * <p>Specify as <code>true</code> to allow user resizing at each edge and corner of the window, false to disable resizing (defaults to true).</p>
+     * <p>Specify as <code>true</code> to allow user resizing at each edge and corner of the window, false to disable 
+     * resizing (defaults to true).</p>
      * <p>This may also be specified as a config object to </p>
      */
     resizable: true,
@@ -253,9 +254,50 @@ Ext.define('Ext.window.Window', {
 
     // State Management
     // private
+    
+    initStateEvents: function(){
+        var events = this.stateEvents;
+        // push on stateEvents if they don't exist
+        Ext.each(['maximize', 'restore', 'resize', 'dragend'], function(event){
+            if (Ext.Array.indexOf(events, event)) {
+                events.push(event);
+            }
+        });
+        this.callParent();    
+    },
+    
     getState: function() {
-        var state = this.callParent() || {};
-        return Ext.apply(state, this.getBox(true));
+        var me = this,
+            state = me.callParent() || {},
+            maximized = !!me.maximized;
+            
+        
+        state.maximized = maximized;
+        Ext.apply(state, {
+            size: maximized ? me.restoreSize : me.getSize(),
+            pos: maximized ? me.restorePos : me.getPosition(true)
+        });
+        return state;
+    },
+    
+    applyState: function(state){
+        var me = this;
+        
+        if (state) {
+            me.maximized = state.maximized;
+            if (me.maximized) {
+                me.hasSavedRestore = true;
+                me.restoreSize = state.size;
+                me.restorePos = state.pos;
+            } else {
+                Ext.apply(me, {
+                    width: state.size.width,
+                    height: state.size.height,
+                    x: state.pos[0],
+                    y: state.pos[1]
+                });
+            }
+        }
     },
 
     // private
@@ -290,7 +332,7 @@ Ext.define('Ext.window.Window', {
         // clickToRaise
         me.mon(me.el, 'mousedown', me.toFront, me);
 
-        // Initialize maximized
+        // Initialize	
         if (me.maximized) {
             me.maximized = false;
             me.maximize();
@@ -341,7 +383,8 @@ Ext.define('Ext.window.Window', {
          * @type Ext.util.ComponentDragger
          * @property dd
          */
-        this.dd = new Ext.util.ComponentDragger(this, ddConfig);
+        me.dd = new Ext.util.ComponentDragger(this, ddConfig);
+        me.relayEvents(me.dd, ['dragstart', 'drag', 'dragend']);
     },
 
     // private
@@ -428,14 +471,13 @@ Ext.define('Ext.window.Window', {
     },
 
     // private
-    afterShow: function(isAnim) {
+    afterShow: function(animateTarget) {
         var me = this,
             size;
-        
-        if (me.isDestroyed) {
-            return false;
-        }
-        me.proxy.hide();
+
+        // Perform superclass's afterShow tasks
+        // Which might include animating a proxy from an animTarget
+        me.callParent(arguments);
 
         if (me.maximized) {
             me.fitContainer();
@@ -450,13 +492,10 @@ Ext.define('Ext.window.Window', {
         }
 
         // BrowserBug. Explain the browser bug in the comment.
-        if (isAnim && (Ext.isIE || Ext.isWebKit)) {
+        if (animateTarget && (Ext.isIE || Ext.isWebKit)) {
             size = me.getSize();
             me.onResize(size.width, size.height);
         }
-
-        // Call superclass's afterShow
-        me.callParent();
     },
 
     // private
@@ -478,7 +517,8 @@ Ext.define('Ext.window.Window', {
      * @param {String/Element} animateTarget (optional) The target element or id to which the window should
      * animate while hiding (defaults to null with no animation)
      * @param {Function} callback (optional) A callback function to call after the window is hidden
-     * @param {Object} scope (optional) The scope (<code>this</code> reference) in which the callback is executed. Defaults to this Window.
+     * @param {Object} scope (optional) The scope (<code>this</code> reference) in which the callback is executed. 
+     * Defaults to this Window.
      * @return {Ext.window.Window} this
      */
     hide: function(animateTarget, cb, scope) {
@@ -505,8 +545,6 @@ Ext.define('Ext.window.Window', {
     // private
     afterHide: function() {
         var me = this;
-        
-        me.proxy.hide();
 
         // No longer subscribe to resizing now that we're hidden
         if (me.monitorResize || me.constrain || me.constrainHeader) {
@@ -518,8 +556,8 @@ Ext.define('Ext.window.Window', {
             me.keyMap.disable();
         }
 
-        me.onHide();
-        me.fireEvent('hide', me);
+        // Perform superclass's afterHide tasks.
+        me.callParent(arguments);
     },
 
     // private
@@ -579,8 +617,10 @@ Ext.define('Ext.window.Window', {
         
         if (!me.maximized) {
             me.expand(false);
-            me.restoreSize = me.getSize();
-            me.restorePos = me.getPosition(true);
+            if (!me.hasSavedRestore) {
+                me.restoreSize = me.getSize();
+                me.restorePos = me.getPosition(true);
+            }
             if (me.maximizable) {
                 me.tools.maximize.hide();
                 me.tools.restore.show();
@@ -616,6 +656,7 @@ Ext.define('Ext.window.Window', {
             tools = me.tools;
             
         if (me.maximized) {
+            delete me.hasSavedRestore;
             me.removeCls(Ext.baseCSSPrefix + 'window-maximized');
 
             // Toggle tool visibility

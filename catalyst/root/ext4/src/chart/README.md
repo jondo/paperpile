@@ -7,11 +7,11 @@ cross browser and cross device graphics in a versatile way.
 
 The structure of this document will cover three main topics:
 
-- Section I: ["Draw"]() a versatile cross-browser/device package to draw general purpose
+- Section I: ["Draw"](#) a versatile cross-browser/device package to draw general purpose
 graphics and animations.
-- Section II: ["Chart"]() A high level presentation of the charting package and how classes are
+- Section II: ["Chart"](#) A high level presentation of the charting package and how classes are
 organized in it.
-- Section III: ["Series"]() A presentation of the available series and their use.
+- Section III: ["Series"](#) A presentation of the available series and their use.
 
 
 ## I. The Draw Package
@@ -20,17 +20,17 @@ ______________________
 The design choices in the graphics team concerning drawing were not just contrained to charting:
 we needed a versatile tool that would enable us to create custom graphics in a cross-browser/device manner and also perform rich animations with them.
 
-The Draw package contains a [Surface]() class that abstracts the underlying graphics implementation
-and enables the developer to create arbitrarily shaped [Sprites]() or [SpriteGroups]() that respond to
+The Draw package contains a [Surface](#) class that abstracts the underlying graphics implementation
+and enables the developer to create arbitrarily shaped [Sprites](#) or [SpriteGroups](#) that respond to
 interactions like mouse events and also provide rich animations on all attributes like shape, color, size,
 etc.
 
-The underlying/concrete implementations for the [Surface]() class are [SVG]() (for SVG capable browsers) and
-[VML]() (for the Internet Explorer family - < 9). [Surface]() can be considered as an interface for
-the [SVG]() and [VML]() rendering engines. Surface is agnostic to its underlying implementations. Most of the methods and ways
+The underlying/concrete implementations for the [Surface](#) class are [SVG](#) (for SVG capable browsers) and
+[VML](#) (for the Internet Explorer family - < 9). [Surface](#) can be considered as an interface for
+the [SVG](#) and [VML](#) rendering engines. Surface is agnostic to its underlying implementations. Most of the methods and ways
 to create sprites are heavily inspired by the [SVG standard](http://www.w3.org/TR/SVG/). 
 
-**Creating a Drawing Surface**
+### Creating a Drawing Surface
 
 You can create a simple drawing surface without loading the Charting package at all. This can be useful
 to create arbitrary graphics that work on all browsers/devices and animate well. For example, you could
@@ -39,7 +39,7 @@ each element is also a sprite. What's interesting about making sprites and not i
 acquires a new level of interactivity but also that being VML and SVG based the images will never loose quality
 and can be printed correctly.
 
-In order to use the Draw package directly you can create a [Draw Component]() and (for example) append it to an `Ext.Window`:
+In order to use the Draw package directly you can create a [Draw Component](#) and (for example) append it to an `Ext.Window`:
 
     var drawComponent = Ext.create('Ext.draw.Component', {
         viewBox: false,
@@ -66,30 +66,32 @@ dimensions accordingly.
 Sprites can have different types. Some of them are:
 
  - *circle* - To draw circles. You can set the radius by using the *radius* parameter in the sprite configuration.
- - *rect* - To render rectangles. Tou can set the width and height of the rectangle by using the *width* and *height* parameters
+ - *rect* - To render rectangles. You can set the width and height of the rectangle by using the *width* and *height* parameters
  in the sprite configuration.
  - *text* - To render text as a sprite. You can set the font/font-size by using the *font* parameter.
  - *path* - The most powerful sprite type. With it you can create arbitrary shapes by using the [SVG path syntax](http://www.w3.org/TR/SVG/paths.html).
  You can find a quick tutorial on to how to get started with
 the path syntax [here](https://developer.mozilla.org/en/SVG/Tutorial/Paths).
 
-**Interacting with a Sprite**
+### Interacting with a Sprite
 
 Now that we've created a draw surface with a sprite in it, let's dive into how to interact with the sprite.
 We can get a handle to the sprite we want to modify by adding that sprite imperatively to the surface:
 
-    //create a draw component    
+    // Create a draw component    
     var drawComponent = Ext.create('Ext.draw.Component', {
         viewBox: false
     });
-    //create a window to place the draw component in
+    
+    // Create a window to place the draw component in
     Ext.create('Ext.Window', {
         width: 220,
         height: 230,
         layout: 'fit',
         items: [drawComponent]
     }).show();
-    //add a circle sprite    
+    
+    // Add a circle sprite    
     var myCircle = drawComponent.surface.add({
         type: 'circle',
         x: 100,
@@ -97,18 +99,21 @@ We can get a handle to the sprite we want to modify by adding that sprite impera
         radius: 100,
         fill: '#cc5'
     });
-    //now do stuff with the sprite, like changing its properties:
+    
+    // Now do stuff with the sprite, like changing its properties:
     myCircle.setAttributes({
         fill: '#ccc'
     }, true);
-    //or animate an attribute on the sprite
+    
+    // or animate an attribute on the sprite
     myCircle.animate({
         to: {
             fill: '#555'
         },
         duration: 2000
     });
-    //add a mouseup listener to the sprite
+    
+    // Add a mouseup listener to the sprite
     myCircle.addListener('mouseup', function() {
         alert('mouse upped!');
     });
@@ -124,16 +129,16 @@ devices.
 So now that we learnt about the expressive power of the draw package, let's dive into charts. The chart
 package consists of a hierarchy of classes that define a chart container (something like a surface but more specific for
 handling charts); axes, legends, series, labels, callouts, tips, cartesian and radial coordinates, and specific series
-like [Pie](), [Area](), [Bar](), etc.
+like [Pie](#), [Area](#), [Bar](#), etc.
 
 In this section we will cover how these classes are tied together and what bits of functionality go into each of these
 classes. We won't cover each particular series, since that is done in the next section.
 
-**Chart**
+### Chart
 
 The Chart class is the main drawing surface for series. It manages the rendering of each series and also how axes are
 drawn and defined. Chart also delegates mouse events over to different areas of the Chart like Series, Axes, etc.
-The [Chart class]() extends [Draw Component]().
+The [Chart class](#) extends [Draw Component](#).
 
 A Chart instance has access to:
 
@@ -153,7 +158,7 @@ We can add handlers for these events by using:
 Chart also delegates events like `itemmousedown` and `itemmouseup` to the series so that we can append
 listeners to those objects and get the target sprite of the event.
 
-**Legend**
+### Legend
 
 The chart configuration object accepts a `legend` parameter to enable legend items for each series and
 to set the position of the legend. These options are passed into the constructor of the chart. For example:
@@ -161,19 +166,22 @@ to set the position of the legend. These options are passed into the constructor
     var chart = Ext.create('Ext.chart.Chart', {
         width: 200,
         height: 200,
-        //set a legend
+        
+        // Set a legend
         legend: {
             position: 'left'
         },
-        //define axes
+        
+        // Define axes
         axes: [/*set an axis configuration*/],
-        //define series
+        
+        // Define series
         series: [/*set series configuration*/]
     });
 
 Each series object needs to have the `showInLegend` parameter set to `true` in order to be in the legend list.
 
-**Axis**
+### Axis
 
 The `axis` package contains an `Abstract` axis class that is extended by `Axis` and `Radial` axes. `Axis` represents 
 a `Cartesian` axis and `Radial` uses polar coordinates to represent the information for polar based visualizations like
@@ -183,7 +191,7 @@ we have the `Time` axis that enables us to render information over a specific pe
 with smooth animations. If you'd like to know more about each axis please go to the axis package documentation. Also, you will find
 configuration examples for axis in the bottom series examples.
 
-**Series**
+### Series
 
 A `Series` is an abstract class extended by concrete visualizations like
 `Line` or `Scatter`. The `Series` class contains code that is common to all of these series, like event handling, animation
@@ -192,7 +200,7 @@ like highlighting, callouts, tips, etc. A `Series` will contain an array of `ite
 positioning of each element, its associated `sprite` and a `storeItem`. The series also share the `drawSeries` method that updates
 all positions for the series and then renders the series.
 
-**Theming**
+### Theming
 
 The Chart configuration object may have a `theme` property with a string value that references a builtin theme name.
 
@@ -342,7 +350,7 @@ The following section will go through our available series/visualizations, intro
 one of them and show a complete configuration example of the series. The example will include the `Chart`,
 `Axis` and `Series` configuration options.
 
-**Area**
+### Area
 
 Creates a Stacked Area Chart. The stacked area chart is useful when displaying multiple aggregated layers of information.
 As with all other series, the Area Series must be appended in the *series* Chart array configuration.
@@ -362,7 +370,8 @@ A typical configuration object for the area series could be:
         legend: {
             position: 'bottom'
         },
-        //Add Numeric and Category axis
+        
+        // Add Numeric and Category axis
         axes: [{
             type: 'Numeric',
             grid: true,
@@ -391,7 +400,8 @@ A typical configuration object for the area series could be:
                 }
             }
         }],
-        //Add the Area Series
+        
+        // Add the Area Series
         series: [{
             type: 'area',
             highlight: true,
@@ -405,7 +415,7 @@ A typical configuration object for the area series could be:
     }); 
 
 
-**Bar**
+### Bar
 
 Creates a Bar Chart. A Bar Chart is a useful visualization technique to display quantitative information for different 
 categories that can show some progression (or regression) in the dataset.
@@ -455,7 +465,7 @@ A typical configuration object for the bar series could be:
     });
 
 
-**Line**
+### Line
 
 Creates a Line Chart. A Line Chart is a useful visualization technique to display quantitative information for different 
 categories or other real values (as opposed to the bar chart), that can show some progression (or regression) in the dataset.
@@ -488,7 +498,8 @@ A typical configuration object for the line series could be:
             fields: ['name'],
             title: 'Month of the Year'
         }],
-        //Add two line series
+        
+        // Add two line series
         series: [{
             type: 'line',
             axis: 'left',
@@ -515,7 +526,7 @@ A typical configuration object for the line series could be:
         }]
     });
 
-**Pie**
+### Pie
 
 Creates a Pie Chart. A Pie Chart is a useful visualization technique to display quantitative information for different 
 categories that also have a meaning as a whole.
@@ -559,7 +570,7 @@ A typical configuration object for the pie series could be:
     });
 
 
-**Radar**
+### Radar
 
 Creates a Radar Chart. A Radar Chart is a useful visualization technique for comparing different quantitative values for 
 a constrained number of categories.
@@ -585,7 +596,8 @@ A typical configuration object for the radar series could be:
                 display: true
             }
         }],
-        //Add two series for radar.
+        
+        // Add two series for radar.
         series: [{
             type: 'radar',
             xField: 'name',
@@ -616,7 +628,7 @@ A typical configuration object for the radar series could be:
     }); 
 
 
-**Scatter**
+### Scatter
 
 Creates a Scatter Chart. The scatter plot is useful when trying to display more than two variables in the same visualization. 
 These variables can be mapped into x, y coordinates and also to an element's radius/size, color, etc.

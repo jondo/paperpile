@@ -8,9 +8,11 @@ Ext.define('Ext.AbstractPlugin', {
     disabled: false,
     
     constructor: function(config) {
-        if (!config.cmp) {
-            console.warn("Attempted to attach a plugin ");
+        //<debug>
+        if (!config.cmp && Ext.global.console) {
+            Ext.global.console.warn("Attempted to attach a plugin ");
         }
+        //</debug>
         Ext.apply(this, config);
     },
     

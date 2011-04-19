@@ -55,7 +55,7 @@ Ext.define('Ext.layout.container.Absolute', {
     alias: 'layout.absolute',
     extend: 'Ext.layout.container.Anchor',
     requires: ['Ext.chart.axis.Axis', 'Ext.fx.Anim'],
-    alternatClassName: 'Ext.layout.AbsoluteLayout',
+    alternateClassName: 'Ext.layout.AbsoluteLayout',
 
     /* End Definitions */
 
@@ -64,11 +64,13 @@ Ext.define('Ext.layout.container.Absolute', {
     type: 'absolute',
 
     onLayout: function() {
-        var target = this.getTarget();
+        var me = this,
+            target = me.getTarget();
+            
         target.position();
-        this.paddingLeft = target.getPadding('l');
-        this.paddingTop = target.getPadding('t');
-        Ext.layout.container.Absolute.superclass.onLayout.apply(this, arguments);
+        me.paddingLeft = target.getPadding('l');
+        me.paddingTop = target.getPadding('t');
+        me.callParent(arguments);
     },
 
     // private

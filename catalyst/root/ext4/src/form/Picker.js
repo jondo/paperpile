@@ -114,31 +114,15 @@ Ext.define('Ext.form.Picker', {
     expand: function() {
         if (this.rendered && !this.isExpanded) {
             var me = this,
-                openCls = me.openCls,
                 bodyEl = me.bodyEl,
                 picker = me.getPicker(),
-                pickerEl,
-                collapseIf = me.collapseIf,
-                aboveSfx = '-above';
+                collapseIf = me.collapseIf;
 
             // show the picker and set isExpanded flag
             picker.show();
-            pickerEl = picker.el;
-            if (me.matchFieldWidth) {
-                picker.setSize(me.bodyEl.getWidth(), null);
-            }
-            if (picker.isFloating()) {
-                picker.alignTo(me.inputEl, me.pickerAlign, me.pickerOffset);
-            }
             me.isExpanded = true;
-
-            // add the {openCls} class, plus the {openCls}-above class if the picker was aligned above
-            // the field due to hitting the bottom of the viewport
-            bodyEl.addCls(openCls);
-            if (pickerEl.getY() < me.inputEl.getY()) {
-                bodyEl.addCls(openCls + aboveSfx);
-                pickerEl.addCls(picker.baseCls + aboveSfx);
-            }
+            me.alignPicker();
+            bodyEl.addCls(me.openCls);
 
             // monitor clicking and mousewheel
             me.mon(Ext.getDoc(), {
@@ -154,6 +138,31 @@ Ext.define('Ext.form.Picker', {
 
     onExpand: Ext.emptyFn,
 
+    /**
+     * @protected
+     * Aligns the picker to the
+     */
+    alignPicker: function() {
+        var me = this,
+            picker, isAbove,
+            aboveSfx = '-above';
+
+        if (this.isExpanded) {
+            picker = me.getPicker();
+            if (me.matchFieldWidth) {
+                picker.setSize(me.bodyEl.getWidth(), null);
+            }
+            if (picker.isFloating()) {
+                picker.alignTo(me.inputEl, me.pickerAlign, me.pickerOffset);
+
+                // add the {openCls}-above class if the picker was aligned above
+                // the field due to hitting the bottom of the viewport
+                isAbove = picker.el.getY() < me.inputEl.getY();
+                me.bodyEl[isAbove ? 'addCls' : 'removeCls'](me.openCls + aboveSfx);
+                picker.el[isAbove ? 'addCls' : 'removeCls'](picker.baseCls + aboveSfx);
+            }
+        }
+    },
 
     /**
      * Collapse this field's picker dropdown.

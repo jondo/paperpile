@@ -19,9 +19,9 @@ Ext.define('Ext.util.Cookies', {
      * access to pages that match that path. Defaults to all pages (<tt>'/'</tt>). 
      * @param {String} domain (Optional) Setting a domain restricts access to
      * pages on a given domain (typically used to allow cookie access across
-     * subdomains). For example, "extjs.com" will create a cookie that can be
-     * accessed from any subdomain of extjs.com, including www.extjs.com,
-     * support.extjs.com, etc.
+     * subdomains). For example, "sencha.com" will create a cookie that can be
+     * accessed from any subdomain of sencha.com, including www.sencha.com,
+     * support.sencha.com, etc.
      * @param {Boolean} secure (Optional) Specify true to indicate that the cookie
      * should only be accessible via SSL on a page using the HTTPS protocol.
      * Defaults to <tt>false</tt>. Note that this will only work if the page
