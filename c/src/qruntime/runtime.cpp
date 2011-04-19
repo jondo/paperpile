@@ -27,11 +27,32 @@ Runtime::Runtime(QWidget *window){
   updaterProcess = 0;
   saveToClose = 0;
 
-  //watcher = new	QFileSystemWatcher();
-  //watcher->addPath(QString("c:\\Users\\wash\\tmp"));
-  //connect(watcher, SIGNAL(directoryChanged(QString)), this, SLOT(processPushUpdate(QString)));
+  watcher = new	QFileSystemWatcher();
+  connect(watcher, SIGNAL(fileChanged(QString)), this, SLOT(processPushUpdate(QString)));
 
 };
+
+void Runtime::registerWatchFile(const QString & path){
+
+  QFile file(path);
+
+  // Create empty file if not exists to make sure it is watched
+  if (!file.exists()){
+    file.open(QIODevice::WriteOnly);
+    file.close();
+  }
+
+  watcher->addPath(path);
+
+}
+
+void Runtime::unregisterWatchFile(const QString & path){
+
+  qDebug()<< "Stop watching " << path;
+
+  watcher->removePath(path);
+
+}
 
 
 void Runtime::openFile( const QString & file = QString()){
@@ -239,7 +260,29 @@ void Runtime::plackError(QProcess::ProcessError error){
 
 void Runtime::processPushUpdate(const QString & path){
 
-  qDebug() << "Direcotory changed" << path;
+  QFile file(path);
+
+  if (file.exists()){
+
+    if(file.open(QIODevice::ReadOnly)) {
+
+      QTextStream in(&file);
+      QString json("");
+
+      while(!in.atEnd()) {
+        json.append(in.readLine());
+      }
+
+      emit pushUpdate(path, json);
+
+      file.close();
+
+    } else {
+
+      log("Could not read file "+path);
+
+    }
+  }
   
 }
 

@@ -23,6 +23,9 @@ Ext.onReady(function() {
   Ext.select('a#start-message-box').on('click',messageBox, this);
   Ext.select('a#start-log').on('click',log, this);
 
+  Ext.select('a#start-watch').on('click',function(){window.QRuntime.registerWatchFile("/tmp/test.json")}, this);
+  Ext.select('a#stop-watch').on('click',function(){window.QRuntime.unregisterWatchFile("/tmp/test.json")}, this);
+
     window.QRuntime.plackExit.connect(
         function(error){
             Ext.select('pre#result-plack-status').update("Plack stopped.");
@@ -42,6 +45,11 @@ Ext.onReady(function() {
         }
     );
 
+  window.QRuntime.pushUpdate.connect(
+      function(path, data) {
+        Ext.select('pre#result-push-update').update(data);
+      }
+    );
 
 });
 

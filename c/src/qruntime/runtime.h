@@ -28,6 +28,8 @@ class Runtime : public QObject{
   Q_INVOKABLE QVariantMap fileDialog(const QVariantMap & config);
   Q_INVOKABLE QVariantMap msgBox(const QVariantMap & config);
   Q_INVOKABLE QVariantMap fileInfo(const QString & file);
+  Q_INVOKABLE void registerWatchFile(const QString & path);
+  Q_INVOKABLE void unregisterWatchFile(const QString & path);
   Q_INVOKABLE void log(const QString & msg);
   Q_INVOKABLE bool isDebugMode();
 
@@ -41,7 +43,7 @@ class Runtime : public QObject{
   void plackExit(QString error);
   void updaterReadLine(QString data);
   void updaterExit(QString error);
-  void pushUpdate(QString data);
+  void pushUpdate(QString file, QString data);
   void appExit();
 
   
