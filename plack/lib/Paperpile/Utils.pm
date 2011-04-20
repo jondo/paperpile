@@ -627,6 +627,9 @@ sub extpdf {
 
   $output_string.=$_ foreach (@result);
 
+  # remove control sequences that make XMLin crash
+  $output_string =~ tr/\000-\037/ /;
+
   if ($command ~~ ['INFO', 'WORDLIST']){
     $output = XMLin($output_string);
   } else {
