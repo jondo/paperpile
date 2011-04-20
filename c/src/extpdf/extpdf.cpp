@@ -128,7 +128,12 @@ void ExtPdf::addNode(QDomDocument *doc, QDomElement* el, const QVariant & data, 
               item.key() == "italic" || item.key() == "rotation"){
             el->setAttribute(item.key(), item.value().toInt());
           }
+
+          if (item.key() == "font"){
+            el->setAttribute(item.key(), item.value().toString());
+          }
           
+
           if (item.key() == "bbox"){
             el->setAttribute(item.key(), item.value().toString());
           }

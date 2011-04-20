@@ -162,10 +162,12 @@ QVariantMap PDF::wordList(int pageNum){
     // Bounding box
     double xMin, yMin, xMax, yMax;
     word->getBBox(&xMin, &yMin, &xMax, &yMax);
-    mmap["bbox"] = QString::number(xMin)+" "+QString::number(yMin)+ " "+QString::number(xMax)+" "+QString::number(yMax);
+    mmap["bbox"] = QString::number(xMin,'f',2)+" "+QString::number(yMin,'f',2)+ " "+QString::number(xMax,'f',2)+" "+QString::number(yMax,'f',2);
 
     // Font features
     mmap["size"] = word->getFontSize();
+
+    mmap["font"] = QString::fromUtf8(word->getFontName()->getCString());
 
     if (word->getFontInfo()->isBold()) mmap["bold"]=1;
     if (word->getFontInfo()->isItalic()) mmap["italic"]=1;

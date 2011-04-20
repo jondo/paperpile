@@ -36,3085 +36,3697 @@ $VAR1 = {
                   },
           'word' => [
                     {
-                      'bbox' => '33.7432 45.0331 51.4952 52.3291',
+                      'bbox' => '33.74 45.03 51.50 52.33',
                       'content' => '212.2',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '56.7032 45.0331 81.7952 52.3291',
+                      'bbox' => '56.70 45.03 81.80 52.33',
                       'content' => 'Genome',
                       'italic' => '1',
+                      'font' => 'DPFPCN+GillSans-Italic',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '84.0192 45.0331 110.102 52.3291',
+                      'bbox' => '84.02 45.03 110.10 52.33',
                       'bold' => '1',
                       'content' => 'Biology',
                       'italic' => '1',
+                      'font' => 'DPFPDI+GillSans-BoldItalic',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '114.546 45.0331 132.295 52.3291',
+                      'bbox' => '114.55 45.03 132.30 52.33',
                       'content' => '2003,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '145.631 45.0331 170.627 52.3291',
+                      'bbox' => '145.63 45.03 170.63 52.33',
                       'content' => 'Volume',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '172.85 45.0331 178.601 52.3291',
+                      'bbox' => '172.85 45.03 178.60 52.33',
                       'content' => '4,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '180.823 45.0331 196.812 52.3291',
+                      'bbox' => '180.82 45.03 196.81 52.33',
                       'content' => 'Issue',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '199.034 45.0331 204.786 52.3291',
+                      'bbox' => '199.03 45.03 204.79 52.33',
                       'content' => '4,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '207.008 45.0331 229.011 52.3291',
+                      'bbox' => '207.01 45.03 229.01 52.33',
                       'content' => 'Article',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '231.234 45.0331 243.232 52.3291',
+                      'bbox' => '231.23 45.03 243.23 52.33',
                       'content' => '212',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '261.013 45.0331 305.332 52.3291',
+                      'bbox' => '261.01 45.03 305.33 52.33',
                       'content' => 'Maurer-Stroh',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '307.556 45.0331 313.307 52.3291',
+                      'bbox' => '307.56 45.03 313.31 52.33',
                       'content' => 'et',
                       'italic' => '1',
+                      'font' => 'DPFPCN+GillSans-Italic',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '315.53 45.0331 322.537 52.3291',
+                      'bbox' => '315.53 45.03 322.54 52.33',
                       'content' => 'al.',
                       'italic' => '1',
+                      'font' => 'DPFPCN+GillSans-Italic',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '425.086 45.0331 554.385 52.3291',
+                      'bbox' => '425.09 45.03 554.38 52.33',
                       'content' => 'http://genomebiology.com/2003/4/4/212',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '55.2756 87.8731 76.514 95.1691',
+                      'bbox' => '55.28 87.87 76.51 95.17',
                       'bold' => '1',
                       'content' => 'Table',
+                      'font' => 'DPFPGC+GillSans-Bold',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '78.7364 87.8731 83.1524 95.1691',
+                      'bbox' => '78.74 87.87 83.15 95.17',
                       'bold' => '1',
                       'content' => '1',
+                      'font' => 'DPFPGC+GillSans-Bold',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '55.2756 106.873 88.0884 114.169',
+                      'bbox' => '55.28 106.87 88.09 114.17',
                       'bold' => '1',
                       'content' => 'Features',
+                      'font' => 'DPFPGC+GillSans-Bold',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '90.3092 106.873 97.4756 114.169',
+                      'bbox' => '90.31 106.87 97.48 114.17',
                       'bold' => '1',
                       'content' => 'of',
+                      'font' => 'DPFPGC+GillSans-Bold',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '99.6964 106.873 125.594 114.169',
+                      'bbox' => '99.70 106.87 125.59 114.17',
                       'bold' => '1',
                       'content' => 'human',
+                      'font' => 'DPFPGC+GillSans-Bold',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '127.815 106.873 155.301 114.169',
+                      'bbox' => '127.81 106.87 155.30 114.17',
                       'bold' => '1',
                       'content' => 'protein',
+                      'font' => 'DPFPGC+GillSans-Bold',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '157.522 106.873 226.143 114.169',
+                      'bbox' => '157.52 106.87 226.14 114.17',
                       'bold' => '1',
                       'content' => 'prenyltransferases',
+                      'font' => 'DPFPGC+GillSans-Bold',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '128.976 125.873 191.122 133.169',
+                      'bbox' => '128.98 125.87 191.12 133.17',
                       'content' => 'Farnesyltransferase',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '193.344 125.873 207.094 133.169',
+                      'bbox' => '193.34 125.87 207.09 133.17',
                       'content' => '(FT)',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '253.144 125.873 337.461 133.169',
+                      'bbox' => '253.14 125.87 337.46 133.17',
                       'content' => 'Geranylgeranyltransferase',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '339.684 125.873 341.684 133.169',
+                      'bbox' => '339.68 125.87 341.68 133.17',
                       'content' => 'I',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '343.906 125.873 369.742 133.169',
+                      'bbox' => '343.91 125.87 369.74 133.17',
                       'content' => '(GGT1)',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '390.74 125.873 475.056 133.169',
+                      'bbox' => '390.74 125.87 475.06 133.17',
                       'content' => 'Geranylgeranyltransferase',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '477.279 125.873 481.278 133.169',
+                      'bbox' => '477.28 125.87 481.28 133.17',
                       'content' => 'II',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '483.5 125.873 506.753 133.169',
+                      'bbox' => '483.50 125.87 506.75 133.17',
                       'content' => '(GGT2',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '508.976 125.873 516.559 133.169',
+                      'bbox' => '508.98 125.87 516.56 133.17',
                       'content' => 'or',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '518.781 125.873 550.28 133.169',
+                      'bbox' => '518.78 125.87 550.28 133.17',
                       'content' => 'RabGGT)',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '55.2756 144.873 72.8572 152.169',
+                      'bbox' => '55.28 144.87 72.86 152.17',
                       'content' => 'Gene',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '75.0796 144.873 92.4932 152.169',
+                      'bbox' => '75.08 144.87 92.49 152.17',
                       'content' => 'name',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '55.2756 154.373 62.7476 161.669',
+                      'bbox' => '55.28 154.37 62.75 161.67',
                       'content' => "(\x{2423}",
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '64.9692 154.373 91.0436 161.669',
+                      'bbox' => '64.97 154.37 91.04 161.67',
                       'content' => 'subunit)',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '128.976 154.373 146.062 161.669',
+                      'bbox' => '128.98 154.37 146.06 161.67',
                       'content' => 'FNTA',
                       'italic' => '1',
+                      'font' => 'DPFPCN+GillSans-Italic',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '253.14 154.373 270.225 161.669',
+                      'bbox' => '253.14 154.37 270.23 161.67',
                       'content' => 'FNTA',
                       'italic' => '1',
+                      'font' => 'DPFPCN+GillSans-Italic',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '390.732 154.373 421.136 161.669',
+                      'bbox' => '390.73 154.37 421.14 161.67',
                       'content' => 'RABGGTA',
                       'italic' => '1',
+                      'font' => 'DPFPCN+GillSans-Italic',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '55.2756 169.543 72.8572 176.839',
+                      'bbox' => '55.28 169.54 72.86 176.84',
                       'content' => 'Gene',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '75.0796 169.543 92.4932 176.839',
+                      'bbox' => '75.08 169.54 92.49 176.84',
                       'content' => 'name',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '55.2756 179.043 62.7476 186.339',
+                      'bbox' => '55.28 179.04 62.75 186.34',
                       'content' => "(\x{2424}",
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '64.9692 179.043 91.0436 186.339',
+                      'bbox' => '64.97 179.04 91.04 186.34',
                       'content' => 'subunit)',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '128.976 179.043 145.972 186.339',
+                      'bbox' => '128.98 179.04 145.97 186.34',
                       'content' => 'FNTB',
                       'italic' => '1',
+                      'font' => 'DPFPCN+GillSans-Italic',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '253.139 179.043 278.707 186.339',
+                      'bbox' => '253.14 179.04 278.71 186.34',
                       'content' => 'PGGT1B',
                       'italic' => '1',
+                      'font' => 'DPFPCN+GillSans-Italic',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '390.732 179.043 421.042 186.339',
+                      'bbox' => '390.73 179.04 421.04 186.34',
                       'content' => 'RABGGTB',
                       'italic' => '1',
+                      'font' => 'DPFPCN+GillSans-Italic',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '55.2756 194.212 85.7572 201.508',
+                      'bbox' => '55.28 194.21 85.76 201.51',
                       'content' => 'Substrate',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '87.9804 194.212 104.977 201.508',
+                      'bbox' => '87.98 194.21 104.98 201.51',
                       'content' => 'motif',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '128.983 194.212 186.475 201.508',
+                      'bbox' => '128.98 194.21 186.47 201.51',
                       'content' => 'Carboxy-terminal',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '188.698 194.212 200.36 201.508',
+                      'bbox' => '188.70 194.21 200.36 201.51',
                       'content' => '-Ca',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '200.351 198.088 203.151 203.196',
+                      'bbox' => '200.35 198.09 203.15 203.20',
                       'content' => '1',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '6'
                     },
                     {
-                      'bbox' => '203.151 194.212 206.567 201.508',
+                      'bbox' => '203.15 194.21 206.57 201.51',
                       'content' => 'a',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '206.565 198.088 209.365 203.196',
+                      'bbox' => '206.57 198.09 209.37 203.20',
                       'content' => '2',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '6'
                     },
                     {
-                      'bbox' => '209.365 194.212 215.029 201.508',
+                      'bbox' => '209.37 194.21 215.03 201.51',
                       'content' => 'X',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '217.252 194.212 233.001 201.508',
+                      'bbox' => '217.25 194.21 233.00 201.51',
                       'content' => 'box*',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '253.141 194.212 310.633 201.508',
+                      'bbox' => '253.14 194.21 310.63 201.51',
                       'content' => 'Carboxy-terminal',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '312.856 194.212 324.518 201.508',
+                      'bbox' => '312.86 194.21 324.52 201.51',
                       'content' => '-Ca',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '324.515 198.088 327.315 203.196',
+                      'bbox' => '324.51 198.09 327.31 203.20',
                       'content' => '1',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '6'
                     },
                     {
-                      'bbox' => '327.315 194.212 330.731 201.508',
+                      'bbox' => '327.31 194.21 330.73 201.51',
                       'content' => 'a',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '330.729 198.088 333.529 203.196',
+                      'bbox' => '330.73 198.09 333.53 203.20',
                       'content' => '2',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '6'
                     },
                     {
-                      'bbox' => '333.529 194.212 339.193 201.508',
+                      'bbox' => '333.53 194.21 339.19 201.51',
                       'content' => 'X',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '341.415 194.212 357.165 201.508',
+                      'bbox' => '341.42 194.21 357.17 201.51',
                       'content' => 'box*',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '390.735 194.212 448.227 201.508',
+                      'bbox' => '390.73 194.21 448.23 201.51',
                       'content' => 'Carboxy-terminal',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '450.449 194.212 467.446 201.508',
+                      'bbox' => '450.45 194.21 467.45 201.51',
                       'content' => 'motif',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '469.668 194.212 484.25 201.508',
+                      'bbox' => '469.67 194.21 484.25 201.51',
                       'content' => 'such',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '486.472 194.212 492.967 201.508',
+                      'bbox' => '486.47 194.21 492.97 201.51',
                       'content' => 'as',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '495.19 194.212 510.851 201.508',
+                      'bbox' => '495.19 194.21 510.85 201.51',
                       'content' => '-CC,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '513.074 194.212 534.399 201.508',
+                      'bbox' => '513.07 194.21 534.40 201.51',
                       'content' => '-CXC,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '390.733 203.712 412.055 211.008',
+                      'bbox' => '390.73 203.71 412.05 211.01',
                       'content' => '-CCX,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '414.275 203.712 441.259 211.008',
+                      'bbox' => '414.28 203.71 441.26 211.01',
                       'content' => '-CCXX,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '443.48 203.712 476.127 211.008',
+                      'bbox' => '443.48 203.71 476.13 211.01',
                       'content' => '-CCXXX,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '478.347 203.712 485.93 211.008',
+                      'bbox' => '478.35 203.71 485.93 211.01',
                       'content' => 'or',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '488.151 203.712 513.384 211.008',
+                      'bbox' => '488.15 203.71 513.38 211.01',
                       'content' => '-CXXX',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '513.391 203.108 516.135 208.216',
+                      'bbox' => '513.39 203.11 516.14 208.22',
                       'content' => "\x{2020}",
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '6'
                     },
                     {
-                      'bbox' => '253.14 344.066 301.81 351.362',
+                      'bbox' => '253.14 344.07 301.81 351.36',
                       'content' => 'Geranylgeranyl',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '390.733 344.066 439.403 351.362',
+                      'bbox' => '390.73 344.07 439.40 351.36',
                       'content' => 'Geranylgeranyl',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '390.734 353.566 405.564 360.862',
+                      'bbox' => '390.73 353.57 405.56 360.86',
                       'content' => '(one',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '407.786 353.566 415.369 360.862',
+                      'bbox' => '407.79 353.57 415.37 360.86',
                       'content' => 'or',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '417.592 353.566 430.422 360.862',
+                      'bbox' => '417.59 353.57 430.42 360.86',
                       'content' => 'two',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '432.644 353.566 460.135 360.862',
+                      'bbox' => '432.64 353.57 460.13 360.86',
                       'content' => 'moieties',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '462.357 353.566 473.356 360.862',
+                      'bbox' => '462.36 353.57 473.36 360.86',
                       'content' => 'per',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '475.578 353.566 508.059 360.862',
+                      'bbox' => '475.58 353.57 508.06 360.86',
                       'content' => 'substrate)',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '56.2756 223.818 71.7764 231.114',
+                      'bbox' => '56.28 223.82 71.78 231.11',
                       'content' => 'Lipid',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '73.9988 223.818 96.4988 231.114',
+                      'bbox' => '74.00 223.82 96.50 231.11',
                       'content' => 'anchor',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '128.976 313.728 155.475 321.024',
+                      'bbox' => '128.98 313.73 155.47 321.02',
                       'content' => 'Farnesyl',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '55.2756 371.57 66.026 378.866',
+                      'bbox' => '55.28 371.57 66.03 378.87',
                       'content' => '*C,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '68.2484 371.57 96.162 378.866',
+                      'bbox' => '68.25 371.57 96.16 378.87',
                       'content' => 'cysteine;',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '98.3844 371.57 101.8 378.866',
+                      'bbox' => '98.38 371.57 101.80 378.87',
                       'content' => 'a',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '101.797 375.447 104.597 380.554',
+                      'bbox' => '101.80 375.45 104.60 380.55',
                       'content' => '1',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '6'
                     },
                     {
-                      'bbox' => '104.597 371.57 106.349 378.866',
+                      'bbox' => '104.60 371.57 106.35 378.87',
                       'content' => ',',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '108.57 371.57 120.063 378.866',
+                      'bbox' => '108.57 371.57 120.06 378.87',
                       'content' => 'and',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '122.284 371.57 125.7 378.866',
+                      'bbox' => '122.28 371.57 125.70 378.87',
                       'content' => 'a',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '125.701 375.447 128.501 380.554',
+                      'bbox' => '125.70 375.45 128.50 380.55',
                       'content' => '2',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '6'
                     },
                     {
-                      'bbox' => '130.056 371.57 140.471 378.866',
+                      'bbox' => '130.06 371.57 140.47 378.87',
                       'content' => 'are',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '142.693 371.57 162.442 378.866',
+                      'bbox' => '142.69 371.57 162.44 378.87',
                       'content' => 'amino',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '164.664 371.57 180.493 378.866',
+                      'bbox' => '164.66 371.57 180.49 378.87',
                       'content' => 'acids',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '182.716 371.57 195.457 378.866',
+                      'bbox' => '182.72 371.57 195.46 378.87',
                       'content' => 'that',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '197.68 371.57 208.094 378.866',
+                      'bbox' => '197.68 371.57 208.09 378.87',
                       'content' => 'are',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '210.316 371.57 242.981 378.866',
+                      'bbox' => '210.32 371.57 242.98 378.87',
                       'content' => 'preferably',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '245.204 371.57 273.204 378.866',
+                      'bbox' => '245.20 371.57 273.20 378.87',
                       'content' => 'aliphatic;',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '275.427 371.57 285.921 378.866',
+                      'bbox' => '275.43 371.57 285.92 378.87',
                       'content' => 'the',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '288.144 371.57 312.386 378.866',
+                      'bbox' => '288.14 371.57 312.39 378.87',
                       'content' => 'identity',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '314.608 371.57 321.024 378.866',
+                      'bbox' => '314.61 371.57 321.02 378.87',
                       'content' => 'of',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '323.246 371.57 326.662 378.866',
+                      'bbox' => '323.25 371.57 326.66 378.87',
                       'content' => 'a',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '326.648 375.447 329.448 380.554',
+                      'bbox' => '326.65 375.45 329.45 380.55',
                       'content' => '1',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '6'
                     },
                     {
-                      'bbox' => '331.004 371.57 335.835 378.866',
+                      'bbox' => '331.00 371.57 335.84 378.87',
                       'content' => 'is',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '338.058 371.57 355.639 378.866',
+                      'bbox' => '338.06 371.57 355.64 378.87',
                       'content' => 'more',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '357.862 371.57 380.776 378.866',
+                      'bbox' => '357.86 371.57 380.78 378.87',
                       'content' => 'flexible',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '382.998 371.57 397.076 378.866',
+                      'bbox' => '383.00 371.57 397.08 378.87',
                       'content' => 'than',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '399.298 371.57 402.714 378.866',
+                      'bbox' => '399.30 371.57 402.71 378.87',
                       'content' => 'a',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '402.711 375.447 405.511 380.554',
+                      'bbox' => '402.71 375.45 405.51 380.55',
                       'content' => '2',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '6'
                     },
                     {
-                      'bbox' => '405.511 371.57 407.263 378.866',
+                      'bbox' => '405.51 371.57 407.26 378.87',
                       'content' => '.',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '409.485 371.57 415.149 378.866',
+                      'bbox' => '409.49 371.57 415.15 378.87',
                       'content' => 'X',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '417.372 371.57 428.29 378.866',
+                      'bbox' => '417.37 371.57 428.29 378.87',
                       'content' => 'can',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '430.513 371.57 438.344 378.866',
+                      'bbox' => '430.51 371.57 438.34 378.87',
                       'content' => 'be',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '440.566 371.57 447.982 378.866',
+                      'bbox' => '440.57 371.57 447.98 378.87',
                       'content' => 'C,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '450.204 371.57 455.619 378.866',
+                      'bbox' => '450.20 371.57 455.62 378.87',
                       'content' => 'S,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '457.842 371.57 466.177 378.866',
+                      'bbox' => '457.84 371.57 466.18 378.87',
                       'content' => 'Q,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '468.399 371.57 475.486 378.866',
+                      'bbox' => '468.40 371.57 475.49 378.87',
                       'content' => 'A,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '477.709 371.57 485.708 378.866',
+                      'bbox' => '477.71 371.57 485.71 378.87',
                       'content' => 'M,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '487.93 371.57 494.514 378.866',
+                      'bbox' => '487.93 371.57 494.51 378.87',
                       'content' => 'T,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '496.736 371.57 504.319 378.866',
+                      'bbox' => '496.74 371.57 504.32 378.87',
                       'content' => 'H,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '506.542 371.57 513.125 378.866',
+                      'bbox' => '506.54 371.57 513.12 378.87',
                       'content' => 'V,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '515.347 371.57 523.346 378.866',
+                      'bbox' => '515.35 371.57 523.35 378.87',
                       'content' => 'N,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '525.569 371.57 531.072 378.866',
+                      'bbox' => '525.57 371.57 531.07 378.87',
                       'content' => 'F,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '533.294 371.57 540.966 378.866',
+                      'bbox' => '533.29 371.57 540.97 378.87',
                       'content' => 'G,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '543.188 371.57 550.771 378.866',
+                      'bbox' => '543.19 371.57 550.77 378.87',
                       'content' => 'or',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '55.2759 381.07 57.2759 388.366',
+                      'bbox' => '55.28 381.07 57.28 388.37',
                       'content' => 'I',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '59.4983 381.07 69.0807 388.366',
+                      'bbox' => '59.50 381.07 69.08 388.37',
                       'content' => 'for',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '71.3031 381.07 81.6375 388.366',
+                      'bbox' => '71.30 381.07 81.64 388.37',
                       'content' => 'FT,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '83.8599 381.07 91.4431 388.366',
+                      'bbox' => '83.86 381.07 91.44 388.37',
                       'content' => 'or',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '93.6655 381.07 99.3367 388.366',
+                      'bbox' => '93.67 381.07 99.34 388.37',
                       'content' => 'L,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '101.559 381.07 107.062 388.366',
+                      'bbox' => '101.56 381.07 107.06 388.37',
                       'content' => 'F,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '109.285 381.07 113.036 388.366',
+                      'bbox' => '109.28 381.07 113.04 388.37',
                       'content' => 'I,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '115.258 381.07 121.841 388.366',
+                      'bbox' => '115.26 381.07 121.84 388.37',
                       'content' => 'V,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '124.064 381.07 131.647 388.366',
+                      'bbox' => '124.06 381.07 131.65 388.37',
                       'content' => 'or',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '133.869 381.07 140.117 388.366',
+                      'bbox' => '133.87 381.07 140.12 388.37',
                       'content' => 'M',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '142.34 381.07 151.922 388.366',
+                      'bbox' => '142.34 381.07 151.92 388.37',
                       'content' => 'for',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '154.145 381.07 174.814 388.366',
+                      'bbox' => '154.14 381.07 174.81 388.37',
                       'content' => 'GGT1',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '177.037 381.07 185.371 388.366',
+                      'bbox' => '177.04 381.07 185.37 388.37',
                       'content' => '(in',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '187.593 381.07 221.666 388.366',
+                      'bbox' => '187.59 381.07 221.67 388.37',
                       'content' => 'decreasing',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '223.889 381.07 242.549 388.366',
+                      'bbox' => '223.89 381.07 242.55 388.37',
                       'content' => 'order',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '244.772 381.07 251.187 388.366',
+                      'bbox' => '244.77 381.07 251.19 388.37',
                       'content' => 'of',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '253.409 381.07 278.826 388.366',
+                      'bbox' => '253.41 381.07 278.83 388.37',
                       'content' => 'affinity).',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '280.378 380.467 283.122 385.574',
+                      'bbox' => '280.38 380.47 283.12 385.57',
                       'content' => "\x{2020}",
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '6'
                     },
                     {
-                      'bbox' => '283.122 381.07 311.613 388.366',
+                      'bbox' => '283.12 381.07 311.61 388.37',
                       'content' => 'Requires',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '313.835 381.07 321.25 388.366',
+                      'bbox' => '313.84 381.07 321.25 388.37',
                       'content' => 'an',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '323.473 381.07 344.133 388.366',
+                      'bbox' => '323.47 381.07 344.13 388.37',
                       'content' => 'escort',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '346.355 381.07 370.182 388.366',
+                      'bbox' => '346.36 381.07 370.18 388.37',
                       'content' => 'protein',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '372.405 381.07 386.986 388.366',
+                      'bbox' => '372.40 381.07 386.99 388.37',
                       'content' => 'such',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '389.209 381.07 395.704 388.366',
+                      'bbox' => '389.21 381.07 395.70 388.37',
                       'content' => 'as',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '397.926 381.07 416.587 388.366',
+                      'bbox' => '397.93 381.07 416.59 388.37',
                       'content' => 'REP1.',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '55.2756 417.175 93.063 425.941',
+                      'bbox' => '55.28 417.17 93.06 425.94',
                       'content' => 'including',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '95.5578 417.175 123.694 425.941',
+                      'bbox' => '95.56 417.17 123.69 425.94',
                       'content' => 'several',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '126.188 417.175 164.815 425.941',
+                      'bbox' => '126.19 417.17 164.81 425.94',
                       'content' => 'parasites.',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '167.309 417.175 182.568 425.941',
+                      'bbox' => '167.31 417.17 182.57 425.94',
                       'content' => 'The',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '185.063 417.175 239.864 425.941',
+                      'bbox' => '185.06 417.17 239.86 425.94',
                       'content' => 'chromosomal',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '242.359 417.175 278.598 425.941',
+                      'bbox' => '242.36 417.17 278.60 425.94',
                       'content' => 'locations',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '281.093 417.175 296.225 425.941',
+                      'bbox' => '281.09 417.17 296.23 425.94',
                       'content' => 'and',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2756 428.925 86.9466 437.691',
+                      'bbox' => '55.28 428.93 86.95 437.69',
                       'content' => 'number',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '90.9714 428.925 98.8086 437.691',
+                      'bbox' => '90.97 428.93 98.81 437.69',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '102.833 428.925 126.01 437.691',
+                      'bbox' => '102.83 428.93 126.01 437.69',
                       'content' => 'exons',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '130.035 428.925 149.524 437.691',
+                      'bbox' => '130.03 428.93 149.52 437.69',
                       'content' => 'from',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '153.548 428.925 182.914 437.691',
+                      'bbox' => '153.55 428.93 182.91 437.69',
                       'content' => 'protein',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '186.938 428.925 257.461 437.691',
+                      'bbox' => '186.94 428.93 257.46 437.69',
                       'content' => 'prenyltransferase',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '261.485 428.925 284.185 437.691',
+                      'bbox' => '261.49 428.93 284.19 437.69',
                       'content' => 'genes',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '288.21 428.925 296.218 437.691',
+                      'bbox' => '288.21 428.93 296.22 437.69',
                       'content' => 'in',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2756 440.675 68.079 449.441',
+                      'bbox' => '55.28 440.68 68.08 449.44',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '75.045 440.675 98.8428 449.441',
+                      'bbox' => '75.05 440.68 98.84 449.44',
                       'content' => 'major',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '105.809 440.675 147.854 449.441',
+                      'bbox' => '105.81 440.68 147.85 449.44',
                       'content' => 'eukaryotic',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '154.82 440.675 179.878 449.441',
+                      'bbox' => '154.82 440.68 179.88 449.44',
                       'content' => 'model',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '186.844 440.675 228.49 449.441',
+                      'bbox' => '186.84 440.68 228.49 449.44',
                       'content' => 'organisms',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '235.456 440.675 248.143 449.441',
+                      'bbox' => '235.46 440.68 248.14 449.44',
                       'content' => 'are',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '255.109 440.675 281.238 449.441',
+                      'bbox' => '255.11 440.68 281.24 449.44',
                       'content' => 'shown',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '288.204 440.675 296.216 449.441',
+                      'bbox' => '288.20 440.68 296.22 449.44',
                       'content' => 'in',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2756 452.426 77.5614 461.192',
+                      'bbox' => '55.28 452.43 77.56 461.19',
                       'content' => 'Table',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '81.0516 452.426 88.5288 461.192',
+                      'bbox' => '81.05 452.43 88.53 461.19',
                       'content' => '2.',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '92.0019 452.426 107.253 461.192',
+                      'bbox' => '92.00 452.43 107.25 461.19',
                       'content' => 'The',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '110.716 450.662 116.215 462.362',
+                      'bbox' => '110.72 450.66 116.21 462.36',
                       'content' => "\x{2423}",
+                      'font' => 'DPFPOI+MathematicalPi-One',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '119.684 452.426 134.804 461.192',
+                      'bbox' => '119.68 452.43 134.80 461.19',
                       'content' => 'and',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '138.277 450.662 143.776 462.362',
+                      'bbox' => '138.28 450.66 143.78 462.36',
                       'content' => "\x{2424}",
+                      'font' => 'DPFPOI+MathematicalPi-One',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '147.246 452.426 181.755 461.192',
+                      'bbox' => '147.25 452.43 181.76 461.19',
                       'content' => 'subunits',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '185.227 452.426 203.944 461.192',
+                      'bbox' => '185.23 452.43 203.94 461.19',
                       'content' => 'have',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '207.416 452.426 242.287 461.192',
+                      'bbox' => '207.42 452.43 242.29 461.19',
                       'content' => 'different',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '245.76 452.426 267.792 461.192',
+                      'bbox' => '245.76 452.43 267.79 461.19',
                       'content' => 'folds,',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '271.264 452.426 280.059 461.192',
+                      'bbox' => '271.26 452.43 280.06 461.19',
                       'content' => 'so',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '283.531 452.426 296.215 461.192',
+                      'bbox' => '283.53 452.43 296.22 461.19',
                       'content' => 'are',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 464.176 87.4596 472.942',
+                      'bbox' => '55.27 464.18 87.46 472.94',
                       'content' => 'unlikely',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '90.0822 464.176 98.1039 472.942',
+                      'bbox' => '90.08 464.18 98.10 472.94',
                       'content' => 'to',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '100.727 464.176 119.446 472.942',
+                      'bbox' => '100.73 464.18 119.45 472.94',
                       'content' => 'have',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '122.068 464.176 146.742 472.942',
+                      'bbox' => '122.07 464.18 146.74 472.94',
                       'content' => 'arisen',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '149.364 464.176 168.866 472.942',
+                      'bbox' => '149.36 464.18 168.87 472.94',
                       'content' => 'from',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '171.489 464.176 176.052 472.942',
+                      'bbox' => '171.49 464.18 176.05 472.94',
                       'content' => 'a',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '178.675 464.176 213.842 472.942',
+                      'bbox' => '178.67 464.18 213.84 472.94',
                       'content' => 'common',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '216.465 464.176 253.08 472.942',
+                      'bbox' => '216.46 464.18 253.08 472.94',
                       'content' => 'ancestor.',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '255.703 464.176 296.224 472.942',
+                      'bbox' => '255.70 464.18 296.22 472.94',
                       'content' => 'Molecular',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 475.927 106.431 484.693',
+                      'bbox' => '55.27 475.93 106.43 484.69',
                       'content' => 'phylogenetic',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '111.009 475.927 143.175 484.693',
+                      'bbox' => '111.01 475.93 143.18 484.69',
                       'content' => 'analysis',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '147.753 475.927 172.431 484.693',
+                      'bbox' => '147.75 475.93 172.43 484.69',
                       'content' => 'shows',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '177.01 475.927 193.147 484.693',
+                      'bbox' => '177.01 475.93 193.15 484.69',
                       'content' => 'that',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '197.725 475.927 245.731 484.693',
+                      'bbox' => '197.72 475.93 245.73 484.69',
                       'content' => 'orthologous',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '250.309 475.927 283.618 484.693',
+                      'bbox' => '250.31 475.93 283.62 484.69',
                       'content' => 'proteins',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '288.197 475.927 296.207 484.693',
+                      'bbox' => '288.20 475.93 296.21 484.69',
                       'content' => 'in',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 487.677 90.1245 496.443',
+                      'bbox' => '55.27 487.68 90.12 496.44',
                       'content' => 'different',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '92.6418 487.677 121.283 496.443',
+                      'bbox' => '92.64 487.68 121.28 496.44',
                       'content' => 'species',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '123.801 487.677 136.48 496.443',
+                      'bbox' => '123.80 487.68 136.48 496.44',
                       'content' => 'are',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '138.997 487.677 159.929 496.443',
+                      'bbox' => '139.00 487.68 159.93 496.44',
                       'content' => 'more',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '162.446 487.677 189.476 496.443',
+                      'bbox' => '162.45 487.68 189.48 496.44',
                       'content' => 'closely',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '191.994 487.677 220.059 496.443',
+                      'bbox' => '191.99 487.68 220.06 496.44',
                       'content' => 'related',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '222.577 487.677 230.595 496.443',
+                      'bbox' => '222.58 487.68 230.59 496.44',
                       'content' => 'to',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '233.112 487.677 251.46 496.443',
+                      'bbox' => '233.11 487.68 251.46 496.44',
                       'content' => 'each',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '253.978 487.677 275.367 496.443',
+                      'bbox' => '253.98 487.68 275.37 496.44',
                       'content' => 'other',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '277.884 487.677 296.233 496.443',
+                      'bbox' => '277.88 487.68 296.23 496.44',
                       'content' => 'than',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 499.427 63.2928 508.193',
+                      'bbox' => '55.27 499.43 63.29 508.19',
                       'content' => 'to',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '68.4561 499.427 87.6225 508.193',
+                      'bbox' => '68.46 499.43 87.62 508.19',
                       'content' => 'their',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '92.7858 499.427 126.881 508.193',
+                      'bbox' => '92.79 499.43 126.88 508.19',
                       'content' => 'paralogs',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '132.044 499.427 140.053 508.193',
+                      'bbox' => '132.04 499.43 140.05 508.19',
                       'content' => 'in',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '145.216 499.427 158.012 508.193',
+                      'bbox' => '145.22 499.43 158.01 508.19',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '163.176 499.427 184.044 508.193',
+                      'bbox' => '163.18 499.43 184.04 508.19',
                       'content' => 'same',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '189.207 499.427 220.701 508.193',
+                      'bbox' => '189.21 499.43 220.70 508.19',
                       'content' => 'species;',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '225.864 499.427 238.66 508.193',
+                      'bbox' => '225.86 499.43 238.66 508.19',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '243.824 499.427 296.202 508.193',
+                      'bbox' => '243.82 499.43 296.20 508.19',
                       'content' => 'relationships',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 511.178 88.7457 519.944',
+                      'bbox' => '55.27 511.18 88.75 519.94',
                       'content' => 'between',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '92.4834 511.178 105.263 519.944',
+                      'bbox' => '92.48 511.18 105.26 519.94',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '109.01 509.414 114.509 521.114',
+                      'bbox' => '109.01 509.41 114.51 521.11',
                       'content' => "\x{2424}",
+                      'font' => 'DPFPOI+MathematicalPi-One',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '118.267 511.178 152.77 519.944',
+                      'bbox' => '118.27 511.18 152.77 519.94',
                       'content' => 'subunits',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '156.528 511.178 169.211 519.944',
+                      'bbox' => '156.53 511.18 169.21 519.94',
                       'content' => 'are',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '172.97 511.178 186.363 519.944',
+                      'bbox' => '172.97 511.18 186.36 519.94',
                       'content' => 'not',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '190.122 511.178 207.972 519.944',
+                      'bbox' => '190.12 511.18 207.97 519.94',
                       'content' => 'fully',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '211.731 511.178 233.587 519.944',
+                      'bbox' => '211.73 511.18 233.59 519.94',
                       'content' => 'clear.',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '237.346 511.178 247.336 519.944',
+                      'bbox' => '237.35 511.18 247.34 519.94',
                       'content' => 'As',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '251.095 511.178 267.415 519.944',
+                      'bbox' => '251.09 511.18 267.41 519.94',
                       'content' => 'well',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '271.173 511.178 279.67 519.944',
+                      'bbox' => '271.17 511.18 279.67 519.94',
                       'content' => 'as',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '283.428 511.178 296.228 519.944',
+                      'bbox' => '283.43 511.18 296.23 519.94',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 522.928 82.4133 531.694',
+                      'bbox' => '55.27 522.93 82.41 531.69',
                       'content' => 'known',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '85.5696 522.928 110.72 531.694',
+                      'bbox' => '85.57 522.93 110.72 531.69',
                       'content' => 'genes,',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '113.876 522.928 153.646 531.694',
+                      'bbox' => '113.88 522.93 153.65 531.69',
                       'content' => 'processed',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '156.802 522.928 208.345 531.694',
+                      'bbox' => '156.80 522.93 208.34 531.69',
                       'content' => 'pseudogenes',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '211.501 522.928 247.139 531.694',
+                      'bbox' => '211.50 522.93 247.14 531.69',
                       'content' => 'resulting',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '250.296 522.928 269.792 531.694',
+                      'bbox' => '250.30 522.93 269.79 531.69',
                       'content' => 'from',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '272.949 522.928 296.191 531.694',
+                      'bbox' => '272.95 522.93 296.19 531.69',
                       'content' => 'retro-',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 534.679 108.787 543.445',
+                      'bbox' => '55.27 534.68 108.79 543.44',
                       'content' => 'transposition',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '113.269 534.679 139.004 543.445',
+                      'bbox' => '113.27 534.68 139.00 543.44',
                       'content' => 'events',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '143.486 534.679 162.195 543.445',
+                      'bbox' => '143.49 534.68 162.19 543.44',
                       'content' => 'have',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '166.677 534.679 185.925 543.445',
+                      'bbox' => '166.68 534.68 185.93 543.44',
                       'content' => 'been',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '190.407 534.679 214.001 543.445',
+                      'bbox' => '190.41 534.68 214.00 543.44',
                       'content' => 'found',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '218.483 534.679 226.493 543.445',
+                      'bbox' => '218.48 534.68 226.49 543.44',
                       'content' => 'in',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '230.975 534.679 243.771 543.445',
+                      'bbox' => '230.97 534.68 243.77 543.44',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '248.253 534.679 276.59 543.445',
+                      'bbox' => '248.25 534.68 276.59 543.44',
                       'content' => 'human',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '281.072 534.679 296.199 543.445',
+                      'bbox' => '281.07 534.68 296.20 543.44',
                       'content' => 'and',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 546.429 81.6501 555.195',
+                      'bbox' => '55.27 546.43 81.65 555.20',
                       'content' => 'mouse',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '83.8893 546.429 119.47 555.195',
+                      'bbox' => '83.89 546.43 119.47 555.20',
                       'content' => 'genomes',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '121.709 546.429 143.525 555.195',
+                      'bbox' => '121.71 546.43 143.53 555.20',
                       'content' => '[3,4].',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 569.929 70.4451 578.695',
+                      'bbox' => '55.27 569.93 70.45 578.69',
                       'content' => 'The',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '72.6582 568.165 78.1572 579.865',
+                      'bbox' => '72.66 568.16 78.16 579.86',
                       'content' => "\x{2423}",
+                      'font' => 'DPFPOI+MathematicalPi-One',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '80.382 569.929 114.577 578.695',
+                      'bbox' => '80.38 569.93 114.58 578.69',
                       'content' => 'subunits',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '116.778 569.929 124.574 578.695',
+                      'bbox' => '116.78 569.93 124.57 578.69',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '126.775 569.929 155.892 578.695',
+                      'bbox' => '126.78 569.93 155.89 578.69',
                       'content' => 'protein',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '158.093 569.929 231.843 578.695',
+                      'bbox' => '158.09 569.93 231.84 578.69',
                       'content' => 'prenyltransferases',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '234.044 569.929 261.829 578.695',
+                      'bbox' => '234.04 569.93 261.83 578.69',
                       'content' => 'consist',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '264.031 569.929 271.826 578.695',
+                      'bbox' => '264.03 569.93 271.83 578.69',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '274.028 569.929 296.213 578.695',
+                      'bbox' => '274.03 569.93 296.21 578.69',
                       'content' => 'tetra-',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 581.679 103.543 590.445',
+                      'bbox' => '55.27 581.68 103.54 590.45',
                       'content' => 'tricopeptide',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '108.091 581.679 137.212 590.445',
+                      'bbox' => '108.09 581.68 137.21 590.45',
                       'content' => 'repeats',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '141.76 581.679 156.801 590.445',
+                      'bbox' => '141.76 581.68 156.80 590.45',
                       'content' => 'and',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '161.35 581.679 173.942 590.445',
+                      'bbox' => '161.35 581.68 173.94 590.45',
                       'content' => 'are',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '178.491 581.679 194.973 590.445',
+                      'bbox' => '178.49 581.68 194.97 590.45',
                       'content' => 'part',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '199.521 581.679 207.316 590.445',
+                      'bbox' => '199.52 581.68 207.32 590.45',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '211.865 581.679 224.575 590.445',
+                      'bbox' => '211.86 581.68 224.57 590.45',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '229.123 581.679 296.206 590.445',
+                      'bbox' => '229.12 581.68 296.21 590.45',
                       'content' => 'tetratricopeptide',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 593.43 80.5287 602.196',
+                      'bbox' => '55.27 593.43 80.53 602.20',
                       'content' => 'repeat',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '86.2005 593.43 133.505 602.196',
+                      'bbox' => '86.20 593.43 133.50 602.20',
                       'content' => 'superfamily',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '139.176 593.43 153.044 602.196',
+                      'bbox' => '139.18 593.43 153.04 602.20',
                       'content' => '[5],',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '158.715 593.43 182.515 602.196',
+                      'bbox' => '158.72 593.43 182.51 602.20',
                       'content' => 'which',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '188.187 593.43 204.079 602.196',
+                      'bbox' => '188.19 593.43 204.08 602.20',
                       'content' => 'also',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '209.751 593.43 242.954 602.196',
+                      'bbox' => '209.75 593.43 242.95 602.20',
                       'content' => 'includes',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '248.625 593.43 296.223 602.196',
+                      'bbox' => '248.63 593.43 296.22 602.20',
                       'content' => 'functionally',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 605.18 83.8101 613.946',
+                      'bbox' => '55.27 605.18 83.81 613.95',
                       'content' => 'diverse',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '87.5361 605.18 120.568 613.946',
+                      'bbox' => '87.54 605.18 120.57 613.95',
                       'content' => 'proteins',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '124.294 605.18 158.1 613.946',
+                      'bbox' => '124.29 605.18 158.10 613.95',
                       'content' => 'involved',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '161.826 605.18 169.796 613.946',
+                      'bbox' => '161.83 605.18 169.80 613.95',
                       'content' => 'in',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '173.522 605.18 227.952 613.946',
+                      'bbox' => '173.52 605.18 227.95 613.95',
                       'content' => 'transcription,',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '231.678 605.18 296.131 613.946',
+                      'bbox' => '231.68 605.18 296.13 613.95',
                       'content' => 'co-chaperoning,',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 616.931 84.4077 625.697',
+                      'bbox' => '55.27 616.93 84.41 625.70',
                       'content' => 'protein',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '89.2299 616.931 128.978 625.697',
+                      'bbox' => '89.23 616.93 128.98 625.70',
                       'content' => 'transport,',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '133.801 616.931 170.309 625.697',
+                      'bbox' => '133.80 616.93 170.31 625.70',
                       'content' => 'cell-cycle',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '175.131 616.931 203.607 625.697',
+                      'bbox' => '175.13 616.93 203.61 625.70',
                       'content' => 'control',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '208.429 616.931 223.477 625.697',
+                      'bbox' => '208.43 616.93 223.48 625.70',
                       'content' => 'and',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '228.3 616.931 296.209 625.697',
+                      'bbox' => '228.30 616.93 296.21 625.70',
                       'content' => 'phosphorylation.',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 628.681 92.0199 637.447',
+                      'bbox' => '55.27 628.68 92.02 637.45',
                       'content' => 'Although',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '95.1735 628.681 132.507 637.447',
+                      'bbox' => '95.17 628.68 132.51 637.45',
                       'content' => 'evolution',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '135.661 628.681 143.459 637.447',
+                      'bbox' => '135.66 628.68 143.46 637.45',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '146.612 628.681 171.857 637.447',
+                      'bbox' => '146.61 628.68 171.86 637.45',
                       'content' => 'repeat',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '175.011 628.681 208.03 637.447',
+                      'bbox' => '175.01 628.68 208.03 637.45',
                       'content' => 'proteins',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '211.184 628.681 217.712 637.447',
+                      'bbox' => '211.18 628.68 217.71 637.45',
                       'content' => 'is',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '220.866 628.681 252.08 637.447',
+                      'bbox' => '220.87 628.68 252.08 637.45',
                       'content' => 'difficult',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '255.233 628.681 263.211 637.447',
+                      'bbox' => '255.23 628.68 263.21 637.45',
                       'content' => 'to',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '266.364 628.681 296.221 637.447',
+                      'bbox' => '266.36 628.68 296.22 637.45',
                       'content' => 'analyze',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 640.431 70.3299 649.197',
+                      'bbox' => '55.27 640.43 70.33 649.20',
                       'content' => 'and',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '72.8211 640.431 110.685 649.197',
+                      'bbox' => '72.82 640.43 110.68 649.20',
                       'content' => 'interpret,',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '113.176 640.431 138.256 649.197',
+                      'bbox' => '113.18 640.43 138.26 649.20',
                       'content' => 'Zhang',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '140.747 640.431 155.802 649.197',
+                      'bbox' => '140.75 640.43 155.80 649.20',
                       'content' => 'and',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '158.293 640.431 188.222 649.197',
+                      'bbox' => '158.29 640.43 188.22 649.20',
                       'content' => 'Grishin',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '190.713 640.431 202.546 649.197',
+                      'bbox' => '190.71 640.43 202.55 649.20',
                       'content' => '[6]',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '205.037 640.431 223.638 649.197',
+                      'bbox' => '205.04 640.43 223.64 649.20',
                       'content' => 'have',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '226.129 640.431 259.594 649.197',
+                      'bbox' => '226.13 640.43 259.59 649.20',
                       'content' => 'deduced',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '262.086 640.431 296.207 649.197',
+                      'bbox' => '262.09 640.43 296.21 649.20',
                       'content' => 'convinc-',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 652.182 74.8173 660.948',
+                      'bbox' => '55.27 652.18 74.82 660.95',
                       'content' => 'ingly',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '77.4219 652.182 93.4401 660.948',
+                      'bbox' => '77.42 652.18 93.44 660.95',
                       'content' => 'that',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '96.0447 652.182 108.764 660.948',
+                      'bbox' => '96.04 652.18 108.76 660.95',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '111.37 652.182 135.269 660.948',
+                      'bbox' => '111.37 652.18 135.27 660.95',
                       'content' => 'FNTA',
+                      'font' => 'DPFPPD+TT44EO00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '137.895 652.182 152.932 660.948',
+                      'bbox' => '137.89 652.18 152.93 660.95',
                       'content' => 'and',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '155.538 652.182 198.43 660.948',
+                      'bbox' => '155.54 652.18 198.43 660.95',
                       'content' => 'RABGGTA',
+                      'font' => 'DPFPPD+TT44EO00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '201.057 652.182 223.598 660.948',
+                      'bbox' => '201.06 652.18 223.60 660.95',
                       'content' => 'genes',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '226.2 652.182 267.074 660.948',
+                      'bbox' => '226.20 652.18 267.07 660.95',
                       'content' => 'originated',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '269.676 652.182 289.046 660.948',
+                      'bbox' => '269.68 652.18 289.05 660.95',
                       'content' => 'from',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '291.648 652.182 296.211 660.948',
+                      'bbox' => '291.65 652.18 296.21 660.95',
                       'content' => 'a',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 663.932 89.3892 672.698',
+                      'bbox' => '55.27 663.93 89.39 672.70',
                       'content' => 'common',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '92.8875 663.932 125.587 672.698',
+                      'bbox' => '92.89 663.93 125.59 672.70',
                       'content' => 'ancestor',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '129.085 663.932 144.599 672.698',
+                      'bbox' => '129.09 663.93 144.60 672.70',
                       'content' => 'that',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '148.097 663.932 176.415 672.698',
+                      'bbox' => '148.10 663.93 176.41 672.70',
                       'content' => 'already',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '179.913 663.932 218.012 672.698',
+                      'bbox' => '179.91 663.93 218.01 672.70',
                       'content' => 'contained',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '221.51 663.932 253.85 672.698',
+                      'bbox' => '221.51 663.93 253.85 672.70',
                       'content' => 'multiple',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '257.348 663.932 296.21 672.698',
+                      'bbox' => '257.35 663.93 296.21 672.70',
                       'content' => 'tetratrico-',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 675.682 85.2231 684.448',
+                      'bbox' => '55.27 675.68 85.22 684.45',
                       'content' => 'peptide',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '88.0752 675.682 117.196 684.448',
+                      'bbox' => '88.08 675.68 117.20 684.45',
                       'content' => 'repeats',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '120.048 675.682 144.622 684.448',
+                      'bbox' => '120.05 675.68 144.62 684.45',
                       'content' => 'rather',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '147.474 675.682 165.693 684.448',
+                      'bbox' => '147.47 675.68 165.69 684.45',
                       'content' => 'than',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '168.545 675.682 195.262 684.448',
+                      'bbox' => '168.55 675.68 195.26 684.45',
                       'content' => 'having',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '198.114 675.682 255.428 684.448',
+                      'bbox' => '198.11 675.68 255.43 684.45',
                       'content' => 'independently',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '258.28 675.682 296.195 684.448',
+                      'bbox' => '258.28 675.68 296.19 684.45',
                       'content' => 'amplified',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 687.433 67.9971 696.199',
+                      'bbox' => '55.27 687.43 68.00 696.20',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '70.1535 687.433 101.645 696.199',
+                      'bbox' => '70.15 687.43 101.64 696.20',
                       'content' => 'number',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '103.801 687.433 111.602 696.199',
+                      'bbox' => '103.80 687.43 111.60 696.20',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '113.758 687.433 139.129 696.199',
+                      'bbox' => '113.76 687.43 139.13 696.20',
                       'content' => 'motifs',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '141.286 687.433 149.744 696.199',
+                      'bbox' => '141.29 687.43 149.74 696.20',
                       'content' => 'as',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '151.9 687.433 164.623 696.199',
+                      'bbox' => '151.90 687.43 164.62 696.20',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '166.779 687.433 198.33 696.199',
+                      'bbox' => '166.78 687.43 198.33 696.20',
                       'content' => 'families',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '200.486 687.433 234.854 696.199',
+                      'bbox' => '200.49 687.43 234.85 696.20',
                       'content' => 'diverged',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '237.01 687.433 254.348 696.199',
+                      'bbox' => '237.01 687.43 254.35 696.20',
                       'content' => 'over',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '256.504 687.433 276.963 696.199',
+                      'bbox' => '256.50 687.43 276.96 696.20',
                       'content' => 'time.',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 710.933 70.3425 719.699',
+                      'bbox' => '55.27 710.93 70.34 719.70',
                       'content' => 'The',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '73.0281 710.933 122.435 719.699',
+                      'bbox' => '73.03 710.93 122.43 719.70',
                       'content' => 'evolutionary',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '125.12 710.933 152.612 719.699',
+                      'bbox' => '125.12 710.93 152.61 719.70',
                       'content' => 'history',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '155.297 710.933 163.043 719.699',
+                      'bbox' => '155.30 710.93 163.04 719.70',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '165.728 710.933 178.339 719.699',
+                      'bbox' => '165.73 710.93 178.34 719.70',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '181.025 709.169 186.524 720.869',
+                      'bbox' => '181.02 709.17 186.52 720.87',
                       'content' => "\x{2424}",
+                      'font' => 'DPFPOI+MathematicalPi-One',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '189.249 710.933 223.065 719.699',
+                      'bbox' => '189.25 710.93 223.07 719.70',
                       'content' => 'subunits',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '225.744 710.933 233.486 719.699',
+                      'bbox' => '225.74 710.93 233.49 719.70',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '236.164 710.933 264.957 719.699',
+                      'bbox' => '236.16 710.93 264.96 719.70',
                       'content' => 'protein',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '267.635 710.933 296.194 719.699',
+                      'bbox' => '267.64 710.93 296.19 719.70',
                       'content' => 'prenyl-',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 722.683 102.914 731.449',
+                      'bbox' => '55.27 722.68 102.91 731.45',
                       'content' => 'transferases',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '105.208 722.683 118.765 731.449',
+                      'bbox' => '105.21 722.68 118.77 731.45',
                       'content' => 'has',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '121.059 722.683 153.751 731.449',
+                      'bbox' => '121.06 722.68 153.75 731.45',
                       'content' => 'received',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '156.045 722.683 178.235 731.449',
+                      'bbox' => '156.05 722.68 178.24 731.45',
                       'content' => 'much',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '180.53 722.683 195.106 731.449',
+                      'bbox' => '180.53 722.68 195.11 731.45',
                       'content' => 'less',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '197.4 722.683 233.396 731.449',
+                      'bbox' => '197.40 722.68 233.40 731.45',
                       'content' => 'attention',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '235.691 722.683 244.386 731.449',
+                      'bbox' => '235.69 722.68 244.39 731.45',
                       'content' => 'so',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '246.68 722.683 257.727 731.449',
+                      'bbox' => '246.68 722.68 257.73 731.45',
                       'content' => 'far',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '260.021 722.683 278.081 731.449',
+                      'bbox' => '260.02 722.68 278.08 731.45',
                       'content' => 'than',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '280.375 722.683 296.22 731.449',
+                      'bbox' => '280.37 722.68 296.22 731.45',
                       'content' => 'that',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '55.2747 734.434 63.0174 743.2',
+                      'bbox' => '55.27 734.43 63.02 743.20',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '67.0026 734.434 79.608 743.2',
+                      'bbox' => '67.00 734.43 79.61 743.20',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '83.5959 732.67 89.0949 744.37',
+                      'bbox' => '83.60 732.67 89.09 744.37',
                       'content' => "\x{2423}",
+                      'font' => 'DPFPOI+MathematicalPi-One',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '93.1251 734.434 126.986 743.2',
+                      'bbox' => '93.13 734.43 126.99 743.20',
                       'content' => 'subunits',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '130.981 734.434 144.451 743.2',
+                      'bbox' => '130.98 734.43 144.45 743.20',
                       'content' => '[7].',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '148.446 734.434 167.902 743.2',
+                      'bbox' => '148.45 734.43 167.90 743.20',
                       'content' => 'They',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '171.897 734.434 188.112 743.2',
+                      'bbox' => '171.90 734.43 188.11 743.20',
                       'content' => 'can,',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '192.107 734.434 227.732 743.2',
+                      'bbox' => '192.11 734.43 227.73 743.20',
                       'content' => 'however,',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '231.727 734.434 241.095 743.2',
+                      'bbox' => '231.73 734.43 241.10 743.20',
                       'content' => 'be',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '245.09 734.434 270.845 743.2',
+                      'bbox' => '245.09 734.43 270.84 743.20',
                       'content' => 'shown',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '274.84 734.434 296.211 743.2',
+                      'bbox' => '274.84 734.43 296.21 743.20',
                       'content' => 'using',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.228 417.184 348.669 425.95',
+                      'bbox' => '313.23 417.18 348.67 425.95',
                       'content' => 'standard',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '352.781 417.184 389.419 425.95',
+                      'bbox' => '352.78 417.18 389.42 425.95',
                       'content' => 'sequence',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '393.532 417.184 425.427 425.95',
+                      'bbox' => '393.53 417.18 425.43 425.95',
                       'content' => 'analysis',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '429.539 417.184 448.851 425.95',
+                      'bbox' => '429.54 417.18 448.85 425.95',
                       'content' => 'tools',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '452.963 417.184 471.306 425.95',
+                      'bbox' => '452.96 417.18 471.31 425.95',
                       'content' => 'such',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '475.418 417.184 483.875 425.95',
+                      'bbox' => '475.42 417.18 483.88 425.95',
                       'content' => 'as',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '487.987 417.184 525.352 425.95',
+                      'bbox' => '487.99 417.18 525.35 425.95',
                       'content' => 'PSI-Blast',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '529.464 417.184 541.528 425.95',
+                      'bbox' => '529.46 417.18 541.53 425.95',
                       'content' => '[8]',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '545.64 417.184 554.16 425.95',
+                      'bbox' => '545.64 417.18 554.16 425.95',
                       'content' => 'or',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.228 428.934 345.259 437.7',
+                      'bbox' => '313.23 428.93 345.26 437.70',
                       'content' => 'HMMer',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '347.435 428.934 359.26 437.7',
+                      'bbox' => '347.43 428.93 359.26 437.70',
                       'content' => '[9]',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '361.436 428.934 369.414 437.7',
+                      'bbox' => '361.44 428.93 369.41 437.70',
                       'content' => 'to',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '371.59 428.934 381.008 437.7',
+                      'bbox' => '371.59 428.93 381.01 437.70',
                       'content' => 'be',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '383.183 428.934 399.676 437.7',
+                      'bbox' => '383.18 428.93 399.68 437.70',
                       'content' => 'part',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '401.851 428.934 409.65 437.7',
+                      'bbox' => '401.85 428.93 409.65 437.70',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '411.825 428.934 416.388 437.7',
+                      'bbox' => '411.82 428.93 416.39 437.70',
                       'content' => 'a',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '418.563 428.934 465.858 437.7',
+                      'bbox' => '418.56 428.93 465.86 437.70',
                       'content' => 'superfamily',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '468.034 428.934 475.832 437.7',
+                      'bbox' => '468.03 428.93 475.83 437.70',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '478.007 428.934 554.201 437.7',
+                      'bbox' => '478.01 428.93 554.20 437.70',
                       'content' => 'prenyltransferases.',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.228 440.684 348.073 449.45',
+                      'bbox' => '313.23 440.68 348.07 449.45',
                       'content' => 'Whereas',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '350.703 440.684 363.422 449.45',
+                      'bbox' => '350.70 440.68 363.42 449.45',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '366.053 438.92 371.552 450.62',
+                      'bbox' => '366.05 438.92 371.55 450.62',
                       'content' => "\x{2424}",
+                      'font' => 'DPFPOI+MathematicalPi-One',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '374.2 440.684 408.394 449.45',
+                      'bbox' => '374.20 440.68 408.39 449.45',
                       'content' => 'subunits',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '411.018 440.684 418.813 449.45',
+                      'bbox' => '411.02 440.68 418.81 449.45',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '421.437 440.684 450.554 449.45',
+                      'bbox' => '421.44 440.68 450.55 449.45',
                       'content' => 'protein',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '453.177 440.684 526.927 449.45',
+                      'bbox' => '453.18 440.68 526.93 449.45',
                       'content' => 'prenyltransferases',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '529.55 440.684 554.183 449.45',
+                      'bbox' => '529.55 440.68 554.18 449.45',
                       'content' => 'attach',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.228 452.435 331.385 461.201',
+                      'bbox' => '313.23 452.43 331.38 461.20',
                       'content' => 'lipid',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '334.074 452.435 365.669 461.201',
+                      'bbox' => '334.07 452.43 365.67 461.20',
                       'content' => 'anchors',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '368.359 452.435 376.338 461.201',
+                      'bbox' => '368.36 452.43 376.34 461.20',
                       'content' => 'to',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '379.027 452.435 414.458 461.201',
+                      'bbox' => '379.03 452.43 414.46 461.20',
                       'content' => 'proteins,',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '417.148 452.435 438.382 461.201',
+                      'bbox' => '417.15 452.43 438.38 461.20',
                       'content' => 'other',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '441.071 452.435 478.256 461.201',
+                      'bbox' => '441.07 452.43 478.26 461.20',
                       'content' => 'members',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '480.945 452.435 488.744 461.201',
+                      'bbox' => '480.94 452.43 488.74 461.20',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '491.434 452.435 504.152 461.201',
+                      'bbox' => '491.43 452.43 504.15 461.20',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '506.842 452.435 554.146 461.201',
+                      'bbox' => '506.84 452.43 554.15 461.20',
                       'content' => 'superfamily',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.228 464.185 344.942 472.951',
+                      'bbox' => '313.23 464.19 344.94 472.95',
                       'content' => 'catalyze',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '347.785 464.185 382.31 472.951',
+                      'bbox' => '347.78 464.19 382.31 472.95',
                       'content' => 'different',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '385.153 464.185 421.649 472.951',
+                      'bbox' => '385.15 464.19 421.65 472.95',
                       'content' => 'reactions',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '424.492 464.185 461.276 472.951',
+                      'bbox' => '424.49 464.19 461.28 472.95',
                       'content' => 'involving',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '464.119 464.185 521.702 472.951',
+                      'bbox' => '464.12 464.19 521.70 472.95',
                       'content' => 'polyisoprenes,',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '524.545 464.185 542.879 472.951',
+                      'bbox' => '524.54 464.19 542.88 472.95',
                       'content' => 'such',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '545.722 464.185 554.176 472.951',
+                      'bbox' => '545.72 464.19 554.18 472.95',
                       'content' => 'as',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.228 475.936 325.945 484.702',
+                      'bbox' => '313.23 475.94 325.95 484.70',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '328.029 475.936 370.338 484.702',
+                      'bbox' => '328.03 475.94 370.34 484.70',
                       'content' => 'cyclization',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '372.421 475.936 380.22 484.702',
+                      'bbox' => '372.42 475.94 380.22 484.70',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '382.303 475.936 433.608 484.702',
+                      'bbox' => '382.30 475.94 433.61 484.70',
                       'content' => 'polyisoprene',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '435.691 475.936 478.963 484.702',
+                      'bbox' => '435.69 475.94 478.96 484.70',
                       'content' => 'derivatives',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '481.047 475.936 507.538 484.702',
+                      'bbox' => '481.05 475.94 507.54 484.70',
                       'content' => 'during',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '509.622 475.936 522.339 484.702',
+                      'bbox' => '509.62 475.94 522.34 484.70',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '524.422 475.936 554.158 484.702',
+                      'bbox' => '524.42 475.94 554.16 484.70',
                       'content' => 'synthe-',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.228 487.686 323.654 496.452',
+                      'bbox' => '313.23 487.69 323.65 496.45',
                       'content' => 'sis',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '326.386 487.686 334.186 496.452',
+                      'bbox' => '326.39 487.69 334.19 496.45',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '336.919 487.686 378.585 496.452',
+                      'bbox' => '336.92 487.69 378.59 496.45',
                       'content' => 'hopanoids',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '381.318 487.686 389.289 496.452',
+                      'bbox' => '381.32 487.69 389.29 496.45',
                       'content' => 'in',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '392.021 487.686 424.051 496.452',
+                      'bbox' => '392.02 487.69 424.05 496.45',
                       'content' => 'bacteria',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '426.784 487.686 445.268 496.452',
+                      'bbox' => '426.78 487.69 445.27 496.45',
                       'content' => '[10],',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '448 487.686 496.517 496.452',
+                      'bbox' => '448.00 487.69 496.52 496.45',
                       'content' => 'cycloartenol',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '499.249 487.686 507.22 496.452',
+                      'bbox' => '499.25 487.69 507.22 496.45',
                       'content' => 'in',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '509.953 487.686 534.599 496.452',
+                      'bbox' => '509.95 487.69 534.60 496.45',
                       'content' => 'plants',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '537.332 487.686 554.142 496.452',
+                      'bbox' => '537.33 487.69 554.14 496.45',
                       'content' => '[11],',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.228 499.436 353.19 508.202',
+                      'bbox' => '313.23 499.44 353.19 508.20',
                       'content' => 'ergosterol',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '355.639 499.436 363.611 508.202',
+                      'bbox' => '355.64 499.44 363.61 508.20',
                       'content' => 'in',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '366.06 499.436 386.69 508.202',
+                      'bbox' => '366.06 499.44 386.69 508.20',
                       'content' => 'fungi',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '389.139 499.436 404.748 508.202',
+                      'bbox' => '389.14 499.44 404.75 508.20',
                       'content' => '[12]',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '407.197 499.436 422.251 508.202',
+                      'bbox' => '407.20 499.44 422.25 508.20',
                       'content' => 'and',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '424.699 499.436 464.535 508.202',
+                      'bbox' => '424.70 499.44 464.54 508.20',
                       'content' => 'lanosterol',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '466.984 499.436 474.956 508.202',
+                      'bbox' => '466.98 499.44 474.96 508.20',
                       'content' => 'in',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '477.405 499.436 522.045 508.202',
+                      'bbox' => '477.41 499.44 522.05 508.20',
                       'content' => 'vertebrates',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '524.494 499.436 554.2 508.202',
+                      'bbox' => '524.49 499.44 554.20 508.20',
                       'content' => '[13,14];',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.228 511.187 334.22 519.953',
+                      'bbox' => '313.23 511.19 334.22 519.95',
                       'content' => 'these',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '340.253 511.187 375.319 519.953',
+                      'bbox' => '340.25 511.19 375.32 519.95',
                       'content' => 'products',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '381.353 511.187 393.955 519.953',
+                      'bbox' => '381.35 511.19 393.95 519.95',
                       'content' => 'are',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '399.988 511.187 418.04 519.953',
+                      'bbox' => '399.99 511.19 418.04 519.95',
                       'content' => 'then',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '424.074 511.187 460.54 519.953',
+                      'bbox' => '424.07 511.19 460.54 519.95',
                       'content' => 'generally',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '466.574 511.187 506.019 519.953',
+                      'bbox' => '466.57 511.19 506.02 519.95',
                       'content' => 'processed',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '512.053 511.187 540.183 519.953',
+                      'bbox' => '512.05 511.19 540.18 519.95',
                       'content' => 'further',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '546.217 511.187 554.196 519.953',
+                      'bbox' => '546.22 511.19 554.20 519.95',
                       'content' => 'to',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.228 522.937 345.655 531.703',
+                      'bbox' => '313.23 522.94 345.66 531.70',
                       'content' => 'produce',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '350.645 522.937 385.412 531.703',
+                      'bbox' => '350.64 522.94 385.41 531.70',
                       'content' => 'essential',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '390.401 522.937 433.732 531.703',
+                      'bbox' => '390.40 522.94 433.73 531.70',
                       'content' => 'substances',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '438.721 522.937 457.059 531.703',
+                      'bbox' => '438.72 522.94 457.06 531.70',
                       'content' => 'such',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '462.049 522.937 470.504 531.703',
+                      'bbox' => '462.05 522.94 470.50 531.70',
                       'content' => 'as',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '475.494 522.937 521.479 531.703',
+                      'bbox' => '475.49 522.94 521.48 531.70',
                       'content' => 'cholesterol,',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '526.469 522.937 554.162 531.703',
+                      'bbox' => '526.47 522.94 554.16 531.70',
                       'content' => 'steroid',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.228 534.688 353.356 543.454',
+                      'bbox' => '313.23 534.69 353.36 543.45',
                       'content' => 'hormones',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '357.955 534.688 366.476 543.454',
+                      'bbox' => '357.95 534.69 366.48 543.45',
                       'content' => 'or',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '371.075 534.688 401.718 543.454',
+                      'bbox' => '371.07 534.69 401.72 543.45',
                       'content' => 'vitamin',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '406.317 534.688 413.04 543.454',
+                      'bbox' => '406.32 534.69 413.04 543.45',
                       'content' => 'D',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '417.639 534.688 432.692 543.454',
+                      'bbox' => '417.64 534.69 432.69 543.45',
                       'content' => 'and',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '437.291 534.688 456.31 543.454',
+                      'bbox' => '437.29 534.69 456.31 543.45',
                       'content' => 'their',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '460.909 534.688 508.832 543.454',
+                      'bbox' => '460.91 534.69 508.83 543.45',
                       'content' => 'equivalents.',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '513.431 534.688 519.488 543.454',
+                      'bbox' => '513.43 534.69 519.49 543.45',
                       'content' => 'A',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '524.087 534.688 554.147 543.454',
+                      'bbox' => '524.09 534.69 554.15 543.45',
                       'content' => 'merged',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.228 546.438 338.474 555.204',
+                      'bbox' => '313.23 546.44 338.47 555.20',
                       'content' => 'PFAM',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '341.56 546.438 356.87 555.204',
+                      'bbox' => '341.56 546.44 356.87 555.20',
                       'content' => '[15]',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '359.956 546.438 390.417 555.204',
+                      'bbox' => '359.96 546.44 390.42 555.20',
                       'content' => 'domain',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '393.503 546.438 437.221 555.204',
+                      'bbox' => '393.50 546.44 437.22 555.20',
                       'content' => '(PF00432)',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '440.307 546.438 453.982 555.204',
+                      'bbox' => '440.31 546.44 453.98 555.20',
                       'content' => 'has',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '457.068 546.438 476.203 555.204',
+                      'bbox' => '457.07 546.44 476.20 555.20',
                       'content' => 'been',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '479.289 546.438 508.622 555.204',
+                      'bbox' => '479.29 546.44 508.62 555.20',
                       'content' => 'created',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '511.708 546.438 554.155 555.204',
+                      'bbox' => '511.71 546.44 554.15 555.20',
                       'content' => 'containing',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.228 558.188 325.942 566.954',
+                      'bbox' => '313.23 558.19 325.94 566.95',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '328.21 556.424 333.709 568.124',
+                      'bbox' => '328.21 556.42 333.71 568.12',
                       'content' => "\x{2424}",
+                      'font' => 'DPFPOI+MathematicalPi-One',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '335.993 558.188 370.187 566.954',
+                      'bbox' => '335.99 558.19 370.19 566.95',
                       'content' => 'subunits',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '372.447 558.188 380.243 566.954',
+                      'bbox' => '372.45 558.19 380.24 566.95',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '382.503 558.188 411.62 566.954',
+                      'bbox' => '382.50 558.19 411.62 566.95',
                       'content' => 'protein',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '413.88 558.188 490.025 566.954',
+                      'bbox' => '413.88 558.19 490.03 566.95',
                       'content' => 'prenyltransferases,',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '492.285 558.188 500.738 566.954',
+                      'bbox' => '492.28 558.19 500.74 566.95',
                       'content' => 'as',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '502.998 558.188 519.185 566.954',
+                      'bbox' => '503.00 558.19 519.19 566.95',
                       'content' => 'well',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '521.445 558.188 529.898 566.954',
+                      'bbox' => '521.44 558.19 529.90 566.95',
                       'content' => 'as',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '532.158 558.188 554.152 566.954',
+                      'bbox' => '532.16 558.19 554.15 566.95',
                       'content' => 'squa-',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.229 569.939 362.531 578.705',
+                      'bbox' => '313.23 569.94 362.53 578.70',
                       'content' => 'lene-hopene',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '366.612 569.939 398.463 578.705',
+                      'bbox' => '366.61 569.94 398.46 578.70',
                       'content' => 'cyclases',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '402.543 569.939 417.582 578.705',
+                      'bbox' => '402.54 569.94 417.58 578.70',
                       'content' => 'and',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '421.663 569.939 461.434 578.705',
+                      'bbox' => '421.66 569.94 461.43 578.70',
                       'content' => 'lanosterol',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '465.515 569.939 480.553 578.705',
+                      'bbox' => '465.51 569.94 480.55 578.70',
                       'content' => 'and',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '484.634 569.939 533.081 578.705',
+                      'bbox' => '484.63 569.94 533.08 578.70',
                       'content' => 'cycloartenol',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '537.162 569.939 554.172 578.705',
+                      'bbox' => '537.16 569.94 554.17 578.70',
                       'content' => 'syn-',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.229 581.689 340.71 590.455',
+                      'bbox' => '313.23 581.69 340.71 590.46',
                       'content' => 'thases.',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '350.567 581.689 400.479 590.455',
+                      'bbox' => '350.57 581.69 400.48 590.46',
                       'content' => 'Intriguingly,',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '410.336 581.689 449.333 590.455',
+                      'bbox' => '410.34 581.69 449.33 590.46',
                       'content' => 'structural',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '459.19 581.689 513.944 590.455',
+                      'bbox' => '459.19 581.69 513.94 590.46',
                       'content' => 'superposition',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '523.801 581.689 531.603 590.455',
+                      'bbox' => '523.80 581.69 531.60 590.46',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '541.46 581.689 554.184 590.455',
+                      'bbox' => '541.46 581.69 554.18 590.46',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.229 593.44 353.423 602.206',
+                      'bbox' => '313.23 593.44 353.42 602.21',
                       'content' => 'conserved',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '356.682 593.44 377.771 602.206',
+                      'bbox' => '356.68 593.44 377.77 602.21',
                       'content' => "(\x{2423}-\x{2423})",
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '377.78 597.98 381.352 604.117',
+                      'bbox' => '377.78 597.98 381.35 604.12',
                       'content' => '6',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '6'
                     },
                     {
-                      'bbox' => '384.615 593.425 408.493 602.191',
+                      'bbox' => '384.62 593.42 408.49 602.19',
                       'content' => 'barrel',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '411.744 593.425 443.646 602.191',
+                      'bbox' => '411.74 593.42 443.65 602.19',
                       'content' => 'forming',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '446.897 593.425 461.47 602.191',
+                      'bbox' => '446.90 593.42 461.47 602.19',
                       'content' => 'one',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '464.722 593.425 480.02 602.191',
+                      'bbox' => '464.72 593.42 480.02 602.19',
                       'content' => 'half',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '483.272 593.425 491.071 602.191',
+                      'bbox' => '483.27 593.42 491.07 602.19',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '494.323 593.425 528.926 602.191',
+                      'bbox' => '494.32 593.42 528.93 602.19',
                       'content' => 'bacterial',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '532.178 593.425 554.186 602.191',
+                      'bbox' => '532.18 593.42 554.19 602.19',
                       'content' => 'squa-',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.228 605.175 362.512 613.941',
+                      'bbox' => '313.23 605.18 362.51 613.94',
                       'content' => 'lene-hopene',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '373.732 605.175 401.684 613.941',
+                      'bbox' => '373.73 605.18 401.68 613.94',
                       'content' => 'cyclase',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '412.903 605.175 428.963 613.941',
+                      'bbox' => '412.90 605.18 428.96 613.94',
                       'content' => '(the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '440.182 605.175 470.611 613.941',
+                      'bbox' => '440.18 605.18 470.61 613.94',
                       'content' => 'enzyme',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '481.831 605.175 497.827 613.941',
+                      'bbox' => '481.83 605.18 497.83 613.94',
                       'content' => 'that',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '509.047 605.175 554.173 613.941',
+                      'bbox' => '509.05 605.18 554.17 613.94',
                       'content' => 'synthesizes',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.228 616.925 358.274 625.691',
+                      'bbox' => '313.23 616.93 358.27 625.69',
                       'content' => 'hopanoids)',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '360.536 616.925 376.211 625.691',
+                      'bbox' => '360.54 616.93 376.21 625.69',
                       'content' => '[16]',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '378.473 616.925 396.11 625.691',
+                      'bbox' => '378.47 616.93 396.11 625.69',
                       'content' => 'with',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '398.372 616.925 411.096 625.691',
+                      'bbox' => '398.37 616.93 411.10 625.69',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '413.355 615.161 418.854 626.861',
+                      'bbox' => '413.36 615.16 418.85 626.86',
                       'content' => "\x{2424}",
+                      'font' => 'DPFPOI+MathematicalPi-One',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '421.128 616.925 451.481 625.691',
+                      'bbox' => '421.13 616.93 451.48 625.69',
                       'content' => 'subunit',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '453.746 616.925 461.55 625.691',
+                      'bbox' => '453.75 616.93 461.55 625.69',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '463.815 616.925 475.166 625.691',
+                      'bbox' => '463.82 616.93 475.17 625.69',
                       'content' => 'rat',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '477.432 616.925 488.412 625.691',
+                      'bbox' => '477.43 616.93 488.41 625.69',
                       'content' => 'FT',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '490.678 616.925 505.755 625.691',
+                      'bbox' => '490.68 616.93 505.76 625.69',
                       'content' => '[17]',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '508.021 616.925 535.935 625.691',
+                      'bbox' => '508.02 616.93 535.94 625.69',
                       'content' => 'reveals',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '538.201 616.925 554.169 625.691',
+                      'bbox' => '538.20 616.93 554.17 625.69',
                       'content' => 'cor-',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.229 628.676 363.8 637.442',
+                      'bbox' => '313.23 628.68 363.80 637.44',
                       'content' => 'respondence',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '366.345 628.676 379.652 637.442',
+                      'bbox' => '366.34 628.68 379.65 637.44',
                       'content' => 'not',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '382.196 628.676 399.394 637.442',
+                      'bbox' => '382.20 628.68 399.39 637.44',
                       'content' => 'only',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '401.939 628.676 409.735 637.442',
+                      'bbox' => '401.94 628.68 409.74 637.44',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '412.28 628.676 431.28 637.442',
+                      'bbox' => '412.28 628.68 431.28 637.44',
                       'content' => 'their',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '433.825 628.676 474.148 637.442',
+                      'bbox' => '433.82 628.68 474.15 637.44',
                       'content' => 'secondary',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '476.693 628.676 515.642 637.442',
+                      'bbox' => '476.69 628.68 515.64 637.44',
                       'content' => 'structural',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '518.186 628.676 554.151 637.442',
+                      'bbox' => '518.19 628.68 554.15 637.44',
                       'content' => 'elements',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.229 640.426 326.542 649.192',
+                      'bbox' => '313.23 640.43 326.54 649.19',
                       'content' => 'but',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '332.909 640.426 348.801 649.192',
+                      'bbox' => '332.91 640.43 348.80 649.19',
                       'content' => 'also',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '355.167 640.426 362.967 649.192',
+                      'bbox' => '355.17 640.43 362.97 649.19',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '369.333 640.426 382.052 649.192',
+                      'bbox' => '369.33 640.43 382.05 649.19',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '388.419 640.426 408.807 649.192',
+                      'bbox' => '388.42 640.43 408.81 649.19',
                       'content' => 'parts',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '415.174 640.426 422.973 649.192',
+                      'bbox' => '415.17 640.43 422.97 649.19',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '429.34 640.426 448.352 649.192',
+                      'bbox' => '429.34 640.43 448.35 649.19',
                       'content' => 'their',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '454.718 640.426 477.92 649.192',
+                      'bbox' => '454.72 640.43 477.92 649.19',
                       'content' => 'active',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '484.287 640.426 492.806 649.192',
+                      'bbox' => '484.29 640.43 492.81 649.19',
                       'content' => 'or',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '499.173 640.426 529.859 649.192',
+                      'bbox' => '499.17 640.43 529.86 649.19',
                       'content' => 'binding',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '536.226 640.426 554.149 649.192',
+                      'bbox' => '536.23 640.43 554.15 649.19',
                       'content' => 'sites',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.229 652.177 342.371 660.943',
+                      'bbox' => '313.23 652.18 342.37 660.94',
                       'content' => '(Figure',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '345.566 652.177 356.366 660.943',
+                      'bbox' => '345.57 652.18 356.37 660.94',
                       'content' => '2).',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '359.54 652.177 376.86 660.943',
+                      'bbox' => '359.54 652.18 376.86 660.94',
                       'content' => 'This',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '380.034 652.177 404.433 660.943',
+                      'bbox' => '380.03 652.18 404.43 660.94',
                       'content' => 'would',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '407.606 652.177 429.255 660.943',
+                      'bbox' => '407.61 652.18 429.26 660.94',
                       'content' => 'make',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '432.429 652.177 454.308 660.943',
+                      'bbox' => '432.43 652.18 454.31 660.94',
                       'content' => 'sense',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '457.481 652.177 463.057 660.943',
+                      'bbox' => '457.48 652.18 463.06 660.94',
                       'content' => 'if',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '466.23 652.177 478.947 660.943',
+                      'bbox' => '466.23 652.18 478.95 660.94',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '482.121 652.177 516.654 660.943',
+                      'bbox' => '482.12 652.18 516.65 660.94',
                       'content' => 'different',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '519.827 652.177 554.18 660.943',
+                      'bbox' => '519.83 652.18 554.18 660.94',
                       'content' => 'enzymes',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.229 663.927 331.816 672.693',
+                      'bbox' => '313.23 663.93 331.82 672.69',
                       'content' => 'have',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '336.027 663.927 369.235 672.693',
+                      'bbox' => '336.03 663.93 369.24 672.69',
                       'content' => 'retained',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '373.446 663.927 408.393 672.693',
+                      'bbox' => '373.45 663.93 408.39 672.69',
                       'content' => 'common',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '412.605 663.927 445.21 672.693',
+                      'bbox' => '412.60 663.93 445.21 672.69',
                       'content' => 'reaction',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '449.421 663.927 499.223 672.693',
+                      'bbox' => '449.42 663.93 499.22 672.69',
                       'content' => 'mechanisms',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '503.434 663.927 506.8 672.693',
+                      'bbox' => '503.43 663.93 506.80 672.69',
                       'content' => '-',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '511.011 663.927 519.529 672.693',
+                      'bbox' => '511.01 663.93 519.53 672.69',
                       'content' => 'or',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '523.74 663.927 531.421 672.693',
+                      'bbox' => '523.74 663.93 531.42 672.69',
                       'content' => 'at',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '535.632 663.927 554.159 672.693',
+                      'bbox' => '535.63 663.93 554.16 672.69',
                       'content' => 'least',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.229 675.677 348.199 684.443',
+                      'bbox' => '313.23 675.68 348.20 684.44',
                       'content' => 'common',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '352.756 675.677 423.662 684.443',
+                      'bbox' => '352.76 675.68 423.66 684.44',
                       'content' => 'substrate-binding',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '428.22 675.677 485.807 684.443',
+                      'bbox' => '428.22 675.68 485.81 684.44',
                       'content' => 'characteristics',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '490.365 675.677 493.731 684.443',
+                      'bbox' => '490.36 675.68 493.73 684.44',
                       'content' => '-',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '498.288 675.677 524.798 684.443',
+                      'bbox' => '498.29 675.68 524.80 684.44',
                       'content' => 'during',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '529.355 675.677 554.137 684.443',
+                      'bbox' => '529.36 675.68 554.14 684.44',
                       'content' => 'evolu-',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.229 687.428 331.568 696.194',
+                      'bbox' => '313.23 687.43 331.57 696.19',
                       'content' => 'tion.',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '335.888 687.428 366.158 696.194',
+                      'bbox' => '335.89 687.43 366.16 696.19',
                       'content' => 'Indeed,',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '370.478 687.428 380.196 696.194',
+                      'bbox' => '370.48 687.43 380.20 696.19',
                       'content' => 'all',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '384.516 687.428 392.314 696.194',
+                      'bbox' => '384.52 687.43 392.31 696.19',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '396.634 687.428 409.349 696.194',
+                      'bbox' => '396.63 687.43 409.35 696.19',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '413.669 687.428 450.843 696.194',
+                      'bbox' => '413.67 687.43 450.84 696.19',
                       'content' => 'members',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '455.163 687.428 462.96 696.194',
+                      'bbox' => '455.16 687.43 462.96 696.19',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '467.28 687.428 479.996 696.194',
+                      'bbox' => '467.28 687.43 480.00 696.19',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '484.316 687.428 554.204 696.194',
+                      'bbox' => '484.32 687.43 554.20 696.19',
                       'content' => 'prenyltransferase',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.229 699.178 360.515 707.944',
+                      'bbox' => '313.23 699.18 360.52 707.94',
                       'content' => 'superfamily',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '367.097 699.178 385.252 707.944',
+                      'bbox' => '367.10 699.18 385.25 707.94',
                       'content' => 'bind',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '391.833 699.178 432.528 707.944',
+                      'bbox' => '391.83 699.18 432.53 707.94',
                       'content' => 'substrates',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '439.11 699.178 481.532 707.944',
+                      'bbox' => '439.11 699.18 481.53 707.94',
                       'content' => 'containing',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '488.114 699.178 525.024 707.944',
+                      'bbox' => '488.11 699.18 525.02 707.94',
                       'content' => 'isoprenyl',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '531.606 699.178 554.133 707.944',
+                      'bbox' => '531.61 699.18 554.13 707.94',
                       'content' => 'units,',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.229 710.929 348.499 719.695',
+                      'bbox' => '313.23 710.93 348.50 719.69',
                       'content' => 'although',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '350.938 710.929 368.092 719.695',
+                      'bbox' => '350.94 710.93 368.09 719.69',
                       'content' => 'they',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '370.531 710.929 388.693 719.695',
+                      'bbox' => '370.53 710.93 388.69 719.69',
                       'content' => 'bind',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '391.132 710.929 425.679 719.695',
+                      'bbox' => '391.13 710.93 425.68 719.69',
                       'content' => 'different',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '428.117 710.929 463.498 719.695',
+                      'bbox' => '428.12 710.93 463.50 719.69',
                       'content' => 'numbers',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '465.936 710.929 480.987 719.695',
+                      'bbox' => '465.94 710.93 480.99 719.69',
                       'content' => 'and',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '483.426 710.929 523.118 719.695',
+                      'bbox' => '483.43 710.93 523.12 719.69',
                       'content' => 'variations',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '525.556 710.929 533.357 719.695',
+                      'bbox' => '525.56 710.93 533.36 719.69',
                       'content' => 'of',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '535.795 710.929 554.138 719.695',
+                      'bbox' => '535.79 710.93 554.14 719.69',
                       'content' => 'such',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.229 722.679 333.369 731.445',
+                      'bbox' => '313.23 722.68 333.37 731.45',
                       'content' => 'units',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '337.953 722.679 353.005 731.445',
+                      'bbox' => '337.95 722.68 353.00 731.45',
                       'content' => 'and',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '357.588 722.679 370.309 731.445',
+                      'bbox' => '357.59 722.68 370.31 731.45',
                       'content' => 'the',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '374.893 722.679 418.122 731.445',
+                      'bbox' => '374.89 722.68 418.12 731.45',
                       'content' => 'underlying',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '422.706 722.679 465.153 731.445',
+                      'bbox' => '422.71 722.68 465.15 731.45',
                       'content' => 'processing',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '469.737 722.679 484.788 731.445',
+                      'bbox' => '469.74 722.68 484.79 731.45',
                       'content' => 'and',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '489.372 722.679 520.064 731.445',
+                      'bbox' => '489.37 722.68 520.06 731.45',
                       'content' => 'binding',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '524.647 722.679 554.163 731.445',
+                      'bbox' => '524.65 722.68 554.16 731.45',
                       'content' => 'mecha-',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '313.229 734.429 336.91 743.195',
+                      'bbox' => '313.23 734.43 336.91 743.20',
                       'content' => 'nisms',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '339.066 734.429 359.644 743.195',
+                      'bbox' => '339.07 734.43 359.64 743.20',
                       'content' => 'seem',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '361.8 734.429 369.782 743.195',
+                      'bbox' => '361.80 734.43 369.78 743.20',
                       'content' => 'to',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '371.938 734.429 390.536 743.195',
+                      'bbox' => '371.94 734.43 390.54 743.20',
                       'content' => 'have',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '392.692 734.429 427.059 743.195',
+                      'bbox' => '392.69 734.43 427.06 743.20',
                       'content' => 'diverged',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '429.216 734.429 455.064 743.195',
+                      'bbox' => '429.22 734.43 455.06 743.20',
                       'content' => 'widely',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '457.22 734.429 474.558 743.195',
+                      'bbox' => '457.22 734.43 474.56 743.20',
                       'content' => 'over',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '476.714 734.429 497.173 743.195',
+                      'bbox' => '476.71 734.43 497.17 743.20',
                       'content' => 'time.',
+                      'font' => 'DPFPIM+TT449O00',
                       'size' => '9'
                     },
                     {
-                      'bbox' => '257.844 760.289 282.935 767.585',
+                      'bbox' => '257.84 760.29 282.94 767.58',
                       'content' => 'Genome',
                       'italic' => '1',
+                      'font' => 'DPFPCN+GillSans-Italic',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '285.16 760.289 311.244 767.585',
+                      'bbox' => '285.16 760.29 311.24 767.58',
                       'bold' => '1',
                       'content' => 'Biology',
                       'italic' => '1',
+                      'font' => 'DPFPDI+GillSans-BoldItalic',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '313.465 760.289 331.217 767.585',
+                      'bbox' => '313.47 760.29 331.22 767.58',
                       'content' => '2003,',
+                      'font' => 'DPFPEN+GillSans',
                       'size' => '8'
                     },
                     {
-                      'bbox' => '333.44 760.289 351.606 767.585',
+                      'bbox' => '333.44 760.29 351.61 767.58',
                       'bold' => '1',
                       'content' => '4:212',
+                      'font' => 'DPFPGC+GillSans-Bold',
                       'size' => '8'
                     }
                   ],
