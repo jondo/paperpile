@@ -76,9 +76,6 @@ sub BUILD {
   $self->_json_file( File::Spec->catfile( $json_dir, "queue.json") );
 
   $self->restore;
-
-
-
 }
 
 sub dbh {
