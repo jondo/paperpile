@@ -167,8 +167,10 @@ QVariantMap PDF::wordList(int pageNum){
     // Font features
     mmap["size"] = word->getFontSize();
 
-    mmap["font"] = QString::fromUtf8(word->getFontName()->getCString());
-
+    if (word->getFontName()){
+      mmap["font"] = QString::fromUtf8(word->getFontName()->getCString());
+    }
+    
     if (word->getFontInfo()->isBold()) mmap["bold"]=1;
     if (word->getFontInfo()->isItalic()) mmap["italic"]=1;
     if (word->getRotation()) mmap["rotation"] = word->getRotation() * 90;

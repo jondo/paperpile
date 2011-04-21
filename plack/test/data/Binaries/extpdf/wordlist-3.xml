@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<extpdf>
+  <comment>Extpdf: Create wordlist for PDF with empty fonts.</comment>
+  <command>WORDLIST</command>
+  <inFile>test2.pdf</inFile>
+  <page>0</page>
+</extpdf>

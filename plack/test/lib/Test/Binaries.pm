@@ -13,7 +13,7 @@ use XML::Simple;
 
 use base 'Test::Class';
 
-sub extpdf : Tests(5) {
+sub extpdf : Tests(6) {
 
   my ($self) = @_;
 
@@ -21,7 +21,7 @@ sub extpdf : Tests(5) {
 
   ok( "-x $extpdf", "Extpdf is present and executable" );
 
-  foreach my $file ( 'info-1', 'wordlist-1', 'wordlist-2', 'text-1' ) {
+  foreach my $file ( 'info-1', 'wordlist-1', 'wordlist-2', 'wordlist-3', 'text-1' ) {
 
     my $arguments = $self->_get_arguments("$file.xml");
     my $output    = Paperpile::Utils->extpdf($arguments);
@@ -29,7 +29,7 @@ sub extpdf : Tests(5) {
     my $expected_file = Paperpile->path_to( "test", "data", "Binaries", "extpdf", "$file.out" );
 
     # Uncomment to write expected file
-    #open(OUT, ">$expected_file");
+    #open(OUT, ">$expected_file.2");
     #print OUT Dumper($output);
     #print OUT $output;
 
