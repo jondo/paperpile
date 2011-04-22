@@ -325,7 +325,7 @@ sub parse_freestyle {
   $self->von('');
   $self->jr('');
 
-  ( my $first, my $last, my $level ) = _parse_freestyle_helper($author_string);
+  ( my $first, my $last, my $jr, my $level ) = _parse_freestyle_helper($author_string);
 
   # If words are all upper case, casing is changed
   if ( $last =~ m/([A-Z])([A-Z]+)$/ ) {
@@ -347,6 +347,7 @@ sub parse_freestyle {
   # We have found a match with the simple patterns
   if ( $level < 9 ) {
     $self->last($last);
+    $self->jr($jr);
     $self->first($first);
   } else {
 
@@ -380,7 +381,12 @@ sub _parse_freestyle_helper {
   my @prefixes_special = ( 'del', 'de la', 'de', 'da', 'do' );
 
   chomp $name;
-  my ( $first, $last ) = ( '', '' );
+  my ( $first, $last, $jr ) = ( '', '', '' );
+
+  if ( $name =~ m/(.*)(\sJr\.?)$/i ) {
+    $name = $1;
+    $jr = 'Jr.';
+  }
 
   # remove leading and tailoring spaces
   $name =~ s/\s+$//;
@@ -388,9 +394,10 @@ sub _parse_freestyle_helper {
 
   # remove titles
   $name =~ s/\sPh\s?D$//i;
+  $name =~ s/,\sMD$//i;
 
-  if ( $name =~ m/Consortium/ ) {
-      return ( $first, $last, 9.0 );
+  if ( $name =~ m/Consortium/i ) {
+      return ( $first, $last, $jr, 9.0 );
   }
 
   my @tmp = split( /\s+/, $name );
@@ -402,7 +409,7 @@ sub _parse_freestyle_helper {
   if ( $#tmp == 1 ) {
     $first = $tmp[0];
     $last  = $tmp[1];
-    return ( $first, $last, 1.0 );
+    return ( $first, $last, $jr, 1.0 );
   }
 
   # NAMES WITH A PREFIX
@@ -410,7 +417,7 @@ sub _parse_freestyle_helper {
     if ( $name =~ /(.+)\s(\S{3,})\s($prefix)\s(.+)/i ) {
       $first = "$1";
       $last  = "$2 $3 $4";
-      return ( $first, $last, 1.1 );
+      return ( $first, $last, $jr, 1.1 );
     }
   }
 
@@ -418,14 +425,14 @@ sub _parse_freestyle_helper {
     if ( $name =~ /(.+)\s($prefix)\s(.+)/i ) {
       $first = "$1";
       $last  = "$2 $3";
-      return ( $first, $last, 1.2 );
+      return ( $first, $last, $jr, 1.2 );
     }
   }
 
   if ( $name =~ /(.+)\s([A-Z]+-van)\s(.+)/i ) {
     $first = "$1";
     $last  = "$2 $3";
-    return ( $first, $last, 1.2 );
+    return ( $first, $last, $jr, 1.2 );
   }
 
   # NAMES WITH THREE WORDS
@@ -448,7 +455,7 @@ sub _parse_freestyle_helper {
         $first = "$tmp[0]";
         $last  = "$tmp[1] $tmp[2]";
       }
-      return ( $first, $last, 2.0 );
+      return ( $first, $last, $jr, 2.0 );
     }
 
     # RULE 2.1: The word in the middle is an initial, while the first one is
@@ -457,7 +464,7 @@ sub _parse_freestyle_helper {
     if ( $tmp[0] !~ m/^[A-Z]\.?$/ and $tmp[1] =~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1]";
       $last  = $tmp[2];
-      return ( $first, $last, 2.1 );
+      return ( $first, $last, $jr, 2.1 );
     }
 
     # RULE 2.2: The first word and the word in the middle are both initials
@@ -465,7 +472,7 @@ sub _parse_freestyle_helper {
     if ( $tmp[0] =~ m/^[A-Z]\.?$/ and $tmp[1] =~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1]";
       $last  = $tmp[2];
-      return ( $first, $last, 2.2 );
+      return ( $first, $last, $jr, 2.2 );
     }
 
     # RULE 2.3:two full given names, and one last name
@@ -478,7 +485,7 @@ sub _parse_freestyle_helper {
         $first = "$tmp[0] $tmp[1]";
         $last  = "$tmp[2]";
       }
-      return ( $first, $last, 2.3 );
+      return ( $first, $last, $jr, 2.3 );
     }
 
     # RULE 2.4:if the middle word is all in lower case letters we consider it
@@ -487,7 +494,7 @@ sub _parse_freestyle_helper {
     if ( $tmp[1] =~ m/^[a-z]+$/ ) {
       $first = "$tmp[0] $tmp[1]";
       $last  = "$tmp[2]";
-      return ( $first, $last, 2.4 );
+      return ( $first, $last, $jr, 2.4 );
     }
 
   }
@@ -500,7 +507,7 @@ sub _parse_freestyle_helper {
     if ( $tmp[0] =~ m/^[A-Z]\.?$/ and $tmp[1] =~ m/^[A-Z]\.?$/ and $tmp[2] !~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1]";
       $last  = "$tmp[2] $tmp[3]";
-      return ( $first, $last, 3.0 );
+      return ( $first, $last, $jr, 3.0 );
     }
 
     # RULE 3.1: The first THREE words are all initials.
@@ -508,7 +515,7 @@ sub _parse_freestyle_helper {
     if ( $tmp[0] =~ m/^[A-Z]\.?$/ and $tmp[1] =~ m/^[A-Z]\.?$/ and $tmp[2] =~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1] $tmp[2]";
       $last  = "$tmp[3]";
-      return ( $first, $last, 3.1 );
+      return ( $first, $last, $jr, 3.1 );
     }
 
     # RULE 3.2: One given name and two initials
@@ -516,7 +523,7 @@ sub _parse_freestyle_helper {
     if ( $tmp[0] !~ m/^[A-Z]\.?$/ and $tmp[1] =~ m/^[A-Z]\.?$/ and $tmp[2] =~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1] $tmp[2]";
       $last  = "$tmp[3]";
-      return ( $first, $last, 3.2 );
+      return ( $first, $last, $jr, 3.2 );
     }
 
     # RULE 3.3: Two given names and one initial
@@ -524,7 +531,7 @@ sub _parse_freestyle_helper {
     if ( $tmp[0] !~ m/^[A-Z]\.?$/ and $tmp[1] !~ m/^[A-Z]\.?$/ and $tmp[2] =~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1] $tmp[2]";
       $last  = "$tmp[3]";
-      return ( $first, $last, 3.3 );
+      return ( $first, $last, $jr, 3.3 );
     }
 
     # RULE 3.4: One given name and one initials
@@ -532,7 +539,7 @@ sub _parse_freestyle_helper {
     if ( $tmp[0] !~ m/^[A-Z]\.?$/ and $tmp[1] =~ m/^[A-Z]\.?$/ and $tmp[2] !~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1]";
       $last  = "$tmp[2] $tmp[3]";
-      return ( $first, $last, 3.4 );
+      return ( $first, $last, $jr, 3.4 );
     }
 
     # RULE 3.5: Initial/Name/Initial
@@ -540,7 +547,7 @@ sub _parse_freestyle_helper {
     if ( $tmp[0] =~ m/^[A-Z]\.?$/ and $tmp[1] !~ m/^[A-Z]\.?$/ and $tmp[2] =~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1] $tmp[2]";
       $last  = "$tmp[3]";
-      return ( $first, $last, 3.5 );
+      return ( $first, $last, $jr, 3.5 );
     }
 
     # RULE 3.6: Initial/Name/Name
@@ -548,7 +555,7 @@ sub _parse_freestyle_helper {
     if ( $tmp[0] =~ m/^[A-Z]\.?$/ and $tmp[1] !~ m/^[A-Z]\.?$/ and $tmp[2] !~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0]";
       $last  = "$tmp[1] $tmp[2] $tmp[3]";
-      return ( $first, $last, 3.6 );
+      return ( $first, $last, $jr, 3.6 );
     }
 
     # RULE 3.7: Three given names
@@ -556,7 +563,7 @@ sub _parse_freestyle_helper {
     if ( $tmp[0] !~ m/^[A-Z]\.?$/ and $tmp[1] !~ m/^[A-Z]\.?$/ and $tmp[2] !~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1] $tmp[2]";
       $last  = "$tmp[3]";
-      return ( $first, $last, 3.7 );
+      return ( $first, $last, $jr, 3.7 );
     }
   }
 
@@ -571,7 +578,7 @@ sub _parse_freestyle_helper {
       and $tmp[3] !~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1]";
       $last  = "$tmp[2] $tmp[3] $tmp[4]";
-      return ( $first, $last, 4.0 );
+      return ( $first, $last, $jr, 4.0 );
     }
 
     # RULE 4.1: The first THREE words are all initials.
@@ -582,7 +589,7 @@ sub _parse_freestyle_helper {
       and $tmp[3] !~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1] $tmp[2]";
       $last  = "$tmp[3] $tmp[4]";
-      return ( $first, $last, 4.1 );
+      return ( $first, $last, $jr, 4.1 );
     }
 
     # RULE 4.2: The first FOUR words are all initials.
@@ -593,7 +600,7 @@ sub _parse_freestyle_helper {
       and $tmp[3] =~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1] $tmp[2] $tmp[3]";
       $last  = "$tmp[4]";
-      return ( $first, $last, 4.2 );
+      return ( $first, $last, $jr, 4.2 );
     }
 
     # RULE 4.3: Initial/Name/Initial
@@ -604,7 +611,7 @@ sub _parse_freestyle_helper {
       and $tmp[3] !~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1] $tmp[2]";
       $last  = "$tmp[3] $tmp[4]";
-      return ( $first, $last, 4.3 );
+      return ( $first, $last, $jr, 4.3 );
     }
 
     # RULE 4.4: Initial/Initial/Name/Initial
@@ -615,7 +622,7 @@ sub _parse_freestyle_helper {
       and $tmp[3] =~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1] $tmp[2] $tmp[3]";
       $last  = "$tmp[4]";
-      return ( $first, $last, 4.4 );
+      return ( $first, $last, $jr, 4.4 );
     }
 
     # RULE 4.5: Name/Initial/Initial/Initial
@@ -626,7 +633,7 @@ sub _parse_freestyle_helper {
       and $tmp[3] =~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1] $tmp[2] $tmp[3]";
       $last  = "$tmp[4]";
-      return ( $first, $last, 4.5 );
+      return ( $first, $last, $jr, 4.5 );
     }
 
     # RULE 4.6: Name/Initial/Initial/Name
@@ -637,7 +644,7 @@ sub _parse_freestyle_helper {
       and $tmp[3] !~ m/^[A-Z]\.?$/ ) {
       $first = "$tmp[0] $tmp[1] $tmp[2] $tmp[3]";
       $last  = "$tmp[4]";
-      return ( $first, $last, 4.6 );
+      return ( $first, $last, $jr, 4.6 );
     }
 
     # RULE 4.7: four given names and one last name
@@ -649,7 +656,7 @@ sub _parse_freestyle_helper {
       and length( $tmp[4] ) > 2 ) {
       $first = "$tmp[0] $tmp[1] $tmp[2] $tmp[3]";
       $last  = "$tmp[4]";
-      return ( $first, $last, 4.7 );
+      return ( $first, $last, $jr, 4.7 );
     }
   }
 
@@ -662,7 +669,7 @@ sub _parse_freestyle_helper {
   if ( $tmp[0] =~ m/^[A-Z]\.?$/ and $tmp[ $#tmp - 1 ] =~ m/^[A-Z]\.?$/ ) {
     $last = pop @tmp;
     $first = join( " ", @tmp );
-    return ( $first, $last, 5.0 );
+    return ( $first, $last, $jr, 5.0 );
   }
 
   # Roel L H M G Spaetjens
@@ -674,7 +681,7 @@ sub _parse_freestyle_helper {
     if ( $all_initials_flag == 1 ) {
       $last = pop @tmp;
       $first = join( " ", @tmp );
-      return ( $first, $last, 5.1 );
+      return ( $first, $last, $jr, 5.1 );
     }
   }
 
@@ -682,7 +689,7 @@ sub _parse_freestyle_helper {
   if ( $tmp[ $#tmp - 1 ] =~ m/^[A-Z]\.?$/ ) {
     $last = pop @tmp;
     $first = join( " ", @tmp );
-    return ( $first, $last, 5.2 );
+    return ( $first, $last, $jr, 5.2 );
   }
 
   # Anabela M Santos Batista Pombo
@@ -702,7 +709,7 @@ sub _parse_freestyle_helper {
     if ( $nr_initials > 0 and $nr_initials <= $#tmp - 1 ) {
       $last = pop @tmp;
       $first = join( " ", @tmp );
-      return ( $first, $last, 5.3 );
+      return ( $first, $last, $jr, 5.3 );
     }
   }
 
@@ -710,10 +717,10 @@ sub _parse_freestyle_helper {
   if ( $#tmp == 2 and $tmp[1] =~ m/^(\x{C5}\x{81}|\x{C3}\x{98})/ ) {
     $last = pop @tmp;
     $first = join( " ", @tmp );
-    return ( $first, $last, 6.0 );
+    return ( $first, $last, $jr, 6.0 );
   }
 
-  return ( $first, $last, 9.0 );
+  return ( $first, $last, $jr, 9.0 );
 }
 
 #is there a built-in way of doing that?

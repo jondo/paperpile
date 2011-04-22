@@ -1,0 +1,333 @@
+---
+authors: 'Bussemaker, Harmen J. and Li, Hao and Siggia, Eric D.'
+title: Regulatory Element Detection using a Probabilistic Segmentation Model
+---
+authors: 'Bystroff, Christopher and Shao, Yu and Yuan, Xin'
+title: Five hierarchical levels of sequence-structure correlation in proteins
+---
+authors: 'Cai, Deyou and Delcher, Arthur and Kao, Ben and Kasif, Simon'
+title: Modeling splice sites with Bayes networks
+---
+authors: 'Cai, Yu-Dong and Zhou, Guo-Ping and Chou, Kuo-Chen'
+title: Support Vector Machines for Predicting Membrane Protein Types by Using Functional Domain Composition
+---
+authors: 'Campbell, Matthew A and Haas, Brian J and Hamilton, John P and Mount, Stephen M and Buell, C Robin'
+doi: 10.1186/1471-2164-7-327
+title: Comprehensive analysis of alternative splicing in rice and comparative analyses with Arabidopsis
+---
+authors: 'Greer Card, Deborah A. and Hebbar, Pratibha B. and Li, Leping and Trotter, Kevin W. and Komatsu, Yoshihiro and Mishina, Yuji and Archer, Trevor K.'
+doi: 10.1128/MCB.00359-08
+title: Oct4/Sox2-Regulated miR-302 Targets Cyclin D1 in Human Embryonic Stem Cells
+---
+authors: 'Carlson, Christopher S. and Thomas, Daryl J. and Eberle, Michael A. and Swanson, Johanna E. and Livingston, Robert J. and Rieder, Mark J. and Nickerson, Deborah A.'
+doi: 10.1101/gr.4326505
+title: Genomic regions exhibiting positive selection identified from dense genotype data
+---
+authors: 'Caseau, Yves and Laburthe, François'
+title: Solving Various Weighted Matching Problems with Constraints
+---
+authors: 'Caselle, Michele and Di Cunto, Ferdinando and Provero, Paolo'
+title: 'Correlating overrepresented upstream motifs to gene expression: a computational approach to regulatory element discovery in eukaryotes'
+---
+authors: 'Castellano, Sergi and Morozova, Nadya and Morey, Marta and Berry, Marla J. and Serras, Florenci and Corominas, Montserrat and Guigó, Roderic'
+title: In silico identification of novel selenoproteins in the Drosophila melanogaster genome
+---
+authors: 'Cataron, Angel and Andonie, Rzvan'
+title: Informational Energy Kernel for LVQ
+---
+authors: 'Cavaloc, Yvon and Bourgeois, Cyril F. and Kister, Liliane and STÉVENIN, James'
+title: The splicing factors 9G8 and SRp20 transactivate splicing through different and specific enhancers
+---
+authors: 'Cech, Thomas R.'
+title: Ribozymeengineering
+---
+authors: 'Cech, Thomas R.'
+title: RNA finds a simpler way
+---
+authors: 'Cejtin, Henry and Edler, Jan and Gottlieb, Allan and Helling, Robert and Li, Hao and Philbin, James and Wingreen, Ned and Tang, Chao'
+doi: 10.1063/1.1423324
+title: Fast tree search for enumeration of a lattice model of protein folding
+---
+authors: 'Celotto, Alicia M. and Graveley, Brenton R.'
+title: Alternative Splicing of the Drosophila Dscam Pre-mRNA Is Both Temporally and Spatially Regulated
+---
+authors: 'Cerchia, Laura and Hamm, Jorg and Libri, Domenico and Tavitian, Bertrand and de Franciscis, Vittorio'
+title: Nucleic acid aptamers in cancer medicine
+---
+authors: 'Chamary, JV and Hurst, Laurence D'
+doi: 10.1186/gb-2005-6-9-r75
+title: Evidence for selection on synonymous mutations affecting stability of mRNA secondary structure in mammals
+---
+authors: 'Chan, Hue Sun and Dill, Ken A.'
+title: 'Protein Folding in the Landscape Perspective: Chevron Plots and Non-Arrhenius Kinetics'
+---
+authors: 'Chang, Wen-Chieh and Li, Chang-Wei and Chen, Bor-Sen'
+doi: 10.1186/1471-2105-6-44
+title: Quantitative inference of dynamic regulatory pathways via microarray data
+---
+authors: 'Chappell, Stephen A. and Edelman, Gerald M. and Mauro, Vincent P.'
+title: A 9-nt segment of a cellular mRNA can function as an internal ribosome entry site (IRES) and when present in linked multiple copies greatly enhances IRES activity
+---
+authors: 'Charikar, Moses and Guruswami, Venkatesan and Kumar, Ravi and Rajagopalan, Sridhar and Sahai, Amit'
+title: Combinatorial Feature Selection Problems
+---
+authors: 'Charlesworth, Deborah'
+doi: 10.1371/journal.pgen.0020064
+title: Balancing Selection and Its Effects on Sequences in Nearby Genome Regions
+---
+authors: 'Chartrand, P. and Meng, X-H. and Singer, R. H. and Long, R. M.'
+title: Structural elements required for the localization of ASH1 mRNA and of a green fluorescent protein reporter particle in vivo
+---
+authors: 'Chen, Chien Peter and Kernytsky, Andrew and Rost, Burkhard'
+title: Transmembrane helix predictions revisited
+---
+authors: 'Chen, Xin and Kwong, Sam and Li, Ming'
+title: A Compression Algorithm for DNA Sequences and Its Applications in Genome Comparison
+---
+authors: 'Chen, Te-Ming and Lu, Chung-Chin and Li, Wen-Hsiung'
+title: Prediction of Splice Sites with Dependency Graphs and Their Expanded Bayesian Networks
+---
+authors: 'Chen, Kevin and Maaskola, Jonas and Siegal, Mark L. and Rajewsky, Nikolaus'
+doi: 10.1371/journal.pone.0005681
+title: 'Reexamining microRNA Site Accessibility in Drosophila: A Population Genomics Study'
+---
+authors: 'Chen, Feng and Mackey, Aaron J. and Vermunt, Jeroen K. and Roos, David S.'
+doi: 10.1371/journal.pone.0000383
+title: Assessing Performance of Orthology Detection Strategies Applied to Eukaryotic Genomes
+---
+authors: 'Chen, Ken and McLellan, Michael D. and Ding, Li and Wendl, Michael C. and Kasai, Yumi and Wilson, Richard K. and Mardis, Elaine R.'
+doi: 10.1101/gr.6151507
+title: 'PolyScan: An automatic indel and SNP detection approach to the analysis of human resequencing data'
+---
+authors: 'Chen, Jessica Walton and Romero, Pedro and Uversky, Vladimir N. and Dunker, A. Keith'
+doi: 10.1021/pr060049p
+title: 'Conservation of Intrinsic Disorder in Protein Domains and Families: II. Functions of Conserved Disorder'
+---
+authors: 'Chen, Jeff Yi-Fu and Stands, Leah and Staley, Jonathan P. and Jackups, Jr., Ronald R. and Latus, Lori J. and Chang, Tien-Hsien'
+title: 'Specific Alterations of U1-C Protein or U1 Small Nuclear RNA Can Eliminate the Requirement of Prp28p, an Essential DEAD Box Splicing Factor'
+---
+authors: 'Chen, Jih-H. and Le, Shu-Yun and Maizel, Jacob V.'
+title: 'Prediction of common secondary structures of RNAs: a genetic algorithm approach'
+---
+authors: 'Chen, Shi-Jie and Dill, Ken A.'
+title: RNA folding energy landscapes
+---
+authors: 'Chern, Tzu-Ming and van Nimwegen, Erik and Kai, Chikatoshi and Kawai, Jun and Carninci, Piero and Hayashizaki, Yoshihide and Zavolan, Mihaela'
+doi: 10.1371/journal.pgen.0020045
+title: A Simple Physical Model Predicts Small Exon Length Variations
+---
+authors: 'Chetouani, F. and Monestié, P. and Thébault, P. and Gaspin, C. and Michot, B.'
+title: 'ESSA: an integrated and interactive computer tool for analysing RNA secondary structure'
+---
+authors: 'Chiang, TSUNG-HAN and Apaydin, Mehmet Serkan and Brutlag, Douglas L. and Hsu, David and Latombe, JEAN-CLAUDE'
+doi: 10.1089/cmb.2007.R004
+title: 'Using Stochastic Roadmap Simulation to Predict Experimental Quantities in Protein Folding Kinetics: Folding Rates and Phi-Values'
+---
+authors: 'Chitsaz, Hamidreza and Backofen, Rolf and Sahinalp, S. Cenk'
+title: 'biRNA: Fast RNA-RNA Binding Sites Prediction'
+---
+authors: 'Chiu, Chi-hua and Amemiya, Chris and Dewar, Ken and Kim, Chang-Bae and Ruddle, Frank H. and Wagner, Gunter P.'
+doi: 10.1073/pnas.052709899
+title: Molecular evolution of the HoxA cluster in the three major gnathostome lineages
+---
+authors: 'Cho, Yangrae and Walbot, Virginia'
+title: 'Computational methods for gene annotation: the Arabidopsis genome'
+---
+authors: 'Chua, Katrin and Reed, Robin'
+doi: 10.1128/MCB.21.5.1509-1514.2001
+title: An Upstream AG Determines Whether a Downstream AG Is Selected during Catalytic Step II of Splicing
+---
+authors: 'Chua, Yii Leng and Watson, Lucy A. and Gray, John C.'
+doi: 10.1105/tpc.011825
+title: The Transcriptional Enhancer of the Pea Plastocyanin Gene Associates with the Nuclear Matrix and Regulates Gene Expression through Histone Acetylation
+---
+authors: 'Chuzhanova, Nadia A. and Jones, Antonia J. and Margetts, Steve'
+title: Feature selection for genetic sequence classification
+---
+authors: 'ILAN CHYTIL, M and Peterson, Blake R. and Rlanson, Daniel A. E and Verdine, Gregory L.'
+title: The orientation of the AP-1 heterodimer on DNA strongly affects transcriptional potency
+---
+authors: 'Cieplak, Marek and Hoang, Trinh Xuan and Li, Mai Suan'
+title: Scaling of Folding Properties in Simple Models of Proteins
+---
+arxivid: 0704.3496v1
+authors: 'Gurski, Frank'
+title: Polynomial algorithms for protein similarity search for restricted mRNA structures
+---
+authors: 'Clark, M. S.'
+title: 'Comparative genomics: the key to understanding the Human Genome Project'
+---
+authors: 'Clark, Hilary F. and Gurney, Austin L. and Abaya, Evangeline and Baker, Kevin and Baldwin, Daryl and Brush, Jennifer and Chen, Jian and Chow, Bernard and Chui, Clarissa and Crowley, Craig and Currell, Bridget and Deuel, Bethanne and Dowd, Patrick and Eaton, Dan and Foster, Jessica and Grimaldi, Christopher and Gu, Qimin and Hass, Philip E. and Heldens, Sherry and Huang, Arthur and Kim, Hok Seon and Klimowski, Laura and Jin, Yisheng and Johnson, Stephanie and Lee, James and Lewis, Lhney and Liao, Dongzhou and Mark, Melanie and Robbie, Edward and Sanchez, Celina and Schoenfeld, Jill and Seshagiri, Somasekar and Simmons, Laura and Singh, Jennifer and Smith, Victoria and Stinson, Jeremy and Vagts, Alicia and Vandlen, Richard and Watanabe, Colin and Wieand, David and Woods, Kathryn and Xie, Ming-Hong and Yansura, Daniel and Yi, Sothy and Yu, Guoying and Yuan, Jean and Zhang, Min and Zhang, Zemin and Goddard, Audrey and Wood, William I. and Godowski, Paul'
+doi: 10.1101/gr.1293003
+title: 'The Secreted Protein Discovery Initiative (SPDI), a Large-Scale Effort to Identify Novel Human Secreted and Transmembrane Proteins: A Bioinformatics Assessment'
+---
+authors: 'Clark, Francis and Thanaraj, T. A.'
+title: Categorization and characterization of transcript-confirmed constitutively and alternatively spliced introns and exons from human
+---
+authors: 'Claverie, Jean-Michel'
+title: Computational Methods for Exon Detection
+---
+authors: 'Clemens, Michael J. and Bommer, Ulrich-Axel'
+title: 'Translational control: the cancer connection'
+---
+authors: 'Clerte, Caroline and Hall, Kathleen B.'
+doi: 10.1021/bi049117g
+title: Global and Local Dynamics of the U1A Polyadenylation Inhibition Element (PIE) RNA and PIE RNA-U1A Complexes
+---
+authors: 'Clote, Peter and FERRÉ, Fabrizio and Kranakis, Evangelos and Krizanc, Danny'
+doi: 10.1261/rna.7220505
+title: Structural RNA has lower folding energy than random RNA of the same dinucleotide frequency
+---
+authors: 'Cokol, Murat and Nair, Rajesh and Rost, Burkhard'
+title: Finding nuclear localization signals
+---
+authors: 'Colbourn, Charles J. and Ling, Alan C. H. and Tompa, Martin'
+title: Construction of optimal quality control for oligo arrays
+---
+authors: 'Cole, J. R. and Chai, B. and Farris, R. J. and Wang, Q. and Kulam, S. A. and McGarrell, D. M. and Garrity, G. M. and Tiedje, J. M.'
+doi: 10.1093/nar/gki038
+title: 'The Ribosomal Database Project (RDP-II): sequences and tools for high-throughput rRNA analysis'
+---
+authors: 'Coleman, Flick'
+title: The Velocities of Gas Molecules
+---
+authors: 'Coleman, Timothy P. and Roesser, James R.'
+doi: 10.1021/bi9808058
+title: 'RNA Secondary Structure: An Important cis-Element in Rat Calcitonin/CGRP Pre-Messenger RNA Splicing'
+---
+authors: 'Farach-Colton, Martin and Landau, Gad M. and Sahinalp, S. Cenk and Tsur, Dekel'
+title: Optimal spaced seeds for faster approximate string matching
+---
+authors: 'Condon, Anne and Davy, Beth and Tarrant, Finbarr and Rastegari, Baharak and Zhao, Shelly'
+title: Classifying RNA Pseudoknotted Structures
+---
+authors: 'S, Gerolama Condorelli and Buenos, Raphael and Robert, '
+title: Two Alternatively Spliced Formsof the Human Insulin-like Growth Factor I Receptor Have Distinct Biological Activities and Internalization Kinetics
+---
+authors: 'Cook, Kathleen S. and Groves, Douglas L. and Min, Hye Yeong and Spiegelman, Bruce M.'
+title: A developmentally regulated mRNA from 3T3 adipocytes encodes a novel serine protease homologue
+---
+authors: 'Cootes, A. P. and Curmi, P. M. G. and Torda, A. E.'
+title: 'Automated protein design and sequence optimisation: scoring functions and the search problem'
+---
+authors: 'Copeland, Paul R. and Fletcher, Julia E. and Carlson, Bradley A. and Hatfield, Dolph L. and Driscoll, Donna M.'
+title: 'A novel RNA binding protein, SBP2, is required for the translation of mammalian selenoprotein mRNAs'
+---
+authors: 'Copley, Richard R. and Doerks, Tobias and Letunic, Ivica and Bork, Peer'
+title: Protein domain analysis in the era of complete genomes
+---
+authors: 'Corcelette, Stéphanie and Massé, Thierry and Madjar, Jean-Jacques'
+title: Initiation of translation by non-AUG codons in human T-cell lymphotropic virus type I mRNA encoding both Rex and Tax regulatory proteins
+---
+authors: 'Corpet, Florence and Servant, Florence and Gouzy, Jérôme and Kahn, Daniel'
+title: 'ProDom and ProDom-CG: tools for protein domain analysis and whole genome comparisons'
+---
+authors: 'Cozman, Fabio Gagliardi'
+title: Semi-Supervised Learning of Mixture Models
+---
+authors: 'Cozman, Fabio Gagliardi'
+title: Semi-Supervised Learning of Mixture Models and Bayesian Networks
+---
+authors: 'Cramer, Paula and GUSTAVO PESCE, C. and Baralle, Francisco E. and Kornblihtt, Alberto R.'
+title: Functional association between promoter structure and transcript alternative splicing
+---
+authors: 'Crowley, Evelyn M. and Roeder, Kathryn and Bina, Minou'
+title: A Statistical Model for Locating Regulatory Regions in Genomic DNA
+---
+authors: 'Cserjesi, Peter and Lilly, Brenda and Hinkley, Craig and Perry, Michael and Eric, '
+title: Homeodomain ProteinMHox and MADS Protein Myocyte Enhancer-binding Factor-2 Converge on a Common Element in the Muscle Creatine Kinase Enhancer
+---
+authors: 'Cui, Yan and Wong, Wing Hung and Bornberg-Bauer, Erich and Chan, Hue Sun'
+doi: 10.1073/pnas.022240299
+title: 'Recombinatoric exploration of novel folded structures: A heteropolymer-based model of protein evolutionary landscapes'
+---
+authors: 'Culbertson, Michael R and Leeds, Peter F'
+doi: 10.1016/S0959-437X0300014-5
+title: Looking at mRNA decay pathways through the window of molecular evolution
+---
+authors: 'Cupal, Jan and Kopp, Stephan and Stadler, Peter F.'
+title: RNA Shape Space Topology
+---
+authors: 'Daggett, Valerie and Fersht, Alan'
+title: The present view of the mechanism of protein folding
+---
+authors: 'Daggett, Valerie'
+title: Long timescale simulations
+---
+authors: 'Palù, Alessandro Dal and Dovier, Agostino and Fogolari, Federico'
+doi: 10.1186/1471-2105-5-186
+title: Constraint Logic Programming approach to protein structure prediction
+---
+authors: 'Palu, Alessandro Dal'
+title: Introduction to the Special Issue on Bioinformatics and Constraints
+---
+authors: 'Dal Palu, A. and Dovier, A. and Pontelli, E. and Rossi, G.'
+title: Integrating Finite Domain Constraints and CLP with Sets
+---
+authors: 'Pal, Alessandro Dal and Will, Sebastian and Backofen, Rolf and Dovier, Agostino'
+title: Constraint Based Protein Structure Prediction Exploiting Secondary Structure Information
+---
+authors: 'Damgaard, Christian Kroun and {THOMAS ØSTERGAARD TANGE} and Kjems, JØRGEN'
+title: hnRNP A1 controls HIV-1 mRNA splicing through cooperative binding to intron and exon splicing silencers in the context of a conserved secondary structure
+---
+authors: 'Dandekar, Thomas and Beyer, Katrin and Bork, Peer and Kenealy, MaryĆRose and Pantopoulos, Kostas and Hentze, Matthias and SonntagĆBuck, Vera and Flouriot, Gilles and Gannon, Frank and Keller, Walter and Schreiber, Sonja'
+title: 'Systematic genomic screening and analysis of mRNA in untranslated regions and mRNA precursors: combining experimental and computational approaches'
+---
+authors: 'Danoff, Sonye and Ferris, Christopher D. and DONATHt, Cornelia and FISCHERt, Gabriela and MUNEMITSUt, Susan and ULLRICHt, Axel and Snyder, Solomon and Ross, Christopher'
+title: 'Inositol 1,4,5-trisphosphate receptors: Distinct neuronal and nonneuronal forms derived by alternative splicing differ in phosphorylation'
+---
+authors: 'Davey, C. and Fraser, R. and Smolle, M. and Simmen, M. W. and Allan, J.'
+doi: 10.1016/S0022-28360201340-2
+title: Nucleosome Positioning Signals in the DNA Sequence of the Human and Mouse H19 Imprinting Control Regions
+---
+authors: 'David, Lior and Huber, Wolfgang and Granovskaia, Marina and Toedling, Joern and Palm, Curtis J. and Bofkin, Lee and Jones, Ted and Davis, Ronald W. and Steinmetz, Lars M.'
+doi: 10.1073/pnas.0601091103
+title: A high-resolution map of transcription in the yeast genome
+---
+authors: 'Davis, Natalie A. and Majee, Sangita S. and Kahn, Jason D.'
+title: TATA Box DNA Deformation with and without the TATA Box-binding Protein
+---
+authors: 'Davis, Jonathan H. and Szostak, Jack W.'
+doi: 10.1073/pnas.182095699
+title: Isolation of high-affinity GTP aptamers from partially structured RNA libraries
+---
+authors: 'Davis, Brigid M. and Waldor, Matthew K.'
+doi: 10.1111/j.1365-2958.2007.05796.x
+title: 'RNase E-dependent processing stabilizes MicX, a Vibrio cholerae sRNA'
+---
+authors: 'Dawson, Wayne K. and Fujiwara, Kazuya and Kawai, Gota'
+doi: 10.1371/journal.pone.0000905
+title: Prediction of RNA Pseudoknots Using Heuristic Modeling with Mapping and Sequential Folding
+---
+authors: 'Day, D A and Tuite, M F'
+title: 'Post-transcriptional gene regulatory mechanisms in eukaryotes: an overview'
+---
+authors: 'De Angelis, Elena and Brummendorf, Thomas and Cheng, Ling and Lemmon, Vance and Kenwrick, Sue'
+doi: 10.1074/jbc.M105156200
+title: Alternative Use of a Mini Exon of the L1 Gene Affects L1 Binding to Neural Ligands
+---
+authors: 'De Lay, Nicholas and Gottesman, Susan'
+doi: 10.1128/JB.01157-08
+title: The Crp-Activated Small Noncoding Regulatory RNA CyaR (RyeE) Links Nutritional Status to Group Behavior
+---
+authors: 'De Rijk, Peter and De Wachter, Rupert'
+title: 'DCSE, an interactive tool for sequence alignment and secondary structure research'
+---
+authors: 'De Rijk, Peter and Wuyts, Jan and De Wachter, Rupert'
+title: 'RnaViz 2: an improved representation of RNA secondary structure'
+---
+authors: 'Debruyne, Romuald'
+title: Domain Filtering Consistencies
+---
+authors: 'Kask, Kalev and Dechter, Rina'
+title: Generating Random Solutions for Constraint Satisfaction Problems
+---
+authors: 'Dechter, Rina and Mateescu, Robert'
+title: The Impact of AND/OR Search Spaces on Constraint Satisfaction and Counting
+---
+authors: 'Degroeve, Sven and De Baets, Bernard and Van de Peer, Yves and Rouze, Pierre'
+title: Feature subset selection for splice site prediction
+---
+authors: 'Del Bene, Filippo and Ettwiller, Laurence and Skowronska-Krawczyk, Dorota and Baier, Herwig and Matter, Jean-Marc and Birney, Ewan and Wittbrodt, Joachim'
+doi: 10.1371/journal.pgen.0030159
+title: In Vivo Validation of a Computationally Predicted Conserved Ath5 Target Gene Set
