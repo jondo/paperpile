@@ -15,7 +15,7 @@ use Paperpile::Formats::Bibtex;
 $ENV{PP_TESTING} = 1;
 
 # Clean workspace
-`rm -rf ../workspace/*`;
+`rm -rf ../workspace/.paperpile`;
 
 # Create mock instance of server
 my $a = Paperpile::App->new();
@@ -41,4 +41,4 @@ my $model = Paperpile::Utils->get_model('Library');
 $model->insert_pubs($data, 1);
 
 # Copy files to fixture folder
-`cp -r ../workspace/* ../data/Fixture/workspace`;
+`cp -r ../workspace/.paperpile/* ../data/Fixture/workspace`;

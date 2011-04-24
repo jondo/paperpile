@@ -6,6 +6,9 @@ use Test::More;
 use Data::Dumper;
 use YAML;
 use File::Path;
+use File::Copy::Recursive;
+use Plack::Test;
+use HTTP::Request::Common;
 
 use base 'Test::Class';
 
@@ -14,8 +17,99 @@ sub class { 'Paperpile' };
 sub startup : Tests(startup => 0) {
   my ($self) = @_;
 
+}
+
+sub init_app {
+
+  my ($self) = @_;
+
+  my $a = Paperpile::App->new();
+  $a->startup();
+
+  my $app = sub {
+    return $a->app(shift);
+  };
+
+  $self->{app} = $app;
 
 }
+
+sub setup_workspace {
+
+  my ($self) = @_;
+
+  $self->clean_workspace;
+
+  if (!$self->{app}){
+    $self->init_app;
+  }
+
+  my $fixtures = Paperpile->path_to("test","data","Fixture","workspace");
+  my $workspace = Paperpile->path_to("test","workspace");
+
+  File::Copy::Recursive::fcopy("$fixtures/paperpile.ppl", "$workspace/.paperpile/paperpile.ppl") || die($!);
+  File::Copy::Recursive::fcopy("$fixtures/settings.db", "$workspace/.paperpile/settings.db") || die($!);
+
+  my $r = $self->request("/ajax/app/init_session");
+
+  $self->{workspace} = $workspace;
+
+}
+
+sub clean_workspace {
+
+  my ($self) = @_;
+
+  rmtree( Paperpile->path_to("test","workspace") );
+
+}
+
+sub row_ok {
+
+  my ($self, $dbh, $table, $where, $test, $comment) = @_;
+
+  my $results = $dbh->selectrow_hashref("SELECT * FROM $table WHERE $where;");
+
+  foreach my $field (keys %$test){
+    is($results->{$field}, $test->{$field}, "$comment: $field=".$results->{$field});
+  }
+
+}
+
+sub row_count_ok {
+
+  my ($self, $dbh, $table, $where, $test, $comment) = @_;
+
+  (my $count) = $dbh->selectrow_array("SELECT COUNT(*) FROM $table WHERE $where;");
+
+  is($count, $test, $comment);
+
+}
+
+
+
+# Requests $path from Plack application. Returns HTTP::Response
+# object. If $content_type and $code are given two tests are added to
+# check for the given values.
+sub request {
+
+  my ( $self, $path, $content_type, $code ) = @_;
+
+  my $res;
+
+  test_psgi $self->{app}, sub {
+    my $cb = shift;
+    $res = $cb->( GET $path);
+  };
+
+  if ($content_type && $code){
+    is($res->code, $code, "Request $path: got 200");
+    is($res->header('Content-type'), $content_type, "Request $path: content type is $content_type");
+  }
+
+  return $res;
+}
+
 
 # Compare $pub against fields in $data. The following suffixes can be
 # used (default is "IS")

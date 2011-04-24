@@ -10,16 +10,25 @@ use File::Path;
 use Paperpile;
 use Paperpile::App;
 
-use base 'Test::Paperpile::Controller::Ajax';
+use base 'Test::Paperpile';
 
 sub class { 'Paperpile::Controller::Ajax::App' }
 
 sub startup : Test(startup => 1) {
   my ($self) = @_;
 
-  $self->SUPER::startup();
-
   use_ok $self->class;
+
+  my $a = Paperpile::App->new();
+  $a->startup();
+
+  my $app = sub {
+    return $a->app(shift);
+  };
+
+  $self->{app} = $app;
+
+  $self->{workspace} = Paperpile->path_to("test","workspace");
 
   # Clean workspace
   if ( !$self->{workspace} =~ m!test/workspace! ) {
@@ -43,8 +52,8 @@ sub init_session : Tests(10){
     ok(-d "$tmp_dir/$dir", "Subfolder '$dir' exists in temporary folder.");
   }
 
-  ok(-e "$workspace/paperpile.ppl", "Library database exists.");
-  ok(-e "$workspace/settings.db", "User settings database exists.");
+  ok(-e "$workspace/.paperpile/paperpile.ppl", "Library database exists.");
+  ok(-e "$workspace/.paperpile/settings.db", "User settings database exists.");
 
 }
 

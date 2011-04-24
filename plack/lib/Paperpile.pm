@@ -217,8 +217,8 @@ sub _substitutions {
 
   # For running tests we use different folders
   if ($ENV{PP_TESTING}){
-    $pp_user_dir  = $self->path_to("test","workspace");
-    $pp_paper_dir = $self->path_to("test","workspace","papers");
+    $pp_user_dir  = $self->path_to("test","workspace",".paperpile");
+    $pp_paper_dir = $self->path_to("test","workspace",".paperpile","papers");
   }
 
   return {

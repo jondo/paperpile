@@ -9,6 +9,7 @@ use utf8;
 use Paperpile;
 use Paperpile::App;
 use Paperpile::Queue;
+use Paperpile::Library::Publication;
 
 use base 'Test::Paperpile';
 
@@ -21,7 +22,7 @@ sub startup : Tests(startup => 1) {
 
 }
 
-sub save_store : Tests(14) {
+sub A_save_store : Tests(14) {
 
   my ($self) = @_;
 
@@ -47,23 +48,31 @@ sub save_store : Tests(14) {
   $job->save;
   $job->{info}->{test} = undef;
   $job->restore;
-  is( $job->{info}->{test}, "some text 私はガラス", "Saving/restoring object to/from freeze/thaw dump" );
+  is(
+    $job->{info}->{test},
+    "some text 私はガラス",
+    "Saving/restoring object to/from freeze/thaw dump"
+  );
 
   ok( -e $job->_json_file, "JSON file is present." );
 
-  open( IN, "<".$job->_json_file );
+  open( IN, "<" . $job->_json_file );
   my $string = '';
   $string .= $_ while (<IN>);
   my $data = decode_json($string);
 
-  is( $data->{info}->{test}, "some text 私はガラス", "Saving/restoring object to/from JSON file" );
+  is(
+    $data->{info}->{test},
+    "some text 私はガラス",
+    "Saving/restoring object to/from JSON file"
+  );
 
   $job->update_info( "test", "456" );
   $job->{info}->{test} = undef;
   $job->restore;
   is( $job->{info}->{test}, "456", "Updating info" );
 
-  open( IN, "<".$job->_json_file );
+  open( IN, "<" . $job->_json_file );
   $string = '';
   $string .= $_ while (<IN>);
   $data = decode_json($string);
@@ -104,7 +113,7 @@ sub save_store : Tests(14) {
 
 }
 
-sub run_cancel : Tests(23) {
+sub B_run_cancel : Tests(23) {
   my ($self) = @_;
 
   ## TEST_JOB1 normal job with several stages
@@ -199,6 +208,100 @@ sub run_cancel : Tests(23) {
 
 }
 
+sub C_pdf_download : Tests(3) {
+
+  my ($self) = @_;
+
+  $self->setup_workspace;
+
+  my $model = Paperpile::Utils->get_model('Library');
+
+  my $dbh = $model->dbh;
+
+  my $pub = Paperpile::Library::Publication->new();
+
+  $pub->title(
+    "Resequencing microarray probe design for typing genetically diverse viruses: human rhinoviruses and enteroviruses"
+  );
+  $pub->authors(
+    "Wang, Zheng and Malanoski, Anthony and Lin, Baochuan and Kidd, Carolyn and Long, Nina and Blaney, Kate and Thach, Dzung and Tibbetts, Clark and Stenger, David"
+  );
+  $pub->year("2008");
+  $pub->pmid("19046445");
+  $pub->doi("10.1186/1471-2164-9-577");
+
+  my $model = Paperpile::Utils->get_model('Library');
+  $model->insert_pubs( [$pub], 1 );
+
+  my $job = Paperpile::Job->new(
+    job_type => 'PDF_SEARCH',
+    pub      => $pub,
+  );
+
+  $job->run;
+
+  my $counter = 1;
+
+  while ( $counter++ <= 10 ) {
+    $job->restore;
+    last if ( $job->status eq 'DONE' );
+    sleep(1);
+  }
+
+  is( $job->status, 'DONE', "PDF search finished" );
+
+  $self->row_ok(
+    $dbh, "Publications", "pmid='19046445'",
+    { pdf_name => 'Wang2008.pdf' },
+    "PDF download ok"
+  );
+
+  ok(-e File::Spec->catfile( $self->{workspace}, ".paperpile", "papers", "Wang2008.pdf"), "PDF file exists.");
+
+}
+
+
+sub D_metadata_update : Tests(2) {
+
+  my ($self) = @_;
+
+  $self->setup_workspace;
+
+  my $model = Paperpile::Utils->get_model('Library');
+
+  my $dbh = $model->dbh;
+
+  my $pub = Paperpile::Library::Publication->new();
+
+  $pub->title("Unknown title");
+  $pub->pmid("19046445");
+
+  my $model = Paperpile::Utils->get_model('Library');
+  $model->insert_pubs( [$pub], 1 );
+
+  my $job = Paperpile::Job->new(
+    job_type => 'METADATA_UPDATE',
+    pub      => $pub,
+  );
+
+  $job->run;
+
+  my $counter = 1;
+
+  while ( $counter++ <= 10 ) {
+    $job->restore;
+    last if ( $job->status eq 'DONE' );
+    sleep(1);
+  }
+
+  is( $job->status, 'DONE', "Metadata update finished" );
+
+  $self->row_ok(
+    $dbh, "Publications", "pmid='19046445'",
+    { doi => '10.1186/1471-2164-9-577' },
+    "Metadata update correct"
+  );
+}
 
 
 
