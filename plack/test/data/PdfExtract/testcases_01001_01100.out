@@ -196,8 +196,9 @@ title: 'IRIS: Intermolecular RNA Interaction Search'
 authors: 'Pesant, Gilles'
 title: 'Counting Solutions of CSPs: A Structural Approach'
 ---
-authors: 'Library for folding, A and structures, comparing Rna secondary'
-title: Vienna RNA Package
+authors: 'Li, Li and Stoeckert, Jr., Christian J. and Roos, David S.'
+title: 'OrthoMCL: Identification of Ortholog Groups for Eukaryotic Genomes'
+doi: 10.1101/gr.1224503
 ---
 authors: 'Pevzner, Pavel A. and Tang, Haixu and Waterman, Michael S.'
 title: A New Approach to Fragment Assembly in DNA Sequencing

@@ -15,7 +15,7 @@ sub startup : Tests(startup => 1) {
   use_ok $self->class;
 }
 
-sub extract : Tests(5153) {
+sub extract : Tests(5157) {
 
   my ($self) = @_;
 
@@ -153,6 +153,32 @@ sub test_extract {
   close(FH);
 
   my @expected = YAML::Load($out);
+
+  if ( $#observed == $#expected ) {
+    foreach my $i ( 0 .. $#expected ) {
+      ( my $file = $infiles[$i]->{file} ) =~ s/(.*\/)(\d+\.pdf)/$2/;
+      if ( defined $expected[$i]->{title} ) {
+        $expected[$i]->{title} .= " | $file";
+        my $tmp = $observed[$i]->title();
+        $observed[$i]->title("$tmp | $file");
+      }
+      if ( defined $expected[$i]->{authors} ) {
+        $expected[$i]->{authors} .= " | $file";
+        my $tmp = $observed[$i]->authors();
+        $observed[$i]->authors("$tmp | $file");
+      }
+      if ( defined $expected[$i]->{doi} ) {
+        $expected[$i]->{doi} .= " | $file";
+        my $tmp = $observed[$i]->doi();
+        $observed[$i]->doi("$tmp | $file");
+      }
+      if ( defined $expected[$i]->{arxivid} ) {
+        $expected[$i]->{arxivid} .= " | $file";
+        my $tmp = $observed[$i]->arxivid();
+        $observed[$i]->arxivid("$tmp | $file");
+      }
+    }
+  }
 
   is( $#observed, $#expected, "$msg: read " . ( $#expected + 1 ) . " items" );
 
