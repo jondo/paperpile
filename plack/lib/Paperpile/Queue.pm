@@ -73,9 +73,14 @@ sub BUILD {
 
   my $json_dir = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'json' );
   mkdir $json_dir if ( !-e $json_dir );
-  $self->_json_file( File::Spec->catfile( $json_dir, "queue.json") );
+  my $json_file =  File::Spec->catfile( $json_dir, "queue.json");
+  $self->_json_file( $json_file );
 
   $self->restore;
+
+  # Set again to make sure it was not undefined in saved state
+  $self->_json_file( $json_file );
+
 }
 
 sub dbh {
@@ -493,7 +498,7 @@ sub as_hash {
     }
 
     next if (ref( $self->$key ) && $key ne 'running_jobs');
-
+    
     $hash{$key} = $value;
   }
 

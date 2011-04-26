@@ -306,19 +306,10 @@ sub run {
 
   if ( $^O eq 'MSWin32' ) {
 
-    # require 'Win32';
-    # require 'Win32::Process';
+    require 'Paperpile::Job::Win32';
 
-    # my $paperperl = Paperpile->path_to('perl5','win32','bin','paperperl.exe');
-    # my $worker = Paperpile->path_to('script','worker.pl');
+    Paperpile::Job::Win32::run($self->id);
 
-    # my $process;
-    # Win32::Process::Create($process,
-    #                        $paperperl,
-    #                        "$paperperl $worker ".$self->id,
-    #                        0,
-    #                        Win32::DETACHED_PROCESS,
-    #                        ".")|| die(Win32::FormatMessage( Win32::GetLastError() ));
 
   } else {
 
