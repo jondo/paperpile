@@ -24,6 +24,8 @@ use Mouse;
 
 use File::Spec;
 use File::HomeDir;
+use File::Copy;
+use File::Path;
 use Cwd qw(abs_path);
 
 use YAML::XS qw(LoadFile DumpFile);
@@ -238,6 +240,44 @@ sub log {
 
 }
 
+sub init_tmp_dir {
 
+  my ( $self ) = @_;
+
+  my $tmp_dir = $self->tmp_dir;
+
+  mkpath($tmp_dir);
+
+  if ( !( -w $tmp_dir ) ) {
+    FileWriteError->throw("Could not start application. Temporary file $tmp_dir not writable.");
+  }
+
+  foreach my $subdir ( 'rss', 'import', 'download', 'jobs', 'json', 'filesync' ) {
+    mkpath( File::Spec->catfile( $tmp_dir, $subdir ) );
+  }
+
+  # Clear temporary PDF downloads and file imports
+  unlink( glob( File::Spec->catfile( $tmp_dir, 'download', '*pdf' ) ) );
+  unlink( glob( File::Spec->catfile( $tmp_dir, 'import',   '*ppl' ) ) );
+
+  # Clear any potential lock files that have been left after a crash
+  unlink( glob( File::Spec->catfile( $tmp_dir, '*lock' ) ) );
+
+  # Clear session variables
+  unlink( File::Spec->catfile( $tmp_dir, 'local_session' ) );
+
+  # Clear log files of external processes
+  unlink( glob( File::Spec->catfile( $tmp_dir, 'worker_*.log' ) ) );
+
+  if ( not -e $self->config->{'queue_db'} ) {
+    copy( $self->path_to('db/queue.db'), $self->config->{'queue_db'} )
+      or
+        FileWriteError->throw("Could not start application (Error initializing queue database,  $!)");
+  } else {
+    my $q = Paperpile::Queue->new();
+    $q->clear_all;
+  }
+
+}
 
 1;

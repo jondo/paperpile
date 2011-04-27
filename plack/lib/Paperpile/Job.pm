@@ -238,7 +238,7 @@ sub remove {
   }
 
   unlink $self->_freeze_file;
-  unlink $self->_json_file;
+  unlink($self->_json_file);
 
 }
 
@@ -661,7 +661,7 @@ sub _save_json {
 
   print OUT $json;
 
-  close OUT;
+  close(OUT);
 
 }
 

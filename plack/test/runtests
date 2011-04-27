@@ -15,6 +15,11 @@ if ( $arch_string =~ /(darwin|osx)/i ) {
   $platform = 'osx';
 }
 
+if ( $arch_string =~ /(win32|msys)/i ) {
+  $platform = 'win32';
+}
+
+
 $ENV{PERL5LIB}=undef;
 $ENV{PLATFORM}=$platform;
 

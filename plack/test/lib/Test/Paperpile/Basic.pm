@@ -36,10 +36,11 @@ sub directories : Tests(9) {
 
   open(OUT, ">$tmp_dir/tmp");
   print OUT "tmp";
+  close(OUT);
 
   ok(-e "$tmp_dir/tmp", "write file to temp_dir");
 
-  unlink("$tmp_dir/tmp");
+  unlink("$tmp_dir/tmp") || die("Could not delete file from tmp_dir $!");
 
   ok(!(-e "$tmp_dir/tmp"), "delete file from temp_dir");
 

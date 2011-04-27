@@ -18,6 +18,8 @@ sub class { 'Paperpile::Job' }
 sub startup : Tests(startup => 1) {
   my ($self) = @_;
 
+  Paperpile->init_tmp_dir;
+
   use_ok $self->class;
 
 }
@@ -60,6 +62,7 @@ sub A_save_store : Tests(14) {
   my $string = '';
   $string .= $_ while (<IN>);
   my $data = decode_json($string);
+  close(IN);
 
   is(
     $data->{info}->{test},
@@ -76,6 +79,7 @@ sub A_save_store : Tests(14) {
   $string = '';
   $string .= $_ while (<IN>);
   $data = decode_json($string);
+  close(IN);
 
   is( $data->{info}->{test}, "456", "Saving/restoring object to/from JSON file" );
 
@@ -103,6 +107,7 @@ sub A_save_store : Tests(14) {
 
   $job->queued(0);
   $job->remove;
+
   ok( !( -e $job->_freeze_file ), "Deleting job. Freeze file is removed." );
   ok( !( -e $job->_json_file ),   "Deleting job. JSON file is removed." );
 
