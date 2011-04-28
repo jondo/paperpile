@@ -127,7 +127,7 @@ authors: 'Pazos, Florencio and Valencia, Alfonso'
 doi: 10.1002/prot.10074
 title: In Silico Two-Hybrid System for the Selection of Physically Interacting Protein Pairs
 ---
-title: ', Beyond the double helix'
+title: 'Beyond the double helix'
 ---
 authors: 'Pesole, Graziano and Liuni, Sabino and Grillo, Giorgio and Licciulli, Flavio and Mignone, Flavio and Gissi, Carmela and Saccone, Cecilia'
 title: "UTRdb and UTRsite: specialized databases of sequences and functional elements of 5' and 3' untranslated regions of eukaryotic mRNAs. Update 2002"
@@ -238,3 +238,104 @@ title: 'Neuroeconomics: The Consilience of Brain and Decision'
 authors: 'Doerks, Tobias and Copley, Richard R. and Schultz, Jorg and Ponting, Chris P. and Bork, Peer'
 doi: 10.1101/gr.203201
 title: Systematic Identification of Novel Protein Domain Families Associated with Nuclear Functions
+---
+authors: 'Luger, Karolin and Richmond, Timothy J'
+title: DNA binding within the nucleosome core
+---
+authors: 'Cormack, R. M.'
+title: A Review of Classification
+---
+authors: 'Klastorin, T. D.'
+title: Assessing Cluster Analysis Results
+---
+authors: 'Hattis, David G.'
+title: Reasonable Health and Safety in Reuse of Buildings as Presented in the Three Technical Guidelines
+---
+authors: 'Acemoglu, Daron and Johnson, Simon and Robinson, James A.'
+title: 'Reversal of Fortune: Geography and Institutions in the Making of the Modern World Income Distribution'
+---
+authors: 'Watmough, Shaun A. and Dillon, Peter J.'
+title: Lead Biogeochemistry in a Central Ontario Forested Watershed
+---
+authors: 'Foster, Donald J.'
+title: 'The Introductory Anthropology Course: A Multi-Track Approach for Community College Instruction'
+---
+authors: 'Butcher, Jerrod A. and Groce, Julie E. and Lituma, Christopher M. and Constanza Cocimano, M. and Sánchez-Johnson, Yara and Campomizzi, Andrew J. and Pope, Theresa L. and Reyna, Kelly S. and Knipps, Anna C. S.'
+title: 'Persistent Controversy in Statistical Approaches in Wildlife Sciences: A Perspective of Students'
+---
+authors: 'Ohler, Uwe and Niemann, Heinrich'
+title: 'Identification and analysis of eukaryotic promoters: recent computational approaches'
+---
+authors: 'Strahs, Daniel and Barash, Danny and Qian, Xiaoliang and Schlick, Tamar'
+title: Sequence-Dependent Solution Structure and Motions of 13 TATA/TBP (TATA-Box Binding Protein) Complexes
+---
+authors: 'Taverna, Darin M. and Goldstein, Richard A.'
+title: The Distribution of Structures in Evolving Protein Populations
+---
+authors: 'Wuchty, Stefan and Fontana, Walter and Hofacker, Ivo L. and Schuster, Peter'
+title: Complete Suboptimal Folding of RNA and the Stability of Secondary Structures
+---
+authors: 'Lu, Hui and Skolnick, Jeffrey'
+title: Application of Statistical Potentials to Protein Structure Refinement from Low Resolution Ab Initio Models
+---
+authors: 'Hud, Nicholas V. and Plavec, Janez'
+title: 'A Unified Model for the Origin of DNA Sequence- Directed Curvature'
+---
+authors: 'Boer, Judith M. and Huber, Wolfgang K. and Sültmann, Holger and Wilmer, Friederike and von Heydebreck, Anja and Haas, Stefan and Korn, Bernhard and Gunawan, Bastian and Vente, Andreas and Füzesi, Laszlo and Vingron, Martin and Poustka, Annemarie'
+doi: 10.1101/gr.184501
+title: 'Identification and Classification of Differentially Expressed Genes in Renal Cell Carcinoma by Expression Profiling on a Global Human 31,500-Element cDNA Array'
+---
+authors: 'Sauer, Robert T.'
+title: Evolution of a Protein Fold in Vitro
+---
+authors: 'Guigo, Roderic and Agarwal, Pankaj and Abril, Josep F. and Burset, Moises and Fickett, James W.'
+doi: 10.1101/gr.122800
+title: An Assessment of Gene Prediction Accuracy in Large DNA Sequences
+---
+authors: 'Kaessmann, Henrik and Zöllner, Sebastian and Nekrutenko, Anton and Li, Wen-Hsiung'
+doi: 10.1101/gr.520702
+title: Signatures of Domain Shuffling in the Human Genome
+---
+authors: 'Qin, Zhaohui S. and McCue, Lee Ann and Thompson, William and Mayerhofer, Linda and Lawrence, Charles E. and Liu, Jun S.'
+doi: 10.1038/nbt802
+title: Identification of co-regulated genes through Bayesian clustering of predicted regulatory binding sites
+---
+authors: 'Møller, Thorleif and Franch, Thomas and Udesen, Christina and Gerdes, Kenn and Valentin-Hansen, Poul'
+doi: 10.1101/gad.231702
+title: Spot 42 RNA mediates discoordinate expression of the E. coli galactose operon
+---
+authors: 'Mott, Richard and Schultz, Jörg and Bork, Peer and Ponting, Chris P.'
+doi: 10.1101/gr.96802
+title: Predicting Protein Cellular Localization Using a Domain Projection Method
+---
+authors: 'Ozkan, S. Banu and Dill, Ken A. and Bahar, Ivet'
+title: Computing the Transition State Populations in Simple Protein Models
+---
+authors: 'Parra, Genís and Reymond, Alexandre and Dabbouseh, Noura and Dermitzakis, Emmanouil T. and Castelo, Robert and Thomson, Timothy M. and Antonarakis, Stylianos E. and Guigó, Roderic'
+doi: 10.1101/gr.4145906
+title: Tandem chimerism as a means to increase protein complexity in the human genome
+---
+authors: 'Pearson, Joseph C. and Lemons, Derek and McGinnis, William'
+doi: 10.1038/nrg1726
+title: MODULATING HOX GENE FUNCTIONS DURING ANIMAL BODY PATTERNING
+---
+authors: 'Pevzner, Pavel A. and Sze, Sing-Hoi'
+title: Combinatorial Approaches to Finding Subtle Signals
+---
+authors: 'Reményi, Attila and Lins, Katharina and Johan Nissen, L. and Reinbold, Rolland and Schöler, Hans R. and Wilmanns, Matthias'
+doi: 10.1101/gad.269303
+title: Crystal structure of a POU/HMG/DNA ternary complex suggests differential assembly of Oct4 and Sox2 on two enhancers
+---
+authors: 'Sankoff, David'
+title: The early introduction of dynamic programming into computational biology
+---
+authors: 'Sharma, Cynthia M. and Darfeuille, Fabien and Plantinga, Titia H. and Vogel, Jörg'
+doi: 10.1101/gad.447207
+title: A small RNA regulates multiple ABC transporter mRNAs by targeting C/A-rich elements inside and upstream of ribosome-binding sites
+---
+authors: 'Udekwu, Klas I. and Darfeuille, Fabien and Vogel, Jörg and Reimegård, Johan and Holmqvist, Erik and Wagner, E. Gerhart H.'
+doi: 10.1101/gad.354405
+title: Hfq-dependent regulation of OmpA synthesis is mediated by an antisense RNA
+---
+authors: 'Dayem Ullah, A. and Kapsokalivas, L. and Mann, M. and Steinhfel, K.'
+title: Protein Folding Simulation by Two-Stage

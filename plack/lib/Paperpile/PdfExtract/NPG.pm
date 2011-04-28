@@ -80,7 +80,7 @@ sub parse {
           last
             if ( $l->[$i]->{nr_bad_words} > 0
             or $l->[$i]->{nr_bad_author_words} > 0
-            or $l->[$i]->{'adress_count'} > 0 );
+            or $l->[$i]->{'address_count'} > 0 );
 
 	  if ( $i > $last_t+1 ) {
 	    last if ( $l->[$i]->{nr_common_words} > 0);
