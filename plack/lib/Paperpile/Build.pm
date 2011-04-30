@@ -375,10 +375,6 @@ sub get_qruntime {
 
   my $tmp_dir = tempdir( CLEANUP => 1 );
 
-  # Fix for msys environment on windows
-  $tmp_dir=~s!\\!/!g;
-  $tmp_dir=~s!^c:!/c/!ig;
-
   my @platforms;
 
   if ($platform){
@@ -454,6 +450,10 @@ sub get_qruntime {
     }
 
     $self->echo("Extracting files.");
+
+    # Fix $tmp_dir for tar and mv under msys environment on windows
+    $tmp_dir=~s!\\!/!g;
+    $tmp_dir=~s!^c:!/c!ig;
 
     `tar -C $tmp_dir -xzf $tmp_dir/$file_name`;
 
@@ -558,12 +558,13 @@ sub push_qruntime {
 
     $self->echo("Copying Qt libraries...");
 
-    my @qt_libs = ('QtCore4.dll','QtGui4.dll',
-                   'QtNetwork4.dll','QtWebKit4.dll','QtXml4.dll',
-                   'phonon4.dll'
+    my @qt_libs = ('qt/bin/QtCore4.dll','qt/bin/QtGui4.dll',
+                   'qt/bin/QtNetwork4.dll','qt/bin/QtWebKit4.dll','qt/bin/QtXml4.dll',
+                   'qt/bin/phonon4.dll',
+                   'mingw/bin/libgcc_s_dw2-1.dll','mingw/bin/mingwm10.dll'
                   );
 
-    my $lib_dir = $self->qt_sdk."/qt/bin";
+    my $lib_dir = $self->qt_sdk;
 
     foreach my $lib (@qt_libs){
       `cp -r -L $lib_dir/$lib $dest_dir`;
@@ -574,7 +575,7 @@ sub push_qruntime {
     $self->echo("Copying Qt plugins...");
 
     foreach my $plugin ('codecs', 'imageformats'){
-      `cp -r $lib_dir/../plugins/$plugin $dest_dir/plugins`;
+      `cp -r $lib_dir/qt/plugins/$plugin $dest_dir/plugins`;
       `rm -f $dest_dir/plugins/$plugin/*a`;
       `rm -f $dest_dir/plugins/$plugin/*d4.dll`;
     }
