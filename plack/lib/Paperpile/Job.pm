@@ -28,6 +28,8 @@ use Paperpile::Library::Publication;
 use Paperpile::PdfCrawler;
 use Paperpile::PdfExtract;
 
+use Paperpile::Job::Win32;
+
 use Data::Dumper;
 use File::Path;
 use File::Spec;
@@ -306,7 +308,7 @@ sub run {
 
   if ( $^O eq 'MSWin32' ) {
 
-    require 'Paperpile::Job::Win32';
+    require Paperpile::Job::Win32;
 
     Paperpile::Job::Win32::run($self->id);
 
@@ -337,9 +339,9 @@ sub run {
       # Make sure that each job takes at least 1 second to be sent once
       # as "running" to frontend which is necessary to get updated
       # correctly. Clearly not optimal but works for now...
-      if ( $self->queued && ( $end_time - $start_time <= 1 ) ) {
-        sleep(1);
-      }
+      #if ( $self->queued && ( $end_time - $start_time <= 1 ) ) {
+      #  sleep(1);
+      #}
 
       $self->pid(-1);
 

@@ -44,11 +44,21 @@ sub setup_workspace {
     $self->init_app;
   }
 
+  # Copy database file into workspace directory
   my $fixtures = Paperpile->path_to("test","data","Fixture","workspace");
   my $workspace = Paperpile->path_to("test","workspace");
 
   File::Copy::Recursive::fcopy("$fixtures/paperpile.ppl", "$workspace/.paperpile/paperpile.ppl") || die($!);
   File::Copy::Recursive::fcopy("$fixtures/settings.db", "$workspace/.paperpile/settings.db") || die($!);
+
+  # Update paths in databases
+  my $dbh = DBI->connect("dbi:SQLite:$workspace/.paperpile/settings.db");
+  my $library = $dbh->quote("$workspace/.paperpile/paperpile.ppl");
+  $dbh->do("UPDATE Settings SET value=$library WHERE key='library_db'");
+
+  $dbh = DBI->connect("dbi:SQLite:$workspace/.paperpile/paperpile.ppl");
+  my $paper_root = $dbh->quote("$workspace/.paperpile/papers");
+  $dbh->do("UPDATE Settings SET value=$paper_root WHERE key='paper_root'");
 
   my $r = $self->request("/ajax/app/init_session");
 

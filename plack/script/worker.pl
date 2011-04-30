@@ -18,11 +18,14 @@ use strict;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
+use Data::Dumper;
 
+use Paperpile;
 use Paperpile::App;
 use Paperpile::Utils;
 use Paperpile::Queue;
 use Paperpile::Job;
+
 
 my $id = $ARGV[0];
 
@@ -43,10 +46,6 @@ eval { $job->_do_work; };
 
 my $end_time = time;
 
-if ( $end_time - $start_time <= 1 ) {
-  sleep(1);
-}
-
 if ($@) {
   $job->_catch_error;
 } else {
@@ -54,7 +53,9 @@ if ($@) {
   $job->update_status('DONE');
 }
 
-my $q = Paperpile::Queue->new();
-$q->run;
+if ($job->queued){
+  my $q = Paperpile::Queue->new();
+  $q->run;
+}
 
 exit(0);

@@ -19,7 +19,6 @@ sub startup : Tests(startup => 1) {
   my ($self) = @_;
 
   Paperpile->init_tmp_dir;
-
   use_ok $self->class;
 
 }
@@ -285,8 +284,8 @@ sub D_metadata_update : Tests(2) {
   $model->insert_pubs( [$pub], 1 );
 
   my $job = Paperpile::Job->new(
-    job_type => 'METADATA_UPDATE',
-    pub      => $pub,
+     job_type => 'METADATA_UPDATE',
+     pub      => $pub,
   );
 
   $job->run;
@@ -302,9 +301,9 @@ sub D_metadata_update : Tests(2) {
   is( $job->status, 'DONE', "Metadata update finished" );
 
   $self->row_ok(
-    $dbh, "Publications", "pmid='19046445'",
-    { doi => '10.1186/1471-2164-9-577' },
-    "Metadata update correct"
+     $dbh, "Publications", "pmid='19046445'",
+     { doi => '10.1186/1471-2164-9-577' },
+     "Metadata update correct"
   );
 }
 

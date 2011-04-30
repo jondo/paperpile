@@ -180,8 +180,8 @@ sub running : Tests(14) {
 
   ## First run one after another
 
-  my $job1 = Paperpile::Job->new( job_type => "TEST_JOB2", queued => 1 );
-  my $job2 = Paperpile::Job->new( job_type => "TEST_JOB2", queued => 1 );
+  my $job1 = Paperpile::Job->new( job_type => "TEST_JOB1", queued => 1 );
+  my $job2 = Paperpile::Job->new( job_type => "TEST_JOB1", queued => 1 );
 
   $job1->update_info( "name", "job1" );
   $job2->update_info( "name", "job2" );
@@ -193,21 +193,21 @@ sub running : Tests(14) {
 
   $q->run;
 
-  sleep(1);
+  sleep(2);
 
   my $jobs = $q->get_jobs('RUNNING');
 
   is( @$jobs, 1, "Running queue sequential. One job is running." );
   is( $jobs->[0]->{info}->{name}, "job1", "Running queue sequential. Job 1 is running.");
 
-  sleep(2);
+  sleep(4);
 
   my $jobs = $q->get_jobs('RUNNING');
 
   is( @$jobs, 1, "Running queue sequential. One job is running." );
   is( $jobs->[0]->{info}->{name}, "job2", "Running queue sequential. Job 2 is running.");
 
-  sleep(2);
+  sleep(5);
 
   my $jobs = $q->get_jobs('DONE');
 
@@ -241,7 +241,7 @@ sub running : Tests(14) {
   is( $jobs->[0]->{info}->{name}, "job1", "Running queue in parallel. Job 1 is running.");
   is( $jobs->[1]->{info}->{name}, "job2", "Running queue in parallel. Job 2 is running.");
 
-  sleep(2);
+  sleep(3);
 
   my $jobs = $q->get_jobs('DONE');
 

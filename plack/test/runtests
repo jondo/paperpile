@@ -17,6 +17,7 @@ if ( $arch_string =~ /(darwin|osx)/i ) {
 
 if ( $arch_string =~ /(win32|msys)/i ) {
   $platform = 'win32';
+  $ENV{PATH}=$ENV{PATH}.";c:\\Users\\wash\\play\\paperpile\\plack\\perl5\\win32\\dll;c:\\Users\\wash\\play\\paperpile\\qt\\win32";
 }
 
 
