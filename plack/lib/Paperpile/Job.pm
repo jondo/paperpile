@@ -257,18 +257,19 @@ sub cancel {
     my $pid = $self->pid;
 
     if ( $pid != -1 ) {
-
-      # Adapt that for windows!!
-      my $processInfo = `ps -A |grep $pid`;
-
-      # Paranoia check to make sure the process is indeed a perl process
-      if ( !( $processInfo =~ /perl/ ) ) {
-        die("Cancel would have killed $processInfo. Aborted");
+      if ( $^O eq 'MSWin32' ) {
+        require Paperpile::Job::Win32;
+        Paperpile::Job::Win32::kill($pid);
+        Paperpile->log("KILLING: $pid");
+      } else {
+        my $processInfo = `ps -A |grep $pid`;
+        # Paranoia check to make sure the process is indeed a perl process
+        if ( !( $processInfo =~ /perl/ ) ) {
+          die("Cancel would have killed $processInfo. Aborted");
+        }
+        Paperpile->log("KILLING: $processInfo");
+        kill( 9, $pid );
       }
-
-      Paperpile->log("KILLING: $processInfo");
-
-      kill( 9, $pid );
     }
 
     UserCancel->throw( error => $self->noun . ' canceled.' );

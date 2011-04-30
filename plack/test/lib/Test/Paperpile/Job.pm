@@ -117,7 +117,7 @@ sub A_save_store : Tests(14) {
 
 }
 
-sub B_run_cancel : Tests(23) {
+sub B_run_cancel : Tests(24) {
   my ($self) = @_;
 
   ## TEST_JOB1 normal job with several stages
@@ -134,6 +134,7 @@ sub B_run_cancel : Tests(23) {
   is( $job->{status},      "RUNNING", "Test job 1. Status is RUNNING" );
   is( $job->{info}->{msg}, "Step1",   "Test job 1. Msg is updated" );
   like( $job->{pid}, qr/\d+/, "Test job 1. PID is set" );
+  cmp_ok( $job->{pid}, '!=', -1, "Test job 1. PID is different from -1." );
   cmp_ok( $job->{pid}, '!=', $$, "Test job 1. PID is different from main process." );
 
   sleep(2);

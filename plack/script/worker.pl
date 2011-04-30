@@ -40,11 +40,15 @@ my $job = Paperpile::Job->new(id => $id);
 my $start_time = time;
 $job->start($start_time);
 
+$job->pid($$);
+
 $job->update_status('RUNNING');
 
 eval { $job->_do_work; };
 
 my $end_time = time;
+
+$job->pid(-1);
 
 if ($@) {
   $job->_catch_error;

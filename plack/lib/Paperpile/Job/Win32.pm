@@ -34,4 +34,11 @@ sub run {
 
 }
 
+sub kill {
+
+  my $pid = shift;
+  Win32::Process::KillProcess($pid, -1);
+
+}
+
 1;
