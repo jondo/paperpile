@@ -115,7 +115,7 @@ sub _tmp_file_name {
 
   my ( $self, $bibfile ) = @_;
 
-  my $path = File::Spec->catfile( Paperpile::Utils->get_tmp_dir, 'import' );
+  my $path = File::Spec->catfile( Paperpile->tmp_dir, 'import' );
 
   mkpath($path);
 

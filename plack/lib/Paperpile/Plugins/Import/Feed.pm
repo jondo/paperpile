@@ -189,7 +189,7 @@ sub _rss_dir {
 
   my ( $self, $bibfile ) = @_;
 
-  my $path = File::Spec->catfile( Paperpile::Utils->get_tmp_dir, 'rss', $self->id );
+  my $path = File::Spec->catfile( Paperpile->tmp_dir, 'rss', $self->id );
 
   mkpath($path);
 

@@ -267,7 +267,7 @@ sub _write_dump {
 sub _get_dump_file {
 
   my ( $self, $collection ) = @_;
-  return catfile( Paperpile::Utils->get_tmp_dir, "filesync", $collection );
+  return catfile( Paperpile->tmp_dir, "filesync", $collection );
 
 }
 

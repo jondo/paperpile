@@ -118,8 +118,8 @@ sub BUILD {
     $self->duration(0);
     $self->start(0);
 
-    my $job_dir  = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'jobs' );
-    my $json_dir = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'json' );
+    my $job_dir  = File::Spec->catfile( Paperpile->tmp_dir, 'jobs' );
+    my $json_dir = File::Spec->catfile( Paperpile->tmp_dir, 'json' );
 
     mkdir $job_dir  if ( !-e $job_dir );
     mkdir $json_dir if ( !-e $json_dir );
@@ -134,7 +134,7 @@ sub BUILD {
   # otherwise restore object from disk
   else {
     $self->_freeze_file(
-      File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'jobs', $self->id ) );
+      File::Spec->catfile( Paperpile->tmp_dir, 'jobs', $self->id ) );
     $self->restore;
     if ( $self->pub ) {
       $self->pub->refresh_job_fields($self);
@@ -745,7 +745,7 @@ sub _download {
   $self->update_info( 'msg', "Starting PDF download..." );
 
   my $file =
-    File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $self->pub->guid . ".pdf" );
+    File::Spec->catfile( Paperpile->tmp_dir, "download", $self->pub->guid . ".pdf" );
 
   # In case file already exists remove it
   unlink($file);

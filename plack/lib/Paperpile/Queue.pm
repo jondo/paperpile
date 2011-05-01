@@ -71,7 +71,7 @@ has _dbh => ( is => 'rw');
 sub BUILD {
   my ( $self, $params ) = @_;
 
-  my $json_dir = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'json' );
+  my $json_dir = File::Spec->catfile( Paperpile->tmp_dir, 'json' );
   mkdir $json_dir if ( !-e $json_dir );
   my $json_file =  File::Spec->catfile( $json_dir, "queue.json");
   $self->_json_file( $json_file );

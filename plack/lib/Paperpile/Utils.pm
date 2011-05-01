@@ -43,13 +43,6 @@ use Paperpile::Model::User;
 use Paperpile::Model::Library;
 use Paperpile::Model::Queue;
 
-sub get_tmp_dir {
-
-  my ( $self ) = @_;
-
-  return Paperpile->tmp_dir;
-
-}
 
 sub get_browser {
 
@@ -238,7 +231,7 @@ sub store {
 
   my ($self, $item, $ref) = @_;
 
-  my $file = File::Spec->catfile($self->get_tmp_dir(), $item);
+  my $file = File::Spec->catfile(Paperpile->tmp_dir, $item);
 
   lock_store($ref, $file) or  die "Can't write to cache\n";
 
@@ -249,7 +242,7 @@ sub retrieve {
 
   my ($self, $item) = @_;
 
-  my $file = File::Spec->catfile($self->get_tmp_dir(), $item);
+  my $file = File::Spec->catfile(Paperpile->tmp_dir, $item);
 
   my $ref=undef;
 

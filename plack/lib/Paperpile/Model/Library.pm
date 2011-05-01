@@ -144,7 +144,7 @@ sub insert_pubs {
 
     ## Attach PDFs either if it is downloaded already in the cache or
     ## it is given as absolute path in the _pdf_tmp field
-    my $cached_file = catfile( Paperpile::Utils->get_tmp_dir, "download", $pub->guid . ".pdf" );
+    my $cached_file = catfile( Paperpile->tmp_dir, "download", $pub->guid . ".pdf" );
 
     if ( $user_library && -e $cached_file ) {
       $pub->_pdf_tmp($cached_file);
@@ -1599,7 +1599,7 @@ sub delete_attachment {
 
   my $paper_root = $self->get_setting('paper_root');
 
-  my $undo_dir = catfile( Paperpile::Utils->get_tmp_dir(), "trash" );
+  my $undo_dir = catfile( Paperpile->tmp_dir, "trash" );
   mkpath($undo_dir);
 
   my $rowid = $pub->_rowid;

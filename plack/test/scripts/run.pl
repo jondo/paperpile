@@ -14,8 +14,8 @@ my %suites = (
   basic => {
     name  => 'Basic backend unit and regression tests',
     files => [
-      "t/basic.t",                 "t/job.t",
-      "t/queue.t",                 "t/formats/bibtex.t",
+      "t/basic.t", "utils.t",
+      "t/job.t",                   "t/queue.t", "t/formats/bibtex.t",
       "t/formats/ris.t",           "t/formats/zotero.t",
       "t/formats/mendeley.t",      "t/plugins/pubmed.t",
       "t/plugins/googlescholar.t", "t/plugins/duplicates.t",
@@ -48,7 +48,6 @@ GetOptions(
   "cover"       => \$cover,
   "debug"       => \$debug,
 );
-
 
 $ENV{PLACK_DEBUG} = $debug ? 1 : 0;
 
