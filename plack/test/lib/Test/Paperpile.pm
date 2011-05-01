@@ -34,6 +34,14 @@ sub init_app {
 
 }
 
+sub workspace {
+
+  my ($self) = @_;
+
+  return(Paperpile->path_to("test","workspace"));
+
+}
+
 sub setup_workspace {
 
   my ($self) = @_;
@@ -46,7 +54,7 @@ sub setup_workspace {
 
   # Copy database file into workspace directory
   my $fixtures = Paperpile->path_to("test","data","Fixture","workspace");
-  my $workspace = Paperpile->path_to("test","workspace");
+  my $workspace = $self->workspace;
 
   File::Copy::Recursive::fcopy("$fixtures/paperpile.ppl", "$workspace/.paperpile/paperpile.ppl") || die($!);
   File::Copy::Recursive::fcopy("$fixtures/settings.db", "$workspace/.paperpile/settings.db") || die($!);
@@ -62,15 +70,13 @@ sub setup_workspace {
 
   my $r = $self->request("/ajax/app/init_session");
 
-  $self->{workspace} = $workspace;
-
 }
 
 sub clean_workspace {
 
   my ($self) = @_;
 
-  rmtree( Paperpile->path_to("test","workspace") );
+  rmtree( $self->workspace );
 
 }
 

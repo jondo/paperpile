@@ -35,7 +35,7 @@ use XML::Simple;
 use Data::Dumper;
 use Date::Format;
 use Data::GUID;
-use Config;
+
 
 use Paperpile;
 
@@ -196,36 +196,37 @@ sub copy_file{
 
 
 sub calculate_md5 {
+
   my ($self, $file) = @_;
+
   open( FILE, "<$file" ) or FileReadError->throw( error => "Could not read " . $file );
   my $c = Digest::MD5->new;
   $c->addfile(*FILE);
+
   return $c->hexdigest;
 }
 
 
 sub store {
 
-  my ($self, $item, $ref) = @_;
+  my ( $self, $item, $ref ) = @_;
 
-  my $file = File::Spec->catfile(Paperpile->tmp_dir, $item);
+  my $file = File::Spec->catfile( Paperpile->tmp_dir, $item );
 
-  lock_store($ref, $file) or  die "Can't write to cache\n";
+  lock_store( $ref, $file ) or die "Can't write to cache\n";
 
 }
 
 
 sub retrieve {
 
-  my ($self, $item) = @_;
+  my ( $self, $item ) = @_;
 
-  my $file = File::Spec->catfile(Paperpile->tmp_dir, $item);
+  my $file = File::Spec->catfile( Paperpile->tmp_dir, $item );
 
-  my $ref=undef;
+  my $ref = undef;
 
-  eval {
-    $ref = lock_retrieve($file);
-  };
+  eval { $ref = lock_retrieve($file); };
 
   return $ref;
 
@@ -351,18 +352,6 @@ sub domain_from_url {
   return $auth;
 
 }
-
-# Wrapper script around $c->session. On the desktop we use a custom
-# solution to store the session to avoid a strange race condition bug
-# in the session plugin.
-
-# USAGE: session($c) ... returns hashref of current session data
-#        session($c, {key=>value}) ... set key in session data
-
-# Important: The local version writes and restores the data everytime
-# the function is called. So if you store an object in the session
-# hash and change the object afterwards it will not be updated in the
-# session hash unless session is called again.
 
 sub session {
 

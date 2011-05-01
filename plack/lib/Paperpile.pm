@@ -22,6 +22,7 @@ use warnings;
 
 use Mouse;
 
+use Config;
 use File::Spec;
 use File::HomeDir;
 use File::Copy;
