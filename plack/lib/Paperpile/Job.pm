@@ -28,8 +28,6 @@ use Paperpile::Library::Publication;
 use Paperpile::PdfCrawler;
 use Paperpile::PdfExtract;
 
-use Paperpile::Job::Win32;
-
 use Data::Dumper;
 use File::Path;
 use File::Spec;

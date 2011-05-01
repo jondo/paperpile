@@ -8,7 +8,6 @@ use File::Path;
 
 ## Define available testsuites here
 
-$ENV{PLACK_DEBUG} = 0;
 $ENV{PP_TESTING} = 1;
 
 my %suites = (
@@ -35,6 +34,7 @@ my %suites = (
 ## Handle command line options
 
 my $verbosity = 1;
+my $debug     = 0;
 my $nocolor   = 0;
 my $junit     = 0;
 my $help      = 0;
@@ -46,7 +46,11 @@ GetOptions(
   "junit"       => \$junit,
   "help"        => \$help,
   "cover"       => \$cover,
+  "debug"       => \$debug,
 );
+
+
+$ENV{PLACK_DEBUG} = $debug ? 1 : 0;
 
 usage() if ( @ARGV == 0 || $help );
 
@@ -136,7 +140,8 @@ sub usage {
 
   print STDERR "  --nocolor     Don't colorize outpout\n";
   print STDERR "  --verbosity   Verbosity level (-3..1, see TAP::Harness)\n";
-  print STDERR "  --junit       JUnit formatted output\n\n";
+  print STDERR "  --debug       Show debug output\n";
+  print STDERR "  --junit       JUnit formatted output\n";
   print STDERR "  --cover       Run coverage analysis\n\n";
 
   exit(1);
