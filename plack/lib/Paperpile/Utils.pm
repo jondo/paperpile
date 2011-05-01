@@ -111,47 +111,24 @@ sub check_browser_response {
 }
 
 
-sub get_binary{
+sub get_binary {
 
-  my ($self, $name)=@_;
+  my ( $self, $name ) = @_;
 
-  my $platform=$self->get_platform;
+  my $platform = Paperpile->platform;
 
-  if ($platform eq 'osx'){
+  if ( $platform eq 'osx' ) {
+
     # Make sure that fontconfig configuration files are found on OSX
-    my $fc=File::Spec->catfile(Paperpile->path_to('bin'), 'osx','fonts','fonts.conf');
-    $ENV{FONTCONFIG_FILE}=$fc;
+    my $fc = File::Spec->catfile( Paperpile->path_to('bin'), 'osx', 'fonts', 'fonts.conf' );
+    $ENV{FONTCONFIG_FILE} = $fc;
   }
 
-  my $bin=File::Spec->catfile(Paperpile->path_to('bin'), $platform, $name);
+  my $bin = File::Spec->catfile( Paperpile->path_to('bin'), $platform, $name );
 
-  $bin=~s/ /\\ /g;
+  $bin =~ s/ /\\ /g;
 
   return $bin;
-}
-
-sub get_platform{
-
-  my ($self) = @_;
-
-  my $platform='';
-  my $arch_string=$Config{archname};
-
-  if ( $arch_string =~ /linux/i ) {
-    $platform = ($arch_string =~ /64/) ? 'linux64' : 'linux32';
-  }
-
-  if ( $arch_string =~ /osx/i ) {
-    $platform = 'osx';
-  }
-
-  if ( $arch_string =~ /MSWin32/i ) {
-    $platform = 'win32';
-  }
-
-
-  return $platform;
-
 }
 
 
