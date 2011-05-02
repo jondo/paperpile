@@ -3,12 +3,16 @@ package Test::Paperpile;
 use strict;
 
 use Test::More;
+use Test::Exception;
+
 use Data::Dumper;
 use YAML;
 use File::Path;
 use File::Copy::Recursive;
 use Plack::Test;
 use HTTP::Request::Common;
+
+use Paperpile::App;
 
 use base 'Test::Class';
 

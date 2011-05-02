@@ -16,7 +16,9 @@ sub startup : Tests(startup => 1) {
   use_ok $self->class;
 }
 
-sub directories : Tests(9) {
+sub basic : Tests(5) {
+
+  my ($self) = @_;
 
   ok(Paperpile->platform ~~[qw/linux32 linux64 osx win32/], "detect platform");
 
@@ -25,6 +27,12 @@ sub directories : Tests(9) {
 
   ok(-e Paperpile->path_to('lib'), "path_to finds .../lib");
   ok(-e Paperpile->path_to('lib','Paperpile'), "path_to finds .../lib/Paperpile");
+
+}
+
+sub tmp_dir : Tests(11) {
+
+  my ($self) = @_;
 
   my $tmp_dir = Paperpile->tmp_dir;
 
@@ -43,6 +51,16 @@ sub directories : Tests(9) {
   unlink("$tmp_dir/tmp") || die("Could not delete file from tmp_dir $!");
 
   ok(!(-e "$tmp_dir/tmp"), "delete file from temp_dir");
+
+  Paperpile->init_tmp_dir;
+
+  ok(-e "$tmp_dir/queue.db", "Queue database exists");
+
+  foreach my $dir ('rss', 'import', 'download', 'jobs', 'json', 'filesync'){
+    ok(-w "$tmp_dir/$dir", "$dir exists im tmp directory and is writable");
+  }
+
+
 
 }
 

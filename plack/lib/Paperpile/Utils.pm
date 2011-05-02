@@ -36,13 +36,45 @@ use Data::Dumper;
 use Date::Format;
 use Data::GUID;
 
-
 use Paperpile;
-
 use Paperpile::Model::User;
 use Paperpile::Model::Library;
 use Paperpile::Model::Queue;
 
+sub get_model {
+
+  my ( $self, $name ) = @_;
+
+  $name = lc($name);
+
+  my $model;
+
+  if ( $name eq "user" ) {
+    my $file = Paperpile->config->{user_db};
+    return Paperpile::Model::User->new( { file => $file } );
+  }
+
+  if ( $name eq "app" ) {
+    my $file = Paperpile->path_to( "db", "app.db" );
+    return Paperpile::Model::App->new( { file => $file } );
+  }
+
+  if ( $name eq "queue" ) {
+    my $file = Paperpile->config->{queue_db};
+    return Paperpile::Model::Queue->new( { file => $file } );
+  }
+
+  if ( $name eq "library" ) {
+
+    my $file = Paperpile::Utils->session->{library_db};
+
+    if ( !$file ) {
+      $file = $self->get_model("User")->settings->{library_db};
+    }
+
+    return Paperpile::Model::Library->new( { file => $file } );
+  }
+}
 
 sub get_browser {
 
@@ -56,7 +88,7 @@ sub get_browser {
     $settings = $test_proxy;
   } else {
 
-    my $model = $self->get_model("User");
+    my $model = Paperpile::Utils->get_model("User");
     $settings = $model->settings;
   }
 
@@ -455,40 +487,7 @@ sub extpdf {
 
 }
 
-sub get_model {
 
-  my ( $self, $name ) = @_;
-
-  $name = lc($name);
-
-  my $model;
-
-  if ( $name eq "user" ) {
-    my $file = Paperpile->config->{user_db};
-    return Paperpile::Model::User->new( { file => $file } );
-  }
-
-  if ( $name eq "app" ) {
-    my $file = Paperpile->path_to( "db", "app.db" );
-    return Paperpile::Model::App->new( { file => $file } );
-  }
-
-  if ( $name eq "queue" ) {
-    my $file = Paperpile->config->{queue_db};
-    return Paperpile::Model::Queue->new( { file => $file } );
-  }
-
-  if ( $name eq "library" ) {
-
-    my $file = $self->session->{library_db};
-
-    if ( !$file ) {
-      my $file = $self->get_model("User")->settings->{library_db};
-    }
-
-    return Paperpile::Model::Library->new( { file => $file } );
-  }
-}
 
 sub generate_guid {
   my $self = shift;

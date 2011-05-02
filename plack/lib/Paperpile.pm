@@ -246,7 +246,7 @@ sub log {
 
 sub init_tmp_dir {
 
-  my ( $self ) = @_;
+  my ($self) = @_;
 
   my $tmp_dir = $self->tmp_dir;
 
@@ -273,14 +273,9 @@ sub init_tmp_dir {
   # Clear log files of external processes
   unlink( glob( File::Spec->catfile( $tmp_dir, 'worker_*.log' ) ) );
 
-  if ( not -e $self->config->{'queue_db'} ) {
-    copy( $self->path_to('db/queue.db'), $self->config->{'queue_db'} )
-      or
-        FileWriteError->throw("Could not start application (Error initializing queue database,  $!)");
-  } else {
-    my $q = Paperpile::Queue->new();
-    $q->clear_all;
-  }
+  copy( $self->path_to('db/queue.db'), $self->config->{'queue_db'} )
+    || FileWriteError->throw(
+    "Could not start application (Error initializing queue database,  $!)");
 
 }
 

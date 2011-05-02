@@ -232,7 +232,7 @@ sub remove {
   my $self = shift;
 
   if ( $self->queued ) {
-    my $dbh = Paperpile::Utils->get_model("Queue")->dbh;
+    my $dbh = Paperpile::Utils->get->model("Queue")->dbh;
     my $id  = $self->id;
     $dbh->do("DELETE FROM Queue WHERE jobid='$id';");
   }
