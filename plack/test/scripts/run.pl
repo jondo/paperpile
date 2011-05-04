@@ -14,7 +14,7 @@ my %suites = (
   basic => {
     name  => 'Basic backend unit and regression tests',
     files => [
-      "t/basic.t", "utils.t",
+      "t/basic.t",                 "t/utils.t", "t/model/sqlite.t",
       "t/job.t",                   "t/queue.t", "t/formats/bibtex.t",
       "t/formats/ris.t",           "t/formats/zotero.t",
       "t/formats/mendeley.t",      "t/plugins/pubmed.t",

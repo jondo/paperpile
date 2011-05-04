@@ -81,6 +81,7 @@ sub clean_workspace {
   my ($self) = @_;
 
   rmtree( $self->workspace );
+  mkpath( $self->workspace );
 
 }
 
