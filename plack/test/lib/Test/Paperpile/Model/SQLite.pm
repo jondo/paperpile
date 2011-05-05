@@ -49,6 +49,49 @@ sub connect : Tests(4) {
 
 }
 
+sub transactions : Tests(10) {
+
+  my ($self) = @_;
+
+  my $model = Paperpile::Model::SQLite->new( file => $self->{db_file} );
+
+
+  # Complete transaction with commit
+
+  my $dbh = $model->begin_transaction;
+
+  isa_ok( $dbh, "DBI::db", "begin_transaction returns handle:" );
+
+  is( $model->begin_transaction, $dbh, "Get same dbh on second call of begin_transaction" );
+
+  my $lock_file = Paperpile->tmp_dir . "/" . $model->get_lock_file .".lock";
+
+  ok( -e $lock_file, "Lock file exists" );
+  ok( $model->in_transaction,   "in_transaction returns true" );
+
+  $dbh->do("INSERT INTO Settings (key,value) VALUES ('test','value1')");
+
+  $model->commit_transaction;
+
+  ok( !(-e $lock_file), "Lock file does not exist" );
+  ok( !($model->in_transaction),   "in_transaction returns false" );
+  $self->row_ok($dbh, "Settings", "key='test'", {value=>'value1'}, "Check if update was made in db");
+
+  # Transaction with rollback
+
+  $dbh = $model->begin_transaction;
+  $dbh->do("INSERT INTO Settings (key,value) VALUES ('test2','value2')");
+
+  $model->rollback_transaction;
+
+  ok( !(-e $lock_file), "Lock file does not exist" );
+  ok( !($model->in_transaction),   "in_transaction returns false" );
+  $self->row_count_ok($dbh, "Settings", "key='test2'", 0 , "Check if update was rolled back in db");
+
+
+
+}
+
 sub settings : Tests(4) {
 
   my ($self) = @_;

@@ -92,7 +92,10 @@ sub row_ok {
   my $results = $dbh->selectrow_hashref("SELECT * FROM $table WHERE $where;");
 
   foreach my $field (keys %$test){
-    is($results->{$field}, $test->{$field}, "$comment: $field=".$results->{$field});
+    my $string = '';
+    $string = "$comment: " if $comment;
+
+    is($results->{$field}, $test->{$field}, "$string$field=".$results->{$field});
   }
 
 }
