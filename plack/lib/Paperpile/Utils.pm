@@ -306,8 +306,6 @@ sub process_attachment_name {
 
   (my $self, my $file) = @_;
 
-  print STDERR "$file\n";
-
   $file=~s{^file://}{}i;
 
   # Try to grab the actual path

@@ -232,7 +232,7 @@ sub remove {
   my $self = shift;
 
   if ( $self->queued ) {
-    my $dbh = Paperpile::Utils->get->model("Queue")->dbh;
+    my $dbh = Paperpile::Utils->get_model("Queue")->dbh;
     my $id  = $self->id;
     $dbh->do("DELETE FROM Queue WHERE jobid='$id';");
   }
@@ -377,7 +377,7 @@ sub _do_work {
 
   if ( $self->job_type eq 'PDF_SEARCH' ) {
 
-    print STDERR "[queue] Searching PDF for ", $self->pub->_citation_display, "\n";
+    Paperpile->log("[queue] Searching PDF for ". $self->pub->_citation_display);
 
     if ( $self->pub->pdf ) {
       $self->update_info( 'msg',
@@ -412,7 +412,7 @@ sub _do_work {
 
   if ( $self->job_type eq 'PDF_IMPORT' ) {
 
-    print STDERR "[queue] Start import of PDF ", $self->pub->pdf, "\n";
+    Paperpile->log("[queue] Start import of PDF ". $self->pub->pdf);
 
     # Store the original PDF filename.
     my $orig_pdf_file = $self->pub->pdf;
@@ -689,7 +689,7 @@ sub _match {
 
   my $success_plugin;
 
-  print STDERR "[queue] Start matching against online resources.\n";
+  Paperpile->log("[queue] Start matching against online resources.");
 
   eval { $success_plugin = $self->pub->auto_complete( [@plugin_list], $require_linkout ); };
 
@@ -708,7 +708,6 @@ sub _crawl {
 
   my $crawler = Paperpile::PdfCrawler->new;
   $crawler->jobid( $self->id );
-  $crawler->debug(1);
   $crawler->driver_file( Paperpile->path_to( 'data', 'pdf-crawler.xml' ) );
   $crawler->load_driver();
 
@@ -722,7 +721,7 @@ sub _crawl {
     die("No target url for PDF download");
   }
 
-  print STDERR "[queue] Start crawling at $start_url\n";
+  Paperpile->log("[queue] Start crawling at $start_url");
 
   $pdf = $crawler->search_file($start_url);
 
@@ -740,7 +739,7 @@ sub _download {
 
   my $self = shift;
 
-  print STDERR "[queue] Start downloading ", $self->pub->_pdf_url, "\n";
+  Paperpile->log("[queue] Start downloading ". $self->pub->_pdf_url);
 
   $self->update_info( 'msg', "Starting PDF download..." );
 
@@ -844,7 +843,7 @@ sub _extract_meta_data {
 
   my $self = shift;
 
-  print STDERR "[queue] Extracting meta data for ", $self->pub->pdf, "\n";
+  Paperpile->log("[queue] Extracting meta data for ". $self->pub->pdf);
 
   my $bin = Paperpile::Utils->get_binary('pdftoxml');
 

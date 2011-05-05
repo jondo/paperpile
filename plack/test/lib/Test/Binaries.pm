@@ -5,7 +5,7 @@ use strict;
 use Test::More;
 use Test::Deep;
 use Data::Dumper;
-use Paperpile::App;
+use Paperpile;
 use Paperpile::Utils;
 use File::Temp;
 
@@ -26,7 +26,7 @@ sub extpdf : Tests(5) {
     my $arguments = $self->_get_arguments("$file.xml");
     my $output    = Paperpile::Utils->extpdf($arguments);
 
-    my $expected_file = Paperpile::App->path_to( "test", "data", "Binaries", "extpdf", "$file.out" );
+    my $expected_file = Paperpile->path_to( "test", "data", "Binaries", "extpdf", "$file.out" );
 
     if ( $arguments->{command} eq 'TEXT' ) {
       $self->compare_file_flat( $output, $expected_file, $arguments->{comment} );
@@ -42,13 +42,13 @@ sub _get_arguments {
 
   my ( $self, $file ) = @_;
 
-  my $file = Paperpile::App->path_to( "test", "data", "Binaries", "extpdf", $file );
+  my $file = Paperpile->path_to( "test", "data", "Binaries", "extpdf", $file );
 
   my $arguments = XMLin($file);
 
   # Convert inFile to absolute path
   $arguments->{inFile} =
-    Paperpile::App->path_to( "test", "data", "Binaries", "extpdf", $arguments->{inFile} );
+    Paperpile->path_to( "test", "data", "Binaries", "extpdf", $arguments->{inFile} );
 
   return $arguments;
 }
