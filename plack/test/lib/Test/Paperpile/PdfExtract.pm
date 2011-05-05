@@ -15,7 +15,7 @@ sub startup : Tests(startup => 1) {
   use_ok $self->class;
 }
 
-sub extract : Tests(5288) {
+sub extract : Tests(5327) {
 
   my ($self) = @_;
 

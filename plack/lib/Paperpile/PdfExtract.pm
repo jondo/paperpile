@@ -28,13 +28,13 @@ use Paperpile::PdfExtract::NPG;
 use Paperpile::PdfExtract::JSTOR;
 use Paperpile::PdfExtract::Biopolymers;
 
-has 'file'     => ( is => 'rw', isa => 'Str' );
-has 'pub'      => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
-has '_COMMONWORDS' => ( is => 'rw', isa => 'HashRef', default => sub { return {} } );
-has '_BADTYPES' => ( is => 'rw', isa => 'ArrayRef', default => sub { return [] } );
-has '_ADDRESS' => ( is => 'rw', isa => 'ArrayRef', default => sub { return [] } );
-has '_BADWORDS' => ( is => 'rw', isa => 'ArrayRef', default => sub { return [] } );
-has '_NUMBERS' => ( is => 'rw', isa => 'ArrayRef', default => sub { return [] } );
+has 'file'            => ( is => 'rw', isa => 'Str' );
+has 'pub'             => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
+has '_COMMONWORDS'    => ( is => 'rw', isa => 'HashRef', default => sub { return {} } );
+has '_BADTYPES'       => ( is => 'rw', isa => 'ArrayRef', default => sub { return [] } );
+has '_ADDRESS'        => ( is => 'rw', isa => 'ArrayRef', default => sub { return [] } );
+has '_BADWORDS'       => ( is => 'rw', isa => 'ArrayRef', default => sub { return [] } );
+has '_NUMBERS'        => ( is => 'rw', isa => 'ArrayRef', default => sub { return [] } );
 has '_BADAUTHORWORDS' => ( is => 'rw', isa => 'ArrayRef', default => sub { return [] } );
 
 sub BUILD {
@@ -106,12 +106,16 @@ sub BUILD {
     'letters?to',                      'BRIEFCOMMUNICATIONS',
     '^Commentary$',                    'MeetingReview',
     'TechnicalReport',                 'ARTICLEINPRESS',
-    '^ResearchLetter$'
+    '^ResearchLetter$',                '^Perspectivesin',
+    '^MicroCommentary$',               '^Casestudy',
+    '^SPECIALFEATURE$',                '^RESEARCHARTICLES$',
+    '^ClinicalNote$'
+
   );
 
   my @tmp3 = (
     'Universi[t|d]',           'College',
-    'school',                  'D[aeiou]part[aeiou]?ment',
+    'school\s(?:of|in)',       'D[aeiou]part[aeiou]?ment',
     'Dept\.',                  'Institut',
     'Lehrstuhl',               'Chair\sfor',
     'Faculty',                 'Facultad',
@@ -127,7 +131,8 @@ sub BUILD {
     'Howard\sHughes\sMedical', 'The\s\S+\sBuilding',
     'Ecole',                   'Direction\sScientifique',
     'USA$',                    'Michigan',
-    'Servicio',                '\d+,\sAve\.'
+    'Servicio',                '\d+,\sAve\.',
+    'Escola'
   );
 
   my @tmp4 = (
@@ -143,9 +148,14 @@ sub BUILD {
   );
 
   my @tmp5 = (
-    '\d{4,}', '\d\d\/\d\d\/\d\d', '\d\d+-\d\d+', '\[\d+-\d+\]', '\[\d+\]', '^\d+$',
+    '\d{4,}',
+    '\d\d\/\d\d\/\d\d',
+    '\d\d+-\d\d+',
+    '\[\d+-\d+\]',
+    '\[\d+\]',
+    '^\d+$',
     '(January|February|March|April|May|June|July|August|September|October|November|December)\s*\d+\s*,\s*\d{4}',
-	      '(January|February|March|April|May|June|July|August|September|October|November|December)\s*\d{4}',
+    '(January|February|March|April|May|June|July|August|September|October|November|December)\s*\d{4}',
     '(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?\s*\d+\s*,\s*\d{4}'
   );
 
@@ -234,7 +244,7 @@ sub parsePDF {
   }
 
   # call text parser
-  ( $title, $authors, my $driver ) = _parse_text( $lines, $verbose );
+  ( $title, $authors, my $driver ) = _parse_text( $lines, $words_rotated, $verbose );
 
   # there can be more than one artilce on the page, in those cases
   # we do not know if we got hte correct DOI
@@ -308,36 +318,36 @@ sub _sort_lines {
   return $lines;
 }
 
-
 sub _parse_text {
-  my $lines   = $_[0];
-  my $verbose = $_[1];
-  my $driver  = 'plain';
+  my $lines         = $_[0];
+  my $words_rotated = $_[1];
+  my $verbose       = $_[2];
+  my $driver        = 'plain';
 
   my ( $title, $authors );
 
   my $most_abundant_fs = _most_abundant_fontsize($lines);
 
   # specific parsers that operate on lines
-  ( $title, $authors ) = Paperpile::PdfExtract::JSTOR->parse( $lines );
+  ( $title, $authors ) = Paperpile::PdfExtract::JSTOR->parse($lines);
 
   if ( !defined $title ) {
-    ( $title, $authors ) = Paperpile::PdfExtract::Biopolymers->parse( $lines );
+    ( $title, $authors ) = Paperpile::PdfExtract::Biopolymers->parse($lines);
     $driver = 'Biopolymers' if ( defined $title );
   }
-  
+
   if ( !defined $title ) {
-    ( $title, $authors ) = Paperpile::PdfExtract::LandesBioScience->parse( $lines );
+    ( $title, $authors ) = Paperpile::PdfExtract::LandesBioScience->parse($lines);
     $driver = 'LandesBioScience' if ( defined $title );
   }
 
   if ( !defined $title ) {
-    ( $title, $authors ) = Paperpile::PdfExtract::ScienceMag->parse( $lines );
+    ( $title, $authors ) = Paperpile::PdfExtract::ScienceMag->parse($lines);
     $driver = 'ScienceMag' if ( defined $title );
   }
 
   if ( !defined $title ) {
-    ( $title, $authors ) = Paperpile::PdfExtract::NPG->parse( $lines );
+    ( $title, $authors ) = Paperpile::PdfExtract::NPG->parse( $lines, $words_rotated );
     $driver = 'NPG' if ( defined $title );
   }
 
@@ -400,9 +410,9 @@ sub _clean_and_format_authors {
   $string =~ s/;/ , /g;
   $string =~ s/,+/ , /g;
   $string =~ s/,\s*$//;
-  $string =~ s/\x{2C7}//g; # Unicode Character 'CARON'
+  $string =~ s/\x{2C7}//g;          # Unicode Character 'CARON'
   $string =~ s/\x{A8}//g;
-  $string =~ s/\x{2D8}//g; # Unicode Character 'BREVE'
+  $string =~ s/\x{2D8}//g;          # Unicode Character 'BREVE'
   $string =~ s/\d//g;
   $string =~ s/\$//g;
   $string =~ s/'//g;
@@ -429,11 +439,11 @@ sub _clean_and_format_authors {
     }
   }
 
-  my @tmp = ( );
+  my @tmp = ();
   my @splitted = split( /(?:\sand\s|\s&\s|,|:)/i, $string );
 
   # some preprocessing
-  foreach my $idx ( 0 .. $#splitted  ) {
+  foreach my $idx ( 0 .. $#splitted ) {
     $splitted[$idx] =~ s/(\s[^[:ascii:]]\s)//g;
     $splitted[$idx] =~ s/\s+$//;
     $splitted[$idx] =~ s/^\s+//;
@@ -441,74 +451,78 @@ sub _clean_and_format_authors {
   }
 
   my $times_reversed = 0;
-  my $all = 0;
-  foreach my $idx ( 0 .. $#splitted  ) {
+  my $all            = 0;
+  foreach my $idx ( 0 .. $#splitted ) {
     my $i = $splitted[$idx];
     next if ( length($i) < 3 );
     $all++;
     if ( $i !~ m/[a-z]/ ) {
       if ( $i =~ m/^(\S+)\s([A-Z]{1,2})$/ ) {
-	if ( $i !~ m/(XU|LI|LU)/ ) {
-	  $times_reversed++;
-	}
+        if ( $i !~ m/(XU|LI|LU)/ ) {
+          $times_reversed++;
+        }
       }
     } else {
       if ( $i =~ m/^(\S+)\s([^a-z]\.?)$/ ) {
-	$times_reversed++;
+        $times_reversed++;
       }
       if ( $i =~ m/^(\S+)\s([^a-z]\.?\s?[^a-z]\.?)$/ ) {
-	$times_reversed++;
+        $times_reversed++;
       }
     }
   }
-  $times_reversed = ( $all > 0 ) ? $times_reversed/$all : 0;
+  $times_reversed = ( $all > 0 ) ? $times_reversed / $all : 0;
 
-  foreach my $idx ( 0 .. $#splitted  ) {
+  foreach my $idx ( 0 .. $#splitted ) {
     my $i = $splitted[$idx];
     next if ( length($i) < 3 );
 
     if ( $times_reversed > 0.9 ) {
       if ( $i !~ m/[a-z]/ ) {
-	if ( $i =~ m/^(\S+)\s([A-Z]{1,2})$/ ) {
-	  $i = "$2 $1";
-	}
+        if ( $i =~ m/^(\S+)\s([A-Z]{1,2})$/ ) {
+          $i = "$2 $1";
+        }
       } else {
-	if ( $i =~ m/^(\S+)\s([^a-z]\.?)$/ ) {
-	  $i = "$2 $1";
-	}
-	if ( $i =~ m/^(\S+)\s([^a-z]\.?\s?[^a-z]\.?)$/ ) {
-	  $i = "$2 $1";
-	}
+        if ( $i =~ m/^(\S+)\s([^a-z]\.?)$/ ) {
+          $i = "$2 $1";
+        }
+        if ( $i =~ m/^(\S+)\s([^a-z]\.?\s?[^a-z]\.?)$/ ) {
+          $i = "$2 $1";
+        }
       }
     }
 
     #print "\t|$i| --> ";
     # if we just have one word
     if ( $i =~ m/^\S+$/ ) {
+
       # let's see if the author was not split correctly
       # and join entires if necessary
-      if ( defined $splitted[$idx+1] ) {
-	# if the next one seems to be just a single word
-	if ( $splitted[$idx+1] =~ m/^\S+$/ ) {
+      if ( defined $splitted[ $idx + 1 ] ) {
 
-	  $splitted[$idx+1] = $splitted[$idx].' '.$splitted[$idx+1];
-	  next;
-	}
-	# if the next one is an initial followed by a singel word
-	if ( $splitted[$idx+1] =~ m/^[A-Z]\.?\s\S+$/ ) {
+        # if the next one seems to be just a single word
+        if ( $splitted[ $idx + 1 ] =~ m/^\S+$/ ) {
 
-	  $splitted[$idx+1] = $splitted[$idx].' '.$splitted[$idx+1];
-	  next;
-	}
+          $splitted[ $idx + 1 ] = $splitted[$idx] . ' ' . $splitted[ $idx + 1 ];
+          next;
+        }
+
+        # if the next one is an initial followed by a singel word
+        if ( $splitted[ $idx + 1 ] =~ m/^[A-Z]\.?\s\S+$/ ) {
+
+          $splitted[ $idx + 1 ] = $splitted[$idx] . ' ' . $splitted[ $idx + 1 ];
+          next;
+        }
       }
     }
 
     #$i =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg;
+    next if ( $i =~ m/^\./ );
+
     #print "\t|$i|\n";
 
     push @tmp, Paperpile::Library::Author->new()->parse_freestyle($i)->bibtex();
   }
-
 
   return join( ' and ', @tmp );
 }
@@ -536,18 +550,17 @@ sub _clean_candidates {
     }
   }
 
-  my $uc_au = ( $cand_au->{content} =~ tr/[A-Z]// );
-  my $uc_ti = ( $cand_ti->{content} =~ tr/[A-Z]// );
+  my $uc_au    = ( $cand_au->{content} =~ tr/[A-Z]// );
+  my $uc_ti    = ( $cand_ti->{content} =~ tr/[A-Z]// );
   my $chars_au = ( $cand_au->{content} =~ tr/[A-Za-z]// );
   my $chars_ti = ( $cand_ti->{content} =~ tr/[A-Za-z]// );
-  $cand_au->{'uc'} = ( $chars_au > 0 ) ? $uc_au/$chars_au : 0;
-  $cand_ti->{'uc'} = ( $chars_ti > 0 ) ? $uc_ti/$chars_ti : 0;
+  $cand_au->{'uc'} = ( $chars_au > 0 ) ? $uc_au / $chars_au : 0;
+  $cand_ti->{'uc'} = ( $chars_ti > 0 ) ? $uc_ti / $chars_ti : 0;
 
   if ( $cand_au->{'uc'} > 0.9 ) {
     $cand_au->{'content'} =~ s/^B\s?Y\s//;
   }
 }
-
 
 # First, we search for an address line. Usually authors are
 # just above that line, and then comes the title
@@ -659,20 +672,20 @@ sub _strategy_one {
       # let's see if we remove lines with a smaller fontsize than
       # the most abundant fs, only two lines are left
       if ( not defined $cand_ti ) {
-	@c = ();
-	foreach my $i ( 0 .. $#n ) {
-	  push @c, $i if ( $n[$i]->{fs} < $most_abundant_fs );
-	}
-	if ( $#c == 1 ) {
-	  ( $cand_ti, $cand_au ) =
-            ( $n[ $c[0] ]->{fs} > $n[ $c[1] ]->{fs} )
-	      ? ( $n[ $c[0] ], $n[ $c[1] ] )
-		: ( $n[ $c[1] ], $n[ $c[0] ] );
-	  if ( $cand_au->{nr_bad_author_words} > 0 ) {
-	    ( $cand_au, $cand_ti ) = ( undef, undef );
-	  }
-	}
-	print STDERR "Au/Ti selection 2 failed.\n" if ( !$cand_ti and $verbose );
+        @c = ();
+        foreach my $i ( 0 .. $#n ) {
+          push @c, $i if ( $n[$i]->{fs} < $most_abundant_fs );
+        }
+        if ( $#c == 1 ) {
+          ( $cand_ti, $cand_au ) =
+              ( $n[ $c[0] ]->{fs} > $n[ $c[1] ]->{fs} )
+            ? ( $n[ $c[0] ], $n[ $c[1] ] )
+            : ( $n[ $c[1] ], $n[ $c[0] ] );
+          if ( $cand_au->{nr_bad_author_words} > 0 ) {
+            ( $cand_au, $cand_ti ) = ( undef, undef );
+          }
+        }
+        print STDERR "Au/Ti selection 2 failed.\n" if ( !$cand_ti and $verbose );
       }
 
       if ( not defined $cand_ti ) {
@@ -786,6 +799,7 @@ sub _strategy_two {
     my $tmp = $cur->{address_count};
     $tmp += $cur->{nr_bad_words};
     $tmp-- if ( $cur->{content} =~ m/(1[1-9]|20|21)\d\d/ );
+
     if ( $tmp == 0 ) {
       my $h = -1;
       foreach my $k ( 0 .. $#n ) {
@@ -871,18 +885,25 @@ sub _strategy_two {
 
     if ( $line_with_max_font_size + 1 <= $#n ) {
       if ( $n[ $line_with_max_font_size + 1 ]->{nr_bad_author_words} == 0 ) {
-	$cand_au = $n[ $line_with_max_font_size + 1 ];
-	$cand_ti = $n[$line_with_max_font_size];
+        $cand_au = $n[ $line_with_max_font_size + 1 ];
+        $cand_ti = $n[$line_with_max_font_size];
       } else {
-	return ( undef, undef );
+        if ( $line_with_max_font_size - 1 >= 0 ) {
+          if ( $n[ $line_with_max_font_size - 1 ]->{nr_bad_author_words} +
+            $n[ $line_with_max_font_size - 1 ]->{nr_common_words} == 0 ) {
+            $cand_au = $n[ $line_with_max_font_size - 1 ];
+            $cand_ti = $n[$line_with_max_font_size];
+          }
+        }
       }
-    } elsif ( $line_with_max_font_size -1 >= 0 ) {
+    } elsif ( $line_with_max_font_size - 1 >= 0 ) {
       if ( $n[ $line_with_max_font_size - 1 ]->{nr_bad_author_words} == 0 ) {
-	$cand_au = $n[ $line_with_max_font_size - 1 ];
-	$cand_ti = $n[$line_with_max_font_size];
+        $cand_au = $n[ $line_with_max_font_size - 1 ];
+        $cand_ti = $n[$line_with_max_font_size];
       }
     }
 
+    return ( undef, undef ) if ( !defined $cand_au or !defined $cand_ti );
     return ( undef, undef ) if ( $cand_au->{nr_common_words} > 1 );
 
     _clean_candidates( $cand_ti, $cand_au );
@@ -928,8 +949,8 @@ sub _evaluate_pair {
 
   # author lines usually have a higher comma to words ratio than
   # the title does
-  my $commas_title   = ( $cand_ti->{content} =~ tr/,// );
-  my $commas_authors = ( $cand_au->{content} =~ tr/,// );
+  my $commas_title   = ( $cand_ti->{content} =~ tr/[,&]// );
+  my $commas_authors = ( $cand_au->{content} =~ tr/[,&]// );
   my $words_title    = ( $cand_ti->{content} =~ tr/ // );
   my $words_authors  = ( $cand_au->{content} =~ tr/ // );
   if ( $words_title > 0 and $words_authors > 0 ) {
@@ -941,12 +962,12 @@ sub _evaluate_pair {
   # authors might be separated by 'and'
   my @temp_authors = split( /(?:\sand\s|\s&\s)/i, $cand_au->{content} );
   my $okay = 0;
-  foreach my $entry ( @temp_authors ) {
+  foreach my $entry (@temp_authors) {
     my $spaces = ( $entry =~ tr/ // );
-    $okay++ if ( $spaces <= 3 and $spaces > 0);
+    $okay++ if ( $spaces <= 3 and $spaces > 0 );
   }
   if ( $okay == $#temp_authors + 1 ) {
-     return ( $cand_ti->{content}, $cand_au->{content}, 3 );
+    return ( $cand_ti->{content}, $cand_au->{content}, 3 );
   }
 
   # there may be just a single author
@@ -959,17 +980,17 @@ sub _evaluate_pair {
   return ( undef, undef, 0 );
 }
 
-
 sub _build_groups {
   my $lines            = $_[0];
   my $most_abundant_fs = $_[1];
   my $verbose          = $_[2];
 
-  my $y_abstract_or_intro  = _get_abstract_or_intro_pos($lines);
-  my $last_line_diff       = 0;
-  my $last_line_lc         = 0;
-  my $last_line_uc         = 0;
-  my @groups               = ();
+  my $y_abstract_or_intro = _get_abstract_or_intro_pos($lines);
+  my $last_line_diff      = 0;
+  my $last_line_lc        = 0;
+  my $last_line_uc        = 0;
+  my $last_line_index     = 0;
+  my @groups              = ();
   push @groups, new_line_or_group();
 
   foreach my $i ( 0 .. $#{$lines} ) {
@@ -979,11 +1000,11 @@ sub _build_groups {
 
     # consider only lines with a minimal length of 2 chars
     next if ( length( $lines->[$i]->{'content'} ) <= 1 );
+    next if ( $lines->[$i]->{'content'} =~ m/^\d+,\d+$/ );
 
     # current and previous lines
-    my $pre_i = ( $i > 0 ) ? $i - 1 : 0;
-    my $c   = $lines->[$i];
-    my $p   = $lines->[$pre_i];
+    my $c = $lines->[$i];
+    my $p = $lines->[$last_line_index];
 
     # calculate some features for the current and previous line
     my $diff        = abs( $p->{yMin} - $c->{yMin} );
@@ -993,9 +1014,9 @@ sub _build_groups {
     my $lc          = ( $c->{content} =~ tr/[a-z]// );
     my $uc          = ( $c->{content} =~ tr/[A-Z]// );
     my $letters     = ( $c->{content} =~ tr/[a-zA-Z]// );
-    $letters = 1 if ( $letters == 0 ); # pseudo to avoid diff by 0
-    $uc = $uc/$letters;
-    $lc = $lc/$letters;
+    $letters = 1 if ( $letters == 0 );    # pseudo to avoid diff by 0
+    $uc      = $uc / $letters;
+    $lc      = $lc / $letters;
 
     # if sng (start_new_group) is assigned a value of 1 or higher
     # a new group is started
@@ -1010,10 +1031,14 @@ sub _build_groups {
     # we only start a new line if we see more than two superscripts
     # and the previous line did not have one
     $sng = 5 if ( $c->{nr_superscripts} > 1 and $p->{nr_superscripts} == 0 );
+
     # we might not join author lines correctly: corrrect here
-    if ( $sng == 5 and $c->{nr_bad_author_words} == 0 and
-	 $p->{nr_bad_author_words} == 0 and $same_fs == 1 and
-	 $same_bold == 1 and $same_italic == 1 ) {
+    if (  $sng == 5
+      and $c->{nr_bad_author_words} == 0
+      and $p->{nr_bad_author_words} == 0
+      and $same_fs == 1
+      and $same_bold == 1
+      and $same_italic == 1 ) {
       $sng = 0;
     }
     $sng = 8 if ( $c->{content} =~ m/^\d+$/ );
@@ -1024,26 +1049,28 @@ sub _build_groups {
     $sng = 10 if ( $diff > 50 );
     $sng = 11 if ( $diff > ( $c->{fs} + $p->{fs} ) * 1.33 );
 
-    $sng = 14 if ( $uc < 0.15 and $last_line_uc > 0.95 );
-    $sng = 15 if ( $c->{nr_bad_words} > 1 and  $p->{nr_bad_words} == 0 );
+    $sng = 14 if ( $uc < 0.15             and $last_line_uc > 0.95 );
+    $sng = 15 if ( $c->{nr_bad_words} > 1 and $p->{nr_bad_words} == 0 );
 
-    $sng = 17 if ( $c->{nr_bad_words} == 0 and $p->{nr_bad_words} > 0 and
-		   $p->{content} !~ m/\s/ );
+    $sng = 17 if ( $c->{nr_bad_words} == 0
+      and $p->{nr_bad_words} > 0
+      and $p->{content} !~ m/\s/ );
 
     # don't join lines that have a different font
     $sng = 18 if ( $c->{font} ne $p->{font} );
-    $sng = 19 if ( $p->{content} eq '');
+    $sng = 19 if ( $p->{content} eq '' );
 
     if ( $sng == 0 ) {
       if ( $c->{content} !~ m/(1[1-9]|20|21)\d\d/ ) {
-	$sng = 7 if ( $c->{nr_bad_words} > 0 and $p->{nr_bad_words} == 0 );
+        $sng = 7 if ( $c->{nr_bad_words} > 0 and $p->{nr_bad_words} == 0 );
       }
+
       # do not join something with a URL
       if ( $p->{content} =~ m/^www\.\S+\.[a-z]{2,3}/i ) {
-	$sng = 12;
+        $sng = 12;
       }
       if ( $p->{content} =~ m/^[\(\[\{].*[\)\]\}]$/i ) {
-	$sng = 13;
+        $sng = 13;
       }
     }
 
@@ -1056,13 +1083,13 @@ sub _build_groups {
     } else {
       update_line_or_group( $c, $groups[$#groups] );
     }
-    $last_line_lc = $lc;
-    $last_line_uc = $uc;
+    $last_line_lc    = $lc;
+    $last_line_uc    = $uc;
+    $last_line_index = $i;
   }
 
   return \@groups;
 }
-
 
 sub MarkBadWords {
   my $self       = shift;
@@ -1079,16 +1106,22 @@ sub MarkBadWords {
   # original article, mini review, ...
   foreach my $type ( @{ $self->_BADTYPES } ) {
     $bad++ if ( $tmp_line =~ m/$type/i );
+
+    #print "$bad $type $tmp_line\n";
   }
 
   # years and numbers
   foreach my $number ( @{ $self->_NUMBERS } ) {
     $bad++ if ( $tmp_line =~ m/$number/i );
+
+    #print "$bad $number $tmp_line\n";
   }
 
   # words that are not supposed to appear in title or authors
   foreach my $word ( @{ $self->_BADWORDS } ) {
     $bad++ if ( $tmp_line =~ m/$word/i );
+
+    #print "$bad $word $tmp_line\n";
   }
 
   # words that are not supposed to appear in author lines
@@ -1105,11 +1138,10 @@ sub MarkBadWords {
   return ( $bad, $bad_author );
 }
 
-
 sub _get_abstract_or_intro_pos {
   my $lines = $_[0];
 
-  my ( $y_a, $y_i )  = ( 10000, 10000 );
+  my ( $y_a, $y_i ) = ( 10000, 10000 );
 
   foreach my $i ( 0 .. $#{$lines} ) {
     my $t = $lines->[$i]->{'condensed_content'};
@@ -1121,7 +1153,7 @@ sub _get_abstract_or_intro_pos {
     $y_i = $y if ( $t =~ m/^(\d\.?)?Results$/i and $y < $y_i );
     $y_i = $y if ( $t =~ m/^(\d\.?)?Background$/i and $y < $y_i );
     $y_i = $y if ( $t =~ m/^Background:/i and $y < $y_i );
-    $y_i = $y if ( $t =~ m/^(\d\.?)?Methods$/i and $y < $y_i and $y > 100 and $i > 3);
+    $y_i = $y if ( $t =~ m/^(\d\.?)?Methods$/i and $y < $y_i and $y > 100 and $i > 3 );
     $y_i = $y if ( $t =~ m/^(\d\.?)?MaterialsandMethods$/i and $y < $y_i and $y > 100 );
     $y_i = $y if ( $t =~ m/^(\d\.?)?Summary$/i and $y < $y_i );
     $y_i = $y if ( $t =~ m/^Addresses$/i and $y < $y_i );
@@ -1133,7 +1165,6 @@ sub _get_abstract_or_intro_pos {
 
   return ( $y_a < $y_i ) ? $y_a : $y_i;
 }
-
 
 sub _most_abundant_fontsize {
   my $lines = $_[0];
@@ -1153,7 +1184,6 @@ sub _most_abundant_fontsize {
 
   return $most_abundant_fs;
 }
-
 
 sub _check_for_cover_page {
   my $lines = $_[0];
@@ -1200,12 +1230,12 @@ sub parse_extpdf_info {
   return \%md if ( not defined $output->{'info'} );
   my $tmp = $output->{'info'};
 
-  if (  $tmp->{'page'} =~ m/^ARRAY/ ) {
+  if ( $tmp->{'page'} =~ m/^ARRAY/ ) {
     if ( defined $tmp->{'page'}->[ $arguments->{page} ]->{'size'} ) {
       $md{size} = $tmp->{'page'}->[ $arguments->{page} ]->{'size'};
     }
   } elsif ( $tmp->{'page'} =~ m/^HASH/ ) {
-     $md{size} = $tmp->{'page'}->{'size'};
+    $md{size} = $tmp->{'page'}->{'size'};
   }
 
   $md{numPages} = $tmp->{'numPages'} if ( defined $tmp->{'numPages'} );
@@ -1248,26 +1278,33 @@ sub parse_extpdf_info {
   return \%md;
 }
 
-
 sub parse_extpdf_output {
   my $self   = shift;
   my $output = $_[0];
 
-  return ([],[]) if ( not defined $output->{'word'} );
+  return ( [], [] ) if ( not defined $output->{'word'} );
 
   my @words = @{ $output->{'word'} };
 
-  return ([],[]) if ( $#words <= 1 );
+  return ( [], [] ) if ( $#words <= 1 );
 
   foreach my $i ( 0 .. $#words ) {
     ( my $xMin, my $yMin, my $xMax, my $yMax ) = split( /\s+/, $words[$i]->{'bbox'} );
     $words[$i]->{xMin} = sprintf( "%.0f", $xMin );
-    $words[$i]->{yMin} = sprintf( "%.0f", $yMin );
     $words[$i]->{xMax} = sprintf( "%.0f", $xMax );
-    $words[$i]->{yMax} = $words[$i]->{yMin} + $words[$i]->{size};
+
+    # for yMin and yMax we assume that the word is vertically centered
+    if ( ( $yMax - $yMin ) > $words[$i]->{size} + 0.5 ) {
+      $words[$i]->{yMin} =
+        sprintf( "%.0f", $yMax - ( $yMax - $yMin - $words[$i]->{size} ) / 2 - $words[$i]->{size} );
+      $words[$i]->{yMax} = sprintf( "%.0f", $yMax - ( $yMax - $yMin - $words[$i]->{size} ) / 2 );
+    } else {
+      $words[$i]->{yMin} = sprintf( "%.0f", $yMin );
+      $words[$i]->{yMax} = sprintf( "%.0f", $yMax );
+    }
     if ( defined $words[$i]->{font} ) {
       if ( $words[$i]->{font} =~ m/Bold/i ) {
-	$words[$i]->{bold} = 1;
+        $words[$i]->{bold} = 1;
       }
     }
     $words[$i]->{font} = 'NA' if ( not defined $words[$i]->{font} );
@@ -1276,8 +1313,9 @@ sub parse_extpdf_output {
   }
 
   # in a first step we want to group words into lines
-  my @lines = ();
-  my @words_rotated = ( );
+  my @lines         = ();
+  my @words_rotated = ();
+
   # kick-off @lines with the first non-rotated word
   my $start = 0;
   foreach my $i ( 0 .. $#words ) {
@@ -1287,7 +1325,7 @@ sub parse_extpdf_output {
     } else {
       push @lines, new_line_or_group();
       update_line_or_group( $words[$i], $lines[$#lines] );
-      $start = $i+1;
+      $start = $i + 1;
       last;
     }
   }
@@ -1300,7 +1338,7 @@ sub parse_extpdf_output {
     # within that span it will be added to the current line
     # bounding box usually seems to be greater than the font size
     # if bounding boxes overlap, a new line is only started if
-    # less than 25% of the word are covered by the last bounding box
+    # less than 25/30% of the word are covered by the last bounding box
 
     my $inrange = 0;
     my $span_i  = $words[$i]->{'yMax'} - $words[$i]->{'yMin'};
@@ -1309,46 +1347,65 @@ sub parse_extpdf_output {
       next;
     }
 
-    if (  $lines[$#lines]->{'yMin'} <= $words[$i]->{'yMin'}
-      and $words[$i]->{'yMax'} <= $lines[$#lines]->{'yMax'} ) {
+    my $last_yMin = $lines[$#lines]->{'yMin'};
+    my $last_yMax = $lines[$#lines]->{'yMax'};
+
+    # get xMIn of the last line
+    my $line_xMin = 10e6;
+    foreach my $j ( 0 .. $#{ $lines[$#lines]->{'words'} } ) {
+      my $other = $lines[$#lines]->{'words'}->[$j];
+      $line_xMin = $other->{xMin} if ( $other->{xMin} < $line_xMin );
+    }
+
+    if (  $last_yMin <= $words[$i]->{'yMin'}
+      and $words[$i]->{'yMax'} <= $last_yMax ) {
       $inrange = 1;
-    } elsif ( $lines[$#lines]->{'yMin'} <= $words[$i]->{'yMax'}
-      and $words[$i]->{'yMax'} <= $lines[$#lines]->{'yMax'} ) {
-      my $span = $words[$i]->{'yMax'} - $lines[$#lines]->{'yMin'};
+    } elsif ( $last_yMin <= $words[$i]->{'yMax'}
+      and $words[$i]->{'yMax'} <= $last_yMax ) {
+      my $span = $words[$i]->{'yMax'} - $last_yMin;
       $inrange = 1 if ( $span / $span_i > 0.25 );
-    } elsif ( $lines[$#lines]->{'yMin'} <= $words[$i]->{'yMin'}
-      and $words[$i]->{'yMin'} <= $lines[$#lines]->{'yMax'} ) {
-      my $span = $lines[$#lines]->{'yMax'} - $words[$i]->{'yMin'};
-      $inrange = 1 if ( $span / $span_i > 0.25 );
+    } elsif ( $last_yMin <= $words[$i]->{'yMin'}
+      and $words[$i]->{'yMin'} <= $last_yMax ) {
+      my $span = $last_yMax - $words[$i]->{'yMin'};
+      $inrange = 1 if ( $span / $span_i > 0.3 );
+    } elsif ( $words[$i]->{'yMin'} <= $last_yMin
+      and $last_yMax <= $words[$i]->{'yMax'} ) {
+      my $span = ( $words[$i]->{'yMax'} - $words[$i]->{'yMin'} ) - ( $last_yMax - $last_yMin );
+      $inrange = 1 if ( $span <= 10 );
+    }
+
+#print "$inrange line:$last_yMin-$last_yMax $words[$i]->{'yMin'}-$words[$i]->{'yMax'} $words[$i]->{'content'} $line_xMin  $words[$i]->{'xMin'}\n";
+    if ( $inrange == 1 and $words[$i]->{xMin} <= $line_xMin and $line_xMin < 50 ) {
+      $inrange = 0;
     }
 
     push @lines, new_line_or_group() if ( $inrange == 0 );
     update_line_or_group( $words[$i], $lines[$#lines] );
   }
 
-  my @filtered_lines = ( );
+  my @filtered_lines = ();
   foreach my $line (@lines) {
-    $self->calculate_line_features($line,1);
+    $self->calculate_line_features( $line, 1 );
     push @filtered_lines, $line if ( $line->{fs} > 3 );
   }
 
-  return ( \@filtered_lines, \@words_rotated);
+  return ( \@filtered_lines, \@words_rotated );
 }
 
 sub _search_for_arXivid {
-  my $lines = $_[0];
+  my $lines         = $_[0];
   my $words_rotated = $_[1];
-  
+
   my $arxivid;
   foreach my $i ( 0 .. $#{$lines} ) {
-    if (  $lines->[$i]->{'content'} =~ m/arxiv:\s?(\S+)/i ) {
+    if ( $lines->[$i]->{'content'} =~ m/arxiv:\s?(\S+)/i ) {
       $arxivid = $1;
     }
   }
   foreach my $i ( 0 .. $#{$words_rotated} ) {
     if ( $words_rotated->[$i]->{'content'} ) {
-      if (  $words_rotated->[$i]->{'content'} =~ m/arxiv:\s?(\S+)/i ) {
-	$arxivid = $1;
+      if ( $words_rotated->[$i]->{'content'} =~ m/arxiv:\s?(\S+)/i ) {
+        $arxivid = $1;
       }
     }
   }
@@ -1365,26 +1422,28 @@ sub _search_for_DOI {
     if ( $tmp =~ m/(10\.\d{4})/i ) {
       $doi = _ParseDOI($tmp);
     }
+
     # the DOI may be split into two lines
     if ( $doi eq '' and $i < $#{$lines} ) {
       my $next_line;
-      foreach my $j ( $i+1 .. $#{$lines} ) {
-	if ( abs($lines->[$j]->{'xMin'}-$lines->[$i]->{'xMin'}) < 5 and
-	     $lines->[$j]->{'yMin'} > $lines->[$i]->{'yMin'} ) {
-	  $next_line = $j;
-	  last;
-	}
+      foreach my $j ( $i + 1 .. $#{$lines} ) {
+        if ( abs( $lines->[$j]->{'xMin'} - $lines->[$i]->{'xMin'} ) < 5
+          and $lines->[$j]->{'yMin'} > $lines->[$i]->{'yMin'} ) {
+          $next_line = $j;
+          last;
+        }
       }
 
       if ( defined $next_line ) {
-	$tmp = $lines->[$i]->{'content'}.$lines->[$next_line]->{'content'};
-	$doi = _ParseDOI($tmp);
+        $tmp = $lines->[$i]->{'content'} . $lines->[$next_line]->{'content'};
+        $doi = _ParseDOI($tmp);
       }
     }
+
     # if the DOI seems to be too short
     if ( $doi ne '' and length($doi) <= 10 ) {
       if ( $tmp =~ m/($doi)\s+(\S+)/i ) {
-	$doi = _ParseDOI($1.$2);
+        $doi = _ParseDOI( $1 . $2 );
       }
     }
 
@@ -1469,6 +1528,7 @@ sub calculate_line_features {
   foreach my $word ( @{ $in->{'words'} } ) {
     $in->{'bold_count'}++   if ( $word->{'bold'} );
     $in->{'italic_count'}++ if ( $word->{'italic'} );
+
     # do not let superscripts determine the major font size
     $in->{'fs_freqs'}->{ $word->{'size'} }++ if ( abs( $in->{yMin} - $word->{yMin} ) <= 1 );
     $in->{'nr_words'}++ if ( $word->{'content'} ne '' );
@@ -1511,6 +1571,8 @@ sub calculate_line_features {
     next if ( $word->{'content'} eq '' );
     $nr_common_words++ if ( defined $self->_COMMONWORDS->{ uc( $word->{'content'} ) } );
     push @tmp_content, $word->{'content'};
+
+    #print "$word->{'content'}\n";
     if ( $word->{'size'} < $in->{'fs'} ) {
 
       while ( $word->{'content'} =~ m/(.*)($special_chars)(.*)/ ) {
@@ -1518,14 +1580,13 @@ sub calculate_line_features {
       }
 
       # do not make SMALL CAPS superscripts
-      #print "$word->{'yMin'} $word->{'size'} < $in->{'fs'} $word->{content} --> ";
-      next if ( $word->{content} =~ m/^[A-Z]{3,}[^A-Za-z]{0,2}$/ );
+      next if ( $word->{content} =~ m/^[A-Z\-]{3,}[^A-Za-z]{0,2}$/ );
       next if ( $word->{content} =~ m/^[A-Z][a-z]{3,}/ );
       next if ( $word->{content} =~ m/^10\.\d{4}/ );
       next if ( length( $word->{content} ) > 10 );
       $word->{'content'} = ',';
 
-      #print "$word->{content}\n";
+      #print "\t$word->{content}\n";
       $in->{'nr_superscripts'}++;
       $in->{'starts_with_superscript'} = 1 if ( $i == 0 );
       next;
@@ -1568,7 +1629,8 @@ sub calculate_line_features {
   if ( $in->{'content'} =~ m/(.{10,})(\s[\.\-_]{5,}.*)/ ) {
     $in->{'content'} = $1;
   }
-  $in->{'content_all'} =~ s/(.*\s)(\S+@\S+)(.*)/$1$3/g;
+  $in->{'content_all'} =~ s/(.*\s)(\S+\s?@\s?\S+)(.*)/$1$3/g;
+  $in->{'content'}     =~ s/(.*\s)(\S+\s?@\s?\S+)(.*)/$1$3/g;
 
   # repair common OCR errors and other stuff
   my %OCRerrors = (
@@ -1640,7 +1702,7 @@ sub update_line_or_group {
     $hashref->{bold_count}          += $in->{bold_count};
     $hashref->{italic_count}        += $in->{italic_count};
     $hashref->{nr_superscripts}     += $in->{nr_superscripts};
-    $hashref->{address_count}        += $in->{address_count};
+    $hashref->{address_count}       += $in->{address_count};
     $hashref->{nr_bad_words}        += $in->{nr_bad_words};
     $hashref->{nr_common_words}     += $in->{nr_common_words};
     $hashref->{nr_bad_author_words} += $in->{nr_bad_author_words};
@@ -1656,6 +1718,7 @@ sub update_line_or_group {
     $hashref->{content} =~ s/^\s#PPRJOIN#//;
 
   } else {
+
     return if ( not defined $in->{'content'} );
     return if ( $in->{content} =~ m/^\x{A3}$/ );
     return if ( $in->{content} =~ m/^\x{A8}$/ );
@@ -1712,7 +1775,8 @@ sub update_line_or_group {
     if (  $d_abs == 0
       and $lastone->{content} !~ m/[a-z]/
       and $lastone->{content} =~ m/[A-Z]/
-      and $in->{content} !~ m/[a-z]/ ) {
+      and $in->{content} !~ m/[a-z]/
+      and $in->{content} =~ m/[A-Z]/ ) {
       $lastone->{xMax} = $in->{xMax};
       $lastone->{content} .= $in->{content};
       return;
@@ -1722,19 +1786,32 @@ sub update_line_or_group {
     # they are often encoded by two chars at the same position
     # we only add a word if it does not overlap
     # with any other word seen so far
-    my $flag = 1;
+    my $flag      = 1;
+    my $overlaper = -1;
     foreach my $j ( 0 .. $#{ $hashref->{'words'} } ) {
       my $other = $hashref->{'words'}->[$j];
       if ( $other->{xMin} < $in->{xMin} and $in->{xMin} < $other->{xMax} ) {
-        $flag = 0;
+        $flag      = 0;
+        $overlaper = $j;
       }
       if ( $other->{xMin} < $in->{xMax} and $in->{xMax} < $other->{xMax} ) {
-        $flag = 0;
-
+        $flag      = 0;
+        $overlaper = $j;
       }
     }
     $flag = 1 if ( $in->{'content'} =~ m/10\.\d{4}/ );
-    push @{ $hashref->{'words'} }, $in if ( $flag == 1 );
+    if ( $flag == 1 ) {
+      push @{ $hashref->{'words'} }, $in;
+    } else {
+
+      # let's check if would should skip or replace
+      # we keep the longer one
+      if (  length( $hashref->{'words'}->[$overlaper]->{content} ) < 2
+        and length( $in->{'content'} ) >= 2 ) {
+        $hashref->{'words'}->[$overlaper] = $in;
+      }
+    }
+    return;
   }
 
   return;
@@ -1760,7 +1837,7 @@ sub new_line_or_group {
     'content'                 => '',
     'condensed_content'       => '',
     'content_all'             => '',
-    'address_count'            => 0,
+    'address_count'           => 0,
     'nr_bad_words'            => 0,
     'nr_bad_author_words'     => 0,
     'nr_common_words'         => 0,
@@ -1813,6 +1890,5 @@ sub _sprintf_line_or_group {
 
   return $s;
 }
-
 
 1;

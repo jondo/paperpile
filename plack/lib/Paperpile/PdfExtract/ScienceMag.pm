@@ -45,6 +45,7 @@ sub parse {
     # first find the title
     foreach my $i ( 0 .. $#{$l} ) {
       if ( $l->[$i]->{fs} == $font_t ) {
+	next if ( $l->[$i]->{content} =~ m/RESEARCH\sARTICLES/ );
         push @t, $l->[$i]->{content};
         $last_t = $i;
         $xMin   = $l->[$i]->{xMin} if ( $l->[$i]->{xMin} < $xMin );

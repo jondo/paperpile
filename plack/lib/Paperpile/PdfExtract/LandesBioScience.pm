@@ -52,6 +52,7 @@ sub parse {
 
   $title   = join( " ", @t );
   $authors = join( ",", @a );
+  $authors = undef if ( $authors eq '' );
 
   return ( $title, $authors );
 }
