@@ -886,7 +886,6 @@ sub format_pattern {
       push @authors, $a->last;
     }
   }
-
   # if no authors are given we use editors
   if ( not @authors ) {
 
@@ -903,35 +902,36 @@ sub format_pattern {
   }
 
   # Make sure there are no slashes or backslashes in the author names
-  foreach my $i (0..$#authors){
-    $authors[$i]=~s!/!_!g;
-    $authors[$i]=~s!\\!_!g;
+  foreach my $i ( 0 .. $#authors ) {
+    $authors[$i] =~ s!/!!g;
+    $authors[$i] =~ s!\\!!g;
   }
 
   my $first_author = $authors[0];
   my $last_author  = $authors[$#authors];
 
+  # Assume that nobody uses a pattern that includes the first author
+  # and not the last author.
   if ( $first_author eq $last_author ) {
-    $last_author = "-";
+    $last_author = '';
   }
 
-  my $YYYY = $self->year;
-  my $YY   = $YYYY;
-
-  my $title = $self->title;
+  my $YYYY    = $self->year;
+  my $YY      = $YYYY;
+  my $title   = $self->title;
+  my $journal = $self->journal;
 
   # Make sure there are no slashes or backslashes in any of the other fields
-  $title =~ s!/!_!g;
-  $YY    =~ s!/!_!g;
-  $YYYY  =~ s!/!_!g;
-  $title =~ s!\\!_!g;
-  $YY    =~ s!\\!_!g;
-  $YYYY  =~ s!\\!_!g;
-
+  $title   =~ s!/!_!g;
+  $YY      =~ s!/!_!g;
+  $YYYY    =~ s!/!_!g;
+  $journal =~ s!/!_!g;
+  $title   =~ s!\\!_!g;
+  $YY      =~ s!\\!_!g;
+  $YYYY    =~ s!\\!_!g;
+  $journal =~ s!\\!_!g;
 
   my @title_words = split( /\s+/, $title );
-
-  my $journal = $self->journal;
 
   $journal      =~ s/\s+/_/g;
   $first_author =~ s/\s+/_/g;
@@ -989,8 +989,6 @@ sub format_pattern {
     foreach my $i ( 0 .. $to - 1 ) {
       $title_words[$i] = substr( $title_words[$i], 0, $5 ) if ($4);
       $title_words[$i] = uc( $title_words[$i] ) if $2 eq 'TITLE';
-
-      #$title_words[$i] = ucfirst( $title_words[$i] ) if $2 eq 'Title';
       $title_words[$i] = lc( $title_words[$i] ) if $2 eq 'title';
     }
     my $title_string = join( '_', @title_words[ 0 .. $to - 1 ] );
@@ -1005,7 +1003,14 @@ sub format_pattern {
     }
   }
 
-  $pattern =~ s/\[journal\]/$journal/g;
+  # [journal]
+  if ( $pattern =~ /\[(journal)\]/i ) {
+    my $found_field = $1;
+    $journal     = uc($journal)      if $1 eq 'JOURNAL';
+    $journal     = ucfirst($journal) if $1 eq 'Journal';
+    $journal = lc($journal)      if $1 eq 'journal';
+    $pattern =~ s/$found_field/$journal/g;
+  }
 
   # Custom substitutions, given as parameter
 
@@ -1029,20 +1034,21 @@ sub format_pattern {
   $pattern =~ s/\W//g;
   $pattern =~ s{__SLASH__}{/}g;
 
+  # No name, no date
   if ( $pattern =~ /(unnamed__undated|undated__unnamed)/ ) {
 
     my $subst;
 
     my $max = $#title_words;
     $max = 3 if $max >= 3;
-
     my $title_string = join( '_', @title_words[ 0 .. $max ] );
 
+    # Use title words if not already in pattern
     if ($title_string) {
       if ( not $pattern =~ /$title_string/ ) {
         $subst = $title_string;
       } else {
-        $subst = 'this';
+        $subst = '';
       }
     } else {
       $subst = 'incomplete_reference';
@@ -1052,10 +1058,11 @@ sub format_pattern {
   }
 
   # Fix underscores
-  $pattern =~ s/__/_/g;      # merge double underscores
+  $pattern =~ s/_+/_/g;      # merge double underscores
   $pattern =~ s/^_//;        # remove underscores from beginning
   $pattern =~ s/_$//;        # remove underscores from end
   $pattern =~ s/\/_/\//g;    # remove underscores from paths: path/_unnamed_2000
+  $pattern =~ s/_\//\//g;    # remove underscores from paths: path/unnamed_/2000
 
   return $pattern;
 
