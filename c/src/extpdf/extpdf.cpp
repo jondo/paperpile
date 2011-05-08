@@ -86,6 +86,9 @@ void ExtPdf::process() {
 
 void ExtPdf::printXML(const QVariantMap & results){
 
+  QDomImplementation impl;
+  impl.setInvalidDataPolicy(QDomImplementation::DropInvalidChars);
+
   // Create document and root note
   QDomDocument doc("output");
   QDomElement root = doc.createElement("output");
