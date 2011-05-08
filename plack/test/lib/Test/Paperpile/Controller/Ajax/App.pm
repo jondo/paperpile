@@ -28,13 +28,11 @@ sub startup : Test(startup => 1) {
 
   $self->{app} = $app;
 
-  $self->{workspace} = Paperpile->path_to("test","workspace");
-
   # Clean workspace
-  if ( !$self->{workspace} =~ m!test/workspace! ) {
-    die( "Something wrong with test workspace. I don't delete " . $self->{workspace} );
+  if ( !$self->workspace =~ m!test/workspace! ) {
+    die( "Something wrong with test workspace. I don't delete " . $self->workspace );
   } else {
-    rmtree( $self->{workspace} );
+    rmtree( $self->workspace );
   }
 
 }
@@ -45,7 +43,7 @@ sub init_session : Tests(10){
 
   my $r = $self->request("/ajax/app/init_session", 'application/json','200');
 
-  my $workspace = $self->{workspace};
+  my $workspace = $self->workspace;
   my $tmp_dir = Paperpile->tmp_dir;
 
   foreach my $dir ( 'rss', 'import', 'download', 'jobs', 'json', 'filesync' ){

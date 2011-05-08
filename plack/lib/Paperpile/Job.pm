@@ -28,8 +28,6 @@ use Paperpile::Library::Publication;
 use Paperpile::PdfCrawler;
 use Paperpile::PdfExtract;
 
-use Paperpile::Job::Win32;
-
 use Data::Dumper;
 use File::Path;
 use File::Spec;
@@ -120,8 +118,8 @@ sub BUILD {
     $self->duration(0);
     $self->start(0);
 
-    my $job_dir  = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'jobs' );
-    my $json_dir = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'json' );
+    my $job_dir  = File::Spec->catfile( Paperpile->tmp_dir, 'jobs' );
+    my $json_dir = File::Spec->catfile( Paperpile->tmp_dir, 'json' );
 
     mkdir $job_dir  if ( !-e $job_dir );
     mkdir $json_dir if ( !-e $json_dir );
@@ -136,7 +134,7 @@ sub BUILD {
   # otherwise restore object from disk
   else {
     $self->_freeze_file(
-      File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'jobs', $self->id ) );
+      File::Spec->catfile( Paperpile->tmp_dir, 'jobs', $self->id ) );
     $self->restore;
     if ( $self->pub ) {
       $self->pub->refresh_job_fields($self);
@@ -379,7 +377,7 @@ sub _do_work {
 
   if ( $self->job_type eq 'PDF_SEARCH' ) {
 
-    print STDERR "[queue] Searching PDF for ", $self->pub->_citation_display, "\n";
+    Paperpile->log("[queue] Searching PDF for ". $self->pub->_citation_display);
 
     if ( $self->pub->pdf ) {
       $self->update_info( 'msg',
@@ -414,7 +412,7 @@ sub _do_work {
 
   if ( $self->job_type eq 'PDF_IMPORT' ) {
 
-    print STDERR "[queue] Start import of PDF ", $self->pub->pdf, "\n";
+    Paperpile->log("[queue] Start import of PDF ". $self->pub->pdf);
 
     # Store the original PDF filename.
     my $orig_pdf_file = $self->pub->pdf;
@@ -691,7 +689,7 @@ sub _match {
 
   my $success_plugin;
 
-  print STDERR "[queue] Start matching against online resources.\n";
+  Paperpile->log("[queue] Start matching against online resources.");
 
   eval { $success_plugin = $self->pub->auto_complete( [@plugin_list], $require_linkout ); };
 
@@ -710,7 +708,6 @@ sub _crawl {
 
   my $crawler = Paperpile::PdfCrawler->new;
   $crawler->jobid( $self->id );
-  $crawler->debug(1);
   $crawler->driver_file( Paperpile->path_to( 'data', 'pdf-crawler.xml' ) );
   $crawler->load_driver();
 
@@ -724,7 +721,7 @@ sub _crawl {
     die("No target url for PDF download");
   }
 
-  print STDERR "[queue] Start crawling at $start_url\n";
+  Paperpile->log("[queue] Start crawling at $start_url");
 
   $pdf = $crawler->search_file($start_url);
 
@@ -742,12 +739,12 @@ sub _download {
 
   my $self = shift;
 
-  print STDERR "[queue] Start downloading ", $self->pub->_pdf_url, "\n";
+  Paperpile->log("[queue] Start downloading ". $self->pub->_pdf_url);
 
   $self->update_info( 'msg', "Starting PDF download..." );
 
   my $file =
-    File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $self->pub->guid . ".pdf" );
+    File::Spec->catfile( Paperpile->tmp_dir, "download", $self->pub->guid . ".pdf" );
 
   # In case file already exists remove it
   unlink($file);
@@ -846,7 +843,7 @@ sub _extract_meta_data {
 
   my $self = shift;
 
-  print STDERR "[queue] Extracting meta data for ", $self->pub->pdf, "\n";
+  Paperpile->log("[queue] Extracting meta data for ". $self->pub->pdf);
 
   my $bin = Paperpile::Utils->get_binary('pdftoxml');
 

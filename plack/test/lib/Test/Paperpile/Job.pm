@@ -261,7 +261,7 @@ sub C_pdf_download : Tests(3) {
     "PDF download ok"
   );
 
-  ok(-e File::Spec->catfile( $self->{workspace}, ".paperpile", "papers", "Wang2008.pdf"), "PDF file exists.");
+  ok(-e File::Spec->catfile( $self->workspace, ".paperpile", "papers", "Wang2008.pdf"), "PDF file exists.");
 
 }
 

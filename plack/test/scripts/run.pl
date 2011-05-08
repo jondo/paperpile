@@ -8,22 +8,23 @@ use File::Path;
 
 ## Define available testsuites here
 
-$ENV{PLACK_DEBUG} = 0;
 $ENV{PP_TESTING} = 1;
 
 my %suites = (
   basic => {
     name  => 'Basic backend unit and regression tests',
     files => [
-      "t/basic.t",                 "t/job.t",
-      "t/queue.t",                 "t/formats/bibtex.t",
-      "t/formats/ris.t",           "t/formats/zotero.t",
-      "t/formats/mendeley.t",      "t/plugins/pubmed.t",
-      "t/plugins/googlescholar.t", "t/plugins/duplicates.t",
-      "t/plugins/arxiv.t",         "t/binaries.t",
-      "t/ajax/app.t",
-
+      "t/basic.t",            "t/utils.t",          "t/model/sqlite.t", "t/job.t",
+      "t/queue.t",            "t/formats/bibtex.t", "t/formats/ris.t",  "t/formats/zotero.t",
+      "t/formats/mendeley.t", "t/binaries.t",       "t/ajax/app.t",
     ]
+  },
+  webplugins => {
+    name  => 'Web Plugins',
+    files => [
+      "t/plugins/pubmed.t",     "t/plugins/googlescholar.t",
+      "t/plugins/duplicates.t", "t/plugins/arxiv.t"
+    ],
   },
   pdfcrawler => {
     name  => 'PDF crawler',
@@ -34,7 +35,9 @@ my %suites = (
 
 ## Handle command line options
 
-my $verbosity = 1;
+my $verbosity = 0;
+my $verbose   = 0;
+my $debug     = 0;
 my $nocolor   = 0;
 my $junit     = 0;
 my $help      = 0;
@@ -43,12 +46,18 @@ my $cover     = 0;
 GetOptions(
   "nocolor"     => \$nocolor,
   "verbosity:i" => \$verbosity,
+  "v"           => \$verbose,
   "junit"       => \$junit,
   "help"        => \$help,
   "cover"       => \$cover,
+  "debug"       => \$debug,
 );
 
+$ENV{PLACK_DEBUG} = $debug ? 1 : 0;
+
 usage() if ( @ARGV == 0 || $help );
+
+$verbosity=1 if ($verbosity == 0 && $verbose);
 
 ## Collect tests from the rest of the command line
 
@@ -136,7 +145,9 @@ sub usage {
 
   print STDERR "  --nocolor     Don't colorize outpout\n";
   print STDERR "  --verbosity   Verbosity level (-3..1, see TAP::Harness)\n";
-  print STDERR "  --junit       JUnit formatted output\n\n";
+  print STDERR "  -v            Shortcut to set verbosity to 1\n";
+  print STDERR "  --debug       Show debug output\n";
+  print STDERR "  --junit       JUnit formatted output\n";
   print STDERR "  --cover       Run coverage analysis\n\n";
 
   exit(1);

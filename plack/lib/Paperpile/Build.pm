@@ -88,7 +88,7 @@ sub initdb {
 
   chdir $self->plack_dir;
 
-  if ( Paperpile::Utils->get_platform eq 'osx' ) {
+  if ( Paperpile->platform eq 'osx' ) {
     $ENV{PATH}              = "bin/osx:" . $ENV{PATH};
     $ENV{DYLD_LIBRARY_PATH} = "bin/osx";
   }
@@ -101,7 +101,7 @@ sub initdb {
   }
 
   my $model;
-  if ( Paperpile::Utils->get_platform eq 'osx' ) {
+  if ( Paperpile->platform eq 'osx' ) {
     $model = Paperpile::Model::Library->new( { file => "db/library" } );
   } else {
     $model = Paperpile::Model::Library->new( { file => "db/library.db" } );
@@ -384,7 +384,7 @@ sub get_qruntime {
       @platforms = ($platform);
     }
   } else {
-    @platforms = (Paperpile::Utils->get_platform);
+    @platforms = (Paperpile->platform);
   }
 
 
@@ -487,7 +487,7 @@ sub push_qruntime {
 
   my ( $self ) = @_;
 
-  my $platform = Paperpile::Utils->get_platform;
+  my $platform = Paperpile->platform;
 
   my $qruntime_version = Paperpile->config->{app_settings}->{qruntime_version};
 

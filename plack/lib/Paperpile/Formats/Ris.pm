@@ -21,6 +21,8 @@ use IO::File;
 use Encode;
 use 5.010;
 
+use Paperpile;
+
 extends 'Paperpile::Formats';
 
 sub BUILD {
@@ -189,7 +191,7 @@ sub read {
           if ( _is_abstract($d) ) {
             $data->{abstract} = $d;
           } else {
-            print STDERR "Warning: could not parse field '$t', content='$d'!\n";
+            Paperpile->log("[Warning] could not parse field '$t', content='$d'!");
           }
         }
         when ( 'KW' ){    # keywords
@@ -246,21 +248,21 @@ sub read {
           if ( _is_doi($d) ) {
             $data->{doi} = $d;
           } else {
-            print STDERR "Warning: could not parse field '$t', content='$d'!\n";
+            Paperpile->log("[Warning] could not parse field '$t', content='$d'!");
           }
         }
         when ( 'M2' ){
           if ( _is_doi($d) ) {
             $data->{doi} = $d;
           } else {
-            print STDERR "Warning: could not parse field '$t', content='$d'!\n";
+            Paperpile->log("[Warning] could not parse field '$t', content='$d'!");
           }
         }
         when ( 'M3' ){
           if ( _is_doi($d) ) {
             $data->{doi} = $d;
           } else {
-            print STDERR "Warning: could not parse field '$t', content='$d'!\n";
+            Paperpile->log("[Warning] could not parse field '$t', content='$d'!");
           }
         }
         when ( 'UR' ){    # URL, one per tag or comma seperated list
@@ -304,9 +306,9 @@ sub read {
         }
 
        default {
-          print STDERR "Warning: field '$t' ignored, content='$d'!\n";
-        }
-      }
+         Paperpile->log("[Warning] field '$t' ignored, content='$d'!");
+       }
+     }
     }
 
     $data->{authors}  = join( ' and ', @authors )  if (@authors);
@@ -515,7 +517,7 @@ sub _set_doi {
   if ( _is_doi($doi) ) {
     $data_ptr->{doi} = $doi;
   } else {
-    print STDERR "Warning: could not parse field '$field', content='$doi'!\n";
+    Paperpile->log("[Warning] could not parse field '$field', content='$doi'!");
   }
 }
 
@@ -555,8 +557,6 @@ sub _handle_dates {
 sub _print_ris {
     my $fh = shift;    # the filehandle
     my $a  = shift;    # the nested array
-
-print STDERR $a;
 
     foreach my $entry ( @{$a} ) {    # for each tag/value pair
         print $fh $entry->[0] . '  - ' . $entry->[1] . "\n";
@@ -610,7 +610,6 @@ sub _add_to_note {
 
     if ( exists $data_ptr->{note} ) {
         $data_ptr->{note} .= '; ' . $note;
-        print STDERR $data_ptr->{note};
     }
     else {
         $data_ptr->{note} = $note;

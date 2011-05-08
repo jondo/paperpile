@@ -40,7 +40,7 @@ has 'driver_file' => (
 
 has '_driver'  => ( is => 'rw', isa => 'HashRef' );
 has 'browser' => ( is => 'rw', isa => 'LWP::UserAgent' );
-has 'debug'    => ( is => 'rw', isa => 'Bool', default => 1 );
+has 'debug'    => ( is => 'rw', isa => 'Bool', default => 0 );
 has '_cache'   => ( is => 'rw', isa => 'HashRef', default => sub { {} } );
 
 # Allows to update status information for queue task.
@@ -53,9 +53,15 @@ sub BUILD {
   $self->browser( Paperpile::Utils->get_browser );
 
   # Bless the browser object as a customized Paperpile useragent
-  bless $self->browser,"Paperpile::PdfUserAgent";
+  bless $self->browser, "Paperpile::PdfUserAgent";
+
   # Store a reference to ourselves within the customized browser object.
   $self->browser->crawler($self);
+
+  if ( $ENV{PLACK_DEBUG} ) {
+    $self->debug(1);
+  }
+
 }
 
 

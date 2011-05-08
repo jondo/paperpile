@@ -35,20 +35,45 @@ use XML::Simple;
 use Data::Dumper;
 use Date::Format;
 use Data::GUID;
-use Config;
 
 use Paperpile;
-
 use Paperpile::Model::User;
 use Paperpile::Model::Library;
 use Paperpile::Model::Queue;
 
-sub get_tmp_dir {
+sub get_model {
 
-  my ( $self ) = @_;
+  my ( $self, $name ) = @_;
 
-  return Paperpile->tmp_dir;
+  $name = lc($name);
 
+  my $model;
+
+  if ( $name eq "user" ) {
+    my $file = Paperpile->config->{user_db};
+    return Paperpile::Model::User->new( { file => $file } );
+  }
+
+  if ( $name eq "app" ) {
+    my $file = Paperpile->path_to( "db", "app.db" );
+    return Paperpile::Model::App->new( { file => $file } );
+  }
+
+  if ( $name eq "queue" ) {
+    my $file = Paperpile->config->{queue_db};
+    return Paperpile::Model::Queue->new( { file => $file } );
+  }
+
+  if ( $name eq "library" ) {
+
+    my $file = Paperpile::Utils->session->{library_db};
+
+    if ( !$file ) {
+      $file = $self->get_model("User")->settings->{library_db};
+    }
+
+    return Paperpile::Model::Library->new( { file => $file } );
+  }
 }
 
 sub get_browser {
@@ -63,7 +88,7 @@ sub get_browser {
     $settings = $test_proxy;
   } else {
 
-    my $model = $self->get_model("User");
+    my $model = Paperpile::Utils->get_model("User");
     $settings = $model->settings;
   }
 
@@ -118,47 +143,24 @@ sub check_browser_response {
 }
 
 
-sub get_binary{
+sub get_binary {
 
-  my ($self, $name)=@_;
+  my ( $self, $name ) = @_;
 
-  my $platform=$self->get_platform;
+  my $platform = Paperpile->platform;
 
-  if ($platform eq 'osx'){
+  if ( $platform eq 'osx' ) {
+
     # Make sure that fontconfig configuration files are found on OSX
-    my $fc=File::Spec->catfile(Paperpile->path_to('bin'), 'osx','fonts','fonts.conf');
-    $ENV{FONTCONFIG_FILE}=$fc;
+    my $fc = File::Spec->catfile( Paperpile->path_to('bin'), 'osx', 'fonts', 'fonts.conf' );
+    $ENV{FONTCONFIG_FILE} = $fc;
   }
 
-  my $bin=File::Spec->catfile(Paperpile->path_to('bin'), $platform, $name);
+  my $bin = File::Spec->catfile( Paperpile->path_to('bin'), $platform, $name );
 
-  $bin=~s/ /\\ /g;
+  $bin =~ s/ /\\ /g;
 
   return $bin;
-}
-
-sub get_platform{
-
-  my ($self) = @_;
-
-  my $platform='';
-  my $arch_string=$Config{archname};
-
-  if ( $arch_string =~ /linux/i ) {
-    $platform = ($arch_string =~ /64/) ? 'linux64' : 'linux32';
-  }
-
-  if ( $arch_string =~ /osx/i ) {
-    $platform = 'osx';
-  }
-
-  if ( $arch_string =~ /MSWin32/i ) {
-    $platform = 'win32';
-  }
-
-
-  return $platform;
-
 }
 
 
@@ -226,36 +228,37 @@ sub copy_file{
 
 
 sub calculate_md5 {
+
   my ($self, $file) = @_;
+
   open( FILE, "<$file" ) or FileReadError->throw( error => "Could not read " . $file );
   my $c = Digest::MD5->new;
   $c->addfile(*FILE);
+
   return $c->hexdigest;
 }
 
 
 sub store {
 
-  my ($self, $item, $ref) = @_;
+  my ( $self, $item, $ref ) = @_;
 
-  my $file = File::Spec->catfile($self->get_tmp_dir(), $item);
+  my $file = File::Spec->catfile( Paperpile->tmp_dir, $item );
 
-  lock_store($ref, $file) or  die "Can't write to cache\n";
+  lock_store( $ref, $file ) or die "Can't write to cache\n";
 
 }
 
 
 sub retrieve {
 
-  my ($self, $item) = @_;
+  my ( $self, $item ) = @_;
 
-  my $file = File::Spec->catfile($self->get_tmp_dir(), $item);
+  my $file = File::Spec->catfile( Paperpile->tmp_dir, $item );
 
-  my $ref=undef;
+  my $ref = undef;
 
-  eval {
-    $ref = lock_retrieve($file);
-  };
+  eval { $ref = lock_retrieve($file); };
 
   return $ref;
 
@@ -302,8 +305,6 @@ sub find_zotero_sqlite {
 sub process_attachment_name {
 
   (my $self, my $file) = @_;
-
-  print STDERR "$file\n";
 
   $file=~s{^file://}{}i;
 
@@ -381,18 +382,6 @@ sub domain_from_url {
   return $auth;
 
 }
-
-# Wrapper script around $c->session. On the desktop we use a custom
-# solution to store the session to avoid a strange race condition bug
-# in the session plugin.
-
-# USAGE: session($c) ... returns hashref of current session data
-#        session($c, {key=>value}) ... set key in session data
-
-# Important: The local version writes and restores the data everytime
-# the function is called. So if you store an object in the session
-# hash and change the object afterwards it will not be updated in the
-# session hash unless session is called again.
 
 sub session {
 
@@ -496,40 +485,7 @@ sub extpdf {
 
 }
 
-sub get_model {
 
-  my ( $self, $name ) = @_;
-
-  $name = lc($name);
-
-  my $model;
-
-  if ( $name eq "user" ) {
-    my $file = Paperpile->config->{user_db};
-    return Paperpile::Model::User->new( { file => $file } );
-  }
-
-  if ( $name eq "app" ) {
-    my $file = Paperpile->path_to( "db", "app.db" );
-    return Paperpile::Model::App->new( { file => $file } );
-  }
-
-  if ( $name eq "queue" ) {
-    my $file = Paperpile->config->{queue_db};
-    return Paperpile::Model::Queue->new( { file => $file } );
-  }
-
-  if ( $name eq "library" ) {
-
-    my $file = $self->session->{library_db};
-
-    if ( !$file ) {
-      my $file = $self->get_model("User")->settings->{library_db};
-    }
-
-    return Paperpile::Model::Library->new( { file => $file } );
-  }
-}
 
 sub generate_guid {
   my $self = shift;

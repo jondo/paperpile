@@ -3,12 +3,16 @@ package Test::Paperpile;
 use strict;
 
 use Test::More;
+use Test::Exception;
+
 use Data::Dumper;
 use YAML;
 use File::Path;
 use File::Copy::Recursive;
 use Plack::Test;
 use HTTP::Request::Common;
+
+use Paperpile::App;
 
 use base 'Test::Class';
 
@@ -34,6 +38,14 @@ sub init_app {
 
 }
 
+sub workspace {
+
+  my ($self) = @_;
+
+  return(Paperpile->path_to("test","workspace"));
+
+}
+
 sub setup_workspace {
 
   my ($self) = @_;
@@ -46,7 +58,7 @@ sub setup_workspace {
 
   # Copy database file into workspace directory
   my $fixtures = Paperpile->path_to("test","data","Fixture","workspace");
-  my $workspace = Paperpile->path_to("test","workspace");
+  my $workspace = $self->workspace;
 
   File::Copy::Recursive::fcopy("$fixtures/paperpile.ppl", "$workspace/.paperpile/paperpile.ppl") || die($!);
   File::Copy::Recursive::fcopy("$fixtures/settings.db", "$workspace/.paperpile/settings.db") || die($!);
@@ -62,15 +74,14 @@ sub setup_workspace {
 
   my $r = $self->request("/ajax/app/init_session");
 
-  $self->{workspace} = $workspace;
-
 }
 
 sub clean_workspace {
 
   my ($self) = @_;
 
-  rmtree( Paperpile->path_to("test","workspace") );
+  rmtree( $self->workspace );
+  mkpath( $self->workspace );
 
 }
 
@@ -81,7 +92,10 @@ sub row_ok {
   my $results = $dbh->selectrow_hashref("SELECT * FROM $table WHERE $where;");
 
   foreach my $field (keys %$test){
-    is($results->{$field}, $test->{$field}, "$comment: $field=".$results->{$field});
+    my $string = '';
+    $string = "$comment: " if $comment;
+
+    is($results->{$field}, $test->{$field}, "$string$field=".$results->{$field});
   }
 
 }
@@ -143,6 +157,11 @@ sub test_fields {
   }
 
   foreach my $key (keys %$data){
+
+    if ($key eq 'folders_tmp'){
+      ok(1,"SKIPPING test until folders_tmp is implemented.");
+      next;
+    }
 
     my $action = 'IS';
 

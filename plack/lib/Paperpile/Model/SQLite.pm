@@ -41,17 +41,15 @@ sub connect {
     die("Tried to connect to database of undefined name.");
   }
 
-  $self->{options} = { AutoCommit => 1, RaiseError => 1 };
-
   my $dbh;
   my $dsn = "dbi:SQLite:" . $self->{file};
 
-  eval { $dbh = DBI->connect( $dsn, $self->{user}, $self->{password}, $self->{options} ); };
+  eval { $dbh = DBI->connect( $dsn, undef, undef, { AutoCommit => 1, RaiseError => 1 } ); };
 
   if ($@) {
     die( "Couldn't connect to " . $self->file . "(" . $@ . ")" );
   } else {
-    $self->log( "Connected to: " . $self->{file} );
+    Paperpile->log( "Connected to: " . $self->{file} );
   }
 
   # Turn on unicode support explicitely
@@ -90,7 +88,7 @@ sub begin_transaction {
     return $self->_txdbh;
   } else {
 
-    $self->log( "Begin transaction on " . $self->file );
+    Paperpile->log( "Begin transaction on " . $self->file );
 
     my $dbh = $self->dbh;
 
@@ -98,7 +96,7 @@ sub begin_transaction {
     # /tmp. Should avoid locking issues in NFS based file systems
 
     my $lock = LockFile::Simple->make(
-      -format => Paperpile->config->{tmp_dir} . "/%f.lock",
+      -format => Paperpile->tmp_dir . "/%f.lock",
       -delay     => 1,     # Wait 1 second between next try to get lock on file
       -max       => 30,    # Try at most 30 times, i.e. timeout is 30 seconds
       -autoclean => 1,     # Clean lockfile when process ends
@@ -122,7 +120,7 @@ sub commit_transaction {
 
   my ($self) = @_;
 
-  $self->log( "Commit transaction on " . $self->file );
+  Paperpile->log( "Commit transaction on " . $self->file );
 
   $self->_txdbh->commit;
 
@@ -138,7 +136,7 @@ sub rollback_transaction {
 
   my ($self) = @_;
 
-  $self->log( "Rollback transaction on " . $self->file );
+  Paperpile->log( "Rollback transaction on " . $self->file );
 
   $self->_txdbh->rollback;
 
@@ -285,20 +283,6 @@ sub _thaw_value {
   }
 
   return $value;
-}
-
-sub log {
-
-  my ( $self, $msg ) = @_;
-
-  my $debug = 1;
-
-  if (defined $ENV{PLACK_DEBUG}){
-    $debug = $ENV{PLACK_DEBUG};
-  }
-
-  print STDERR "[info] $msg (pid:$$)\n" if $debug;
-
 }
 
 1;

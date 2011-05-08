@@ -22,6 +22,7 @@ use warnings;
 
 use Mouse;
 
+use Config;
 use File::Spec;
 use File::HomeDir;
 use File::Copy;
@@ -74,25 +75,28 @@ sub tmp_dir {
   }
 }
 
+# Returns operating system: linux32, linux64, osx or win32
 sub platform {
 
   my ($self) = @_;
 
-  if ( $^O =~ /linux/i ) {
-    my @f = `file /bin/ls`;    # More robust way for this??
-    if ( $f[0] =~ /64-bit/ ) {
-      return ('linux64');
-    } else {
-      return ('linux32');
-    }
-  }
-  if ( $^O =~ /cygwin/i or $^O =~ /MSWin/i ) {
-    return ('win32');
+  my $arch_string = $Config{archname};
+
+  my $platform    = '';
+
+  if ( $arch_string =~ /linux/i ) {
+    $platform = ( $arch_string =~ /64/ ) ? 'linux64' : 'linux32';
   }
 
-  if ( $^O =~ /(darwin|osx)/i ) {
-    return ('osx');
+  if ( $arch_string =~ /osx/i ) {
+    $platform = 'osx';
   }
+
+  if ( $arch_string =~ /MSWin32/i ) {
+    $platform = 'win32';
+  }
+
+  return $platform;
 
 }
 
@@ -242,7 +246,7 @@ sub log {
 
 sub init_tmp_dir {
 
-  my ( $self ) = @_;
+  my ($self) = @_;
 
   my $tmp_dir = $self->tmp_dir;
 
@@ -269,14 +273,9 @@ sub init_tmp_dir {
   # Clear log files of external processes
   unlink( glob( File::Spec->catfile( $tmp_dir, 'worker_*.log' ) ) );
 
-  if ( not -e $self->config->{'queue_db'} ) {
-    copy( $self->path_to('db/queue.db'), $self->config->{'queue_db'} )
-      or
-        FileWriteError->throw("Could not start application (Error initializing queue database,  $!)");
-  } else {
-    my $q = Paperpile::Queue->new();
-    $q->clear_all;
-  }
+  copy( $self->path_to('db/queue.db'), $self->config->{'queue_db'} )
+    || FileWriteError->throw(
+    "Could not start application (Error initializing queue database,  $!)");
 
 }
 

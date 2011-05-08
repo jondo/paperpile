@@ -122,7 +122,7 @@ sub migrate_db  {
 
   my ( $self, $c ) = @_;
 
-  my $mg = Paperpile::Migrate->new('tmp_dir'=>Paperpile::Utils->get_tmp_dir,
+  my $mg = Paperpile::Migrate->new('tmp_dir'=>Paperpile->tmp_dir,
                                    'user_settings' => $c->config->{'user_settings'},
                                    'library_settings' => $c->config->{'library_settings'},
                                   );
