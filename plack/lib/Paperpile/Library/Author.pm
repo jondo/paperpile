@@ -396,7 +396,7 @@ sub _parse_freestyle_helper {
   $name =~ s/\sPh\s?D$//i;
   $name =~ s/,\sMD$//i;
 
-  if ( $name =~ m/Consortium/i ) {
+  if ( $name =~ m/(Consortium|Group|Member)/i ) {
       return ( $first, $last, $jr, 9.0 );
   }
 

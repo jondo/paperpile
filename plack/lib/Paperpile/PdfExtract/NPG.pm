@@ -19,15 +19,27 @@ use Mouse;
 
 sub parse {
 
-  my ( $self, $l, $verbose ) = @_;
+  my ( $self, $l, $words_rotated, $verbose ) = @_;
+
+  my @patterns = (
+    'Nature\sPublishing\sGroup',    'Nature\sAmerica\sInc\.',
+    'http:\/\/[a-z]+\.nature\.com', 'www\.nature\.com',
+    'doi:\s?10\.1038'
+  );
 
   my $flag = 0;
   foreach my $i ( 0 .. $#{$l} ) {
-    $flag = 1 if ( $l->[$i]->{content} =~ m/Nature\sPublishing\sGroup/i );
-    $flag = 1 if ( $l->[$i]->{content} =~ m/Nature\sAmerica\sInc\./ );
-    $flag = 1 if ( $l->[$i]->{content} =~ m/http:\/\/[a-z]+\.nature\.com/ );
-    $flag = 1 if ( $l->[$i]->{content} =~ m/www\.nature\.com/ );
-    $flag = 1 if ( $l->[$i]->{content} =~ m/doi:\s?10\.1038/i );
+    foreach my $pattern (@patterns) {
+      $flag = 1 if ( $l->[$i]->{content} =~ m/$pattern/i );
+    }
+  }
+  if ( $flag == 0 ) {
+    foreach my $i ( 0 .. $#{$words_rotated} ) {
+      next if ( not defined $words_rotated->[$i]->{content} );
+      foreach my $pattern (@patterns) {
+	$flag = 1 if ( $words_rotated->[$i]->{content} =~ m/$pattern/i );
+      }
+    }
   }
 
   return ( undef, undef ) if ( $flag == 0 );
@@ -36,8 +48,9 @@ sub parse {
 
   # pairs of font sizes for title and authors
   my @combinations = (
-    [ 32, 9 ], [ 28, 11 ], [ 24, 12 ], [ 24, 11 ], [ 22, 12 ], [ 22, 11 ],
-    [ 22, 10 ], [ 18, 11 ], [ 18, 10 ], [ 18, 9 ], [ 17, 8 ]
+    [ 32, 9 ],  [ 28, 11 ], [ 24, 12 ], [ 24, 11 ], [ 24, 10 ], [ 23, 10 ],
+    [ 22, 12 ], [ 22, 11 ], [ 22, 10 ], [ 18, 11 ], [ 18, 10 ], [ 18, 9 ],
+    [ 17, 8 ]
   );
 
   foreach my $entry (@combinations) {
@@ -52,7 +65,7 @@ sub parse {
     # first find the title
     foreach my $i ( 0 .. $#{$l} ) {
       if ( $l->[$i]->{fs} == $font_t ) {
-	next if ( $l->[$i]->{content} =~ m/ARTICLES/ );
+        next if ( $l->[$i]->{content} =~ m/ARTICLES/ );
         push @t, $l->[$i]->{content};
         $last_t = $i;
         $xMin   = $l->[$i]->{xMin} if ( $l->[$i]->{xMin} < $xMin );
@@ -80,11 +93,11 @@ sub parse {
           last
             if ( $l->[$i]->{nr_bad_words} > 0
             or $l->[$i]->{nr_bad_author_words} > 0
-            or $l->[$i]->{'adress_count'} > 0 );
+            or $l->[$i]->{'address_count'} > 0 );
 
-	  if ( $i > $last_t+1 ) {
-	    last if ( $l->[$i]->{nr_common_words} > 0);
-	  }
+          if ( $i > $last_t + 1 ) {
+            last if ( $l->[$i]->{nr_common_words} > 0 );
+          }
           if ( defined $last_a ) {
             last if ( $l->[$i]->{yMin} - $l->[$last_a]->{yMin} > 30 );
           }
@@ -96,6 +109,12 @@ sub parse {
     }
     $title   = join( " ", @t ) if ( $#t > -1 );
     $authors = join( ",", @a ) if ( $#a > -1 );
+  }
+  if ( defined $title ) {
+    $title = undef if ( $title eq '' );
+  }
+  if ( defined $authors ) {
+    $authors = undef if ( $authors eq '' );
   }
 
   return ( $title, $authors );

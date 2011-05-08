@@ -15,7 +15,7 @@ sub startup : Tests(startup => 1) {
   use_ok $self->class;
 }
 
-sub extract : Tests(5157) {
+sub extract : Tests(5327) {
 
   my ($self) = @_;
 
@@ -129,7 +129,11 @@ sub extract : Tests(5157) {
     'data/PdfExtract/testcases_02101_02200.in',
     'data/PdfExtract/testcases_02101_02200.out'
   );
-
+  $self->test_extract(
+    'Testcases 02101-02200',
+    'data/PdfExtract/testcases_02201_02300.in',
+    'data/PdfExtract/testcases_02201_02300.out'
+  );
 }
 
 

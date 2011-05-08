@@ -14,45 +14,35 @@
 # received a copy of the GNU Affero General Public License along with
 # Paperpile.  If not, see http://www.gnu.org/licenses.
 
-package Paperpile::PdfExtract::LandesBioScience;
+package Paperpile::PdfExtract::Biopolymers;
 use Mouse;
 
 sub parse {
 
-  my ( $self, $lines, $verbose ) = @_;
+  my ( $self, $l, $verbose ) = @_;
 
   my $flag = 0;
-  foreach my $line ( @{$lines} ) {
-    $flag = 1 if ( $line->{content} =~ m/Landes Bioscience/ );
+  foreach my $i ( 0 .. $#{$l} ) {
+    $flag = 1 if ( $l->[$i]->{content} =~ m/^Biopolymers,\sVol\.\s\d+/i );
   }
 
   return ( undef, undef ) if ( $flag == 0 );
 
   my ( $title, $authors );
 
-  my @t = ();
-  my @a = ();
-  foreach my $line ( @{$lines} ) {
-    push @t, $line->{content} if ( $line->{fs} == 24 );
-    push @a, $line->{content}
-      if ($line->{fs} == 12
-      and abs( 37 - $line->{xMin} ) <= 7
-      and $line->{content} =~ m/,$/ );
+  my @title_tmp   = ();
+  my @authors_tmp = ();
+  for ( my $j = 0 ; $j <= $#{$l} ; $j++ ) {
+    push @title_tmp, $l->[$j]->{content} if ( $l->[$j]->{fs} == 18 );
+    last if ( $l->[$j]->{content} =~ m/^Abstract:/ );
+  }
+  for ( my $j = 0 ; $j <= $#{$l} ; $j++ ) {
+    push @authors_tmp, $l->[$j]->{content} if ( $l->[$j]->{fs} == 11 );
+    last if ( $l->[$j]->{address_count} > 0 );
   }
 
-  if ( $#a == -1 ) {
-    foreach my $line ( @{$lines} ) {
-      push @a, $line->{content}
-        if ($line->{fs} == 10
-        and abs( 37 - $line->{xMin} ) <= 7
-        and $line->{content} =~ m/,$/
-        and $line->{yMin} < 200 );
-    }
-  }
-
-  $title   = join( " ", @t );
-  $authors = join( ",", @a );
-  $authors = undef if ( $authors eq '' );
+  $title   = join( " ", @title_tmp );
+  $authors = join( ", ", @authors_tmp );
 
   return ( $title, $authors );
 }
