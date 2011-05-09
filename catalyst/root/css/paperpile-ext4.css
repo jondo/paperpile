@@ -615,3 +615,7 @@ table.pp-meta-form {
 .pp-meta-form a.pp-textlink {
     font-size: 12px;
 }
+
+.pp-icon-clouds{
+    background-image: url('/images/icons/weather_clouds.png')!important;
+}

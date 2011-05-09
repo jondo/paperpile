@@ -19,9 +19,104 @@ Ext.define('Paperpile.Tree', {
   alias: 'widget.pp-tree',
 
   initComponent: function() {
-    Ext.apply(this, {});
+
+    this.store = this.createStore();
+
+    this.setChildrenAsLeaves(this.store.getNodeById('OnlineSearch'));
+    this.setChildrenAsLeaves(this.store.getNodeById('ToolsResources'));
+
+    Ext.apply(this, {
+      enableDD: true,
+      animate: false,
+      autoScroll: true,
+      rootVisible: false,
+      store: this.store
+    });
     this.callParent(arguments);
+  },
+
+  createStore: function() {
+    var store = Ext.create('Ext.data.TreeStore', {
+      model: 'TreeNode',
+      root: {
+        expanded: true,
+        text: "",
+        children: this.createRootNodes()
+      }
+    });
+    return store;
+  },
+
+  createRootNodes: function() {
+    return[{
+      text: 'Library',
+      id: 'Library',
+      expanded: Paperpile.Settings.get('tree_Library_expanded', true),
+      children: [{
+        text: 'Folders'
+      },
+      {
+        text: 'Labels'
+      },
+      {
+	  text: 'Trash',
+	      leaf: true
+      }]
+    },
+    {
+      text: 'Online Search',
+      id: 'OnlineSearch',
+      expanded: Paperpile.Settings.get('tree_Search_expanded', true),
+      children: [{
+        text: 'PubMed',
+        id: 'PubMed',
+        plugin: 'PubMed',
+        icon: '/images/icons/pubmed.png'
+      },
+      {
+        text: 'Google Scholar',
+        id: 'GoogleScholar',
+        plugin: 'GoogleScholar',
+        icon: '/images/icons/google.png'
+      },
+      /*
+      {
+        text: 'Google Books',
+        id: 'GoogleBooks',
+	      plugin: 'GoogleBooks',
+	      icon: '/images/icons/google.png',
+	      hidden: true
+      }
+	  */
+      ]
+    },
+    {
+      text: 'Tools & Resources',
+      id: 'ToolsResources',
+      expanded: Paperpile.Settings.get('tree_Tools_expanded', true),
+      children: [{
+        text: 'Cloud View',
+        id: 'CloudView',
+        plugin: 'CloudView',
+        icon: '/images/icons/weather_clouds.png',
+      },
+      {
+        text: 'Duplicate Removal',
+        id: 'DuplicateRemoval',
+        plugin: 'DuplicateRemoval',
+        icon: '/images/icons/duplicates.png',
+      }]
+    }];
+  },
+
+  setChildrenAsLeaves: function(node) {
+    var children = node.childNodes;
+    for (var i = 0; i < children.length; i++) {
+      var child = children[i];
+      child.set('leaf', true);
+    }
   }
+
 });
 
 /*

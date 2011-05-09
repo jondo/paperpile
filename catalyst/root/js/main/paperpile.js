@@ -79,7 +79,9 @@ Ext.define('Paperpile.main.Viewport', {
 
   createTree: function() {
     this.tree = Ext.createByAlias('widget.pp-tree', {
-      region: 'north',
+      region: 'west',
+      split: true,
+      border: false,
       flex: 1
     });
     return this.tree;
@@ -92,7 +94,6 @@ Ext.define('Paperpile.main.Viewport', {
       border: false,
       flex: 5
     });
-    Paperpile.log("Tabs!");
     return this.tabs;
   },
 

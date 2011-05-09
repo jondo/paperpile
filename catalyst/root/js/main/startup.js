@@ -412,6 +412,7 @@ Paperpile.stage2 = function() {
   Paperpile.startupProgress(0.5);
   var f = function() {
   Paperpile.Settings.load(function() {
+  Paperpile.main = Ext.createByAlias('widget.pp-viewport');
       Paperpile.main.afterLoadSettings();
       Paperpile.startupProgress(0.6);
       Paperpile.stage3();
@@ -419,14 +420,7 @@ Paperpile.stage2 = function() {
   }
 
   Paperpile.app.Actions.loadActions();
-
-  Paperpile.main = Ext.createByAlias('widget.pp-viewport', {
-    listeners: {
-      afterrender: {
-        fn: f
-      }
-    }
-  });
+  f();
 
   /*
   */
