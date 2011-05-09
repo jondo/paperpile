@@ -31,6 +31,7 @@ Ext.define('Ext.ux.HoverButtonGroup', {
         position: 'absolute'
       },
       floating: true,
+      shadow: false,
       layout: {
         type: 'hbox',
         pack: 'end',
@@ -52,7 +53,7 @@ Ext.define('Ext.ux.HoverButtonGroup', {
       this.getEl().appendTo(target);
       this.doLayout();
       this.alignTo(target, 'r-r');
-      this.stopFx();
+      this.stopAnimation();
       this.getEl().setOpacity(0);
       this.animate({
         to: {
@@ -61,6 +62,7 @@ Ext.define('Ext.ux.HoverButtonGroup', {
         duration: this.fadeDuration,
         delay: this.fadeDelay
       });
+      
     } else {
       this.doLayout();
       this.alignTo(target, 'r-r');

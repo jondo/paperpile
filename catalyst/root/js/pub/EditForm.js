@@ -593,7 +593,9 @@ Ext.define('Paperpile.pub.EditForm', {
         }
       },
       listeners: {
+	  /*
         mousedown: {
+	    
           // Allow clicks in the input area to toggle the combo open/closed.
           fn: function(event) {
             var target = Ext.fly(event.target);
@@ -611,7 +613,8 @@ Ext.define('Paperpile.pub.EditForm', {
           },
           element: 'el',
           scope: this
-        },
+	  },
+	  */
         select: {
           fn: function(combo, data, index) {
             if (combo.getValue() == '') {
