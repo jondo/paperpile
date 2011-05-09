@@ -41,7 +41,7 @@ $grid-row-cell-border-style: solid !default;
 $grid-row-cell-border-width: 1px 0 !default;
 
 //row cell alt
-$grid-row-cell-alt-background: adjust-color($neutral-color, $hue: 0deg, $saturation: 0%, $lightness: 4.706%) !default;
+$grid-row-cell-alt-background: darken($grid-row-cell-background, 2) !default;
 
 //row cell over
 $grid-row-cell-over-border-color: adjust-color($neutral-color, $hue: 0deg, $saturation: 0%, $lightness: -6.667%) !default;
@@ -60,7 +60,7 @@ $grid-row-cell-focus-background-gradient: 'grid-row-over' !default;
 
 //standard cells
 $grid-cell-font: normal 13px $font-family !default;
-$grid-cell-inner-padding: 3px 2px !default;
+$grid-cell-inner-padding: 3px 4px !default;
 
 //special cell
 $grid-cell-special-over-background-color: adjust-color($base-color, $hue: -0.476deg, $saturation: 25.214%, $lightness: 5.686%) !default;

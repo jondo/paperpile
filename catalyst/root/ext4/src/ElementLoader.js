@@ -11,7 +11,7 @@ Ext.get('el').load({
 });
  * </code></pre>
  * <p>
- * In general this class will not be instanced directly, rather the {@link Ext.Element#load} method
+ * In general this class will not be instanced directly, rather the {@link Ext.core.Element#load} method
  * will be used.
  * </p>
  */
@@ -31,63 +31,7 @@ Ext.define('Ext.ElementLoader', {
     statics: {
         Renderer: {
             Html: function(loader, response, active){
-                var target = loader.getTarget(),
-                    html = response.responseText,
-                    id,
-                    dom,
-                    interval;
-                    
-                if (active.scripts) {
-                    id = Ext.id();
-                    dom = target.dom;
-                    html += '<span id="' + id + '"></span>';
-                    // Set this in a timer because it may take a little time to update the dom
-                    interval = setInterval(function(){
-                        var doc = document,
-                            el = document.getElementById(id),
-                            head = doc.getElementsByTagName("head")[0],
-                            win = window,
-                            re = /(?:<script([^>]*)?>)((\n|\r|.)*?)(?:<\/script>)/ig,
-                            srcRe = /\ssrc=([\'\"])(.*?)\1/i,
-                            typeRe = /\stype=([\'\"])(.*?)\1/i,
-                            match,
-                            attrs,
-                            srcMatch,
-                            typeMatch,
-                            script;
-                            if (!el) {
-                                return;
-                            }
-                            clearInterval(interval);
-                            
-                            while ((match = re.exec(html))) {
-                                attrs = match[1];
-                                srcMatch = attrs ? attrs.match(srcRe) : false;
-                                if (srcMatch && srcMatch[2]) {
-                                    script = doc.createElement('script');
-                                    script.src = srcMatch[2];
-                                    typeMatch = attrs.match(typeRe);
-                                    if (typeMatch && typeMatch[2]) {
-                                        script.type = typeMatch[2];
-                                    }
-                                    head.appendChild(script);
-                                } else if (match[2] && match[2].length > 0) {
-                                    if (win.execScript) {
-                                        win.execScript(match[2]);
-                                    } else {
-                                        win.eval(match[2]);
-                                    }
-                                }
-                            }
-                            el = doc.getElementById(id);
-                            if (el) {
-                                Ext.removeNode(el);
-                            }
-                    }, 50);
-                    dom.innerHTML = html.replace(/(?:<script.*?>)((\n|\r|.)*?)(?:<\/script>)/ig, '');
-                } else {
-                    target.update(html);
-                }
+                loader.getTarget().update(response.responseText, active.scripts === true);
                 return true;
             }
         }     
@@ -271,9 +215,11 @@ Ext.define('Ext.ElementLoader', {
      * class defaults.
      */
     load: function(options) {
+        //<debug>
         if (!this.target) {
-            throw 'A target is required when loading';
+            Ext.Error.raise('A valid target is required when loading content');
         }
+        //</debug>
 
         options = Ext.apply({}, options);
 
@@ -296,9 +242,11 @@ Ext.define('Ext.ElementLoader', {
             url: me.url
         });
 
+        //<debug>
         if (!options.url) {
-            throw 'No URL specified';
+            Ext.Error.raise('You must specify the URL from which content should be loaded');
         }
+        //</debug>
 
         Ext.apply(options, {
             scope: me,

@@ -94,7 +94,7 @@ Ext.define('Ext.direct.PollingProvider', {
         var me = this, url = me.url;
         
         if (url && !me.pollTask) {
-            me.pollTask = Ext.TaskMgr.start({
+            me.pollTask = Ext.TaskManager.start({
                 run: function(){
                     if (me.fireEvent('beforepoll', me) !== false) {
                         if (Ext.isFunction(url)) {
@@ -114,7 +114,9 @@ Ext.define('Ext.direct.PollingProvider', {
             });
             me.fireEvent('connect', me);
         } else if (!url) {
-            throw 'Error initializing PollingProvider, no url configured.';
+            //<debug>
+            Ext.Error.raise('Error initializing PollingProvider, no url configured.');
+            //</debug>
         }
     },
 
@@ -126,7 +128,7 @@ Ext.define('Ext.direct.PollingProvider', {
         var me = this;
         
         if (me.pollTask) {
-            Ext.TaskMgr.stop(me.pollTask);
+            Ext.TaskManager.stop(me.pollTask);
             delete me.pollTask;
             me.fireEvent('disconnect', me);
         }

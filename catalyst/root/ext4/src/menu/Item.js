@@ -198,7 +198,7 @@ Ext.define('Ext.menu.Item', {
     },
     
     deferHideParentMenus: function() {
-        Ext.menu.MenuManager.hideAll();
+        Ext.menu.Manager.hideAll();
     },
     
     expandMenu: function(delay) {
@@ -279,7 +279,7 @@ Ext.define('Ext.menu.Item', {
         me.cls = cls.join(' ');
         
         if (me.menu) {
-            me.menu = Ext.menu.MenuManager.get(me.menu);
+            me.menu = Ext.menu.Manager.get(me.menu);
         }
         
         me.callParent(arguments);
@@ -364,7 +364,7 @@ Ext.define('Ext.menu.Item', {
      * Sets the {@link #iconCls} of this item
      * @param {String} iconCls The CSS class to set to {@link #iconCls}
      */
-    setIconClass: function(iconCls) {
+    setIconCls: function(iconCls) {
         var me = this;
         
         if (me.iconEl) {

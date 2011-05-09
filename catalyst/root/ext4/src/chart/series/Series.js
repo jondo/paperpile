@@ -10,10 +10,11 @@ Ext.define('Ext.chart.series.Series', {
     /* Begin Definitions */
 
     mixins: {
-        labels: 'Ext.chart.Labels',
-        highlights: 'Ext.chart.Highlights',
-        tips: 'Ext.chart.Tips',
-        callouts: 'Ext.chart.Callouts'
+        observable: 'Ext.util.Observable',
+        labels: 'Ext.chart.Label',
+        highlights: 'Ext.chart.Highlight',
+        tips: 'Ext.chart.Tip',
+        callouts: 'Ext.chart.Callout'
     },
 
     /* End Definitions */
@@ -69,26 +70,36 @@ Ext.define('Ext.chart.series.Series', {
             Ext.apply(me, config);
         }
         
-        me.listeners = Ext.applyIf(config.listeners || {}, {
-            itemmouseover: Ext.emptyFn,
-            itemmouseout: Ext.emptyFn,
-            itemmousedown: Ext.emptyFn,
-            itemmouseup: Ext.emptyFn
-        });
-        
         me.shadowGroups = [];
-
+        
         me.mixins.labels.constructor.call(me, config);
         me.mixins.highlights.constructor.call(me, config);
         me.mixins.tips.constructor.call(me, config);
         me.mixins.callouts.constructor.call(me, config);
 
-        me.chart.on({
+        me.addEvents({
+            scope: me,
+            itemmouseover: true,
+            itemmouseout: true,
+            itemmousedown: true,
+            itemmouseup: true,
+            mouseleave: true,
+
+            /**
+             * @event titlechange
+             * Fires when the series title is changed via {@link #setTitle}.
+             * @param {String} title The new title value
+             * @param {Number} index The index in the collection of titles
+             */
+            titlechange: true
+        });
+
+        me.mixins.observable.constructor.call(me, config);
+
+        me.on({
             scope: me,
             itemmouseover: me.onItemMouseOver,
             itemmouseout: me.onItemMouseOut,
-            itemmousedown: me.onItemMouseDown,
-            itemmouseup: me.onItemMouseUp,
             mouseleave: me.onMouseLeave
         });
     },
@@ -121,22 +132,13 @@ Ext.define('Ext.chart.series.Series', {
 
     // @private set the animation for the sprite
     onAnimate: function(sprite, attr) {
-        sprite.stopFx();
+        sprite.stopAnimation();
         return sprite.animate(Ext.applyIf(attr, this.chart.animate));
     },
 
     // @private return the gutter.
     getGutters: function() {
         return [0, 0];
-    },
-
-    // @private wrapper for the itemmouseup event.
-    onItemMouseUp: function(item) {
-        this.listeners.itemmouseup(item);
-    },
-    // @private wrapper for the itemmousedown event.
-    onItemMouseDown: function(item) {
-        this.listeners.itemmousedown(item);
     },
 
     // @private wrapper for the itemmouseover event.
@@ -150,7 +152,6 @@ Ext.define('Ext.chart.series.Series', {
                 me.showTip(item);
             }
         }
-        me.listeners.itemmouseover(item);
     },
 
     // @private wrapper for the itemmouseout event.
@@ -162,7 +163,6 @@ Ext.define('Ext.chart.series.Series', {
                 me.hideTip(item);
             }
         }
-        me.listeners.itemmouseout(item);
     },
 
     // @private wrapper for the mouseleave event.
@@ -198,12 +198,10 @@ Ext.define('Ext.chart.series.Series', {
             items = me.items,
             bbox = me.bbox,
             item, i, ln;
-
         // Check bounds
         if (!Ext.draw.Draw.withinBox(x, y, bbox)) {
             return null;
         }
-        
         for (i = 0, ln = items.length; i < ln; i++) {
             if (items[i] && this.isItemInPoint(x, y, items[i], i)) {
                 return items[i];
@@ -283,5 +281,34 @@ Ext.define('Ext.chart.series.Series', {
             return !excludes[index];
         }
         return !this.seriesIsHidden;
+    },
+
+    /**
+     * Changes the value of the {@link #title} for the series.
+     * Arguments can take two forms:
+     * <ul>
+     * <li>A single String value: this will be used as the new single title for the series (applies
+     * to series with only one yField)</li>
+     * <li>A numeric index and a String value: this will set the title for a single indexed yField.</li>
+     * </ul>
+     * @param {Number} index
+     * @param {String} title
+     */
+    setTitle: function(index, title) {
+        var me = this,
+            oldTitle = me.title;
+
+        if (Ext.isString(index)) {
+            title = index;
+            index = 0;
+        }
+
+        if (Ext.isArray(oldTitle)) {
+            oldTitle[index] = title;
+        } else {
+            me.title = title;
+        }
+
+        me.fireEvent('titlechange', title, index);
     }
 });

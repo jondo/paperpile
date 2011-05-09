@@ -13,7 +13,7 @@ Ext.define('Ext.fx.target.Element', {
     constructor: function(target) {
         this.target = target;
         this.id = this.getId();
-        Ext.fx.target.Element.superclass.constructor.call(this, target);
+        this.callParent([target]);
     },
 
     type: 'element',

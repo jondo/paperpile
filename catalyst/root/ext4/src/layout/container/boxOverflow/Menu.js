@@ -245,7 +245,7 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
              * The expand menu - holds items for every item that cannot be shown
              * because the container is currently not large enough.
              */
-            me.menu = new Ext.menu.Menu({
+            me.menu = Ext.create('Ext.menu.Menu', {
                 ownerCt : me.layout.container,
                 hideMode: 'offsets',
                 listeners: {
@@ -260,9 +260,9 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
              * @type Ext.button.Button
              * The expand button which triggers the overflow menu to be shown
              */
-            me.menuTrigger = new Ext.button.Button({
+            me.menuTrigger = Ext.create('Ext.button.Button', {
                 iconCls : Ext.baseCSSPrefix + layout.owner.getXType() + '-more-icon',
-                ui      : layout.owner instanceof Ext.toolbar.Toolbar ? 'toolbar' : 'default',
+                ui      : layout.owner instanceof Ext.toolbar.Toolbar ? 'default-toolbar' : 'default',
                 menu    : me.menu,
                 getSplitCls: function() { return '';},
                 renderTo: me.afterCt

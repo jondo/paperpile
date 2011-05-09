@@ -253,7 +253,7 @@ describe("Ext", function() {
         it("should throw an error if superclass isn't defined", function() {
             expect(function() {
                 Ext.extend(undefined, {});
-            }).toThrow("Attempting to extend from a class which has not been loaded on the page.");
+            }).toRaiseExtError("Attempting to extend from a class which has not been loaded on the page.");
         });
 
         it("should create a superclass that return the original classe", function() {
@@ -263,21 +263,6 @@ describe("Ext", function() {
         it("should add override method", function() {
             expect(typeof david.override === 'function').toBe(true);
         });
-
-        describe("subclass extend method", function() {
-            it("should add an extend method", function() {
-                expect(typeof Awesome.extend === 'function').toBe(true);
-            });
-
-            xit("should call Ext.extend", function() {
-                var extendSpy = spyOn(Ext, "extend");
-
-                Awesome.extend();
-
-                expect(extendSpy).toHaveBeenCalledWith(Awesome, undefined);
-            });
-        });
-
 
         it("should override redefined methods", function() {
             expect(david.isBadass).toBe(true);
@@ -303,6 +288,99 @@ describe("Ext", function() {
             Ext.override(Dude, override);
 
             expect(extApplySpy).toHaveBeenCalledWith(Dude.prototype, override);
+        });
+    });
+
+    describe("Ext.typeOf", function() {
+        it("should return null", function() {
+            expect(Ext.typeOf(null)).toEqual('null');
+        });
+        it("should return undefined", function() {
+            expect(Ext.typeOf(undefined)).toEqual('undefined');
+        });
+        it("should return undefined", function() {
+            expect(Ext.typeOf(window.someWeirdPropertyThatDoesntExist)).toEqual('undefined');
+        });
+        it("should return string", function() {
+            expect(Ext.typeOf('')).toEqual('string');
+        });
+        it("should return string", function() {
+            expect(Ext.typeOf('something')).toEqual('string');
+        });
+        it("should return string", function() {
+            expect(Ext.typeOf('1.2')).toEqual('string');
+        });
+        it("should return number", function() {
+            expect(Ext.typeOf(1)).toEqual('number');
+        });
+        it("should return number", function() {
+            expect(Ext.typeOf(1.2)).toEqual('number');
+        });
+        it("should return boolean", function() {
+            expect(Ext.typeOf(true)).toEqual('boolean');
+        });
+        it("should return boolean", function() {
+            expect(Ext.typeOf(false)).toEqual('boolean');
+        });
+        it("should return array", function() {
+            expect(Ext.typeOf([1,2,3])).toEqual('array');
+        });
+        it("should return array", function() {
+            expect(Ext.typeOf(new Array(1,2,3))).toEqual('array');
+        });
+        it("should return function 1", function() {
+            expect(Ext.typeOf(function(){})).toEqual('function');
+        });
+        // Don't run this test in IE
+        if (typeof alert === 'function') {
+            it("should return function 2", function() {
+                expect(Ext.typeOf(prompt)).toEqual('function');
+            });
+        }
+        it("should return function 3", function() {
+            expect(Ext.typeOf(new Function())).toEqual('function');
+        });
+        it("should return regexp 1", function() {
+            expect(Ext.typeOf(/test/)).toEqual('regexp');
+        });
+        it("should return regexp 2", function() {
+            expect(Ext.typeOf(new RegExp('test'))).toEqual('regexp');
+        });
+        it("should return date", function() {
+            expect(Ext.typeOf(new Date())).toEqual('date');
+        });
+        it("should return textnode", function() {
+            expect(Ext.typeOf(document.createTextNode('tada'))).toEqual('textnode');
+        });
+        it("should return whitespace", function() {
+            expect(Ext.typeOf(document.createTextNode(' '))).toEqual('whitespace');
+        });
+        it("should return whitespace", function() {
+            expect(Ext.typeOf(document.createTextNode('         '))).toEqual('whitespace');
+        });
+        it("should return element", function() {
+            expect(Ext.typeOf(document.getElementsByTagName('body')[0])).toEqual('element');
+        });
+        it("should return element", function() {
+            expect(Ext.typeOf(document.createElement('button'))).toEqual('element');
+        });
+        it("should return element", function() {
+            expect(Ext.typeOf(new Image())).toEqual('element');
+        });
+        it("should return object 1", function() {
+            expect(Ext.typeOf({some: 'stuff'})).toEqual('object');
+        });
+        it("should return object 2", function() {
+            expect(Ext.typeOf(new Object())).toEqual('object');
+        });
+        it("should return object 3", function() {
+            expect(Ext.typeOf(window)).toEqual('object');
+        });
+        it("should return boolean", function() {
+            expect(Ext.typeOf(new Boolean(true))).toEqual('boolean');
+        });
+        it("should return number", function() {
+            expect(Ext.typeOf(new Number(1.2))).toEqual('number');
         });
     });
 
@@ -913,6 +991,14 @@ describe("Ext", function() {
 
         it("should return true with empty object", function() {
             expect(Ext.isObject({})).toBe(true);
+        });
+
+        it("should return false with a DOM node", function() {
+            expect(Ext.isObject(document.body)).toBe(false);
+        });
+
+        it("should return false with a Text node", function() {
+            expect(Ext.isObject(document.createTextNode('test'))).toBe(false);
         });
 
         it("should return true with object with properties", function() {

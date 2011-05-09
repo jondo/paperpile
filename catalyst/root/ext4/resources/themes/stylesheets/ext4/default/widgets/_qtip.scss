@@ -39,14 +39,16 @@
     }
 
     // Tip is a Panel. It uses dock layout. Body style must be the same
-    .#{$prefix}tip-body {
+    .#{$prefix}tip-body,
+    .#{$prefix}form-invalid-tip-body {
         overflow: hidden;
         position: relative;
         padding: $tip-body-padding;
     }
 
     .#{$prefix}tip-header,
-    .#{$prefix}tip-body {
+    .#{$prefix}tip-body,
+    .#{$prefix}form-invalid-tip-body {
         color: $tip-body-color;
         font-size: $tip-body-font-size;
         font-weight: $tip-body-font-weight;
@@ -135,20 +137,36 @@
             $width: 1px,
             $color: $tip-error-inner-border-color
         );
-        
-        .#{$prefix}tip-body {
-            background: theme-image($theme-name, 'form/exclamation.gif') 1px 1px no-repeat;
-            
-            padding-left: 22px;
+    }
+
+    .#{$prefix}form-invalid-tip-body {
+        background: theme-image($theme-name, 'form/exclamation.gif') 1px 1px no-repeat;
+        padding-left: 22px;
+
+        li {
+            margin-bottom: 4px;
+            &.last {
+                margin-bottom: 0;
+            }
         }
     }
-    
+
     @include x-frame(
         $cls: 'form-invalid-tip',
+        $ui: 'default',
         $border-radius: $tip-error-border-radius,
         $border-width: $tip-error-border-width,
-        $background-color: $tip-background-color,
+        $background-color: $tip-error-background-color,
         $background-gradient: $tip-background-gradient,
         $table: true
+    );
+    
+    @include x-frame(
+        $cls: 'form-invalid-tip-header',
+        $ui: 'default',
+        $border-radius: $tip-error-border-radius,
+        $border-width: $tip-error-border-width,
+        $background-color: $tip-error-background-color,
+        $background-gradient: $tip-background-gradient
     );
 }

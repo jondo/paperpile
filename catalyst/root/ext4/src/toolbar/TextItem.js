@@ -3,11 +3,17 @@
  * @extends Ext.toolbar.Item
  * A simple class that renders text directly into a toolbar.
  * Example usage:
+ * {@img Ext.toolbar.TextItem/Ext.toolbar.TextItem.png TextItem component}
  * <pre><code>
-new Ext.panel.Panel({
-    tbar : [
-        {xtype: 'tbtext', text: 'Item 1'} // or simply 'Item 1'
-    ]
+    Ext.create('Ext.panel.Panel', {
+        title: 'Panel with TextItem',
+        width: 300,
+        height: 200,
+        tbar: [
+            {xtype: 'tbtext', text: 'Sample TextItem'}
+        ],
+        renderTo: Ext.getBody()
+    });
 });
 </code></pre>
  * @constructor
@@ -44,6 +50,7 @@ Ext.define('Ext.toolbar.TextItem', {
     setText : function(t) {
         if (this.rendered) {
             this.el.update(t);
+            this.ownerCt.doLayout(); // In case an empty text item (centered at zero height) receives new text.
         } else {
             this.text = t;
         }

@@ -2,7 +2,11 @@
  * @class Ext.util.Animate
  * This animation class is a mixin.
 
-Ext.util.Animate provides an API for the creation of animated transitions of properties and styles.  This class is used as a mixin and currently applied to {@link Ext.Element}, {@link Ext.CompositeElement}, {@link Ext.draw.Sprite}, {@link Ext.draw.SpriteGroup}, and {@link Ext.Component}.  Note that Components have a limited subset of what attributes can be animated such as top, left, x, y, height, width, and opacity (color, paddings, and margins can not be animated).
+Ext.util.Animate provides an API for the creation of animated transitions of properties and styles.  
+This class is used as a mixin and currently applied to {@link Ext.core.Element}, {@link Ext.CompositeElement}, 
+{@link Ext.draw.Sprite}, {@link Ext.draw.CompositeSprite}, and {@link Ext.Component}.  Note that Components 
+have a limited subset of what attributes can be animated such as top, left, x, y, height, width, and 
+opacity (color, paddings, and margins can not be animated).
 
 __Animation Basics__
 
@@ -100,7 +104,7 @@ This works the same as:
         }
     });
 
-The {@link Ext.util.Animate#stopFx stopFx} method can be used to stop any currently running animations and clear any queued animations. 
+The {@link Ext.util.Animate#stopAnimation stopAnimation} method can be used to stop any currently running animations and clear any queued animations. 
 
 __Animation Keyframes__
 You can also set up complex animations with {@link Ext.fx.Anim#keyframe keyframe} which follows the CSS3 Animation configuration pattern. Note rotation, translation, and scaling can only be done for sprites. The previous example can be written with the following syntax:
@@ -125,7 +129,7 @@ You can also set up complex animations with {@link Ext.fx.Anim#keyframe keyframe
 
 __Animation Events__
 
-Each animation you create has events for {@link Ext.fx.Anim#beforeanimation beforeanimation}, {@link Ext.fx.Anim#afteranimation afteranimation}, and {@link Ext.fx.Anim#lastframe lastframe}.  Keyframed animations adds an additional {@link Ext.fx.Animator#keyframe keyframe} event which fires for each keyframe in your animation.
+Each animation you create has events for {@link Ext.fx.Anim#beforeanimation beforeanimation}, {@link Ext.fx.Anim#afteranimate afteranimate}, and {@link Ext.fx.Anim#lastframe lastframe}.  Keyframed animations adds an additional {@link Ext.fx.Animator#keyframe keyframe} event which fires for each keyframe in your animation.
 
 All animations support the {@link Ext.util.Observable#listeners listeners} configuration to attact functions to these events.
    
@@ -156,14 +160,14 @@ All animations support the {@link Ext.util.Observable#listeners listeners} confi
     }
 
 
-Due to the fact that animations run asynchronously, you can determine if an animation is currently running on any target by using the {@link Ext.util.Animate#hasActiveFx hasActiveFx} method.  This method will return false if there are no active animations or return the currently running {@link Ext.fx.Anim} instance.
+Due to the fact that animations run asynchronously, you can determine if an animation is currently running on any target by using the {@link Ext.util.Animate#getActiveAnimation getActiveAnimation} method.  This method will return false if there are no active animations or return the currently running {@link Ext.fx.Anim} instance.
 
 In this example, we're going to wait for the current animation to finish, then stop any other queued animations before we fade our element's opacity to 0:
 
-    var curAnim = p1.hasActiveFx();
+    var curAnim = p1.getActiveAnimation();
     if (curAnim) {
         curAnim.on('afteranimate', function() {
-            p1.stopFx();
+            p1.stopAnimation();
             p1.animate({
                 to: {
                     opacity: 0
@@ -181,9 +185,94 @@ Ext.define('Ext.util.Animate', {
     uses: ['Ext.fx.Manager', 'Ext.fx.Anim'],
 
     /**
-     * Perform custom animation on this element.
-     * @param {Ext.fx.Anim} animObj An Ext.fx Anim object
-     * @return {Ext.core.Element} this
+     * <p>Perform custom animation on this object.<p>
+     * <p>This method is applicable to both the the {@link Ext.Component Component} class and the {@link Ext.core.Element Element} class.
+     * It performs animated transitions of certain properties of this object over a specified timeline.</p>
+     * <p>The sole parameter is an object which specifies start property values, end property values, and properties which
+     * describe the timeline. Of the properties listed below, only <b><code>to</code></b> is mandatory.</p>
+     * <p>Properties include<ul>
+     * <li><code>from</code> <div class="sub-desc">An object which specifies start values for the properties being animated.
+     * If not supplied, properties are animated from current settings. The actual properties which may be animated depend upon
+     * ths object being animated. See the sections below on Element and Component animation.<div></li>
+     * <li><code>to</code> <div class="sub-desc">An object which specifies end values for the properties being animated.</div></li>
+     * <li><code>duration</code><div class="sub-desc">The duration <b>in milliseconds</b> for which the animation will run.</div></li>
+     * <li><code>easing</code> <div class="sub-desc">A string value describing an easing type to modify the rate of change from the default linear to non-linear. Values may be one of:<code><ul>
+     * <li>ease</li>
+     * <li>easeIn</li>
+     * <li>easeOut</li>
+     * <li>easeInOut</li>
+     * <li>backIn</li>
+     * <li>backOut</li>
+     * <li>elasticIn</li>
+     * <li>elasticOut</li>
+     * <li>bounceIn</li>
+     * <li>bounceOut</li>
+     * </ul></code></div></li>
+     * <li><code>keyframes</code> <div class="sub-desc">This is an object which describes the state of animated properties at certain points along the timeline.
+     * it is an object containing properties who's names are the percentage along the timeline being described and who's values specify the animation state at that point.</div></li>
+     * <li><code>listeners</code> <div class="sub-desc">This is a standard {@link Ext.util.Observable#listeners listeners} configuration object which may be used
+     * to inject behaviour at either the <code>beforeanimate</code> event or the <code>afteranimate</code> event.</div></li>
+     * </ul></p>
+     * <h3>Animating an {@link Ext.core.Element Element}</h3>
+     * When animating an Element, the following properties may be specified in <code>from</code>, <code>to</code>, and <code>keyframe</code> objects:<ul>
+     * <li><code>x</code> <div class="sub-desc">The page X position in pixels.</div></li>
+     * <li><code>y</code> <div class="sub-desc">The page Y position in pixels</div></li>
+     * <li><code>left</code> <div class="sub-desc">The element's CSS <code>left</code> value. Units must be supplied.</div></li>
+     * <li><code>top</code> <div class="sub-desc">The element's CSS <code>top</code> value. Units must be supplied.</div></li>
+     * <li><code>width</code> <div class="sub-desc">The element's CSS <code>width</code> value. Units must be supplied.</div></li>
+     * <li><code>height</code> <div class="sub-desc">The element's CSS <code>height</code> value. Units must be supplied.</div></li>
+     * <li><code>scrollLeft</code> <div class="sub-desc">The element's <code>scrollLeft</code> value.</div></li>
+     * <li><code>scrollTop</code> <div class="sub-desc">The element's <code>scrollLeft</code> value.</div></li>
+     * <li><code>opacity</code> <div class="sub-desc">The element's <code>opacity</code> value. This must be a value between <code>0</code> and <code>1</code>.</div></li>
+     * </ul>
+     * <p><b>Be aware than animating an Element which is being used by an Ext Component without in some way informing the Component about the changed element state
+     * will result in incorrect Component behaviour. This is because the Component will be using the old state of the element. To avoid this problem, it is now possible to
+     * directly animate certain properties of Components.</b></p>
+     * <h3>Animating a {@link Ext.Component Component}</h3>
+     * When animating an Element, the following properties may be specified in <code>from</code>, <code>to</code>, and <code>keyframe</code> objects:<ul>
+     * <li><code>x</code> <div class="sub-desc">The Component's page X position in pixels.</div></li>
+     * <li><code>y</code> <div class="sub-desc">The Component's page Y position in pixels</div></li>
+     * <li><code>left</code> <div class="sub-desc">The Component's <code>left</code> value in pixels.</div></li>
+     * <li><code>top</code> <div class="sub-desc">The Component's <code>top</code> value in pixels.</div></li>
+     * <li><code>width</code> <div class="sub-desc">The Component's <code>width</code> value in pixels.</div></li>
+     * <li><code>width</code> <div class="sub-desc">The Component's <code>width</code> value in pixels.</div></li>
+     * <li><code>dynamic</code> <div class="sub-desc">Specify as true to update the Component's layout (if it is a Container) at every frame
+     * of the animation. <i>Use sparingly as laying out on every intermediate size change is an expensive operation</i>.</div></li>
+     * </ul>
+     * <p>For example, to animate a Window to a new size, ensuring that its internal layout, and any shadow is correct:</p>
+     * <pre><code>
+myWindow = Ext.create('Ext.window.Window', {
+    title: 'Test Component animation',
+    width: 500,
+    height: 300,
+    layout: {
+        type: 'hbox',
+        align: 'stretch'
+    },
+    items: [{
+        title: 'Left: 33%',
+        margins: '5 0 5 5',
+        flex: 1
+    }, {
+        title: 'Left: 66%',
+        margins: '5 5 5 5',
+        flex: 2
+    }]
+});
+myWindow.show();
+myWindow.header.el.on('click', function() {
+    myWindow.animate({
+        to: {
+            width: (myWindow.getWidth() == 500) ? 700 : 500,
+            height: (myWindow.getHeight() == 300) ? 400 : 300,
+        }
+    });
+});
+</code></pre>
+     * <p>For performance reasons, by default, the internal layout is only updated when the Window reaches its final <code>"to"</code> size. If dynamic updating of the Window's child
+     * Components is required, then configure the animation with <code>dynamic: true</code> and the two child items will maintain their proportions during the animation.</p>
+     * @param {Object} config An object containing properties which describe the animation's start and end states, and the timeline of the animation.
+     * @return {Object} this
      */
     animate: function(animObj) {
         var me = this;
@@ -202,8 +291,8 @@ Ext.define('Ext.util.Animate', {
 
         var me = this;
 
-        if (config.stopFx) {
-            me.stopFx();
+        if (config.stopAnimation) {
+            me.stopAnimation();
         }
 
         Ext.applyIf(config, Ext.fx.Manager.getFxDefaults(me.id));
@@ -215,16 +304,24 @@ Ext.define('Ext.util.Animate', {
     },
 
     /**
-     * Stops any running effects and clears the element's internal effects queue if it contains
+     * Stops any running effects and clears this object's internal effects queue if it contains
      * any additional effects that haven't started yet.
      * @return {Ext.core.Element} The Element
      */
-    stopFx: function() {
-        Ext.fx.Manager.stopFx(this.id);
+    stopFx: Ext.Function.alias(Ext.util.Animate, 'stopAnimation'),
+
+    /**
+     * @deprecated 4.0 Replaced by {@link #stopAnimation}
+     * Stops any running effects and clears this object's internal effects queue if it contains
+     * any additional effects that haven't started yet.
+     * @return {Ext.core.Element} The Element
+     */
+    stopAnimation: function() {
+        Ext.fx.Manager.stopAnimation(this.id);
     },
 
     /**
-     * Ensures that all effects queued after syncFx is called on the element are
+     * Ensures that all effects queued after syncFx is called on this object are
      * run concurrently.  This is the opposite of {@link #sequenceFx}.
      * @return {Ext.core.Element} The Element
      */
@@ -235,7 +332,7 @@ Ext.define('Ext.util.Animate', {
     },
 
     /**
-     * Ensures that all effects queued after sequenceFx is called on the element are
+     * Ensures that all effects queued after sequenceFx is called on this object are
      * run in sequence.  This is the opposite of {@link #syncFx}.
      * @return {Ext.core.Element} The Element
      */
@@ -246,11 +343,18 @@ Ext.define('Ext.util.Animate', {
     },
 
     /**
-     * Returns thq current animation if the element has any effects actively running or queued, else returns false.
+     * @deprecated 4.0 Replaced by {@link #getActiveAnimation}
+     * Returns thq current animation if this object has any effects actively running or queued, else returns false.
      * @return {Mixed} anim if element has active effects, else false
      */
-    hasActiveFx: function() {
-        return Ext.fx.Manager.hasActiveFx(this.id);
+    hasActiveFx: Ext.Function.alias(Ext.util.Animate, 'getActiveAnimation'),
+
+    /**
+     * Returns thq current animation if this object has any effects actively running or queued, else returns false.
+     * @return {Mixed} anim if element has active effects, else false
+     */
+    getActiveAnimation: function() {
+        return Ext.fx.Manager.getActiveAnimation(this.id);
     }
 });
 

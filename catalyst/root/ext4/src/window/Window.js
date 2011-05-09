@@ -4,13 +4,14 @@
  * <p>A specialized panel intended for use as an application window.  Windows are floated, {@link #resizable}, and
  * {@link #draggable} by default.  Windows can be {@link #maximizable maximized} to fill the viewport,
  * restored to their prior size, and can be {@link #minimize}d.</p>
- * <p>Windows can also be linked to a {@link Ext.ZIndexManager} or managed by the {@link Ext.WindowMgr} to provide
+ * <p>Windows can also be linked to a {@link Ext.ZIndexManager} or managed by the {@link Ext.WindowManager} to provide
  * grouping, activation, to front, to back and other application-specific behavior.</p>
  * <p>By default, Windows will be rendered to document.body. To {@link #constrain} a Window to another element
  * specify {@link Ext.Component#renderTo renderTo}.</p>
  * <p><b>As with all {@link Ext.container.Container Container}s, it is important to consider how you want the Window
  * to size and arrange any child Components. Choose an appropriate {@link #layout} configuration which lays out
  * child Components in the required manner.</b></p>
+ * {@img Ext.window.Window/Ext.window.Window.png Window component}
  * Example:<code><pre>
 Ext.create('Ext.window.Window', {
     title: 'Hello',
@@ -20,7 +21,7 @@ Ext.create('Ext.window.Window', {
     items: {  // Let's put an empty grid in just to illustrate fit layout
         xtype: 'grid',
         border: false,
-        headers: [{header: 'World'}]                 // One header just for show. There's no data,
+        columns: [{header: 'World'}],                 // One header just for show. There's no data,
         store: Ext.create('Ext.data.ArrayStore', {}) // A dummy empty data store
     }
 }).show();
@@ -240,11 +241,9 @@ Ext.define('Ext.window.Window', {
              */
             'restore'
         );
-
-        // Initialize as visible.
-        if (me.hidden === false) {
-            me.hidden = true;
-            me.show();
+        
+        if (me.plain) {
+            me.ui = [me.ui, 'plain'];
         }
         
         if (me.modal) {
@@ -263,23 +262,22 @@ Ext.define('Ext.window.Window', {
                 events.push(event);
             }
         });
-        this.callParent();    
+        this.callParent();
     },
-    
+
     getState: function() {
         var me = this,
             state = me.callParent() || {},
             maximized = !!me.maximized;
-            
-        
+
         state.maximized = maximized;
         Ext.apply(state, {
             size: maximized ? me.restoreSize : me.getSize(),
-            pos: maximized ? me.restorePos : me.getPosition(true)
+            pos: maximized ? me.restorePos : me.getPosition()
         });
         return state;
     },
-    
+
     applyState: function(state){
         var me = this;
         
@@ -303,13 +301,7 @@ Ext.define('Ext.window.Window', {
     // private
     onRender: function(ct, position) {
         var me = this;
-        
-        Ext.applyIf(me.renderData, {
-            plain: me.plain ? me.baseCls + '-plain' : undefined
-        });
-
         me.callParent(arguments);
-
         me.focusEl = me.el;
 
         // Double clicking a header will toggleMaximize
@@ -321,10 +313,13 @@ Ext.define('Ext.window.Window', {
     // private
     afterRender: function() {
         var me = this,
+            hidden = me.hidden,
             keyMap;
-            
+          
+        me.hidden = false;
         // Component's afterRender sizes and positions the Component
         me.callParent();
+        me.hidden = hidden;
 
         // Create the proxy after the size has been applied in Component.afterRender
         me.proxy = me.getProxy();
@@ -383,7 +378,7 @@ Ext.define('Ext.window.Window', {
          * @type Ext.util.ComponentDragger
          * @property dd
          */
-        me.dd = new Ext.util.ComponentDragger(this, ddConfig);
+        me.dd = Ext.create('Ext.util.ComponentDragger', this, ddConfig);
         me.relayEvents(me.dd, ['dragstart', 'drag', 'dragend']);
     },
 
@@ -396,11 +391,13 @@ Ext.define('Ext.window.Window', {
     // private
     beforeDestroy: function() {
         var me = this;
-        
+
         if (me.rendered) {
+            delete this.animateTarget;
             me.hide();
             Ext.destroy(
-                me.focusEl
+                me.focusEl,
+                me.keyMap
             );
         }
         me.callParent();
@@ -490,18 +487,12 @@ Ext.define('Ext.window.Window', {
         if (me.keyMap) {
             me.keyMap.enable();
         }
-
-        // BrowserBug. Explain the browser bug in the comment.
-        if (animateTarget && (Ext.isIE || Ext.isWebKit)) {
-            size = me.getSize();
-            me.onResize(size.width, size.height);
-        }
     },
 
     // private
     doClose: function() {
         var me = this;
-        
+
         // immediate close
         if (me.hidden) {
             me.fireEvent('close', me);
@@ -510,36 +501,6 @@ Ext.define('Ext.window.Window', {
             // close after hiding
             me.hide(me.animTarget, me.doClose, me);
         }
-    },
-
-    /**
-     * Hides the window, setting it to invisible and applying negative offsets.
-     * @param {String/Element} animateTarget (optional) The target element or id to which the window should
-     * animate while hiding (defaults to null with no animation)
-     * @param {Function} callback (optional) A callback function to call after the window is hidden
-     * @param {Object} scope (optional) The scope (<code>this</code> reference) in which the callback is executed. 
-     * Defaults to this Window.
-     * @return {Ext.window.Window} this
-     */
-    hide: function(animateTarget, cb, scope) {
-        var me = this;
-        
-        if (me.hidden || me.fireEvent('beforehide', me) === false) {
-            return me;
-        }
-        if (cb) {
-            me.on('hide', cb, scope, {
-                single: true
-            });
-        }
-        me.hidden = true;
-        if (me.animateTarget) {
-            me.animHide();
-        } else {
-            me.el.hide();
-            me.afterHide();
-        }
-        return me;
     },
 
     // private
@@ -581,7 +542,7 @@ Ext.define('Ext.window.Window', {
 
     afterCollapse: function() {
         var me = this;
-        
+
         if (me.maximizable) {
             me.tools.maximize.hide();
             me.tools.restore.hide();

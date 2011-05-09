@@ -15,7 +15,7 @@ Ext.define('Ext.fx.target.Sprite', {
     constructor: function(target) {
         this.target = target;
         this.id = this.getId();
-        Ext.fx.target.Sprite.superclass.constructor.call(this, target);
+        this.callParent([target]);
     },
 
     type: 'draw',
@@ -61,13 +61,13 @@ Ext.define('Ext.fx.target.Sprite', {
                 for (j = 0; j < ln2; j++) {
                     spritePtr = attrArr[j][0];
                     attPtr = attrArr[j][1];
-                    if (attr == 'translate') {
+                    if (attr === 'translate') {
                         value = {
                             x: attPtr.x,
                             y: attPtr.y
                         };
                     }
-                    else if (attr == 'rotate') {
+                    else if (attr === 'rotate') {
                         x = attPtr.x;
                         if (isNaN(x)) {
                             x = null;
@@ -81,6 +81,9 @@ Ext.define('Ext.fx.target.Sprite', {
                             x: x,
                             y: y
                         };
+                    }
+                    else if (attr === 'width' || attr === 'height' || attr === 'x' || attr === 'y') {
+                        value = parseFloat(attPtr);
                     }
                     else {
                         value = attPtr;

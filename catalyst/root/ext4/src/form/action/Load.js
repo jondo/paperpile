@@ -11,11 +11,11 @@
  * <li><b><code>data</code></b> property : Object</li>
  * <div class="sub-desc">The <code>data</code> property contains the values of Fields to load.
  * The individual value object for each Field is passed to the Field's
- * {@link Ext.form.Field#setValue setValue} method.</div></li>
+ * {@link Ext.form.field.Field#setValue setValue} method.</div></li>
  * </ul></div>
  * <p><u><b>JSON Packets</b></u></p>
  * <p>By default, response packets are assumed to be JSON, so for the following form load call:<pre><code>
-var myFormPanel = new Ext.form.FormPanel({
+var myFormPanel = new Ext.form.Panel({
     title: 'Client and routing info',
     items: [{
         fieldLabel: 'Client',
@@ -28,7 +28,7 @@ var myFormPanel = new Ext.form.FormPanel({
         name: 'portOfDischarge'
     }]
 });
-myFormPanel.{@link Ext.form.FormPanel#getForm getForm}().{@link Ext.form.Basic#load load}({
+myFormPanel.{@link Ext.form.Panel#getForm getForm}().{@link Ext.form.Basic#load load}({
     url: '/getRoutingInfo.php',
     params: {
         consignmentRef: myConsignmentRef

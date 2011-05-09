@@ -69,7 +69,7 @@ Ext.define('Ext.util.History', {
             oldToken = elem ? elem.innerText : null,
             oldHash = me.getHash();
            
-        Ext.TaskMgr.start({
+        Ext.TaskManager.start({
             run: function () {
                 var doc = contentWindow.document,
                     elem = doc.getElementById("state"),
@@ -103,7 +103,7 @@ Ext.define('Ext.util.History', {
             me.checkIFrame();
         } else {
             var hash = me.getHash();
-            Ext.TaskMgr.start({
+            Ext.TaskManager.start({
                 run: function () {
                     var newHash = me.getHash();
                     if (newHash !== hash) {

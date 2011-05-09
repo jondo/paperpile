@@ -23,7 +23,7 @@ Ext.define('Ext.AbstractManager', {
          * @property all
          * @type Ext.util.MixedCollection
          */
-        this.all = new Ext.util.HashMap();
+        this.all = Ext.create('Ext.util.HashMap');
 
         this.types = {};
     },
@@ -83,9 +83,11 @@ Ext.define('Ext.AbstractManager', {
         var type        = config[this.typeName] || config.type || defaultType,
             Constructor = this.types[type];
 
+        //<debug>
         if (Constructor == undefined) {
-            throw new Error(Ext.String.format("The '{0}' type has not been registered with this manager", type));
+            Ext.Error.raise("The '" + type + "' type has not been registered with this manager");
         }
+        //</debug>
 
         return new Constructor(config);
     },

@@ -34,9 +34,11 @@ Ext.define('Ext.util.Sorter', {
         
         Ext.apply(me, config);
         
+        //<debug>
         if (me.property == undefined && me.sorterFn == undefined) {
-            throw "A Sorter requires either a property or a sorter function";
+            Ext.Error.raise("A Sorter requires either a property or a sorter function");
         }
+        //</debug>
         
         me.updateSortFunction();
     },

@@ -370,7 +370,7 @@ Ext.core.DomHelper = function(){
         /**
          * Inserts an HTML fragment into the DOM.
          * @param {String} where Where to insert the html in relation to el - beforeBegin, afterBegin, beforeEnd, afterEnd.
-         * @param {HTMLElement} el The context element
+         * @param {HTMLElement/TextNode} el The context element
          * @param {String} html The HTML fragment
          * @return {HTMLElement} The new node
          */
@@ -387,11 +387,13 @@ Ext.core.DomHelper = function(){
             // add these here because they are used in both branches of the condition.
             hash[beforebegin] = ['BeforeBegin', 'previousSibling'];
             hash[afterend] = ['AfterEnd', 'nextSibling'];
-
+            
+            // if IE and context element is an HTMLElement
             if (el.insertAdjacentHTML) {
                 if(tableRe.test(el.tagName) && (rs = insertIntoTable(el.tagName.toLowerCase(), where, el, html))){
                     return rs;
                 }
+                
                 // add these two to the hash.
                 hash[afterbegin] = ['AfterBegin', 'firstChild'];
                 hash[beforeend] = ['BeforeEnd', 'lastChild'];
@@ -399,29 +401,34 @@ Ext.core.DomHelper = function(){
                     el.insertAdjacentHTML(hashVal[0], html);
                     return el[hashVal[1]];
                 }
+            // if (not IE and context element is an HTMLElement) or TextNode
             } else {
-                range = el.ownerDocument.createRange();
+                // we cannot insert anything inside a textnode so...
+                if (Ext.isTextNode(el)) {
+                    where = where === 'afterbegin' ? 'beforebegin' : where; 
+                    where = where === 'beforeend' ? 'afterend' : where;
+                }
+                range = Ext.supports.CreateContextualFragment ? el.ownerDocument.createRange() : undefined;
                 setStart = 'setStart' + (endRe.test(where) ? 'After' : 'Before');
                 if (hash[where]) {
-                    range[setStart](el);
-                    if (!range.createContextualFragment) {
-                        frag = createContextualFragment(html);
-                    }
-                    else {
+                    if (range) {
+                        range[setStart](el);
                         frag = range.createContextualFragment(html);
+                    } else {
+                        frag = createContextualFragment(html);
                     }
                     el.parentNode.insertBefore(frag, where == beforebegin ? el : el.nextSibling);
                     return el[(where == beforebegin ? 'previous' : 'next') + 'Sibling'];
                 } else {
                     rangeEl = (where == afterbegin ? 'first' : 'last') + 'Child';
                     if (el.firstChild) {
-                        range[setStart](el[rangeEl]);
-                        if (!range.createContextualFragment) {
+                        if (range) {
+                            range[setStart](el[rangeEl]);
+                            frag = range.createContextualFragment(html);
+                        } else {
                             frag = createContextualFragment(html);
                         }
-                        else {
-                            frag = range.createContextualFragment(html);
-                        }
+                        
                         if(where == afterbegin){
                             el.insertBefore(frag, el.firstChild);
                         }else{
@@ -433,7 +440,15 @@ Ext.core.DomHelper = function(){
                     return el[rangeEl];
                 }
             }
-            throw 'Illegal insertion point -> "' + where + '"';
+            //<debug>
+            Ext.Error.raise({
+                sourceClass: 'Ext.core.DomHelper',
+                sourceMethod: 'insertHtml',
+                htmlToInsert: html,
+                targetElement: el,
+                msg: 'Illegal insertion point reached: "' + where + '"'
+            });
+            //</debug>
         },
 
         /**
@@ -512,7 +527,7 @@ Ext.core.DomHelper = function(){
          */
         createTemplate : function(o){
             var html = Ext.core.DomHelper.createHtml(o);
-            return new Ext.Template(html);
+            return Ext.create('Ext.Template', html);
         }
     };
     return pub;
@@ -1011,8 +1026,8 @@ Ext.core.DomQuery = Ext.DomQuery = function(){
                         var m = path.match(t.re);
                         if(m){
                             fn[fn.length] = t.select.replace(tplRe, function(x, i){
-                return m[i];
-                });
+                                return m[i];
+                            });
                             path = path.replace(m[0], "");
                             matched = true;
                             break;
@@ -1020,7 +1035,13 @@ Ext.core.DomQuery = Ext.DomQuery = function(){
                     }
                     // prevent infinite loop on bad selector
                     if(!matched){
-                        throw 'Error parsing selector, parsing failed at "' + path + '"';
+                        //<debug>
+                        Ext.Error.raise({
+                            sourceClass: 'Ext.DomQuery',
+                            sourceMethod: 'compile',
+                            msg: 'Error parsing selector. Parsing failed at "' + path + '"'
+                        });
+                        //</debug>
                     }
                 }
                 if(modeMatch[1]){
@@ -1043,9 +1064,9 @@ Ext.core.DomQuery = Ext.DomQuery = function(){
          * @return {Array} An Array of DOM elements which match the selector. If there are
          * no matches, and empty Array is returned.
          */
-    jsSelect: function(path, root, type){
-        // set root to doc if not specified.
-        root = root || document;
+        jsSelect: function(path, root, type){
+            // set root to doc if not specified.
+            root = root || document;
 
             if(typeof root == "string"){
                 root = document.getElementById(root);
@@ -1060,7 +1081,13 @@ Ext.core.DomQuery = Ext.DomQuery = function(){
                 if(!cache[subPath]){
                     cache[subPath] = Ext.DomQuery.compile(subPath);
                     if(!cache[subPath]){
-                        throw subPath + " is not a valid selector";
+                        //<debug>
+                        Ext.Error.raise({
+                            sourceClass: 'Ext.DomQuery',
+                            sourceMethod: 'jsSelect',
+                            msg: subPath + ' is not a valid selector'
+                        });
+                        //</debug>
                     }
                 }
                 var result = cache[subPath](root);
@@ -1076,23 +1103,25 @@ Ext.core.DomQuery = Ext.DomQuery = function(){
             }
             return results;
         },
-    isXml: function(el) {
-        var docEl = (el ? el.ownerDocument || el : 0).documentElement;
-        return docEl ? docEl.nodeName !== "HTML" : false;
-    },
+
+        isXml: function(el) {
+            var docEl = (el ? el.ownerDocument || el : 0).documentElement;
+            return docEl ? docEl.nodeName !== "HTML" : false;
+        },
+        
         select : document.querySelectorAll ? function(path, root, type) {
-        root = root || document;
-        if (!Ext.DomQuery.isXml(root)) {
-        try {
-            var cs = root.querySelectorAll(path);
-            return Ext.Array.toArray(cs);
-        }
-        catch (ex) {}
-        }
-        return Ext.DomQuery.jsSelect.call(this, path, root, type);
-    } : function(path, root, type) {
-        return Ext.DomQuery.jsSelect.call(this, path, root, type);
-    },
+            root = root || document;
+            if (!Ext.DomQuery.isXml(root)) {
+            try {
+                var cs = root.querySelectorAll(path);
+                return Ext.Array.toArray(cs);
+            }
+            catch (ex) {}
+            }
+            return Ext.DomQuery.jsSelect.call(this, path, root, type);
+        } : function(path, root, type) {
+            return Ext.DomQuery.jsSelect.call(this, path, root, type);
+        },
 
         /**
          * Selects a single element.
@@ -2238,7 +2267,7 @@ el.un('click', this.handlerFn);
      * Retrieves Ext.core.Element objects.
      * <p><b>This method does not retrieve {@link Ext.Component Component}s.</b> This method
      * retrieves Ext.core.Element objects which encapsulate DOM elements. To retrieve a Component by
-     * its ID, use {@link Ext.ComponentMgr#get}.</p>
+     * its ID, use {@link Ext.ComponentManager#get}.</p>
      * <p>Uses simple caching to consistently return the same object. Automatically fixes if an
      * object was recreated with the same id via AJAX or DOM.</p>
      * @param {Mixed} el The id of the node, a DOM Node or an existing Element.
@@ -2434,7 +2463,7 @@ el.un('click', this.handlerFn);
      * Retrieves Ext.core.Element objects.
      * <p><b>This method does not retrieve {@link Ext.Component Component}s.</b> This method
      * retrieves Ext.core.Element objects which encapsulate DOM elements. To retrieve a Component by
-     * its ID, use {@link Ext.ComponentMgr#get}.</p>
+     * its ID, use {@link Ext.ComponentManager#get}.</p>
      * <p>Uses simple caching to consistently return the same object. Automatically fixes if an
      * object was recreated with the same id via AJAX or DOM.</p>
      * Shorthand of {@link Ext.core.Element#get}
@@ -2792,7 +2821,7 @@ Ext.core.Element.addMethods({
             return Ext.core.DomHelper.insertBefore(insertBefore, config, returnDom !== true);
         }
         else {
-            return Ext.core.DomHelper[!this.dom.firstChild ? 'overwrite' : 'append'](this.dom, config,  returnDom !== true);
+            return Ext.core.DomHelper[!this.dom.firstChild ? 'insertFirst' : 'append'](this.dom, config,  returnDom !== true);
         }
     },
 
@@ -2835,6 +2864,7 @@ Ext.core.Element.addMethods({
         trimRe = /^\s+|\s+$/g,
         spacesRe = /\s+/,
         wordsRe = /\w/g,
+        adjustDirect2DTableRe = /table-row|table-.*-group/,
         INTERNAL = '_internal',
         PADDING = 'padding',
         MARGIN = 'margin',
@@ -3093,7 +3123,7 @@ Ext.core.Element.addMethods({
          */
         getColor : function(attr, defaultValue, prefix){
             var v = this.getStyle(attr),
-                color = prefix === 'undefined' ? prefix : '#',
+                color = prefix || prefix === '' ? prefix : '#',
                 h;
 
             if(!v || (/transparent|inherit/.test(v))) {
@@ -3151,22 +3181,31 @@ Ext.core.Element.addMethods({
          * the default animation (<tt>{duration: .35, easing: 'easeIn'}</tt>)
          * @return {Ext.core.Element} this
          */
-         setOpacity : function(opacity, animate){
+        setOpacity: function(opacity, animate) {
             var me = this,
-                s = me.dom.style,
-                val;
+                dom = me.dom,
+                val,
+                style;
 
-            if(!animate || !me.anim){
-                if(!Ext.supports.Opacity){
-                    opacity = opacity < 1 ? 'alpha(opacity=' + opacity * 100 + ')' : '';
-                    val = s.filter.replace(opacityRe, '').replace(trimRe, '');
+            if (!me.dom) {
+                return me;
+            }
 
-                    s.zoom = 1;
-                    s.filter = val + (val.length > 0 ? ' ' : '') + opacity;
-                }else{
-                    s.opacity = opacity;
+            style = me.dom.style;
+
+            if (!animate || !me.anim) {
+                if (!Ext.supports.Opacity) {
+                    opacity = opacity < 1 ? 'alpha(opacity=' + opacity * 100 + ')': '';
+                    val = style.filter.replace(opacityRe, '').replace(trimRe, '');
+
+                    style.zoom = 1;
+                    style.filter = val + (val.length > 0 ? ' ': '') + opacity;
                 }
-            }else{
+                else {
+                    style.opacity = opacity;
+                }
+            }
+            else {
                 if (!Ext.isObject(animate)) {
                     animate = {
                         duration: 350,
@@ -3177,10 +3216,12 @@ Ext.core.Element.addMethods({
                     to: {
                         opacity: opacity
                     }
-                }, animate));
+                },
+                animate));
             }
             return me;
         },
+
 
         /**
          * Clears any opacity settings from this element. Required in some cases for IE.
@@ -3197,17 +3238,50 @@ Ext.core.Element.addMethods({
             }
             return this;
         },
+        
+        /**
+         * @private
+         * Returns 1 if the browser returns the subpixel dimension rounded to the lowest pixel.
+         * @return {Number} 0 or 1 
+         */
+        adjustDirect2DDimension: function(dimension) {
+            var me = this,
+                dom = me.dom,
+                display = me.getStyle('display'),
+                inlineDisplay = dom.style['display'],
+                inlinePosition = dom.style['position'],
+                originIndex = dimension === 'width' ? 0 : 1,
+                floating;
+                
+            if (display === 'inline') {
+                dom.style['display'] = 'inline-block';
+            }
 
+            dom.style['position'] = display.match(adjustDirect2DTableRe) ? 'absolute' : 'static';
+
+            // floating will contain digits that appears after the decimal point
+            // if height or width are set to auto we fallback to msTransformOrigin calculation
+            floating = (parseFloat(me.getStyle(dimension)) || parseFloat(dom.currentStyle.msTransformOrigin.split(' ')[originIndex]) * 2) % 1;
+            
+            dom.style['position'] = inlinePosition;
+            
+            if (display === 'inline') {
+                dom.style['display'] = inlineDisplay;
+            }
+
+            return floating;
+        },
+        
         /**
          * Returns the offset height of the element
          * @param {Boolean} contentHeight (optional) true to get the height minus borders and padding
          * @return {Number} The element's height
          */
-        getHeight: function(contentHeight) {
+        getHeight: function(contentHeight, preciseHeight) {
             var me = this,
                 dom = me.dom,
                 hidden = Ext.isIE && me.isStyle('display', 'none'),
-                height, overflow, style;
+                height, overflow, style, floating;
 
             // IE Quirks mode acts more like a max-size measurement unless overflow is hidden during measurement.
             // We will put the overflow back to it's original value when we are done measuring.
@@ -3217,7 +3291,20 @@ Ext.core.Element.addMethods({
                 me.setStyle({ overflow: 'hidden'});
             }
 
-            height = MATH.max(dom.offsetHeight, hidden ? 0 : dom.clientHeight) || 0;
+            height = dom.offsetHeight;
+
+            height = MATH.max(height, hidden ? 0 : dom.clientHeight) || 0;
+
+            // IE9 Direct2D dimension rounding bug
+            if (!hidden && Ext.supports.Direct2DBug) {
+                floating = me.adjustDirect2DDimension('height');
+                if (preciseHeight) {
+                    height += floating;
+                }
+                else if (floating > 0 && floating < 0.5) {
+                    height++;
+                }
+            }
 
             if (contentHeight) {
                 height -= (me.getBorderWidth("tb") + me.getPadding("tb"));
@@ -3232,43 +3319,66 @@ Ext.core.Element.addMethods({
             }
             return height;
         },
-
+                
         /**
          * Returns the offset width of the element
          * @param {Boolean} contentWidth (optional) true to get the width minus borders and padding
          * @return {Number} The element's width
          */
-        getWidth: function(contentWidth) {
+        getWidth: function(contentWidth, preciseWidth) {
             var me = this,
                 dom = me.dom,
                 hidden = Ext.isIE && me.isStyle('display', 'none'),
-                rect, width, overflow, style;
+                rect, width, overflow, style, floating, parentPosition;
 
             // IE Quirks mode acts more like a max-size measurement unless overflow is hidden during measurement.
             // We will put the overflow back to it's original value when we are done measuring.
             if (Ext.isIEQuirks) {
                 style = dom.style;
                 overflow = style.overflow;
-                me.setStyle({ overflow: 'hidden'});
+                me.setStyle({overflow: 'hidden'});
             }
-
+            
+            // Fix Opera 10.5x width calculation issues 
+            if (Ext.isOpera10_5) {
+                if (dom.parentNode.currentStyle.position === 'relative') {
+                    parentPosition = dom.parentNode.style.position;
+                    dom.parentNode.style.position = 'static';
+                    width = dom.offsetWidth;
+                    dom.parentNode.style.position = parentPosition;
+                }
+                width = Math.max(width || 0, dom.offsetWidth)
+            
             // Gecko will in some cases report an offsetWidth that is actually less than the width of the
             // text contents, because it measures fonts with sub-pixel precision but rounds the calculated
             // value down. Using getBoundingClientRect instead of offsetWidth allows us to get the precise
             // subpixel measurements so we can force them to always be rounded up. See
             // https://bugzilla.mozilla.org/show_bug.cgi?id=458617
-            if (Ext.supports.BoundingClientRect) {
+            } else if (Ext.supports.BoundingClientRect) {
                 rect = dom.getBoundingClientRect();
-                width = Math.ceil(rect.right - rect.left);
+                width = rect.right - rect.left;
+                width = preciseWidth ? width : Math.ceil(width);
             } else {
                 width = dom.offsetWidth;
             }
+
             width = MATH.max(width, hidden ? 0 : dom.clientWidth) || 0;
 
+            // IE9 Direct2D dimension rounding bug
+            if (!hidden && Ext.supports.Direct2DBug) {
+                floating = me.adjustDirect2DDimension('width');
+                if (preciseWidth) {
+                    width += floating;
+                }
+                else if (floating > 0 && floating < 0.5) {
+                    width++;
+                }
+            }
+            
             if (contentWidth) {
                 width -= (me.getBorderWidth("lr") + me.getPadding("lr"));
             }
-
+            
             if (Ext.isIEQuirks) {
                 me.setStyle({ overflow: overflow});
             }
@@ -3676,9 +3786,9 @@ Ext.fly('elId').setHeight(150, {
             // Else use clientHeight/clientWidth
             }
             else {
-                // IE Quirks mode acts more like a max-size measurement unless overflow is hidden during measurement.
+                // IE 6 & IE Quirks mode acts more like a max-size measurement unless overflow is hidden during measurement.
                 // We will put the overflow back to it's original value when we are done measuring.
-                if (Ext.isIEQuirks) {
+                if (Ext.isIE6 || Ext.isIEQuirks) {
                     style = dom.style;
                     overflow = style.overflow;
                     me.setStyle({ overflow: 'hidden'});
@@ -3687,7 +3797,7 @@ Ext.fly('elId').setHeight(150, {
                     width : dom.clientWidth,
                     height : dom.clientHeight
                 };
-                if (Ext.isIEQuirks) {
+                if (Ext.isIE6 || Ext.isIEQuirks) {
                     me.setStyle({ overflow: overflow });
                 }
             }
@@ -4064,6 +4174,9 @@ Ext.core.Element.addMethods(function(){
         }
     };
 }());
+/**
+ * @class Ext.core.Element
+ */
 Ext.applyIf(Ext.core.Element.prototype, {
     // @private override base Ext.util.Animate mixin for animate for backwards compatibility
     animate: function(config) {
@@ -4089,8 +4202,8 @@ Ext.applyIf(Ext.core.Element.prototype, {
             easing = config.easing || 'ease',
             animConfig;
 
-        if (config.stopFx) {
-            me.stopFx();
+        if (config.stopAnimation) {
+            me.stopAnimation();
         }
 
         Ext.applyIf(config, Ext.fx.Manager.getFxDefaults(me.id));
@@ -4136,7 +4249,7 @@ Ext.applyIf(Ext.core.Element.prototype, {
         delete animConfig.to.easing;
         delete animConfig.to.concurrent;
         delete animConfig.to.block;
-        delete animConfig.to.stopFx;
+        delete animConfig.to.stopAnimation;
         delete animConfig.to.delay;
         return animConfig;
     },
@@ -4156,7 +4269,7 @@ el.slideIn('r', { duration: 2 });
 // common config options shown with default values
 el.slideIn('t', {
     easing: 'easeOut',
-    duration: .5
+    duration: 500
 });
 </code></pre>
      * @param {String} anchor (optional) One of the valid Fx anchor positions (defaults to top: 't')
@@ -4341,7 +4454,11 @@ el.slideIn('t', {
             wrapAnim.on('afteranimate', function() {
                 if (slideOut) {
                     me.setPositioning(position);
-                    obj.useDisplay ? me.setDisplayed(false) : me.hide();
+                    if (obj.useDisplay) {
+                        me.setDisplayed(false);
+                    } else {
+                        me.hide();   
+                    }
                 }
                 else {
                     me.clearPositioning();
@@ -4396,7 +4513,7 @@ el.slideOut('r', { duration: 2 });
 // common config options shown with default values
 el.slideOut('t', {
     easing: 'easeOut',
-    duration: .5,
+    duration: 500,
     remove: false,
     useDisplay: false
 });
@@ -4420,7 +4537,7 @@ el.puff();
 // common config options shown with default values
 el.puff({
     easing: 'easeOut',
-    duration: .5,
+    duration: 500,
     useDisplay: false
 });
 </code></pre>
@@ -4454,7 +4571,11 @@ el.puff({
             };
             this.on('afteranimate',function() {
                 if (me.dom) {
-                    obj.useDisplay ? me.setDisplayed(false) : me.hide();
+                    if (obj.useDisplay) {
+                        me.setDisplayed(false);
+                    } else {
+                        me.hide();
+                    }
                     me.clearOpacity();  
                     me.setPositioning(position);
                     me.setStyle({fontSize: fontSize});
@@ -4533,7 +4654,11 @@ el.switchOff({
                 }
             });
             keyframe.on('afteranimate', function() {
-                obj.useDisplay ? me.setDisplayed(false) : me.hide();  
+                if (obj.useDisplay) {
+                    me.setDisplayed(false);
+                } else {
+                    me.hide();
+                }  
                 me.clearOpacity();
                 me.setPositioning(position);
                 me.setSize(size);
@@ -4645,7 +4770,7 @@ el.ghost('r', { duration: 2 });
 // common config options shown with default values
 el.ghost('b', {
     easing: 'easeOut',
-    duration: .5
+    duration: 500
 });
 </code></pre>
      * @param {String} anchor (optional) One of the valid Fx anchor positions (defaults to bottom: 'b')
@@ -4731,10 +4856,10 @@ el.highlight("0000ff", { attr: 'color', duration: 2 });
 
 // common config options shown with default values
 el.highlight("ffff9c", {
-    attr: "background-color", //can be any valid CSS property (attribute) that supports a color value
+    attr: "backgroundColor", //can be any valid CSS property (attribute) that supports a color value
     endColor: (current color) or "ffffff",
     easing: 'easeIn',
-    duration: 1
+    duration: 1000
 });
 </code></pre>
      * @param {String} color (optional) The highlight color. Should be a 6 char hex color without the leading # (defaults to yellow: 'ffff9c')
@@ -4745,43 +4870,200 @@ el.highlight("ffff9c", {
         var me = this,
             dom = me.dom,
             from = {},
-            restore, to, attr;
+            restore, to, attr, lns, event, fn;
 
         o = o || {};
-        attr = o.attr || "backgroundColor";
+        lns = o.listeners || {};
+        attr = o.attr || 'backgroundColor';
+        from[attr] = color || 'ffff9c';
+        
         if (!o.to) {
             to = {};
-            to[attr] = o.endColor || "#ffff9c";
+            to[attr] = o.endColor || me.getColor(attr, 'ffffff', '');
         }
         else {
             to = o.to;
         }
+        
+        // Don't apply directly on lns, since we reference it in our own callbacks below
+        o.listeners = Ext.apply(Ext.apply({}, lns), {
+            beforeanimate: function() {
+                restore = dom.style[attr];
+                me.clearOpacity();
+                me.show();
+                
+                event = lns.beforeanimate;
+                if (event) {
+                    fn = event.fn || event;
+                    return fn.apply(event.scope || lns.scope || window, arguments);
+                }
+            },
+            afteranimate: function() {
+                if (dom) {
+                    dom.style[attr] = restore;
+                }
+                
+                event = lns.afteranimate;
+                if (event) {
+                    fn = event.fn || event;
+                    fn.apply(event.scope || lns.scope || window, arguments);
+                }
+            }
+        });
 
         me.animate(Ext.apply({}, o, {
             duration: 1000,
             easing: 'ease-in',
-            to: to,
-            listeners: {
-                beforeanimate: {
-                    fn: function() {
-                        restore = dom.style[attr];
-                        me.clearOpacity();
-                        me.show();
-                    }
-                },
-                afteranimate: {
-                    fn: function() {
-                        if (dom) {
-                            dom.style[attr] = restore;
-                        }
-                    }
-                }
-            }
+            from: from,
+            to: to
         }));
         return me;
+    },
+
+   /**
+    * @deprecated 4.0
+    * Creates a pause before any subsequent queued effects begin.  If there are
+    * no effects queued after the pause it will have no effect.
+    * Usage:
+<pre><code>
+el.pause(1);
+</code></pre>
+    * @param {Number} seconds The length of time to pause (in seconds)
+    * @return {Ext.Element} The Element
+    */
+    pause: function(ms) {
+        var me = this;
+        Ext.fx.Manager.setFxDefaults(me.id, {
+            delay: ms
+        });
+        return me;
+    },
+
+   /**
+    * Fade an element in (from transparent to opaque).  The ending opacity can be specified
+    * using the <tt>{@link #endOpacity}</tt> config option.
+    * Usage:
+<pre><code>
+// default: fade in from opacity 0 to 100%
+el.fadeIn();
+
+// custom: fade in from opacity 0 to 75% over 2 seconds
+el.fadeIn({ endOpacity: .75, duration: 2});
+
+// common config options shown with default values
+el.fadeIn({
+    endOpacity: 1, //can be any value between 0 and 1 (e.g. .5)
+    easing: 'easeOut',
+    duration: 500
+});
+</code></pre>
+    * @param {Object} options (optional) Object literal with any of the Fx config options
+    * @return {Ext.Element} The Element
+    */
+    fadeIn: function(o) {
+        this.animate(Ext.apply({}, o, {
+            opacity: 1
+        }));
+        return this;
+    },
+
+   /**
+    * Fade an element out (from opaque to transparent).  The ending opacity can be specified
+    * using the <tt>{@link #endOpacity}</tt> config option.  Note that IE may require
+    * <tt>{@link #useDisplay}:true</tt> in order to redisplay correctly.
+    * Usage:
+<pre><code>
+// default: fade out from the element's current opacity to 0
+el.fadeOut();
+
+// custom: fade out from the element's current opacity to 25% over 2 seconds
+el.fadeOut({ endOpacity: .25, duration: 2});
+
+// common config options shown with default values
+el.fadeOut({
+    endOpacity: 0, //can be any value between 0 and 1 (e.g. .5)
+    easing: 'easeOut',
+    duration: 500,
+    remove: false,
+    useDisplay: false
+});
+</code></pre>
+    * @param {Object} options (optional) Object literal with any of the Fx config options
+    * @return {Ext.Element} The Element
+    */
+    fadeOut: function(o) {
+        this.animate(Ext.apply({}, o, {
+            opacity: 0
+        }));
+        return this;
+    },
+
+   /**
+    * @deprecated 4.0
+    * Animates the transition of an element's dimensions from a starting height/width
+    * to an ending height/width.  This method is a convenience implementation of {@link shift}.
+    * Usage:
+<pre><code>
+// change height and width to 100x100 pixels
+el.scale(100, 100);
+
+// common config options shown with default values.  The height and width will default to
+// the element&#39;s existing values if passed as null.
+el.scale(
+    [element&#39;s width],
+    [element&#39;s height], {
+        easing: 'easeOut',
+        duration: .35
+    }
+);
+</code></pre>
+    * @param {Number} width  The new width (pass undefined to keep the original width)
+    * @param {Number} height  The new height (pass undefined to keep the original height)
+    * @param {Object} options (optional) Object literal with any of the Fx config options
+    * @return {Ext.Element} The Element
+    */
+    scale: function(w, h, o) {
+        this.animate(Ext.apply({}, o, {
+            width: w,
+            height: h
+        }));
+        return this;
+    },
+
+   /**
+    * @deprecated 4.0
+    * Animates the transition of any combination of an element's dimensions, xy position and/or opacity.
+    * Any of these properties not specified in the config object will not be changed.  This effect 
+    * requires that at least one new dimension, position or opacity setting must be passed in on
+    * the config object in order for the function to have any effect.
+    * Usage:
+<pre><code>
+// slide the element horizontally to x position 200 while changing the height and opacity
+el.shift({ x: 200, height: 50, opacity: .8 });
+
+// common config options shown with default values.
+el.shift({
+    width: [element&#39;s width],
+    height: [element&#39;s height],
+    x: [element&#39;s x position],
+    y: [element&#39;s y position],
+    opacity: [element&#39;s opacity],
+    easing: 'easeOut',
+    duration: .35
+});
+</code></pre>
+    * @param {Object} options  Object literal with any of the Fx config options
+    * @return {Ext.Element} The Element
+    */
+    shift: function(config) {
+        this.animate(config);
+        return this;
     }
 });
 
+/**
+ * @class Ext.core.Element
+ */
 Ext.applyIf(Ext.core.Element, {
     unitRe: /\d+(px|em|%|en|ex|pt|in|cm|mm|pc)$/i,
     camelRe: /(-[a-z])/gi,
@@ -4973,12 +5255,10 @@ console.log(Ext.core.Element.parseStyles(css));
             matches;
             
         if (styles) {
-            /**
-             * Since we're using the g flag on the regex, we need to set the lastIndex.
-             * This automatically happens on some implementations, but not others, see:
-             * http://stackoverflow.com/questions/2645273/javascript-regular-expression-literal-persists-between-function-calls
-             * http://blog.stevenlevithan.com/archives/fixing-javascript-regexp
-             */
+            // Since we're using the g flag on the regex, we need to set the lastIndex.
+            // This automatically happens on some implementations, but not others, see:
+            // http://stackoverflow.com/questions/2645273/javascript-regular-expression-literal-persists-between-function-calls
+            // http://blog.stevenlevithan.com/archives/fixing-javascript-regexp
             cssRe.lastIndex = 0;
             while ((matches = cssRe.exec(styles))) {
                 out[matches[1]] = matches[2];
@@ -5289,7 +5569,15 @@ Ext.core.Element.select = function(selector, root){
     }else if(selector.length !== undefined){
         els = selector;
     }else{
-        throw "Invalid selector";
+        //<debug>
+        Ext.Error.raise({
+            sourceClass: "Ext.core.Element",
+            sourceMethod: "select",
+            selector: selector,
+            root: root,
+            msg: "Invalid selector specified: " + selector
+        });
+        //</debug>
     }
     return new Ext.CompositeElementLite(els);
 };
@@ -5422,7 +5710,11 @@ Ext.require('Ext.util.DelayedTask', function() {
 
                 //<debug error>
                 if (!fn) {
-                    throw new Error("["+Ext.getClassName(this.observable)+"#addListener -> Ext.util.Event#addListener] Invalid callback function: " + fn);
+                    Ext.Error.raise({
+                        sourceClass: Ext.getClassName(this.observable),
+                        sourceMethod: "addListener",
+                        msg: "The specified callback function is undefined"
+                    });
                 }
                 //</debug>
 
@@ -5448,14 +5740,16 @@ Ext.require('Ext.util.DelayedTask', function() {
                     },
                     handler = fn;
 
+                // The order is important. The 'single' wrapper must be wrapped by the 'buffer' and 'delayed' wrapper
+                // because the event removal that the single listener does destroys the listener's DelayedTask(s)
+                if (o.single) {
+                    handler = createSingle(handler, listener, o, scope);
+                }
                 if (o.delay) {
                     handler = createDelayed(handler, listener, o, scope);
                 }
                 if (o.buffer) {
                     handler = createBuffered(handler, listener, o, scope);
-                }
-                if (o.single) {
-                    handler = createSingle(handler, listener, o, scope);
                 }
 
                 listener.fireFn = handler;
@@ -5730,7 +6024,7 @@ Ext.EventManager = {
      * Options to parse for the 4th argument to addListener.
      * @private
      */
-    propRe: /^(?:scope|delay|buffer|single|stopEvent|preventDefault|stopPropagation|normalized|args|delegate)$/,
+    propRe: /^(?:scope|delay|buffer|single|stopEvent|preventDefault|stopPropagation|normalized|args|delegate|freezeEvent)$/,
 
     /**
      * Get the id of the element. If one has not been assigned, automatically assign it.
@@ -5810,7 +6104,7 @@ Ext.EventManager = {
                 fn = Ext.Function.createInterceptor(fn, this.contains, this);
             }
             eventName = eventName == 'mouseenter' ? 'mouseover' : 'mouseout';
-        } else if (eventName == 'mousewheel' && !Ext.supports.MouseWheel){
+        } else if (eventName == 'mousewheel' && !Ext.supports.MouseWheel && !Ext.isOpera){
             eventName = 'DOMMouseScroll';
         }
         return {
@@ -5883,14 +6177,26 @@ Ext.EventManager = {
             bind,
             wrap;
 
-        // if the element doesnt exist throw an error
+        //<debug>
         if (!dom){
-            throw 'Error listening for "' + eventName + '\". Element "' + element + '" doesn\'t exist.';
+            Ext.Error.raise({
+                sourceClass: 'Ext.EventManager',
+                sourceMethod: 'addListener',
+                targetElement: element,
+                eventName: eventName,
+                msg: 'Error adding "' + eventName + '\" listener for nonexistent element "' + element + '"'
+            });
         }
-
         if (!fn) {
-            throw 'Error listening for "' + eventName + '". No handler function specified';
+            Ext.Error.raise({
+                sourceClass: 'Ext.EventManager',
+                sourceMethod: 'addListener',
+                targetElement: element,
+                eventName: eventName,
+                msg: 'Error adding "' + eventName + '\" listener. The handler function is undefined.'
+            });
         }
+        //</debug>
 
         // create the wrapper function
         options = options || {};
@@ -5899,10 +6205,10 @@ Ext.EventManager = {
         wrap = this.createListenerWrap(dom, eventName, bind.fn, scope, options);
 
 
-        if (window.addEventListener) {
-            dom.addEventListener(bind.eventName, wrap, options.capture || false);
-        } else {
+        if (dom.attachEvent) {
             dom.attachEvent('on' + bind.eventName, wrap);
+        } else {
+            dom.addEventListener(bind.eventName, wrap, options.capture || false);
         }
 
         if (dom == document && eventName == 'mousedown') {
@@ -5961,10 +6267,10 @@ Ext.EventManager = {
                     delete wrap.tasks;
                 }
 
-                if (window.removeEventListener) {
-                    dom.removeEventListener(bindName, wrap, false);
-                } else {
+                if (dom.detachEvent) {
                     dom.detachEvent('on' + bindName, wrap);
+                } else {
+                    dom.removeEventListener(bindName, wrap, false);
                 }
 
                 if (wrap && dom == document && eventName == 'mousedown') {
@@ -6037,8 +6343,8 @@ Ext.EventManager = {
         var f = ['if(!Ext) {return;}'],
             gen;
 
-        if(options.buffer || options.delay) {
-            f.push('e = new Ext.EventObjectImpl(e);');
+        if(options.buffer || options.delay || options.freezeEvent) {
+            f.push('e = new Ext.EventObjectImpl(e, ' + (options.freezeEvent ? 'true' : 'false' ) + ');');
         } else {
             f.push('e = Ext.EventObject.setEvent(e);');
         }
@@ -6746,13 +7052,13 @@ Ext.define('Ext.EventObjectImpl', {
         2: 2
     },
 
-    constructor: function(event){
+    constructor: function(event, freezeEvent){
         if (event) {
-            this.setEvent(event.browserEvent || event);
+            this.setEvent(event.browserEvent || event, freezeEvent);
         }
     },
 
-    setEvent: function(event){
+    setEvent: function(event, freezeEvent){
         var me = this, button, options;
 
         if (event == me || (event && event.browserEvent)) { // already wrapped
@@ -6779,8 +7085,7 @@ Ext.define('Ext.EventObjectImpl', {
                 target: Ext.EventManager.getTarget(event),
                 relatedTarget: Ext.EventManager.getRelatedTarget(event),
                 currentTarget: event.currentTarget,
-                // same for XY
-                xy: Ext.EventManager.getPageXY(event)
+                xy: (freezeEvent ? me.getXY() : null)
             };
         } else {
             options = {
@@ -6859,24 +7164,46 @@ Ext.define('Ext.EventObjectImpl', {
     /**
      * Gets the x coordinate of the event.
      * @return {Number}
+     * @deprecated 4.0 Replaced by {@link #getX}
      */
     getPageX: function(){
-        return this.xy[0];
+        return this.getX();
     },
 
     /**
      * Gets the y coordinate of the event.
      * @return {Number}
+     * @deprecated 4.0 Replaced by {@link #getY}
      */
     getPageY: function(){
-        return this.xy[1];
+        return this.getY();
     },
-
+    
+    /**
+     * Gets the x coordinate of the event.
+     * @return {Number}
+     */
+    getX: function() {
+        return this.getXY()[0];
+    },    
+    
+    /**
+     * Gets the y coordinate of the event.
+     * @return {Number}
+     */
+    getY: function() {
+        return this.getXY()[1];
+    },
+        
     /**
      * Gets the page coordinates of the event.
      * @return {Array} The xy values like [x, y]
      */
-    getXY: function(){
+    getXY: function() {
+        if (!this.xy) {
+            // same for XY
+            this.xy = Ext.EventManager.getPageXY(this.browserEvent);
+        }
         return this.xy;
     },
 
@@ -6950,7 +7277,7 @@ Ext.getBody().on('click', function(e,t){
         if(el){
             var t = related ? this.getRelatedTarget() : this.getTarget(),
                 result;
-                
+
             if (t) {
                 result = Ext.fly(el).contains(t);
                 if (!result && allowEl) {
@@ -6994,7 +7321,8 @@ Ext.getBody().on('click', function(e,t){
      * @return {Ext.util.Point} point
      */
     getPoint : function(){
-        return new Ext.util.Point(this.xy[0], this.xy[1]);
+        var xy = this.getXY();
+        return Ext.create('Ext.util.Point', xy[0], xy[1]);
     },
 
    /**
@@ -7011,6 +7339,9 @@ Ext.EventObject = new Ext.EventObjectImpl();
 });
 
 
+/**
+ * @class Ext.core.Element
+ */
 (function(){
     var doc = document,
         isCSS1 = doc.compatMode == "CSS1Compat",
@@ -7236,11 +7567,12 @@ this.menuEl.un(this.mouseLeaveMonitor);
             timer,
             listeners = {
                 mouseleave: function(e) {
-                    timer = setTimeout(Ext.Function.bind(handler, scope||me, [new Ext.EventObjectImpl(e)]), delay);
+                    timer = setTimeout(Ext.Function.bind(handler, scope||me, [e]), delay);
                 },
                 mouseenter: function() {
                     clearTimeout(timer);
-                }
+                },
+                freezeEvent: true
             };
 
         me.on(listeners);
@@ -7348,7 +7680,7 @@ this.menuEl.un(this.mouseLeaveMonitor);
             loader = data(dom, 'loader');
             
         if (!loader) {
-            loader = new Ext.ElementLoader({
+            loader = Ext.create('Ext.ElementLoader', {
                 target: this
             });
             data(dom, 'loader', loader);
@@ -7587,7 +7919,13 @@ Ext.core.Element.addMethods({
 
         el = Ext.get(el);
         if(!el || !el.dom){
-            throw "Element.alignToXY with an element that doesn't exist";
+            //<debug>
+            Ext.Error.raise({
+                sourceClass: 'Ext.core.Element',
+                sourceMethod: 'getAlignVector',
+                msg: 'Attempted to align an element that doesn\'t exist'
+            });
+            //</debug>
         }
 
         elRegion = el.getRegion();
@@ -7605,7 +7943,13 @@ Ext.core.Element.addMethods({
         el = Ext.get(el);
 
         if(!el || !el.dom){
-            throw "Element.alignToXY with an element that doesn't exist";
+            //<debug>
+            Ext.Error.raise({
+                sourceClass: 'Ext.core.Element',
+                sourceMethod: 'getAlignToXY',
+                msg: 'Attempted to align an element that doesn\'t exist'
+            });
+            //</debug>
         }
 
         o = o || [0,0];
@@ -7640,7 +7984,16 @@ Ext.core.Element.addMethods({
             m = p.match(/^([a-z]+)-([a-z]+)(\?)?$/);
 
         if(!m){
-           throw "Element.alignTo with an invalid alignment " + p;
+            //<debug>
+            Ext.Error.raise({
+                sourceClass: 'Ext.core.Element',
+                sourceMethod: 'getAlignToXY',
+                el: el,
+                position: p,
+                offset: o,
+                msg: 'Attemmpted to align an element with an invalid position: "' + p + '"'
+            });
+            //</debug>
         }
 
         p1 = m[1];
@@ -8274,11 +8627,16 @@ Ext.override(Ext.core.Element, {
      * @return {Region} A Ext.util.Region containing "top, left, bottom, right" member data.
      */
     getViewRegion: function() {
-        var pos = this.getXY(),
-            top = pos[1] + this.getBorderWidth('t') + this.getPadding('t'),
-            left = pos[0] + this.getBorderWidth('l') + this.getPadding('l');
-        
-        return new Ext.util.Region(top, left + this.getWidth(true), top + this.getHeight(true), left);
+        var me = this,
+            isBody = me.dom === document.body,
+            scroll = me.getScroll(),
+            pos = isBody ? [0, 0] : me.getXY(),
+            top = pos[1] + scroll.top + (isBody ?  0 : me.getBorderWidth('t') + me.getPadding('t')),
+            left = pos[0] + scroll.left + (isBody ? 0 : me.getBorderWidth('l') + me.getPadding('l')),
+            width = isBody ? Ext.core.Element.getViewportWidth() : me.getWidth(true),
+            height = isBody ? Ext.core.Element.getViewportHeight() : me.getHeight(true);
+
+        return Ext.create('Ext.util.Region', top, left + width, top + height, left);
     },
 
     /**
@@ -8311,7 +8669,7 @@ Ext.override(Ext.core.Element, {
             l = xy[0];
 
         if (getRegion) {
-            return new Ext.util.Region(t, r, b, l);
+            return Ext.create('Ext.util.Region', t, r, b, l);
         }
         else {
             return {
@@ -8667,13 +9025,21 @@ Ext.core.Element.addMethods(
                 }
             },
             /**
-             * Returns true if this element is masked
+             * Returns true if this element is masked. Also re-centers any displayed message within the mask.
              * @return {Boolean}
              */
             isMasked : function() {
-                var m = data(this.dom, 'mask');
-                // force to bool
-                return !!(m && m.isVisible());
+                var me = this,
+                    mask = data(me.dom, 'mask'),
+                    maskMsg = data(me.dom, 'maskMsg');
+
+                if (mask && mask.isVisible()) {
+                    if (maskMsg) {
+                        maskMsg.center(me);
+                    }
+                    return true;
+                }
+                return false;
             },
 
             /**
@@ -8725,7 +9091,7 @@ Ext.core.Element.addMethods({
                 scope: scope
             };
         }
-        return new Ext.util.KeyMap(this, config);
+        return Ext.create('Ext.util.KeyMap', this, config);
     },
 
     /**
@@ -8734,13 +9100,14 @@ Ext.core.Element.addMethods({
      * @return {Ext.util.KeyMap} The KeyMap created
      */
     addKeyMap : function(config){
-        return new Ext.util.KeyMap(this, config);
+        return Ext.create('Ext.util.KeyMap', this, config);
     }
 });
 
 //Import the newly-added Ext.core.Element functions into CompositeElementLite. We call this here because
 //Element.keys.js is the last extra Ext.core.Element include in the ext-all.js build
 Ext.CompositeElementLite.importElementMethods();
+
 /**
  * @class Ext.CompositeElementLite
  */
@@ -8905,9 +9272,17 @@ Ext.core.Element.select = function(selector, unique, root){
     }else if(selector.length !== undefined){
         els = selector;
     }else{
-        throw "Invalid selector";
+        //<debug>
+        Ext.Error.raise({
+            sourceClass: "Ext.core.Element",
+            sourceMethod: "select",
+            selector: selector,
+            unique: unique,
+            root: root,
+            msg: "Invalid selector specified: " + selector
+        });
+        //</debug>
     }
-
     return (unique === true) ? new Ext.CompositeElement(els) : new Ext.CompositeElementLite(els);
 };
 

@@ -61,7 +61,7 @@ Ext.define('Ext.dd.DragZone', {
     extend: 'Ext.dd.DragSource',
 
     constructor : function(el, config){
-        Ext.dd.DragZone.superclass.constructor.call(this, el, config);
+        this.callParent([el, config]);
         if (this.containerScroll) {
             Ext.dd.ScrollManager.register(this.el);
         }
@@ -74,13 +74,10 @@ Ext.define('Ext.dd.DragZone', {
      * @type Object
      * @property dragData
      */
+
     /**
      * @cfg {Boolean} containerScroll True to register this container with the Scrollmanager
      * for auto scrolling during drag operations.
-     */
-    /**
-     * @cfg {String} hlColor The color to use when visually highlighting the drag source in the afterRepair
-     * method after a failed drop (defaults to "c3daf9" - light blue)
      */
 
     /**
@@ -109,14 +106,14 @@ Ext.define('Ext.dd.DragZone', {
     },
 
     /**
-     * Called after a repair of an invalid drop. By default, highlights this.dragData.ddel 
+     * Called after a repair of an invalid drop. By default, highlights this.dragData.ddel
      */
     afterRepair : function(){
-        if (Ext.enableFx){
-            // EAC Commented out: 1/20/11 while waiting for anim pkg
-            //Ext.fly(this.dragData.ddel).highlight(this.hlColor || "c3daf9");
+        var me = this;
+        if (Ext.enableFx) {
+            Ext.fly(me.dragData.ddel).highlight(me.repairHighlightColor);
         }
-        this.dragging = false;
+        me.dragging = false;
     },
 
     /**
@@ -126,11 +123,11 @@ Ext.define('Ext.dd.DragZone', {
      * @return {Array} The xy location (e.g. [100, 200])
      */
     getRepairXY : function(e){
-        return Ext.core.Element.fly(this.dragData.ddel).getXY();  
+        return Ext.core.Element.fly(this.dragData.ddel).getXY();
     },
 
     destroy : function(){
-        Ext.dd.DragZone.superclass.destroy.call(this);
+        this.callParent();
         if (this.containerScroll) {
             Ext.dd.ScrollManager.unregister(this.el);
         }

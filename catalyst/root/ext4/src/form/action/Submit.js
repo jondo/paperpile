@@ -27,8 +27,8 @@
  * <p>Other data may be placed into the response for processing by the {@link Ext.form.Basic}'s callback
  * or event handler methods. The object decoded from this JSON is available in the
  * {@link Ext.form.action.Action#result result} property.</p>
- * <p>Alternatively, if an {@link #errorReader} is specified as an {@link Ext.data.XmlReader XmlReader}:</p><pre><code>
-    errorReader: new Ext.data.XmlReader({
+ * <p>Alternatively, if an {@link #errorReader} is specified as an {@link Ext.data.reader.Xml XmlReader}:</p><pre><code>
+    errorReader: new Ext.data.reader.Xml({
             record : 'field',
             success: '@success'
         }, [
@@ -52,7 +52,7 @@
 &lt;/message&gt;
 </code></pre>
  * <p>Other elements may be placed into the response XML for processing by the {@link Ext.form.Basic}'s callback
- * or event handler methods. The XML document is available in the {@link #errorReader}'s {@link Ext.data.XmlReader#xmlData xmlData} property.</p>
+ * or event handler methods. The XML document is available in the {@link #errorReader}'s {@link Ext.data.reader.Xml#xmlData xmlData} property.</p>
  */
 Ext.define('Ext.form.action.Submit', {
     extend:'Ext.form.action.Action',
@@ -72,7 +72,7 @@ Ext.define('Ext.form.action.Submit', {
         var form = this.form;
         if (this.clientValidation === false || form.isValid()) {
             this.doSubmit();
-        } else { 
+        } else {
             // client validation failed
             this.failureType = Ext.form.action.Action.CLIENT_INVALID;
             form.afterAction(this, false);
@@ -113,7 +113,7 @@ Ext.define('Ext.form.action.Submit', {
      */
     getParams: function() {
         var nope = false,
-            configParams = Ext.form.action.Submit.superclass.getParams.call(this),
+            configParams = this.callParent(),
             fieldParams = this.form.getValues(nope, nope, this.submitEmptyText !== nope);
         return Ext.apply({}, fieldParams, configParams);
     },
@@ -179,21 +179,10 @@ Ext.define('Ext.form.action.Submit', {
 
         // Special handling for file upload fields: since browser security measures prevent setting
         // their values programatically, and prevent carrying their selected values over when cloning,
-        // we have to move the actual field instances out of their components and into the form. We
-        // create a clone to replace it with to maintain correct layout.
+        // we have to move the actual field instances out of their components and into the form.
         Ext.Array.each(uploadFields, function(field) {
             if (field.rendered) { // can only have a selected file value after being rendered
-                var input = field.getFileInput(),
-                    clone = input.cloneNode(true),
-                    previous = input.previousSibling,
-                    parent = input.parentNode;
-                    
-                formEl.appendChild(input);
-                if (previous) {
-                    Ext.fly(clone).insertAfter(previous);
-                } else {
-                    parent.appendChild(clone);
-                }
+                formEl.appendChild(field.extractFileInput());
             }
         });
 

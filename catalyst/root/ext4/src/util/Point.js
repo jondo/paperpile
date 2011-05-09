@@ -15,7 +15,7 @@ Ext.define('Ext.util.Point', {
     extend: 'Ext.util.Region',
 
     statics: {
-        
+
         /**
          * Returns a new instance of Ext.util.Point base on the pageX / pageY values of the given event
          * @static
@@ -31,7 +31,7 @@ Ext.define('Ext.util.Point', {
     /* End Definitions */
 
     constructor: function(x, y) {
-        Ext.util.Point.superclass.constructor.call(this, y, x, y, x);
+        this.callParent([y, x, y, x]);
     },
 
     /**

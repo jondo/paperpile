@@ -20,8 +20,8 @@
 Ext.define('Ext.grid.Section', {
     extend: 'Ext.panel.Panel',
     requires: [
-        'Ext.grid.GridView',
-        'Ext.grid.HeaderContainer'
+        'Ext.grid.View',
+        'Ext.grid.header.Container'
     ],
     alias: 'widget.gridsection',
 
@@ -63,14 +63,14 @@ Ext.define('Ext.grid.Section', {
         
         
         if (vertical) {
-            me.verticalScroller = Ext.ComponentMgr.create({
+            me.verticalScroller = Ext.ComponentManager.create({
                 dock: me.verticalScrollDock,
                 xtype: 'gridscroller'
             });
         }
         
         if (horizontal) {
-            me.horizontalScroller = Ext.ComponentMgr.create({
+            me.horizontalScroller = Ext.ComponentManager.create({
                 xtype: 'gridscroller',
                 section: me,
                 dock: 'bottom'

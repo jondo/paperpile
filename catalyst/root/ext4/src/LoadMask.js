@@ -12,7 +12,7 @@ myMask.show();
 
  * @constructor
  * Create a new LoadMask
- * @param {Mixed} el The element or DOM node, or its id
+ * @param {Mixed} el The element, element ID, or DOM node you wish to mask. Also, may be a Component who's element you wish to mask.
  * @param {Object} config The config object
  */
 
@@ -24,7 +24,7 @@ Ext.define('Ext.LoadMask', {
         observable: 'Ext.util.Observable'
     },
 
-    requires: ['Ext.data.StoreMgr'],
+    requires: ['Ext.data.StoreManager'],
 
     /* End Definitions */
 
@@ -44,6 +44,12 @@ Ext.define('Ext.LoadMask', {
      * The CSS class to apply to the loading message element (defaults to "x-mask-loading")
      */
     msgCls : Ext.baseCSSPrefix + 'mask-loading',
+    
+    /**
+     * @cfg {Boolean} useMsg
+     * Whether or not to use a loading message class or simply mask the bound element.
+     */
+    useMsg: true,
 
     /**
      * Read-only. True if the mask is currently disabled so that it will not be displayed (defaults to false)
@@ -54,7 +60,11 @@ Ext.define('Ext.LoadMask', {
     constructor : function(el, config) {
         var me = this;
 
-        me.el = Ext.get(el);
+        if (el.isComponent) {
+            me.bindComponent(el);
+        } else {
+            me.el = Ext.get(el);
+        }
         Ext.apply(me, config);
 
         me.addEvents('beforeshow', 'show', 'hide');
@@ -62,6 +72,41 @@ Ext.define('Ext.LoadMask', {
             me.bindStore(me.store, true);
         }
         me.mixins.observable.constructor.call(me, config);
+    },
+
+    bindComponent: function(comp) {
+        var me = this,
+            listeners = {
+                resize: me.onComponentResize,
+                scope: me
+            };
+
+        if (comp.el) {
+            me.onComponentRender(comp);
+        } else {
+            listeners.render = {
+                fn: me.onComponentRender,
+                scope: me,
+                single: true
+            };
+        }
+        me.mon(comp, listeners);
+    },
+
+    /**
+     * @private
+     * Called if we were configured with a Component, and that Component was not yet rendered. Collects the element to mask.
+     */
+    onComponentRender: function(comp) {
+        this.el = comp.getContentTarget();
+    },
+
+    /**
+     * @private
+     * Called when this LoadMask's Component is resized. The isMasked method also re-centers any displayed message.
+     */
+    onComponentResize: function(comp, w, h) {
+        this.el.isMasked();
     },
 
     /**
@@ -83,7 +128,7 @@ Ext.define('Ext.LoadMask', {
             }
         }
         if (store) {
-            store = Ext.data.StoreMgr.lookup(store);
+            store = Ext.data.StoreManager.lookup(store);
             me.mon(store, {
                 scope: me,
                 beforeload: me.onBeforeLoad,
@@ -139,7 +184,12 @@ Ext.define('Ext.LoadMask', {
         var me = this;
 
         if (!me.disabled && !me.loading && me.fireEvent('beforeshow', me, me.el, me.store) !== false) {
-            me.el.mask(me.msg, me.msgCls, false);
+            if (me.useMsg) {
+                me.el.mask(me.msg, me.msgCls, false);
+            } else {
+                me.el.mask();
+            }
+            
             me.fireEvent('show', me, me.el, me.store);
             me.loading = true;
         }

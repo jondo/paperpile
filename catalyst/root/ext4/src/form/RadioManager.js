@@ -1,6 +1,6 @@
 /**
  * @private
- * Private utility class for managing all {@link Ext.form.Radio} fields grouped by name.
+ * Private utility class for managing all {@link Ext.form.field.Radio} fields grouped by name.
  */
 Ext.define('Ext.form.RadioManager', {
     extend: 'Ext.util.MixedCollection',

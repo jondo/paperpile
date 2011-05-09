@@ -16,8 +16,8 @@ Ext.define('Ext.AbstractComponent', {
     },
 
     requires: [
-        'Ext.PluginMgr',
-        'Ext.ComponentMgr',
+        'Ext.PluginManager',
+        'Ext.ComponentManager',
         'Ext.core.Element',
         'Ext.core.DomHelper',
         'Ext.XTemplate',
@@ -25,7 +25,7 @@ Ext.define('Ext.AbstractComponent', {
         'Ext.LoadMask',
         'Ext.ComponentLoader',
         'Ext.EventManager',
-        'Ext.layout.Manager',
+        'Ext.layout.Layout',
         'Ext.layout.component.Auto'
     ],
 
@@ -71,7 +71,7 @@ Ext.define('Ext.AbstractComponent', {
      * {@link Ext.container.Container}.{@link Ext.container.Container#getComponent getComponent} which will retrieve
      * <code>itemId</code>'s or <tt>{@link #id}</tt>'s. Since <code>itemId</code>'s are an index to the
      * container's internal MixedCollection, the <code>itemId</code> is scoped locally to the container --
-     * avoiding potential conflicts with {@link Ext.ComponentMgr} which requires a <b>unique</b>
+     * avoiding potential conflicts with {@link Ext.ComponentManager} which requires a <b>unique</b>
      * <code>{@link #id}</code>.</p>
      * <pre><code>
 var c = new Ext.panel.Panel({ //
@@ -157,7 +157,7 @@ p2 = p1.{@link #ownerCt}.{@link Ext.container.Container#getComponent getComponen
 
     /**
      * @cfg {Object} renderSelectors
-     
+
 An object containing properties specifying {@link Ext.DomQuery DomQuery} selectors which identify child elements
 created by the render process.
 
@@ -223,7 +223,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
      * <p>The sizing and positioning of a Component's internal Elements is the responsibility of
      * the Component's layout manager which sizes a Component's internal structure in response to the Component being sized.</p>
      * <p>Generally, developers will not use this configuration as all provided Components which need their internal
-     * elements sizing (Such as {@link Ext.form.Field input fields}) come with their own componentLayout managers.</p>
+     * elements sizing (Such as {@link Ext.form.field.Base input fields}) come with their own componentLayout managers.</p>
      * <p>The {@link Ext.layout.container.Auto default layout manager} will be used on instances of the base Ext.Component class
      * which simply sizes the Component's encapsulating element to the height and width specified in the {@link #setSize} method.</p>
      */
@@ -372,7 +372,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
 
     /**
      * @cfg {Boolean} draggable
-     * Allows the component to be dragged via the touch event.
+     * Allows the component to be dragged.
      */
 
     /**
@@ -472,6 +472,11 @@ and a property `descEl` referencing the `div` Element which contains the descrip
      // @private
      allowDomMove: true,
 
+     /**
+      * @cfg {Boolean} autoShow True to automatically show the component upon creation.
+      * This config option may only be used for {@link #floating} components or components
+      * that use {@link #autoRender}. Defaults to <tt>false</tt>.
+      */
      autoShow: false,
 
     /**
@@ -502,8 +507,11 @@ and a property `descEl` referencing the `div` Element which contains the descrip
      * @type {Boolean}
      */
     rendered: false,
-    
+
     weight: 0,
+
+    trimRe: /^\s+|\s+$/g,
+    spacesRe: /\s+/,
 
     constructor : function(config) {
         var me = this,
@@ -512,7 +520,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
         config = config || {};
         me.initialConfig = config;
         Ext.apply(me, config);
-                
+
         me.addEvents(
             /**
              * @event beforeactivate
@@ -664,7 +672,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
         me.initComponent();
 
         // ititComponent gets a chance to change the id property before registering
-        Ext.ComponentMgr.register(me);
+        Ext.ComponentManager.register(me);
 
         // Dont pass the config so that it is not applied to 'this' again
         me.mixins.observable.constructor.call(me);
@@ -684,9 +692,17 @@ and a property `descEl` referencing the `div` Element which contains the descrip
             me.render(me.renderTo);
         }
 
+        if (me.autoShow) {
+            me.show();
+        }
+
         //<debug>
         if (Ext.isDefined(me.disabledClass)) {
-            throw "Component: disabledClass has been deprecated. Please use disabledCls.";
+            if (Ext.isDefined(Ext.global.console)) {
+                Ext.global.console.warn('Ext.Component: disabledClass has been deprecated. Please use disabledCls.');
+            }
+            me.disabledCls = me.disabledClass;
+            delete me.disabledClass;
         }
         //</debug>
     },
@@ -769,10 +785,10 @@ and a property `descEl` referencing the `div` Element which contains the descrip
     constructPlugin: function(plugin) {
         if (plugin.ptype && typeof plugin.init != 'function') {
             plugin.cmp = this;
-            plugin = Ext.PluginMgr.create(plugin);
+            plugin = Ext.PluginManager.create(plugin);
         }
         else if (typeof plugin == 'string') {
-            plugin = Ext.PluginMgr.create({
+            plugin = Ext.PluginManager.create({
                 ptype: plugin,
                 cmp: this
             });
@@ -807,7 +823,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
      * <p>Finds the ancestor Container responsible for allocating zIndexes for the passed Component.</p>
      * <p>That will be the outermost floating Container (a Container which has no ownerCt and has floating:true).</p>
      * <p>If we have no ancestors, or we walk all the way up to the document body, there's no zIndexParent,
-     * and the global Ext.WindowMgr will be used.</p>
+     * and the global Ext.WindowManager will be used.</p>
      */
     getZIndexParent: function() {
         var p = this.ownerCt,
@@ -844,12 +860,12 @@ and a property `descEl` referencing the `div` Element which contains the descrip
                 // If a floating Component is configured to be constrained, but has no configured
                 // constrainTo setting, set its constrainTo to be it's ownerCt before rendering.
                 if ((me.constrain || me.constrainHeader) && !me.constrainTo) {
-                    me.constrainTo = me.floatParent ? me.floatParent.getTargetEl() : Ext.getBody();
+                    me.constrainTo = me.floatParent ? me.floatParent.getTargetEl() : me.container;
                 }
                 if (me.zIndexParent) {
                     me.zIndexParent.registerFloatingItem(me);
                 } else {
-                    Ext.WindowMgr.register(me);
+                    Ext.WindowManager.register(me);
                 }
             }
 
@@ -861,9 +877,10 @@ and a property `descEl` referencing the `div` Element which contains the descrip
             // This means DISPLAY, VISIBILITY or OFFSETS.
             me.el.setVisibilityMode(Ext.core.Element[me.hideMode.toUpperCase()]);
 
-            if(me.overCls){
-                me.el.addClsOnOver(me.overCls);
+            if (me.overCls) {
+                me.el.hover(me.addOverCls, me.removeOverCls, me);
             }
+
             me.fireEvent('render', me);
 
             me.initContent();
@@ -872,10 +889,6 @@ and a property `descEl` referencing the `div` Element which contains the descrip
             me.fireEvent('afterrender', me);
 
             me.initEvents();
-
-            if (me.autoShow) {
-                me.show();
-            }
 
             if (me.hidden) {
                 // Hiding during the render process should not perform any ancillary
@@ -928,10 +941,10 @@ and a property `descEl` referencing the `div` Element which contains the descrip
                 // Else we wrap this element in an element that adds the reset class.
                 me.resetEl = el.wrap({
                     cls: Ext.baseCSSPrefix + 'reset'
-                });                
+                });
             }
         }
-                
+
         el.addCls(cls);
         el.setStyle(styles);
 
@@ -983,7 +996,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
                 pos = me.floatParent.getTargetEl().translatePoints(xy[0], xy[1]);
             } else {
                 xy = me.el.getAlignToXY(me.container, 'c-c');
-                pos = me.el.translatePoints(xy[0], xy[1]);
+                pos = me.container.translatePoints(xy[0], xy[1]);
             }
             me.x = me.x === undefined ? pos.left: me.x;
             me.y = me.y === undefined ? pos.top: me.y;
@@ -1002,21 +1015,21 @@ and a property `descEl` referencing the `div` Element which contains the descrip
 
     frameTpl: [
         '<tpl if="top">',
-            '<tpl if="left"><div class="{frameCls}-tl {baseCls}-tl" style="background-position: 0 -{tl}px; padding-left: {frameWidth}px" role="presentation"></tpl>',
-                '<tpl if="right"><div class="{frameCls}-tr {baseCls}-tr" style="background-position: right -{tr}px; padding-right: {frameWidth}px" role="presentation"></tpl>',
-                    '<div class="{frameCls}-tc {baseCls}-tc" style="background-position: 0 0; height: {frameWidth}px" role="presentation"></div>',
+            '<tpl if="left"><div class="{frameCls}-tl {baseCls}-tl<tpl for="ui"> {parent.baseCls}-{.}-tl</tpl>" style="background-position: {tl}; padding-left: {frameWidth}px" role="presentation"></tpl>',
+                '<tpl if="right"><div class="{frameCls}-tr {baseCls}-tr<tpl for="ui"> {parent.baseCls}-{.}-tr</tpl>" style="background-position: {tr}; padding-right: {frameWidth}px" role="presentation"></tpl>',
+                    '<div class="{frameCls}-tc {baseCls}-tc<tpl for="ui"> {parent.baseCls}-{.}-tc</tpl>" style="background-position: {tc}; height: {frameWidth}px" role="presentation"></div>',
                 '<tpl if="right"></div></tpl>',
             '<tpl if="left"></div></tpl>',
         '</tpl>',
-        '<tpl if="left"><div class="{frameCls}-ml {baseCls}-ml" style="background-position: 0 0; padding-left: {frameWidth}px" role="presentation"></tpl>',
-            '<tpl if="right"><div class="{frameCls}-mr {baseCls}-mr" style="background-position: right 0; padding-right: {frameWidth}px" role="presentation"></tpl>',
-                '<div class="{frameCls}-mc {baseCls}-mc" role="presentation"></div>',
+        '<tpl if="left"><div class="{frameCls}-ml {baseCls}-ml<tpl for="ui"> {parent.baseCls}-{.}-ml</tpl>" style="background-position: {ml}; padding-left: {frameWidth}px" role="presentation"></tpl>',
+            '<tpl if="right"><div class="{frameCls}-mr {baseCls}-mr<tpl for="ui"> {parent.baseCls}-{.}-mr</tpl>" style="background-position: {mr}; padding-right: {frameWidth}px" role="presentation"></tpl>',
+                '<div class="{frameCls}-mc {baseCls}-mc<tpl for="ui"> {parent.baseCls}-{.}-mc</tpl>" role="presentation"></div>',
             '<tpl if="right"></div></tpl>',
         '<tpl if="left"></div></tpl>',
         '<tpl if="bottom">',
-            '<tpl if="left"><div class="{frameCls}-bl {baseCls}-bl" style="background-position: 0 -{bl}px; padding-left: {frameWidth}px" role="presentation"></tpl>',
-                '<tpl if="right"><div class="{frameCls}-br {baseCls}-br" style="background-position: right -{br}px; padding-right: {frameWidth}px" role="presentation"></tpl>',
-                    '<div class="{frameCls}-bc {baseCls}-bc" style="background-position: 0 -{frameWidth}px; height: {frameWidth}px" role="presentation"></div>',
+            '<tpl if="left"><div class="{frameCls}-bl {baseCls}-bl<tpl for="ui"> {parent.baseCls}-{.}-bl</tpl>" style="background-position: {bl}; padding-left: {frameWidth}px" role="presentation"></tpl>',
+                '<tpl if="right"><div class="{frameCls}-br {baseCls}-br<tpl for="ui"> {parent.baseCls}-{.}-br</tpl>" style="background-position: {br}; padding-right: {frameWidth}px" role="presentation"></tpl>',
+                    '<div class="{frameCls}-bc {baseCls}-bc<tpl for="ui"> {parent.baseCls}-{.}-bc</tpl>" style="background-position: {bc}; height: {frameWidth}px" role="presentation"></div>',
                 '<tpl if="right"></div></tpl>',
             '<tpl if="left"></div></tpl>',
         '</tpl>'
@@ -1026,21 +1039,21 @@ and a property `descEl` referencing the `div` Element which contains the descrip
         '<table><tbody>',
             '<tpl if="top">',
                 '<tr>',
-                    '<tpl if="left"><td class="{frameCls}-tl {baseCls}-tl" style="background-position: 0 -{tl}px; padding-left:{frameWidth}px" role="presentation"></td></tpl>',
-                    '<td class="{frameCls}-tc {baseCls}-tc" style="background-position: 0 0; height: {frameWidth}px" role="presentation"></td>',
-                    '<tpl if="right"><td class="{frameCls}-tr {baseCls}-tr" style="background-position: right -{tr}px; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
+                    '<tpl if="left"><td class="{frameCls}-tl {baseCls}-tl<tpl for="ui"> {parent.baseCls}-{.}-tl</tpl>" style="background-position: {tl}; padding-left:{frameWidth}px" role="presentation"></td></tpl>',
+                    '<td class="{frameCls}-tc {baseCls}-tc<tpl for="ui"> {parent.baseCls}-{.}-tc</tpl>" style="background-position: {tc}; height: {frameWidth}px" role="presentation"></td>',
+                    '<tpl if="right"><td class="{frameCls}-tr {baseCls}-tr<tpl for="ui"> {parent.baseCls}-{.}-tr</tpl>" style="background-position: {tr}; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
                 '</tr>',
             '</tpl>',
             '<tr>',
-                '<tpl if="left"><td class="{frameCls}-ml {baseCls}-ml" style="background-position: 0 -{ml}px; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
-                '<td class="{frameCls}-mc {baseCls}-mc" style="background-position: 0 0;" role="presentation"></td>',
-                '<tpl if="right"><td class="{frameCls}-mr {baseCls}-mr" style="background-position: right 0; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
+                '<tpl if="left"><td class="{frameCls}-ml {baseCls}-ml<tpl for="ui"> {parent.baseCls}-{.}-ml</tpl>" style="background-position: {ml}; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
+                '<td class="{frameCls}-mc {baseCls}-mc<tpl for="ui"> {parent.baseCls}-{.}-mc</tpl>" style="background-position: 0 0;" role="presentation"></td>',
+                '<tpl if="right"><td class="{frameCls}-mr {baseCls}-mr<tpl for="ui"> {parent.baseCls}-{.}-mr</tpl>" style="background-position: {mr}; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
             '</tr>',
             '<tpl if="bottom">',
                 '<tr>',
-                    '<tpl if="left"><td class="{frameCls}-bl {baseCls}-bl" style="background-position: 0 -{bl}px; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
-                    '<td class="{frameCls}-bc {baseCls}-bc" style="background-position: 0 -{frameWidth}px; height: {frameWidth}px" role="presentation"></td>',
-                    '<tpl if="right"><td class="{frameCls}-br {baseCls}-br" style="background-position: right -{br}px; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
+                    '<tpl if="left"><td class="{frameCls}-bl {baseCls}-bl<tpl for="ui"> {parent.baseCls}-{.}-bl</tpl>" style="background-position: {bl}; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
+                    '<td class="{frameCls}-bc {baseCls}-bc<tpl for="ui"> {parent.baseCls}-{.}-bc</tpl>" style="background-position: {bc}; height: {frameWidth}px" role="presentation"></td>',
+                    '<tpl if="right"><td class="{frameCls}-br {baseCls}-br<tpl for="ui"> {parent.baseCls}-{.}-br</tpl>" style="background-position: {br}; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
                 '</tr>',
             '</tpl>',
         '</tbody></table>'
@@ -1048,11 +1061,10 @@ and a property `descEl` referencing the `div` Element which contains the descrip
 
     initFrame : function(cls, styles) {
         var me = this,
-            frameBaseCls = me.baseCls + (me.ui ? '-' + me.ui : ''),
             left = me.el.getStyle('background-position-x'),
             top = me.el.getStyle('background-position-y'),
             frameWidth = 0, frameSize,
-            frameTpl, info, max;
+            frameTpl, info, max, vertical;
 
         // Some browsers dont support background-position-x and y, so for those
         // browsers let's split background-position into two parts.
@@ -1061,13 +1073,16 @@ and a property `descEl` referencing the `div` Element which contains the descrip
             left = info[0];
             top = info[1];
         }
-        
+
         // We actually pass a string in the form of '[type][tl][tr]px [type][br][bl]px' as
         // the background position of this.el from the css to indicate to IE that this component needs
         // framing. We parse it here and change the markup accordingly.
         if (parseInt(left, 10) >= 1000000 && parseInt(top, 10) >= 1000000) {
             // Table markup starts with 110, div markup with 100.
             frameTpl = me.getFrameTpl(left.substr(0, 3) == '110');
+
+            // Determine if we are dealing with a horizontal or vertical component
+            vertical = top.substr(0, 3) == '110';
 
             // Get and parse the different border radius sizes
             max = Math.max;
@@ -1078,60 +1093,80 @@ and a property `descEl` referencing the `div` Element which contains the descrip
                 left:   max(top.substr(5, 2), left.substr(3, 2))
             };
             frameWidth = max(frameSize.top, frameSize.right, frameSize.bottom, frameSize.left);
-        
+
             // Just to be sure we set the background image of the el to none.
             me.el.setStyle('background-image', 'none');
         }
-        
+
         // This happens when you set frame: true explicitly without using the x-frame mixin in sass.
         // This way IE can't figure out what sizes to use and thus framing can't work.
         if (me.frame === true && !frameSize) {
             //<debug error>
-            throw new Error("[" + Ext.getClassName(me) + "#initFrame] You have set frame: true explicity on this component " +
-                            "while it doesnt have any framing in sass. This way IE can't figure out what sizes to use and thus framing " +
-                            "on this component will be disabled");
+            Ext.Error.raise("You have set frame: true explicity on this component while it doesn't have any " +
+                            "framing defined in the CSS template. In this case IE can't figure out what sizes " +
+                            "to use and thus framing on this component will be disabled.");
             //</debug>
         }
-        
+
         me.frame = me.frame || !!frameWidth;
         me.frameSize = frameSize || false;
-        
+
         if (me.frame) {
             //<debug error>
             if (!frameSize) {
-                throw new Error("[" + Ext.getClassName(me) + "#initFrame] Unable to read background-image style " +
-                                "(got '" + info + "') of element: " + me.el.dom.outerHTML + " to handle framing.");
+                Ext.Error.raise("Unable to read background-image style (got '" + info +
+                                "') of element: " + me.el.dom.outerHTML + " to handle framing.");
             }
             //</debug>
-        
+
+            var positions;
+            if (vertical) {
+                positions = {
+                    tl: '0 -' + (frameWidth * 0) + 'px',
+                    tr: '0 -' + (frameWidth * 1) + 'px',
+                    bl: '0 -' + (frameWidth * 2) + 'px',
+                    br: '0 -' + (frameWidth * 3) + 'px',
+
+                    ml: '-' + (frameWidth * 1) + 'px 0',
+                    mr: 'right 0',
+
+                    tc: '0 -' + (frameWidth * 0) + 'px',
+                    bc: '0 -' + (frameWidth * 1) + 'px'
+                };
+            } else {
+                positions = {
+                    tl: '0 -' + (frameWidth * 2) + 'px',
+                    tr: 'right -' + (frameWidth * 3) + 'px',
+                    bl: '0 -' + (frameWidth * 4) + 'px',
+                    br: 'right -' + (frameWidth * 5) + 'px',
+
+                    ml: '-' + (frameWidth * 0) + 'px 0',
+                    mr: 'right 0',
+
+                    tc: '0 -' + (frameWidth * 0) + 'px',
+                    bc: '0 -' + (frameWidth * 1) + 'px'
+                };
+            }
+
             // Here we render the frameTpl to this component. This inserts the 9point div or the table framing.
-            frameTpl.append(me.el, {
+            frameTpl.append(me.el, Ext.apply({}, {
                 frameCls:   me.frameCls,
-                baseCls:    frameBaseCls,
+                baseCls:    me.baseCls,
+                ui:         me.ui,
                 frameWidth: frameWidth,
                 top:        !!frameSize.top,
                 left:       !!frameSize.left,
                 right:      !!frameSize.right,
-                bottom:     !!frameSize.bottom,
-                tl:         (frameWidth * 2),
-                tr:         (frameWidth * 3),
-                bl:         (frameWidth * 4),
-                br:         (frameWidth * 5)
-            });
-        
-            // The frameBody is returned in getTargetEl, so that layouts render items to the correct target.
-            me.frameBody = me.el.down('.' + frameBaseCls + '-mc');
+                bottom:     !!frameSize.bottom
+            }, positions));
+
+            // The frameBody is returned in getTargetEl, so that layouts render items to the correct target.=
+            me.frameBody = me.el.down('.' + me.frameCls + '-mc');
         }
     },
 
     getFrameTpl : function(table) {
-        var frameTpl = table ? this.frameTableTpl : this.frameTpl;
-
-        if (Ext.isArray(frameTpl) || typeof frameTpl === "string") {
-            frameTpl = new Ext.XTemplate(frameTpl);
-        }
-
-        return frameTpl;
+        return table ? this.getTpl('frameTableTpl') : this.getTpl('frameTpl');
     },
 
     /**
@@ -1143,14 +1178,19 @@ and a property `descEl` referencing the `div` Element which contains the descrip
     initCls: function() {
         var me = this,
             cls = [];
-        
+
         cls.push(me.baseCls);
 
         //<deprecated since=0.99>
         if (Ext.isDefined(me.cmpCls)) {
-            throw "Ext.Component: cmpCls renamed to componentCls";
+            if (Ext.isDefined(Ext.global.console)) {
+                Ext.global.console.warn('Ext.Component: cmpCls has been deprecated. Please use componentCls.');
+            }
+            me.componentCls = me.cmpCls;
+            delete me.cmpCls;
         }
         //</deprecated>
+
         if (me.componentCls) {
             cls.push(me.componentCls);
         } else {
@@ -1161,12 +1201,46 @@ and a property `descEl` referencing the `div` Element which contains the descrip
             delete me.cls;
         }
         if (me.ui) {
-            cls.push(me.componentCls + '-' + me.ui);
+            if (Ext.isArray(me.ui)) {
+                for (var i = 0; i < me.ui.length; i++) {
+                    cls.push(me.componentCls + '-' + me.ui[i]);
+                }
+            } else {
+                cls.push(me.componentCls + '-' + me.ui);
+            }
         }
-        if (me.frame) {
-            cls.push('x-framed ' + me.baseCls + '-' + (me.ui ? me.ui + '-' : '') + 'framed');
-        }
+
         return cls.concat(me.additionalCls);
+    },
+
+    /**
+     * Returns a string for specified className which includes the baseCls and each UI, as well as the baseCls + cls
+     * If you do not pass a cls, it will only add the UIs to the baseCls
+     * So if you pass: 'pressed' and you have an array of UIs: ['default', 'large'], it will return the following:
+     *   x-btn-default-pressed x-btn-large-pressed x-btn-pressed
+     * @param {String} cls The class to convert
+     * @private
+     */
+    getClsWithUIs: function(cls) {
+        var me = this,
+            result = "",
+            i;
+
+        // Now lets loop through the UIs (if it is an array), and set the iconCls for each UI
+        if (Ext.isArray(me.ui)) {
+            for (i = 0; i < me.ui.length; i++) {
+                result += me.baseCls + '-' + me.ui[i] + ((cls) ? '-' + cls : '') + ' ';
+            }
+        } else {
+            result += me.baseCls + '-' + me.ui + ((cls) ? '-' + cls : '') + ' ';
+        }
+
+        //add it without UI
+        if (cls) {
+            result += me.baseCls + '-' + cls + ' ';
+        }
+
+        return result;
     },
 
     getElConfig : function() {
@@ -1203,7 +1277,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
      */
     initContainer: function(container) {
         var me = this;
-        
+
         // If you render a component specifying the el, we get the container
         // of the el, and make sure we dont move the el around in the dom
         // during the render
@@ -1228,7 +1302,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
      */
     initRenderData: function() {
         var me = this;
-        
+
         return Ext.applyIf(me.renderData, {
             ui: me.ui,
             baseCls: me.baseCls,
@@ -1238,25 +1312,43 @@ and a property `descEl` referencing the `div` Element which contains the descrip
     },
 
     /**
+     * @private
+     */
+    getTpl: function(name) {
+        var prototype = this.self.prototype,
+            ownerPrototype;
+
+        if (this.hasOwnProperty(name)) {
+            if (!(this[name] instanceof Ext.XTemplate)) {
+                this[name] = Ext.ClassManager.dynInstantiate('Ext.XTemplate', this[name]);
+            }
+
+            return this[name];
+        }
+
+        if (!(prototype[name] instanceof Ext.XTemplate)) {
+            ownerPrototype = prototype;
+
+            do {
+                if (ownerPrototype.hasOwnProperty(name)) {
+                    ownerPrototype[name] = Ext.ClassManager.dynInstantiate('Ext.XTemplate', ownerPrototype[name]);
+                    break;
+                }
+
+                ownerPrototype = ownerPrototype.superclass;
+            } while (ownerPrototype);
+        }
+
+        return prototype[name];
+    },
+
+    /**
      * Initializes the renderTpl.
      * @return {Ext.XTemplate} The renderTpl XTemplate instance.
      * @private
      */
     initRenderTpl: function() {
-        var renderTpl = this.renderTpl,
-            prototype = Ext.AbstractComponent.prototype;
-
-        if (renderTpl) {
-            if (prototype.renderTpl !== renderTpl) {
-                if (Ext.isArray(renderTpl) || typeof renderTpl === "string") {
-                    renderTpl = new Ext.XTemplate(renderTpl);
-                }
-            }
-            else if (Ext.isArray(prototype.renderTpl)){
-                renderTpl = prototype.renderTpl = new Ext.XTemplate(renderTpl);
-            }
-        }
-        return renderTpl;
+        return this.getTpl('renderTpl');
     },
 
     /**
@@ -1267,8 +1359,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
     initStyles: function() {
         var style = {},
             me = this,
-            Element = Ext.core.Element,
-            i, ln, split, prop;
+            Element = Ext.core.Element;
 
         if (Ext.isString(me.style)) {
             style = Element.parseStyles(me.style);
@@ -1278,15 +1369,18 @@ and a property `descEl` referencing the `div` Element which contains the descrip
 
         // Convert the padding, margin and border properties from a space seperated string
         // into a proper style string
-        if (me.padding != undefined) {
+        if (me.padding !== undefined) {
             style.padding = Element.unitizeBox((me.padding === true) ? 5 : me.padding);
         }
 
-        if (me.margin != undefined) {
+        if (me.margin !== undefined) {
             style.margin = Element.unitizeBox((me.margin === true) ? 5 : me.margin);
         }
 
-        if (me.border != undefined) {
+        // Border styles on a Panel are different. Panel (and subclass) borders are handled by the theming.
+        // Ext.grid.column.Column inherits a border configuration from HeaderContainer and should NOT inject a borderWidth (this will
+        // cause misalignment)
+        if (me.border !== undefined && me.border !== false && !(me instanceof Ext.panel.Panel || me instanceof Ext.grid.column.Column)) {
             style.borderWidth = Element.unitizeBox((me.border === true) ? 1 : me.border);
         }
 
@@ -1320,7 +1414,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
         if (me.tpl) {
             // Make sure this.tpl is an instantiated XTemplate
             if (!me.tpl.isTemplate) {
-                me.tpl = new Ext.XTemplate(me.tpl);
+                me.tpl = Ext.create('Ext.XTemplate', me.tpl);
             }
 
             if (me.data) {
@@ -1337,12 +1431,11 @@ and a property `descEl` referencing the `div` Element which contains the descrip
             property, listeners;
         if (afterRenderEvents) {
             for (property in afterRenderEvents) {
-                if (!afterRenderEvents.hasOwnProperty(property)) {
-                    continue;
-                }
-                listeners = afterRenderEvents[property];
-                if (me[property] && me[property].on) {
-                    me.mon(me[property], listeners);
+                if (afterRenderEvents.hasOwnProperty(property)) {
+                    listeners = afterRenderEvents[property];
+                    if (me[property] && me[property].on) {
+                        me.mon(me[property], listeners);
+                    }
                 }
             }
         }
@@ -1358,13 +1451,17 @@ and a property `descEl` referencing the `div` Element which contains the descrip
             selector;
 
         for (selector in selectors) {
-            if (!selectors.hasOwnProperty(selector) || !selectors[selector]) {
-                continue;
+            if (selectors.hasOwnProperty(selector) && selectors[selector]) {
+                this[selector] = Ext.get(Ext.DomQuery.selectNode(selectors[selector], el));
             }
-            this[selector] = Ext.get(Ext.DomQuery.selectNode(selectors[selector], el));
         }
     },
 
+    /**
+     * Tests whether this Component matches the selector string.
+     * @param {String} selector The selector string to test against.
+     * @return {Boolean} True if this Component matches the selector.
+     */
     is: function(selector) {
         return Ext.ComponentQuery.is(this, selector);
     },
@@ -1373,10 +1470,10 @@ and a property `descEl` referencing the `div` Element which contains the descrip
      * <p>Walks up the <code>ownerCt</code> axis looking for an ancestor Container which matches
      * the passed simple selector.</p>
      * <p>Example:<pre><code>
-var owningTabContainer = grid.up('tabcontainer');
+var owningTabPanel = grid.up('tabpanel');
 </code></pre>
      * @param {String} selector Optional. The simple selector to test.
-     * @return {Ext.container.Container} The matching ancestor Container (or <code>undefined</code> if no match was found).
+     * @return {Container} The matching ancestor Container (or <code>undefined</code> if no match was found).
      */
     up: function(selector) {
         var result = this.ownerCt;
@@ -1393,9 +1490,9 @@ var owningTabContainer = grid.up('tabcontainer');
     /**
      * <p>Returns the next sibling of this Component.</p>
      * <p>Optionally selects the next sibling which matches the passed {@link Ext.ComponentQuery ComponentQuery} selector.</p>
-     * <p>May also be refered to as <code><b>prev()</b></code></p>
-     * <p>Note that this is limited to siblings, and if no siblings of the item match, <code>null</code> is returned. Contract with {@link #nextNode}</p>
-     * @param selector Optional. A {@link Ext.ComponentQuery ComponentQuery} selector to filter the following items.
+     * <p>May also be refered to as <code><b>next()</b></code></p>
+     * <p>Note that this is limited to siblings, and if no siblings of the item match, <code>null</code> is returned. Contrast with {@link #nextNode}</p>
+     * @param {String} selector Optional A {@link Ext.ComponentQuery ComponentQuery} selector to filter the following items.
      * @returns The next sibling (or the next sibling which matches the selector). Returns null if there is no matching sibling.
      */
     nextSibling: function(selector) {
@@ -1424,8 +1521,8 @@ var owningTabContainer = grid.up('tabcontainer');
      * <p>Returns the previous sibling of this Component.</p>
      * <p>Optionally selects the previous sibling which matches the passed {@link Ext.ComponentQuery ComponentQuery} selector.</p>
      * <p>May also be refered to as <code><b>prev()</b></code></p>
-     * <p>Note that this is limited to siblings, and if no siblings of the item match, <code>null</code> is returned. Contract with {@link #previousNode}</p>
-     * @param selector Optional. A {@link Ext.ComponentQuery ComponentQuery} selector to filter the preceding items.
+     * <p>Note that this is limited to siblings, and if no siblings of the item match, <code>null</code> is returned. Contrast with {@link #previousNode}</p>
+     * @param {String} selector Optional. A {@link Ext.ComponentQuery ComponentQuery} selector to filter the preceding items.
      * @returns The previous sibling (or the previous sibling which matches the selector). Returns null if there is no matching sibling.
      */
     previousSibling: function(selector) {
@@ -1453,8 +1550,8 @@ var owningTabContainer = grid.up('tabcontainer');
     /**
      * <p>Returns the previous node in the Component tree in tree traversal order.</p>
      * <p>Note that this is not limited to siblings, and if invoked upon a node with no matching siblings, will
-     * walk the tree in reverse order to attempt to find a match. Contract with {@link #previousSibling}.</p>
-     * @param selector Optional. A {@link Ext.ComponentQuery ComponentQuery} selector to filter the preceding nodes.
+     * walk the tree in reverse order to attempt to find a match. Contrast with {@link #previousSibling}.</p>
+     * @param {String} selector Optional. A {@link Ext.ComponentQuery ComponentQuery} selector to filter the preceding nodes.
      * @returns The previous node (or the previous node which matches the selector). Returns null if there is no matching node.
      */
     previousNode: function(selector, includeSelf) {
@@ -1466,7 +1563,7 @@ var owningTabContainer = grid.up('tabcontainer');
         if (includeSelf && node.is(selector)) {
             return node;
         }
-        
+
         result = this.prev(selector);
         if (result) {
             return result;
@@ -1489,8 +1586,8 @@ var owningTabContainer = grid.up('tabcontainer');
     /**
      * <p>Returns the next node in the Component tree in tree traversal order.</p>
      * <p>Note that this is not limited to siblings, and if invoked upon a node with no matching siblings, will
-     * walk the tree in reverse order to attempt to find a match. Contract with {@link #previousSibling}.</p>
-     * @param selector Optional. A {@link Ext.ComponentQuery ComponentQuery} selector to filter the following nodes.
+     * walk the tree to attempt to find a match. Contrast with {@link #pnextSibling}.</p>
+     * @param {String} selector Optional A {@link Ext.ComponentQuery ComponentQuery} selector to filter the following nodes.
      * @returns The next node (or the next node which matches the selector). Returns null if there is no matching node.
      */
     nextNode: function(selector, includeSelf) {
@@ -1556,10 +1653,10 @@ var owningTabContainer = grid.up('tabcontainer');
      * <p>For a list of all available xtypes, see the {@link Ext.Component} header.</p>
      * <p>Example usage:</p>
      * <pre><code>
-var t = new Ext.form.Text();
+var t = new Ext.form.field.Text();
 var isText = t.isXType('textfield');        // true
-var isBoxSubclass = t.isXType('field');       // true, descended from Ext.form.Field
-var isBoxInstance = t.isXType('field', true); // false, not a direct Ext.form.Field instance
+var isBoxSubclass = t.isXType('field');       // true, descended from Ext.form.field.Base
+var isBoxInstance = t.isXType('field', true); // false, not a direct Ext.form.field.Base instance
 </code></pre>
      * @param {String} xtype The xtype to check for this Component
      * @param {Boolean} shallow (optional) False to check whether this Component is descended from the xtype (this is
@@ -1586,7 +1683,7 @@ var isBoxInstance = t.isXType('field', true); // false, not a direct Ext.form.Fi
      * to participate in determination of inherited xtypes.</b></p>
      * <p>Example usage:</p>
      * <pre><code>
-var t = new Ext.form.Text();
+var t = new Ext.form.field.Text();
 alert(t.getXTypes());  // alerts 'component/field/textfield'
 </code></pre>
      * @return {String} The xtype hierarchy string
@@ -1629,7 +1726,7 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
      */
     update : function(htmlOrData, loadScripts, cb) {
         var me = this;
-        
+
         if (me.tpl && !Ext.isString(htmlOrData)) {
             me.data = htmlOrData;
             if (me.rendered) {
@@ -1703,7 +1800,7 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
      */
     enable : function(silent) {
         var me = this;
-        
+
         if (me.rendered) {
             me.el.removeCls(me.disabledCls);
             me.el.dom.disabled = false;
@@ -1726,7 +1823,7 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
      */
     disable : function(silent) {
         var me = this;
-        
+
         if (me.rendered) {
             me.el.addCls(me.disabledCls);
             me.el.dom.disabled = true;
@@ -1768,36 +1865,54 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
 
     /**
      * Adds a CSS class to the top level element representing this component.
-     * @returns {Ext.Component} Returns the Component to allow method chaining.
+     * @param {String} cls The CSS class name to add
+     * @return {Ext.Component} Returns the Component to allow method chaining.
      */
-    addCls : function() {
-        var me = this,
-            args = Ext.Array.toArray(arguments);
+    addCls : function(className) {
+        var me = this;
+        if (!className) {
+            return me;
+        }
+        if (!Ext.isArray(className)){
+            className = className.replace(me.trimRe, '').split(me.spacesRe);
+        }
         if (me.rendered) {
-            me.el.addCls(args);
-        } else {
-            me.additionalCls = Ext.Array.unique(me.additionalCls.concat(args));
+            me.el.addCls(className);
+        }
+        else {
+            me.additionalCls = Ext.Array.unique(me.additionalCls.concat(className));
         }
         return me;
     },
 
-    //<debug>
+    /**
+     * @deprecated 4.0 Replaced by {link:#addCls}
+     * Adds a CSS class to the top level element representing this component.
+     * @param {String} cls The CSS class name to add
+     * @return {Ext.Component} Returns the Component to allow method chaining.
+     */
     addClass : function() {
-        throw "Component: addClass has been deprecated. Please use addCls.";
+        return this.addCls.apply(this, arguments);
     },
-    //</debug>
 
     /**
      * Removes a CSS class from the top level element representing this component.
      * @returns {Ext.Component} Returns the Component to allow method chaining.
      */
-    removeCls : function() {
-        var me = this,
-            args = Ext.Array.toArray(arguments);
+    removeCls : function(className) {
+        var me = this;
+
+        if (!className) {
+            return me;
+        }
+        if (!Ext.isArray(className)){
+            className = className.replace(me.trimRe, '').split(me.spacesRe);
+        }
         if (me.rendered) {
-            me.el.removeCls(args);
-        } else if (me.additionalCls.length) {
-            Ext.each(args, function(cls) {
+            me.el.removeCls(className);
+        }
+        else if (me.additionalCls.length) {
+            Ext.each(className, function(cls) {
                 Ext.Array.remove(me.additionalCls, cls);
             });
         }
@@ -1806,15 +1921,29 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
 
     //<debug>
     removeClass : function() {
-        throw "Component: removeClass has been deprecated. Please use removeCls.";
+        if (Ext.isDefined(Ext.global.console)) {
+            Ext.global.console.warn('Ext.Component: removeClass has been deprecated. Please use removeCls.');
+        }
+        return this.removeCls.apply(this, arguments);
     },
     //</debug>
+
+    addOverCls: function() {
+        var me = this;
+        if (!me.disabled) {
+            me.el.addCls(me.overCls);
+        }
+    },
+
+    removeOverCls: function() {
+        this.el.removeCls(this.overCls);
+    },
 
     addListener : function(element, listeners, scope, options) {
         var me = this,
             fn,
             option;
-        
+
         if (Ext.isString(element) && (Ext.isObject(listeners) || options && options.element)) {
             if (options.element) {
                 fn = listeners;
@@ -1827,11 +1956,10 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
                 }
 
                 for (option in options) {
-                    if (!options.hasOwnProperty(option)) {
-                        continue;
-                    }
-                    if (me.eventOptionsRe.test(option)) {
-                        listeners[option] = options[option];
+                    if (options.hasOwnProperty(option)) {
+                        if (me.eventOptionsRe.test(option)) {
+                            listeners[option] = options[option];
+                        }
                     }
                 }
             }
@@ -1904,15 +2032,21 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
      */
     onRemoved : function() {
         var me = this;
-        
+
         me.fireEvent('removed', me, me.ownerCt);
         delete me.ownerCt;
     },
 
     // @private
-    onEnable : Ext.emptyFn,
+    onEnable : function() {
+        delete this.resetDisable;
+    },
+
     // @private
-    onDisable : Ext.emptyFn,
+    onDisable : function() {
+        this.resetDisable = false;
+    },
+
     // @private
     beforeDestroy : Ext.emptyFn,
     // @private
@@ -1939,7 +2073,7 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
     setSize : function(width, height) {
         var me = this,
             layoutCollection;
-            
+
         // support for standard size objects
         if (Ext.isObject(width)) {
             height = width.height;
@@ -2053,20 +2187,33 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
 
     getComponentLayout : function() {
         var me = this;
-        
+
         if (!me.componentLayout || !me.componentLayout.isLayout) {
-            me.setComponentLayout(Ext.layout.Manager.create(me.componentLayout, 'autocomponent'));
+            me.setComponentLayout(Ext.layout.Layout.create(me.componentLayout, 'autocomponent'));
         }
         return me.componentLayout;
     },
 
     /**
-     * @param {Ext.Component} this
      * @param {Number} adjWidth The box-adjusted width that was set
      * @param {Number} adjHeight The box-adjusted height that was set
+     * @param {Boolean} isSetSize Whether or not the height/width are stored on the component permanently
+     * @param {Ext.Component} layoutOwner Component which sent the layout. Only used when isSetSize is false.
      */
-    afterComponentLayout: function(width, height) {
+    afterComponentLayout: function(width, height, isSetSize, layoutOwner) {
         this.fireEvent('resize', this, width, height);
+    },
+
+    /**
+     * Occurs before componentLayout is run. Returning false from this method will prevent the componentLayout
+     * from being executed.
+     * @param {Number} adjWidth The box-adjusted width that was set
+     * @param {Number} adjHeight The box-adjusted height that was set
+     * @param {Boolean} isSetSize Whether or not the height/width are stored on the component permanently
+     * @param {Ext.Component} layoutOwner Component which sent the layout. Only used when isSetSize is false.
+     */
+    beforeComponentLayout: function(width, height, isSetSize, layoutOwner) {
+        return true;
     },
 
     /**
@@ -2078,7 +2225,7 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
      */
     setPosition : function(x, y) {
         var me = this;
-        
+
         if (Ext.isObject(x)) {
             y = x.y;
             x = x.x;
@@ -2179,18 +2326,29 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
 
     /**
      * This method allows you to show or hide a LoadMask on top of this component.
-     * @param {Boolean/Object} load True to show the default LoadMask or a config object
-     * that will be passed to the LoadMask constructor. False to hide the current LoadMask.
+     * @param {Boolean/Object/String} load True to show the default LoadMask, a config object
+     * that will be passed to the LoadMask constructor, or a message String to show. False to
+     * hide the current LoadMask.
      * @param {Boolean} targetEl True to mask the targetEl of this Component instead of the this.el.
      * For example, setting this to true on a Panel will cause only the body to be masked. (defaults to false)
      * @return {Ext.LoadMask} The LoadMask instance that has just been shown.
      */
     setLoading : function(load, targetEl) {
-        var me = this;
-        
+        var me = this,
+            config;
+
         if (me.rendered) {
             if (load !== false) {
-                me.loadMask = me.loadMask || new Ext.LoadMask(targetEl ? me.getTargetEl() : me.el, Ext.applyIf(Ext.isObject(load) ? load : {}));
+                if (Ext.isObject(load)) {
+                    config = load;
+                }
+                else if (Ext.isString(load)) {
+                    config = {msg: load};
+                }
+                else {
+                    config = {};
+                }
+                me.loadMask = me.loadMask || Ext.create('Ext.LoadMask', targetEl ? me.getTargetEl() : me.el, config);
                 me.loadMask.show();
             } else {
                 Ext.destroy(me.loadMask);
@@ -2210,7 +2368,7 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
      */
     setDocked : function(dock, layoutParent) {
         var me = this;
-        
+
         me.dock = dock;
         if (layoutParent && me.ownerCt && me.rendered) {
             me.ownerCt.doComponentLayout();
@@ -2220,7 +2378,7 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
 
     onDestroy : function() {
         var me = this;
-        
+
         if (me.monitorResize && Ext.EventManager.resizeEvent) {
             Ext.EventManager.resizeEvent.removeListener(me.setSize, me);
         }
@@ -2232,13 +2390,20 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
      */
     destroy : function() {
         var me = this;
-        
+
         if (!me.isDestroyed) {
             if (me.fireEvent('beforedestroy', me) !== false) {
                 me.destroying = true;
                 me.beforeDestroy();
 
-                if (me.ownerCt && me.ownerCt.remove) {
+                if (me.floating) {
+                    delete me.floatParent;
+                    // A zIndexManager is stamped into a *floating* Component when it is added to a Container.
+                    // If it has no zIndexManager at render time, it is assigned to the global Ext.WindowManager instance.
+                    if (me.zIndexManager) {
+                        me.zIndexManager.unregister(me);
+                    }
+                } else if (me.ownerCt && me.ownerCt.remove) {
                     me.ownerCt.remove(me, false);
                 }
 
@@ -2248,9 +2413,12 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
 
                 me.onDestroy();
 
-                Ext.ComponentMgr.unregister(me);
+                // Attempt to destroy all plugins
+                Ext.destroy(me.plugins);
+
+                Ext.ComponentManager.unregister(me);
                 me.fireEvent('destroy', me);
-                
+
                 me.mixins.state.destroy.call(me);
 
                 me.clearListeners();

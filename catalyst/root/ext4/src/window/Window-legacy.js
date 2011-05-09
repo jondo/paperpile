@@ -1,4 +1,5 @@
 /**
+ * @class Ext.Window
  * @ignore
  */
 Ext.Window.override({

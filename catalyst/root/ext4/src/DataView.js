@@ -1,4 +1,7 @@
 /**
+ * @class Ext.DataView
+ * @extends Ext.AbstractDataView
+ *
  * A mechanism for displaying data using custom layout templates and formatting. DataView uses an {@link Ext.XTemplate}
  * as its internal templating mechanism, and is bound to an {@link Ext.data.Store}
  * so that as the data in the store changes the view is automatically updated to reflect the changes.  The view also
@@ -8,7 +11,8 @@
  *
  * <p>The example below binds a DataView to a {@link Ext.data.Store} and renders it into an {@link Ext.panel.Panel}.</p>
  * <pre><code>
-Ext.regModel('Image', {
+ImageModel = Ext.define('ImageModel', {
+    extend: 'Ext.data.Model',
     fields: [
         'name', 'url',
         {name:'size', type: 'float'},
@@ -57,8 +61,6 @@ var panel = new Ext.panel.Panel({
     })
 });
  * </code></pre>
- * @class Ext.DataView
- * @extends Ext.AbstractDataView
  * @xtype dataview
  */
 Ext.define('Ext.DataView', {
@@ -75,7 +77,8 @@ Ext.define('Ext.DataView', {
             mouseover: 'MouseOver',
             mouseout: 'MouseOut',
             mouseenter: 'MouseEnter',
-            mouseleave: 'MouseLeave'
+            mouseleave: 'MouseLeave',
+            keydown: 'KeyDown'
         }
     },
     
@@ -150,7 +153,17 @@ Ext.define('Ext.DataView', {
              * @param {Number} index The item's index
              * @param {Ext.EventObject} e The raw event object
              */
-            'beforeitemcontextmenu',            
+            'beforeitemcontextmenu',
+            /**
+             * @event beforeitemkeydown
+             * Fires before the keydown event on an item is processed. Returns false to cancel the default action.
+             * @param {Ext.DataView} this
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
+             * @param {Ext.EventObject} e The raw event object. Use {@link Ext.EventObject#getKey getKey()} to retrieve the key that was pressed.
+             */
+            'beforeitemkeydown',
             /**
              * @event itemmousedown
              * Fires when there is a mouse down on an item
@@ -220,7 +233,17 @@ Ext.define('Ext.DataView', {
              * @param {Number} index The item's index
              * @param {Ext.EventObject} e The raw event object
              */
-            'itemcontextmenu',            
+            'itemcontextmenu',
+            /**
+             * @event itemkeydown
+             * Fires when a key is pressed while an item is currently selected.
+             * @param {Ext.DataView} this
+             * @param {Ext.data.Model} record The record that belongs to the item
+             * @param {HTMLElement} item The item's element
+             * @param {Number} index The item's index
+             * @param {Ext.EventObject} e The raw event object. Use {@link Ext.EventObject#getKey getKey()} to retrieve the key that was pressed.
+             */
+            'itemkeydown',
             /**
              * @event beforecontainermousedown
              * Fires before the mousedown event on the container is processed. Returns false to cancel the default action.
@@ -271,6 +294,13 @@ Ext.define('Ext.DataView', {
              */
             'beforecontainercontextmenu',
             /**
+             * @event beforecontainerkeydown
+             * Fires before the keydown event on the container is processed. Returns false to cancel the default action.
+             * @param {Ext.DataView} this
+             * @param {Ext.EventObject} e The raw event object. Use {@link Ext.EventObject#getKey getKey()} to retrieve the key that was pressed.
+             */
+            'beforecontainerkeydown',
+            /**
              * @event containermouseup
              * Fires when there is a mouse up on the container
              * @param {Ext.DataView} this
@@ -312,7 +342,14 @@ Ext.define('Ext.DataView', {
              * @param {Ext.EventObject} e The raw event object
              */
             'containercontextmenu',
-                      
+            /**
+             * @event containerkeydown
+             * Fires when a key is pressed while the container is focused, and no item is currently selected.
+             * @param {Ext.DataView} this
+             * @param {Ext.EventObject} e The raw event object. Use {@link Ext.EventObject#getKey getKey()} to retrieve the key that was pressed.
+             */
+            'containerkeydown',
+            
             /**
              * @event selectionchange
              * Fires when the selected nodes change. Relayed event from the underlying selection model.
@@ -345,7 +382,8 @@ Ext.define('Ext.DataView', {
             dblclick: me.handleEvent,
             contextmenu: me.handleEvent,
             mouseover: me.handleEvent,
-            mouseout: me.handleEvent
+            mouseout: me.handleEvent,
+            keydown: me.handleEvent
         };
         
         me.mon(me.getTargetEl(), listeners);
@@ -367,21 +405,37 @@ Ext.define('Ext.DataView', {
     processSpecialEvent: Ext.emptyFn,
     
     processUIEvent: function(e, type) {
+        type = type || e.type;
         var me = this,
             item = e.getTarget(me.getItemSelector(), me.getTargetEl()),
-            type = type || e.type,
             map = this.statics().EventMap,
             index, record;
         
-        // There is this weird bug when you hover over the border of a cell it is saying
-        // the target is the table.        
-        if (!item && type == 'mouseover' && me.mouseOverItem && Ext.fly(me.mouseOverItem).getRegion().contains(e.getPoint())) {
-            item = me.mouseOverItem;
+        if (!item) {
+            // There is this weird bug when you hover over the border of a cell it is saying
+            // the target is the table.
+            // BrowserBug: IE6 & 7. If me.mouseOverItem has been removed and is no longer
+            // in the DOM then accessing .offsetParent will throw an "Unspecified error." exception.
+            // typeof'ng and checking to make sure the offsetParent is an object will NOT throw
+            // this hard exception.
+            if (type == 'mouseover' && me.mouseOverItem && typeof me.mouseOverItem.offsetParent === "object" && Ext.fly(me.mouseOverItem).getRegion().contains(e.getPoint())) {
+                item = me.mouseOverItem;
+            }
+            
+            // Try to get the selected item to handle the keydown event, otherwise we'll just fire a container keydown event
+            if (type == 'keydown') {
+                record = me.getSelectionModel().getLastSelected();
+                if (record) {
+                    item = me.getNode(record);
+                }
+            }
         }
         
         if (item) {
             index = me.indexOf(item);
-            record = me.getRecord(item);
+            if (!record) {
+                record = me.getRecord(item);
+            }
             
             if (me.processItemEvent(type, record, item, index, e) === false) {
                 return false;
@@ -456,6 +510,7 @@ Ext.define('Ext.DataView', {
     onItemClick: Ext.emptyFn,
     onItemDblClick: Ext.emptyFn,
     onItemContextMenu: Ext.emptyFn,
+    onItemKeyDown: Ext.emptyFn,
     onBeforeItemMouseDown: Ext.emptyFn,
     onBeforeItemMouseUp: Ext.emptyFn,
     onBeforeItemMouseEnter: Ext.emptyFn,
@@ -463,6 +518,7 @@ Ext.define('Ext.DataView', {
     onBeforeItemClick: Ext.emptyFn,
     onBeforeItemDblClick: Ext.emptyFn,
     onBeforeItemContextMenu: Ext.emptyFn,
+    onBeforeItemKeyDown: Ext.emptyFn,
     
     // @private, template methods
     onContainerMouseDown: Ext.emptyFn,
@@ -472,6 +528,7 @@ Ext.define('Ext.DataView', {
     onContainerClick: Ext.emptyFn,
     onContainerDblClick: Ext.emptyFn,
     onContainerContextMenu: Ext.emptyFn,
+    onContainerKeyDown: Ext.emptyFn,
     onBeforeContainerMouseDown: Ext.emptyFn,
     onBeforeContainerMouseUp: Ext.emptyFn,
     onBeforeContainerMouseOver: Ext.emptyFn,
@@ -479,6 +536,7 @@ Ext.define('Ext.DataView', {
     onBeforeContainerClick: Ext.emptyFn,
     onBeforeContainerDblClick: Ext.emptyFn,
     onBeforeContainerContextMenu: Ext.emptyFn,
+    onBeforeContainerKeyDown: Ext.emptyFn,
     
     /**
      * Highlight a given item in the DataView. This is called by the mouseover handler if {@link #overItemCls}

@@ -14,11 +14,12 @@ __Some items have shortcut strings for creation:__
 | `-`      | `tbseparator` | {@link Ext.toolbar.Separator} | add a vertical separator bar between toolbar items |
 | ` `      | `tbspacer`    | {@link Ext.toolbar.Spacer}    | add horiztonal space between elements              |
 
+{@img Ext.toolbar.Toolbar/Ext.toolbar.Toolbar1.png Toolbar component}
 Example usage:
 
-    var toolbar = new Ext.toolbar.Toolbar({
+    Ext.create('Ext.toolbar.Toolbar", {
         renderTo: document.body,
-        width   : 600,
+        width   : 500,
         items: [
             {
                 // xtype: 'button', // default for Toolbars
@@ -47,139 +48,144 @@ Example usage:
 
 Toolbars have {@link #enable} and {@link #disable} methods which when called, will enable/disable all items within your toolbar.
 
+{@img Ext.toolbar.Toolbar/Ext.toolbar.Toolbar2.png Toolbar component}
 Example usage:
 
-var toolbar = new Ext.toolbar.Toolbar({
-    renderTo: document.body,
-    width   : 400,
-    items: [
-        {
-            text: 'Button'
-        },
-        {
-            xtype: 'splitbutton',
-            text : 'Split Button'
-        },
-        '->',
-        {
-            xtype    : 'textfield',
-            name     : 'field1',
-            emptyText: 'enter search term'
+    Ext.create('Ext.toolbar.Toolbar', {
+        renderTo: document.body,
+        width   : 400,
+        items: [
+            {
+                text: 'Button'
+            },
+            {
+                xtype: 'splitbutton',
+                text : 'Split Button'
+            },
+            '->',
+            {
+                xtype    : 'textfield',
+                name     : 'field1',
+                emptyText: 'enter search term'
+            }
+        ]
+    });
+
+{@img Ext.toolbar.Toolbar/Ext.toolbar.Toolbar3.png Toolbar component}
+Example usage:
+    
+    var enableBtn = Ext.create('Ext.button.Button', {
+        text    : 'Enable All Items',
+        disabled: true,
+        scope   : this,
+        handler : function() {
+            //disable the enable button and enable the disable button
+            enableBtn.disable();
+            disableBtn.enable();
+            
+            //enable the toolbar
+            toolbar.enable();
         }
-    ]
-});
-
-var enableBtn = new Ext.button.Button({
-    text    : 'Enable All Items',
-    disabled: true,
-    scope   : this,
-    handler : function() {
-        //disable the enable button and enable the disable button
-        enableBtn.disable();
-        disableBtn.enable();
-        
-        //enable the toolbar
-        toolbar.enable();
-    }
-});
-
-var disableBtn = new Ext.button.Button({
-    text    : 'Disable All Items',
-    scope   : this,
-    handler : function() {
-        //enable the enable button and disable button
-        disableBtn.disable();
-        enableBtn.enable();
-        
-        //disable the toolbar
-        toolbar.disable();
-    }
-});
-
-new Ext.toolbar.Toolbar({
-    renderTo: document.body,
-    width   : 400,
-    margin  : '5 0 0 0',
-    items   : [enableBtn, disableBtn]
-});
+    });
+    
+    var disableBtn = Ext.create('Ext.button.Button', {
+        text    : 'Disable All Items',
+        scope   : this,
+        handler : function() {
+            //enable the enable button and disable button
+            disableBtn.disable();
+            enableBtn.enable();
+            
+            //disable the toolbar
+            toolbar.disable();
+        }
+    });
+    
+    var toolbar = Ext.create('Ext.toolbar.Toolbar', {
+        renderTo: document.body,
+        width   : 400,
+        margin  : '5 0 0 0',
+        items   : [enableBtn, disableBtn]
+    });
 
 Adding items to and removing items from a toolbar is as simple as calling the {@link #add} and {@link #remove} methods. There is also a {@link #removeAll} method 
 which remove all items within the toolbar.
 
+{@img Ext.toolbar.Toolbar/Ext.toolbar.Toolbar4.png Toolbar component}
 Example usage:
 
-var toolbar = new Ext.toolbar.Toolbar({
-    renderTo: document.body,
-    width   : 700,
-    items: [
-        {
-            text: 'Example Button'
-        }
-    ]
-});
-
-var addedItems = [];
-
-new Ext.toolbar.Toolbar({
-    renderTo: document.body,
-    width   : 700,
-    margin  : '5 0 0 0',
-    items   : [
-        {
-            text   : 'Add a button',
-            scope  : this,
-            handler: function() {
-                var text = prompt('Please enter the text for your button:');
-                addedItems.push(toolbar.add({
-                    text: text
-                }));
+    var toolbar = Ext.create('Ext.toolbar.Toolbar', {
+        renderTo: document.body,
+        width   : 700,
+        items: [
+            {
+                text: 'Example Button'
             }
-        },
-        {
-            text   : 'Add a text item',
-            scope  : this,
-            handler: function() {
-                var text = prompt('Please enter the text for your item:');
-                addedItems.push(toolbar.add(text));
-            }
-        },
-        {
-            text   : 'Add a toolbar seperator',
-            scope  : this,
-            handler: function() {
-                addedItems.push(toolbar.add('-'));
-            }
-        },
-        {
-            text   : 'Add a toolbar spacer',
-            scope  : this,
-            handler: function() {
-                addedItems.push(toolbar.add('->'));
-            }
-        },
-        '->',
-        {
-            text   : 'Remove last inserted item',
-            scope  : this,
-            handler: function() {
-                if (addedItems.length) {
-                    toolbar.remove(addedItems.pop());
-                } else if (toolbar.items.length) {
-                    toolbar.remove(toolbar.items.last());
-                } else {
-                    alert('No items in the toolbar');
+        ]
+    });
+    
+    var addedItems = [];
+    
+    Ext.create('Ext.toolbar.Toolbar', {
+        renderTo: document.body,
+        width   : 700,
+        margin  : '5 0 0 0',
+        items   : [
+            {
+                text   : 'Add a button',
+                scope  : this,
+                handler: function() {
+                    var text = prompt('Please enter the text for your button:');
+                    addedItems.push(toolbar.add({
+                        text: text
+                    }));
+                }
+            },
+            {
+                text   : 'Add a text item',
+                scope  : this,
+                handler: function() {
+                    var text = prompt('Please enter the text for your item:');
+                    addedItems.push(toolbar.add(text));
+                }
+            },
+            {
+                text   : 'Add a toolbar seperator',
+                scope  : this,
+                handler: function() {
+                    addedItems.push(toolbar.add('-'));
+                }
+            },
+            {
+                text   : 'Add a toolbar spacer',
+                scope  : this,
+                handler: function() {
+                    addedItems.push(toolbar.add('->'));
+                }
+            },
+            '->',
+            {
+                text   : 'Remove last inserted item',
+                scope  : this,
+                handler: function() {
+                    if (addedItems.length) {
+                        toolbar.remove(addedItems.pop());
+                    } else if (toolbar.items.length) {
+                        toolbar.remove(toolbar.items.last());
+                    } else {
+                        alert('No items in the toolbar');
+                    }
+                }
+            },
+            {
+                text   : 'Remove all items',
+                scope  : this,
+                handler: function() {
+                    toolbar.removeAll();
                 }
             }
-        },
-        {
-            text   : 'Remove all items',
-            scope  : this,
-            handler: function() {
-                toolbar.removeAll();
-            }
-        }
-    ]
-});
+        ]
+    });
 
  * @constructor
  * Creates a new Toolbar
@@ -202,7 +208,6 @@ Ext.define('Ext.toolbar.Toolbar', {
     isToolbar: true,
     baseCls  : Ext.baseCSSPrefix + 'toolbar',
     ariaRole : 'toolbar',
-    ui       : 'default',
     
     defaultType: 'button',
     
@@ -334,7 +339,7 @@ Ext.define('Ext.toolbar.Toolbar', {
     // private
     onBeforeAdd: function(component) {
         if (component.is('button') && this.ui != 'footer') {
-            component.ui = 'toolbar';
+            component.ui = component.ui + '-toolbar';
         }
         this.callParent(arguments);
     },
@@ -353,24 +358,6 @@ Ext.define('Ext.toolbar.Toolbar', {
     onRemove: function(c) {
         this.callParent(arguments);
         this.trackMenu(c, true);
-    },
-
-    // private
-    onDisable: function() {
-        this.items.each(function(item) {
-            if (item.disable) {
-                item.disable();
-            }
-        });
-    },
-
-    // private
-    onEnable: function() {
-        this.items.each(function(item) {
-            if (item.enable) {
-                item.enable();
-            }
-        });
     },
 
     // private

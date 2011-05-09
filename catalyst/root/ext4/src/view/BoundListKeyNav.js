@@ -3,8 +3,7 @@
  * @extends Ext.util.KeyNav
  * A specialized {@link Ext.util.KeyNav} implementation for navigating a {@link Ext.view.BoundList} using
  * the keyboard. The up, down, pageup, pagedown, home, and end keys move the active highlight
- * through the list. The enter key (and optionally the tab key) invokes the selection model's
- * select action using the highlighted item.
+ * through the list. The enter key invokes the selection model's select action using the highlighted item.
  */
 Ext.define('Ext.view.BoundListKeyNav', {
     extend: 'Ext.util.KeyNav',
@@ -16,15 +15,9 @@ Ext.define('Ext.view.BoundListKeyNav', {
      * The {@link Ext.view.BoundList} instance for which key navigation will be managed. This is required.
      */
 
-    /**
-     * @cfg {Boolean} selectOnTab
-     * Whether the Tab key should select the currently highlighted item. Defaults to <tt>true</tt>.
-     */
-    selectOnTab: true,
-
     constructor: function(el, config) {
         var me = this;
-        Ext.copyTo(me, config, 'boundList,selectOnTab');
+        Ext.copyTo(me, config, 'boundList');
         config = Ext.apply({}, config, me.defaultHandlers);
         me.callParent([el, config]);
     },
@@ -69,15 +62,6 @@ Ext.define('Ext.view.BoundListKeyNav', {
 
         enter: function(e) {
             this.selectHighlighted(e);
-        },
-
-        tab: function(e) {
-            var me = this;
-            if (me.selectOnTab) {
-                me.selectHighlighted(e);
-            }
-            // Tab key event is allowed to propagate to field
-            return true;
         }
     },
 

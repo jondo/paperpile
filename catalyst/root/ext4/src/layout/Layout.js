@@ -15,24 +15,25 @@ Ext.define('Ext.layout.Layout', {
     initialized: false,
 
     statics: {
-        factory: function(config, defaultType) {
-            if (config instanceof Ext.layout.Layout) {
-                return config;
+        create: function(layout, defaultType) {
+            var type;
+            if (layout instanceof Ext.layout.Layout) {
+                return Ext.createByAlias('layout.' + layout);
+            } else {
+                if (Ext.isObject(layout)) {
+                    type = layout.type;
+                }
+                else {
+                    type = layout || defaultType;
+                    layout = {};
+                }
+                return Ext.createByAlias('layout.' + type, layout || {});
             }
-            var type, options = {};
-            if (Ext.isString(config)) {
-                type = config;
-            }
-            else {
-                type = config.type || defaultType;
-                options = config;
-            }
-            return Ext.create('layout.' + type, options);
         }
     },
 
     constructor : function(config) {
-        this.id = Ext.id(null, 'ext-layout-' + this.type + '-');
+        this.id = Ext.id(null, this.type + '-');
         Ext.apply(this, config);
     },
 
@@ -45,11 +46,17 @@ Ext.define('Ext.layout.Layout', {
         me.initLayout();
 
         if (me.beforeLayout.apply(me, arguments) !== false) {
+            me.layoutCancelled = false;
             me.onLayout.apply(me, arguments);
             me.owner.needsLayout = false;
+            me.layoutBusy = false;
+            me.afterLayout.apply(me, arguments);
+        }
+        else {
+            me.layoutCancelled = true;
         }
         me.layoutBusy = false;
-        me.afterLayout.apply(me, arguments);
+        me.doOwnerCtLayouts();
     },
 
     beforeLayout : function() {
@@ -158,6 +165,7 @@ Ext.define('Ext.layout.Layout', {
     afterLayout : Ext.emptyFn,
     onRemove : Ext.emptyFn,
     onDestroy : Ext.emptyFn,
+    doOwnerCtLayouts : Ext.emptyFn,
 
     /**
      * @private

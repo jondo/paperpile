@@ -3,10 +3,10 @@
  * @class Ext.data.ArrayStore
  * @extends Ext.data.Store
  * @ignore
- * 
+ *
  * <p>Small helper class to make creating {@link Ext.data.Store}s from Array data easier.
- * An ArrayStore will be automatically configured with a {@link Ext.data.ArrayReader}.</p>
- * 
+ * An ArrayStore will be automatically configured with a {@link Ext.data.reader.Array}.</p>
+ *
  * <p>A store configuration would be something like:</p>
 <pre><code>
 var store = new Ext.data.ArrayStore({
@@ -34,12 +34,12 @@ var myData = [
     ['Wal-Mart Stores, Inc.',45.45,0.73,1.63,'9/1 12:00am']
 ];
 </code></pre>
-* 
+*
  * <p>An object literal of this form could also be used as the {@link #data} config option.</p>
- * 
+ *
  * <p><b>*Note:</b> Although not listed here, this class accepts all of the configuration options of
- * <b>{@link Ext.data.ArrayReader ArrayReader}</b>.</p>
- * 
+ * <b>{@link Ext.data.reader.Array ArrayReader}</b>.</p>
+ *
  * @constructor
  * @param {Object} config
  * @xtype arraystore
@@ -47,8 +47,8 @@ var myData = [
 Ext.define('Ext.data.ArrayStore', {
     extend: 'Ext.data.Store',
     alias: 'store.array',
-    uses: ['Ext.data.ArrayReader'],
-    
+    uses: ['Ext.data.reader.Array'],
+
     /**
      * @cfg {Ext.data.DataReader} reader @hide
      */
@@ -62,7 +62,7 @@ Ext.define('Ext.data.ArrayStore', {
             }
         });
 
-        Ext.data.ArrayStore.superclass.constructor.call(this, config);
+        this.callParent([config]);
     },
 
     loadData: function(data, append) {
@@ -74,11 +74,11 @@ Ext.define('Ext.data.ArrayStore', {
             for (; i < ln; i++) {
                 r[r.length] = [data[i]];
             }
-            
+
             data = r;
         }
 
-        Ext.data.ArrayStore.superclass.loadData.call(this, data, append);
+        this.callParent([data, append]);
     }
 }, function() {
     // backwards compat

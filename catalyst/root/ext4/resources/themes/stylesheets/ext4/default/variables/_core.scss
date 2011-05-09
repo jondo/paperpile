@@ -15,6 +15,7 @@ $include-ff              : true !default;
 $include-chrome          : true !default;
 $include-safari          : true !default;
 $include-opera           : true !default;
+$include-webkit          : true !default;
 
 $supports-border-radius  : true !default;
 $supports-gradients      : true !default;
@@ -22,3 +23,5 @@ $supports-gradients      : true !default;
 $compile-all             : true !default;
 
 $scope-reset-css         : false !default;
+
+$css-shadow-background-color: #ccc !default;

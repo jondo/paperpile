@@ -21,11 +21,11 @@ Ext.dd.ScrollManager.register(el);
 Ext.define('Ext.dd.ScrollManager', {
     singleton: true,
     requires: [
-        'Ext.dd.DragDropMgr'
+        'Ext.dd.DragDropManager'
     ],
 
     constructor: function() {
-        var ddm = Ext.dd.DragDropMgr;
+        var ddm = Ext.dd.DragDropManager;
         ddm.fireEvents = Ext.Function.createSequence(ddm.fireEvents, this.onFire, this);
         ddm.stopDrag = Ext.Function.createSequence(ddm.stopDrag, this.onStop, this);
         this.doScroll = Ext.Function.bind(this.doScroll, this);

@@ -19,7 +19,7 @@
         axis: 'left',
         xField: 'name',
         yField: 'data1',
-        markerCfg: {
+        markerConfig: {
             type: 'cross',
             size: 4,
             radius: 4,
@@ -35,7 +35,7 @@
         fill: true,
         xField: 'name',
         yField: 'data3',
-        markerCfg: {
+        markerConfig: {
             type: 'circle',
             size: 4,
             radius: 4,
@@ -47,7 +47,7 @@
  <p> 
   In this configuration we're adding two series (or lines), one bound to the `data1` property of the store and the other to `data3`. The type for both configurations is 
   `line`. The `xField` for both series is the same, the name propert of the store. Both line series share the same axis, the left axis. You can set particular marker 
-  configuration by adding properties onto the markerCfg object. Both series have an object as highlight so that markers animate smoothly to the properties in highlight 
+  configuration by adding properties onto the markerConfig object. Both series have an object as highlight so that markers animate smoothly to the properties in highlight 
   when hovered. The second series has `fill=true` which means that the line will also have an area below it of the same color.
  </p>
  */
@@ -58,11 +58,15 @@ Ext.define('Ext.chart.series.Line', {
 
     extend: 'Ext.chart.series.Cartesian',
 
-    requires: ['Ext.chart.axis.Axis', 'Ext.chart.Shapes', 'Ext.draw.Draw', 'Ext.fx.Anim'],
+    alternateClassName: ['Ext.chart.LineSeries', 'Ext.chart.LineChart'],
+
+    requires: ['Ext.chart.axis.Axis', 'Ext.chart.Shape', 'Ext.draw.Draw', 'Ext.fx.Anim'],
 
     /* End Definitions */
 
     type: 'line',
+    
+    alias: 'series.line',
 
     /**
      * @cfg {Number} selectionTolerance
@@ -72,16 +76,28 @@ Ext.define('Ext.chart.series.Line', {
     
     /**
      * @cfg {Boolean} showMarkers
-     * Whether markers should be displayed at the date points along the line. If true,
-     * then the {@link #markerCfg} config item will determine the markers' styling.
+     * Whether markers should be displayed at the data points along the line. If true,
+     * then the {@link #markerConfig} config item will determine the markers' styling.
      */
     showMarkers: true,
 
     /**
-     * @cfg {Object} markerCfg
+     * @cfg {Object} markerConfig
      * The display style for the markers. Only used if {@link #showMarkers} is true.
+     * The markerConfig is a configuration object containing the same set of properties defined in
+     * the Sprite class. For example, if we were to set red circles as markers to the line series we could
+     * pass the object:
+     *
+     <pre><code>
+        markerConfig: {
+            type: 'circle',
+            radius: 4,
+            'fill': '#f00'
+        }
+     </code></pre>
+     
      */
-    markerCfg: {},
+    markerConfig: {},
 
     /**
      * @cfg {Object} style
@@ -91,17 +107,11 @@ Ext.define('Ext.chart.series.Line', {
     style: {},
     
     /**
-     * @cfg {String} dash
-     * Optional dash array for the line.
-     */
-    dash: '',
-
-    /**
      * @cfg {Boolean} smooth
      * If true, the line will be smoothed/rounded around its points, otherwise straight line
      * segments will be drawn. Defaults to false.
      */
-    //smooth: false,
+    smooth: false,
 
     /**
      * @cfg {Boolean} fill
@@ -118,7 +128,7 @@ Ext.define('Ext.chart.series.Line', {
             i, l;
         Ext.apply(me, config, {
             highlightCfg: {
-                lineWidth: 3
+                'stroke-width': 3
             },
             shadowAttributes: [{
                 "stroke-width": 6,
@@ -228,7 +238,7 @@ Ext.define('Ext.chart.series.Line', {
         }
         
         //prepare style objects for line and markers
-        endMarkerStyle = Ext.apply(markerStyle, me.markerCfg);
+        endMarkerStyle = Ext.apply(markerStyle, me.markerConfig);
         type = endMarkerStyle.type;
         delete endMarkerStyle.type;
         endLineStyle = Ext.apply(seriesStyle, me.style);
@@ -280,7 +290,7 @@ Ext.define('Ext.chart.series.Line', {
         }
         // If a field was specified without a corresponding axis, create one to get bounds
         if (me.xField && !Ext.isNumber(minX)) {
-            axis = new Ext.chart.axis.Axis({
+            axis = Ext.create('Ext.chart.axis.Axis', {
                 chart: chart,
                 fields: [].concat(me.xField)
             }).calcEnds();
@@ -288,7 +298,7 @@ Ext.define('Ext.chart.series.Line', {
             maxX = axis.to;
         }
         if (me.yField && !Ext.isNumber(minY)) {
-            axis = new Ext.chart.axis.Axis({
+            axis = Ext.create('Ext.chart.axis.Axis', {
                 chart: chart,
                 fields: [].concat(me.yField)
             }).calcEnds();
@@ -396,7 +406,7 @@ Ext.define('Ext.chart.series.Line', {
             if (showMarkers) {
                 marker = markerGroup.getAt(i);
                 if (!marker) {
-                    marker = Ext.chart.Shapes[type](surface, Ext.apply({
+                    marker = Ext.chart.Shape[type](surface, Ext.apply({
                         group: [group, markerGroup],
                         x: 0, y: 0,
                         translate: {
@@ -725,7 +735,7 @@ Ext.define('Ext.chart.series.Line', {
             if (this.line.__anim) {
                 this.line.__anim.paused = true;
             }
-            this.line.__anim = new Ext.fx.Anim({
+            this.line.__anim = Ext.create('Ext.fx.Anim', {
                 target: this.line,
                 to: {
                     'stroke-width': this.line.__strokeWidth + 3
@@ -740,7 +750,7 @@ Ext.define('Ext.chart.series.Line', {
         var me = this;
         me.callParent(arguments);
         if (this.line && this.highlighted) {
-            this.line.__anim = new Ext.fx.Anim({
+            this.line.__anim = Ext.create('Ext.fx.Anim', {
                 target: this.line,
                 to: {
                     'stroke-width': this.line.__strokeWidth

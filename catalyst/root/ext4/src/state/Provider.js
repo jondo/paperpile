@@ -1,13 +1,14 @@
 /**
  * @class Ext.state.Provider
- * Abstract base class for state provider implementations. The provider is responsible
+ * <p>Abstract base class for state provider implementations. The provider is responsible
  * for setting values  and extracting values to/from the underlying storage source. The 
  * storage source can vary and the details should be implemented in a subclass. For example
- * a provider could use a server side database or the browser localstorage where supported. 
- * This class provides methods for encoding and decoding <b>typed</b> variables including 
+ * a provider could use a server side database or the browser localstorage where supported.</p>
+ *
+ * <p>This class provides methods for encoding and decoding <b>typed</b> variables including 
  * dates and defines the Provider interface. By default these methods put the value and the
  * type information into a delimited string that can be stored. These should be overridden in 
- * a subclass if you want to change the format of the encoded value and subsequent decoding.
+ * a subclass if you want to change the format of the encoded value and subsequent decoding.</p>
  */
 Ext.define('Ext.state.Provider', {
     mixins: {

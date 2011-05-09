@@ -195,7 +195,16 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
 
 (function() {
 
-    var flexSetter = Ext.Function.flexSetter;
+    var Class,
+        Base = Ext.Base,
+        baseStaticProperties = [],
+        baseStaticProperty;
+
+    for (baseStaticProperty in Base) {
+        if (Base.hasOwnProperty(baseStaticProperty)) {
+            baseStaticProperties.push(baseStaticProperty);
+        }
+    }
 
     /**
      * @constructor
@@ -204,8 +213,8 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
      * Note that the creation process can be asynchronous depending on the pre-processors used.
      * @return {Ext.Base} The newly created class
      */
-    Ext.Class = function(newClass, classData, createdFn) {
-        if (Ext.isObject(newClass)) {
+    Ext.Class = Class = function(newClass, classData, createdFn) {
+        if (typeof newClass !== 'function') {
             createdFn = classData;
             classData = newClass;
             newClass = function() {
@@ -213,40 +222,73 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
             };
         }
 
-        var self = this.constructor,
-            preprocessors = Ext.Array.from(classData.preprocessors || self.getDefaultPreprocessors()),
-            staticProp, process;
+        var preprocessorStack = classData.preprocessors || Class.getDefaultPreprocessors(),
+            registeredPreprocessors = Class.getPreprocessors(),
+            index = 0,
+            preprocessors = [],
+            preprocessor, preprocessors, staticPropertyName, process, i, j, ln, clsPrototype;
 
-        for (staticProp in Ext.Base) {
-            if (Ext.Base.hasOwnProperty(staticProp)) {
-                newClass[staticProp] = Ext.Base[staticProp];
-            }
+        for (i = 0, ln = baseStaticProperties.length; i < ln; i++) {
+            staticPropertyName = baseStaticProperties[i];
+            newClass[staticPropertyName] = Base[staticPropertyName];
         }
 
         delete classData.preprocessors;
 
+        for (j = 0, ln = preprocessorStack.length; j < ln; j++) {
+            preprocessor = preprocessorStack[j];
+
+            if (typeof preprocessor === 'string') {
+                preprocessor = registeredPreprocessors[preprocessor];
+
+                if (!preprocessor.always) {
+                    if (classData[preprocessor.name] !== undefined) {
+                        preprocessors.push(preprocessor.fn);
+                    }
+                }
+                else {
+                    preprocessors.push(preprocessor.fn);
+                }
+            }
+            else {
+                preprocessors.push(preprocessor);
+            }
+        }
+
         process = function(cls, data) {
-            var name = preprocessors.shift();
+            preprocessor = preprocessors[index++];
 
-            if (!name) {
-                cls.extend(data);
+            clsPrototype = cls.prototype;
 
-                if (Ext.isFunction(createdFn)) {
+            if (preprocessor === undefined) {
+                if (data.config && clsPrototype.config) {
+                    Ext.Object.merge(clsPrototype.config, data.config);
+                    delete data.config;
+                }
+
+                cls.implement(data);
+
+                if (createdFn) {
                     createdFn.call(cls);
+                }
+
+                if (clsPrototype.$onAfterClassExtended !== undefined &&
+                    clsPrototype.hasOwnProperty('$onAfterClassExtended') === false) {
+                    clsPrototype.$onAfterClassExtended.call(cls, cls, data);
                 }
 
                 return;
             }
 
-            this.getPreprocessor(name).call(this, cls, data, process);
+            preprocessor.call(this, cls, data, process);
         };
 
-        process.call(self, newClass, classData);
+        process.call(Class, newClass, classData);
 
         return newClass;
     };
 
-    Ext.apply(Ext.Class, {
+    Ext.apply(Class, {
 
         /** @private */
         preprocessors: {},
@@ -278,11 +320,15 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
          * @return {Ext.Class} this
          * @markdown
          */
-        registerPreprocessor: flexSetter(function(name, fn) {
-            this.preprocessors[name] = fn;
+        registerPreprocessor: function(name, fn, always) {
+            this.preprocessors[name] = {
+                name: name,
+                always: always ||  false,
+                fn: fn
+            };
 
             return this;
-        }),
+        },
 
         /**
          * Retrieve a pre-processor callback function by its name, which has been registered before
@@ -292,6 +338,10 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
          */
         getPreprocessor: function(name) {
             return this.preprocessors[name];
+        },
+
+        getPreprocessors: function() {
+            return this.preprocessors;
         },
 
         /**
@@ -335,11 +385,11 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
          * @return {Ext.Class} this
          * @markdown
          */
-        insertDefaultPreprocessor: function(name, offset, relativeName) {
+        setDefaultPreprocessorPosition: function(name, offset, relativeName) {
             var defaultPreprocessors = this.defaultPreprocessors,
                 index;
 
-            if (Ext.isString(offset)) {
+            if (typeof offset === 'string') {
                 if (offset === 'first') {
                     defaultPreprocessors.unshift(name);
 
@@ -364,177 +414,168 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
         }
     });
 
-    Ext.Class.registerPreprocessor({
-        extend: function(cls, data, fn) {
-            var extend = data.extend,
-                base = Ext.Base,
-                temp = function() {},
-                parent, i, k, ln, staticName, parentStatics;
+    Class.registerPreprocessor('extend', function(cls, data, fn) {
+        var extend = data.extend,
+            base = Ext.Base,
+            basePrototype = base.prototype,
+            prototype = function() {},
+            parent, i, k, ln, staticName, parentStatics,
+            parentPrototype, clsPrototype;
 
-            if (typeof extend === 'function' && extend !== Object) {
-                parent = extend;
-            }
-            else {
-                parent = base;
-            }
+        if (extend && extend !== Object) {
+            parent = extend;
+        }
+        else {
+            parent = base;
+        }
 
-            temp.prototype = parent.prototype;
-            cls.prototype = new temp();
+        parentPrototype = parent.prototype;
 
-            if (!('$class' in parent)) {
-                for (i in base.prototype) {
-                    if (!parent.prototype[i]) {
-                        parent.prototype[i] = base.prototype[i];
-                    }
+        prototype.prototype = parentPrototype;
+        cls.prototype = new prototype();
+
+        clsPrototype = cls.prototype;
+
+        if (!('$class' in parent)) {
+            for (i in basePrototype) {
+                if (!parentPrototype[i]) {
+                    parentPrototype[i] = basePrototype[i];
                 }
-            }
-
-            cls.prototype.self = cls;
-
-            if (data.hasOwnProperty('constructor')) {
-                cls.prototype.constructor = cls;
-            }
-            else {
-                cls.prototype.constructor = parent.prototype.constructor;
-            }
-
-            cls.superclass = cls.prototype.superclass = parent.prototype;
-
-            delete data.extend;
-
-            // Statics inheritance
-            parentStatics = parent.$inheritableStatics;
-
-            if (parentStatics) {
-                for (k = 0, ln = parentStatics.length; k < ln; k++) {
-                    staticName = parentStatics[k];
-
-                    if (!cls[staticName]) {
-                        cls[staticName] = parent[staticName];
-                    }
-                }
-            }
-
-            // Merge the parent class' config object without referencing it
-            Ext.merge(cls.prototype.config, parent.prototype.config || {});
-
-            if (fn) {
-                fn.call(this, cls, data);
-            }
-        },
-
-        mixins: function(cls, data, fn) {
-            var mixins = data.mixins;
-
-            if (mixins) {
-                cls.mixin(mixins);
-            }
-
-            delete data.mixins;
-
-            if (fn) {
-                fn.call(this, cls, data);
-            }
-        },
-
-        config: function(cls, data, fn) {
-            var config = data.config;
-
-            if (config) {
-                Ext.Object.each(config, function(name) {
-                    var cName = Ext.String.capitalize(name),
-                        pName = '_' + name,
-                        apply = 'apply' + cName,
-                        setter = 'set' + cName,
-                        getter = 'get' + cName,
-                        reset = 'reset' + cName,
-                        prototype = cls.prototype;
-
-                    if (!(apply in prototype)) {
-                        prototype[apply] = function(val) {
-                            return val;
-                        };
-                    }
-
-                    if (!(setter in prototype)) {
-                        prototype[setter] = function(val) {
-                            var ret = this[apply].call(this, val, this[pName]);
-
-                            if (ret !== undefined) {
-                                this[pName] = ret;
-                            }
-
-                            return this;
-                        };
-                    }
-
-                    if (!(getter in prototype)) {
-                        prototype[getter] = function() {
-                            return this[pName];
-                        };
-                    }
-
-                    if (!(reset in prototype)) {
-                        prototype[reset] = function() {
-                            return this[setter].call(this, this.config[name]);
-                        };
-                    }
-
-                    if (name.search(/^is|has/) !== -1) {
-                        if (!(name in prototype)) {
-                            prototype[name] = function() {
-                                return !!this[getter].apply(this, arguments);
-                            };
-                        }
-                    }
-                });
-            }
-
-            if (fn) {
-                fn.call(this, cls, data);
-            }
-        },
-
-        statics: function(cls, data, fn) {
-            var statics = data.statics,
-                inheritableStatics = data.inheritableStatics,
-                name;
-
-            if (Ext.isObject(statics) || Ext.isObject(inheritableStatics)) {
-
-                if (statics) {
-                    for (name in statics) {
-                        if (statics.hasOwnProperty(name)) {
-                            cls[name] = statics[name];
-                        }
-                    }
-
-                    delete data.statics;
-                }
-
-                if (inheritableStatics) {
-                    cls.$inheritableStatics = [];
-
-                    for (name in inheritableStatics) {
-                        if (inheritableStatics.hasOwnProperty(name)) {
-                            cls[name] = inheritableStatics[name];
-                            cls.$inheritableStatics.push(name);
-                        }
-                    }
-
-                    delete data.inheritableStatics;
-                }
-            }
-
-            if (fn) {
-                fn.call(this, cls, data);
             }
         }
+
+        clsPrototype.self = cls;
+
+        cls.superclass = clsPrototype.superclass = parentPrototype;
+
+        delete data.extend;
+
+        // Statics inheritance
+        parentStatics = parentPrototype.$inheritableStatics;
+
+        if (parentStatics !== undefined) {
+            for (k = 0, ln = parentStatics.length; k < ln; k++) {
+                staticName = parentStatics[k];
+
+                if (!cls[staticName]) {
+                    cls[staticName] = parent[staticName];
+                }
+            }
+        }
+
+        // Merge the parent class' config object without referencing it
+        if (parentPrototype.config) {
+            data.config = Ext.Object.merge({}, parentPrototype.config, data.config || {});
+        }
+
+        if (clsPrototype.$onExtended !== undefined) {
+            clsPrototype.$onExtended.call(cls, cls, data);
+        }
+
+        // onClassExtended callback
+        if (data.onClassExtended !== undefined) {
+            clsPrototype.$onExtended = data.onClassExtended;
+            delete data.onClassExtended;
+        }
+
+        if (data.onAfterClassExtended !== undefined) {
+            clsPrototype.$onAfterClassExtended = data.onAfterClassExtended;
+            delete data.onAfterClassExtended;
+        }
+
+        fn.apply(this, arguments);
+
+    }, true);
+
+    Class.registerPreprocessor('statics', function(cls, data, fn) {
+        var statics = data.statics,
+            name;
+
+        for (name in statics) {
+            if (statics.hasOwnProperty(name)) {
+                cls[name] = statics[name];
+            }
+        }
+
+        delete data.statics;
+
+        fn.apply(this, arguments);
+
     });
 
-    Ext.Class.setDefaultPreprocessors(['extend', 'mixins', 'config', 'statics']);
+    Class.registerPreprocessor('inheritableStatics', function(cls, data, fn) {
+        var statics = data.inheritableStatics,
+            inheritableStatics,
+            prototype = cls.prototype,
+            name;
 
-    //TODO: Move this to compat file
+        inheritableStatics = prototype.$inheritableStatics;
+
+        if (inheritableStatics === undefined) {
+            inheritableStatics = prototype.$inheritableStatics = [];
+        }
+
+        for (name in statics) {
+            if (statics.hasOwnProperty(name)) {
+                cls[name] = statics[name];
+                inheritableStatics.push(name);
+            }
+        }
+
+        delete data.inheritableStatics;
+
+        fn.call(this, cls, data);
+    });
+
+    Class.registerPreprocessor('mixins', function(cls, data, fn) {
+        cls.mixin(data.mixins);
+
+        delete data.mixins;
+
+        fn.call(this, cls, data);
+    });
+
+    Class.registerPreprocessor('config', function(cls, data, fn) {
+        Ext.Object.each(data.config, function(name) {
+            var cName = name.charAt(0).toUpperCase() + name.substr(1),
+                pName = name,
+                apply = 'apply' + cName,
+                setter = 'set' + cName,
+                getter = 'get' + cName,
+                reset = 'reset' + cName,
+                prototype = cls.prototype;
+
+            if (!(apply in prototype) && !data.hasOwnProperty(apply)) {
+                data[apply] = function(val) {
+                    return val;
+                };
+            }
+
+            if (!(setter in prototype) && !data.hasOwnProperty(setter)) {
+                data[setter] = function(val) {
+                    var ret = this[apply].call(this, val, this[pName]);
+
+                    if (ret !== undefined) {
+                        this[pName] = ret;
+                    }
+
+                    return this;
+                };
+            }
+
+            if (!(getter in prototype) && !data.hasOwnProperty(getter)) {
+                data[getter] = function() {
+                    return this[pName];
+                };
+            }
+        });
+
+        fn.call(this, cls, data);
+    });
+
+    Class.setDefaultPreprocessors(['extend', 'statics', 'inheritableStatics', 'mixins', 'config']);
+
+    // Backwards compatible
     Ext.extend = function(subclass, superclass, members) {
         if (arguments.length === 2 && Ext.isObject(superclass)) {
             members = superclass;
@@ -545,17 +586,17 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
         var cls;
 
         if (!superclass) {
-            throw new Error("Attempting to extend from a class which has not been loaded on the page.");
+            Ext.Error.raise("Attempting to extend from a class which has not been loaded on the page.");
         }
 
         members.extend = superclass;
         members.preprocessors = ['extend', 'mixins', 'config', 'statics'];
 
         if (subclass) {
-            cls = new Ext.Class(subclass, members);
+            cls = new Class(subclass, members);
         }
         else {
-            cls = new Ext.Class(members);
+            cls = new Class(members);
         }
 
         cls.prototype.override = function(o) {

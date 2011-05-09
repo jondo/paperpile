@@ -1,6 +1,6 @@
 /**
  * @class Ext.layout.component.Auto
- * @extends Ext.layout.Component
+ * @extends Ext.layout.component.Component
  * @private
  *
  * <p>The AutoLayout is the default layout manager delegated by {@link Ext.Component} to
@@ -13,7 +13,7 @@ Ext.define('Ext.layout.component.Auto', {
 
     alias: 'layout.autocomponent',
 
-    extend: 'Ext.layout.Component',
+    extend: 'Ext.layout.component.Component',
 
     /* End Definitions */
 

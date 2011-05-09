@@ -122,7 +122,7 @@ myGrid.on('render', function(grid) {
         var me = this;
         me.callParent(arguments);
         me.lastActive = new Date();
-        me.initTarget(me.target);
+        me.setTarget(me.target);
         me.origAnchor = me.anchor;
     },
 
@@ -150,7 +150,7 @@ myGrid.on('render', function(grid) {
      * Binds this ToolTip to the specified element. The tooltip will be displayed when the mouse moves over the element.
      * @param {Mixed} t The Element, HtmlElement, or ID of an element to bind to
      */
-    initTarget: function(target) {
+    setTarget: function(target) {
         var me = this,
             t = Ext.get(target),
             tg;
@@ -294,9 +294,11 @@ myGrid.on('render', function(grid) {
             me.tipAnchor = me.anchor.charAt(0);
         } else {
             m = me.defaultAlign.match(/^([a-z]+)-([a-z]+)(\?)?$/);
+            //<debug>
             if (!m) {
-                throw 'AnchorTip.defaultAlign is invalid';
+                Ext.Error.raise('The AnchorTip.defaultAlign value "' + me.defaultAlign + '" is invalid.');
             }
+            //</debug>
             me.tipAnchor = m[1].charAt(0);
         }
 
@@ -440,14 +442,15 @@ myGrid.on('render', function(grid) {
      */
     show: function() {
         var me = this;
+
+        // Show this Component first, so that sizing can be calculated
+        // pre-show it off screen so that the el will have dimensions
+        this.callParent();
+        me.setPagePosition(-10000, -10000);
+
         if (me.anchor) {
-            // pre-show it off screen so that the el will have dimensions
-            // for positioning calcs when getting xy next
-            Ext.tip.Tip.superclass.show.call(me);
-            me.setPagePosition(-10000, -10000);
             me.anchor = me.origAnchor;
         }
-
         me.showAt(me.getTargetXY());
 
         if (me.anchor) {
@@ -464,7 +467,10 @@ myGrid.on('render', function(grid) {
         me.lastActive = new Date();
         me.clearTimers();
 
-        Ext.tip.Tip.superclass.show.call(me);
+        // Only call if this is hidden. May have been called from show above.
+        if (!me.isVisible()) {
+            this.callParent(arguments);
+        }
 
         // Show may have been vetoed.
         if (me.isVisible()) {
@@ -575,6 +581,7 @@ myGrid.on('render', function(grid) {
 
     // private
     onDisable: function() {
+        this.callParent();
         this.clearTimers();
         this.hide();
     },

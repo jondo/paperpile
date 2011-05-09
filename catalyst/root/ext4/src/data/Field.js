@@ -65,7 +65,7 @@ Ext.regModel('User', {
  * <p>Now when we create a new User, the firstName is populated automatically based on the name:</p>
  * 
 <code><pre>
-var ed = Ext.ModelMgr.create({name: 'Ed Spencer'}, 'User');
+var ed = Ext.ModelManager.create({name: 'Ed Spencer'}, 'User');
 
 console.log(ed.get('firstName')); //logs 'Ed', based on our convert function
 </code></pre>
@@ -135,7 +135,7 @@ Ext.define('Ext.data.Field', {
     /**
      * @cfg {String} name
      * The name by which the field is referenced within the Model. This is referenced by, for example,
-     * the <code>dataIndex</code> property in column definition objects passed to {@link Ext.grid.HeaderContainer}.
+     * the <code>dataIndex</code> property in column definition objects passed to {@link Ext.grid.header.Container}.
      * <p>Note: In the simplest case, if no properties other than <code>name</code> are required, a field
      * definition may consist of just a String for the field name.</p>
      */
@@ -232,23 +232,23 @@ var myData = [
     
     /**
      * @cfg {Mixed} defaultValue
-     * (Optional) The default value used <b>when a Model is being created by a {@link Ext.data.Reader Reader}</b>
+     * (Optional) The default value used <b>when a Model is being created by a {@link Ext.data.reader.Reader Reader}</b>
      * when the item referenced by the <code>{@link Ext.data.Field#mapping mapping}</code> does not exist in the data
      * object (i.e. undefined). (defaults to "")
      */
     defaultValue: "",
     /**
      * @cfg {String/Number} mapping
-     * <p>(Optional) A path expression for use by the {@link Ext.data.Reader} implementation
+     * <p>(Optional) A path expression for use by the {@link Ext.data.reader.Reader} implementation
      * that is creating the {@link Ext.data.Model Model} to extract the Field value from the data object.
      * If the path expression is the same as the field name, the mapping may be omitted.</p>
      * <p>The form of the mapping expression depends on the Reader being used.</p>
      * <div class="mdetail-params"><ul>
-     * <li>{@link Ext.data.JsonReader}<div class="sub-desc">The mapping is a string containing the javascript
-     * expression to reference the data from an element of the data item's {@link Ext.data.JsonReader#root root} Array. Defaults to the field name.</div></li>
-     * <li>{@link Ext.data.XmlReader}<div class="sub-desc">The mapping is an {@link Ext.DomQuery} path to the data
-     * item relative to the DOM element that represents the {@link Ext.data.XmlReader#record record}. Defaults to the field name.</div></li>
-     * <li>{@link Ext.data.ArrayReader}<div class="sub-desc">The mapping is a number indicating the Array index
+     * <li>{@link Ext.data.reader.Json}<div class="sub-desc">The mapping is a string containing the javascript
+     * expression to reference the data from an element of the data item's {@link Ext.data.reader.Json#root root} Array. Defaults to the field name.</div></li>
+     * <li>{@link Ext.data.reader.Xml}<div class="sub-desc">The mapping is an {@link Ext.DomQuery} path to the data
+     * item relative to the DOM element that represents the {@link Ext.data.reader.Xml#record record}. Defaults to the field name.</div></li>
+     * <li>{@link Ext.data.reader.Array}<div class="sub-desc">The mapping is a number indicating the Array index
      * of the field's value. Defaults to the field specification's Array position.</div></li>
      * </ul></div>
      * <p>If a more complex value extraction strategy is required, then configure the Field with a {@link #convert}

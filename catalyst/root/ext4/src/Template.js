@@ -76,15 +76,14 @@ Ext.define('Ext.Template', {
         var me = this,
             args = arguments,
             buffer = [],
-            value, i, length;
+            i = 0,
+            length = args.length,
+            value;
 
         me.initialConfig = {};
-
-        if (Ext.isArray(html)) {
-            html = html.join("");
-        }
-        else if (args.length > 1) {
-            for (i = 0, length = args.length; i < length; i++) {
+        
+        if (length > 1) {
+            for (; i < length; i++) {
                 value = args[i];
                 if (typeof value == 'object') {
                     Ext.apply(me.initialConfig, value);
@@ -94,10 +93,16 @@ Ext.define('Ext.Template', {
                 }
             }
             html = buffer.join('');
+        } else {
+            if (Ext.isArray(html)) {
+                buffer.push(html.join(''));
+            } else {
+                buffer.push(html);
+            }
         }
 
         // @private
-        me.html = html;
+        me.html = buffer.join('');
 
         if (me.compiled) {
             me.compile();
@@ -110,7 +115,7 @@ Ext.define('Ext.Template', {
      */
     disableFormats: false,
 
-    re: /\{([\w-]+)(?:\:([\w\.]*)(?:\((.*?)?\))?)?\}/g,
+    re: /\{([\w\-]+)(?:\:([\w\.]*)(?:\((.*?)?\))?)?\}/g,
     /**
      * Returns an HTML fragment of this template with the specified values applied.
      * @param {Object/Array} values The template values. Can be an array if your params are numeric (i.e. {0}) or an object (i.e. {foo: 'bar'})

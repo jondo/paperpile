@@ -13,30 +13,36 @@ Ext.define('Ext.panel.Header', {
     defaultType    : 'tool',
     indicateDrag   : false,
 
-    renderTpl: ['<div class="{baseCls}-body<tpl if="ui"> {baseCls}-body-{ui}</tpl>"<tpl if="bodyStyle"> style="{bodyStyle}"</tpl>></div>'],
+    renderTpl: ['<div class="{baseCls}-body<tpl if="ui"><tpl for="ui"> {parent.baseCls}-body-{.}</tpl></tpl>"<tpl if="bodyStyle"> style="{bodyStyle}"</tpl>></div>'],
 
     initComponent: function() {
         var me = this,
             rule,
             style,
-            titleTextEl;
-
+            titleTextEl,
+            ui;
+        
         me.indicateDragCls = me.baseCls + '-draggable';
         me.title = me.title || '&#160;';
         me.tools = me.tools || [];
         me.items = me.items || [];
-        me.orientation = me.orientation||'horizontal';
-        me.addCls(me.baseCls + '-' + me.orientation);
-        me.addCls(me.baseCls + '-' + me.dock);
+        me.orientation = me.orientation || 'horizontal';
+        me.dock = (me.dock) ? me.dock : (me.orientation == 'horizontal') ? 'top' : 'left';
+        me.addCls(me.getClsWithUIs(me.orientation));
+        me.addCls(me.getClsWithUIs(me.dock));
+        
+        //add the dock as a ui
+        //this is so we support top/right/left/bottom headers
+        if (Ext.isArray(me.ui)) {
+            me.ui.push(me.ui[me.ui.length - 1] + '-' + me.dock);
+        } else {
+            me.ui = [me.ui, me.ui + '-' + me.dock];
+        }
 
         Ext.applyIf(me.renderSelectors, {
             body: '.' + me.baseCls + '-body'
         });
 
-        if (me.frame) {
-            me.ui = 'framed';
-        }
-        
         // Add Icon
         if (!Ext.isEmpty(me.iconCls)) {
             me.initIconCmp();
@@ -63,7 +69,11 @@ Ext.define('Ext.panel.Header', {
                     degrees: 90
                 }
             };
-            rule = Ext.util.CSS.getRule('.' + me.baseCls + '-text');
+            ui = me.ui;
+            if (Ext.isArray(ui)) {
+                ui = ui[0];
+            }
+            rule = Ext.util.CSS.getRule('.' + me.baseCls + '-text-' + ui);
             if (rule) {
                 style = rule.style;
             }
@@ -75,8 +85,9 @@ Ext.define('Ext.panel.Header', {
                     fill: style.color
                 });
             }
-            me.titleCmp = new Ext.draw.Component({
+            me.titleCmp = Ext.create('Ext.draw.Component', {
                 ariaRole  : 'heading',
+                focusable: false,
                 viewBox: false,
                 autoSize: true,
                 margins: '5 0 0 0',
@@ -92,14 +103,15 @@ Ext.define('Ext.panel.Header', {
                 clearInnerCtOnLayout: true,
                 bindToOwnerCtContainer: false
             };
-            me.titleCmp = new Ext.Component({
+            me.titleCmp = Ext.create('Ext.Component', {
                 xtype     : 'component',
                 ariaRole  : 'heading',
                 focusable: false,
-                renderTpl : ['<span class="{cls}-text">{title}</span>'],
+                renderTpl : ['<span class="{cls}-text<tpl if="ui"><tpl for="ui"> {parent.cls}-text-{.}</tpl></tpl>">{title}</span>'],
                 renderData: {
                     title: me.title,
-                    cls  : me.baseCls
+                    cls  : me.baseCls,
+                    ui   : me.ui
                 },
                 renderSelectors: {
                     textEl: '.' + me.baseCls + '-text'
@@ -118,11 +130,12 @@ Ext.define('Ext.panel.Header', {
 
         // Add Tools
         me.items = me.items.concat(me.tools);
-        Ext.panel.Header.superclass.initComponent.call(me);
+        this.callParent();
     },
 
     initIconCmp: function() {
-        this.iconCmp = new Ext.Component({
+        this.iconCmp = Ext.create('Ext.Component', {
+            focusable: false,
             renderTpl : ['<img alt="" src="{blank}" class="{cls}-icon {iconCls}"/>'],
             renderData: {
                 blank  : Ext.BLANK_IMAGE_URL,
@@ -168,24 +181,33 @@ Ext.define('Ext.panel.Header', {
     setTitle: function(title) {
         var me = this;
         if (me.rendered) {
-            if (me.titleCmp.surface) {
-                me.title = title || '';
-                var sprite = me.titleCmp.surface.items.items[0],
-                    surface = me.titleCmp.surface;
-                
-                surface.remove(sprite);
-                me.textConfig.type = 'text';
-                me.textConfig.text = title;
-                sprite = surface.add(me.textConfig);
-                sprite.setAttributes({
-                    rotate: {
-                        degrees: 90
-                    }    
-                }, true);
-                me.titleCmp.autoSizeSurface();
+            if (me.titleCmp.rendered) {
+                if (me.titleCmp.surface) {
+                    me.title = title || '';
+                    var sprite = me.titleCmp.surface.items.items[0],
+                        surface = me.titleCmp.surface;
+
+                    surface.remove(sprite);
+                    me.textConfig.type = 'text';
+                    me.textConfig.text = title;
+                    sprite = surface.add(me.textConfig);
+                    sprite.setAttributes({
+                        rotate: {
+                            degrees: 90
+                        }
+                    }, true);
+                    me.titleCmp.autoSizeSurface();
+                } else {
+                    me.title = title || '&#160;';
+                    me.titleCmp.textEl.update(me.title);
+                }
             } else {
-                me.title = title || '&#160;';
-                me.titleCmp.textEl.update(me.title);
+                me.titleCmp.on({
+                    render: function() {
+                        me.setTitle(title);
+                    },
+                    single: true
+                });
             }
         } else {
             me.on({
@@ -203,7 +225,7 @@ Ext.define('Ext.panel.Header', {
      * icon class if one has already been set and fire the {@link #iconchange} event after completion.
      * @param {String} cls The new CSS class name
      */
-    setIconClass: function(cls) {
+    setIconCls: function(cls) {
         this.iconCls = cls;
         if (!this.iconCmp) {
             this.initIconCmp();

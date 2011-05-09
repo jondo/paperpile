@@ -1,12 +1,12 @@
 /**
- * @class Ext.grid.HeaderDragZone
+ * @class Ext.view.DragZone
  * @extends Ext.dd.DragZone
  * @private
  */
 Ext.define('Ext.view.DragZone', {
     extend: 'Ext.dd.DragZone',
     containerScroll: false,
-    
+
     constructor: function(config) {
         var me = this;
 
@@ -36,35 +36,21 @@ Ext.define('Ext.view.DragZone', {
 
     init: function(id, sGroup, config) {
         this.initTarget(id, sGroup, config);
-        this.view.on({
-            beforeitemmousedown: this.onBeforeMouseDown,
-            itemmouseup: this.onAfterMouseUp,
+        this.view.mon(this.view, {
+            itemmousedown: this.onItemMouseDown,
             scope: this
         });
     },
 
-    onBeforeMouseDown: function(view, record, item, index, e) {
-        var selectionModel = view.getSelectionModel();
-        if (!this.isPreventDrag(e)) {
-            if (!selectionModel.isSelected(record) || e.hasModifier()) {
-                selectionModel.selectWithEvent(record, e);
-            }
+    onItemMouseDown: function(view, record, item, index, e) {
+        if (!this.isPreventDrag(e, record, item, index)) {
             this.handleMouseDown(e);
-            return false;
         }
-        return true;
     },
 
     // private template method
     isPreventDrag: function(e) {
         return false;
-    },
-
-    onAfterMouseUp: function(view, record, item, index, e) {
-        var selectionModel = view.getSelectionModel();
-        if (!this.dragging && selectionModel.isSelected(record) && selectionModel.getSelection().length > 1 && !e.hasModifier()) {
-            selectionModel.select(record);
-        }
     },
 
     getDragData: function(e) {
@@ -78,6 +64,7 @@ Ext.define('Ext.view.DragZone', {
             records = selectionModel.getSelection();
             return {
                 copy: this.view.copy || (this.view.allowCopy && e.ctrlKey),
+                event: new Ext.EventObjectImpl(e),
                 view: view,
                 ddel: this.ddel,
                 item: item,
@@ -88,9 +75,23 @@ Ext.define('Ext.view.DragZone', {
     },
 
     onInitDrag: function(x, y) {
-        this.ddel.update(this.getDragText());
-        this.proxy.update(this.ddel.dom);
-        this.onStartDrag(x, y);
+        var me = this,
+            data = me.dragData,
+            view = data.view,
+            selectionModel = view.getSelectionModel(),
+            record = view.getRecord(data.item),
+            e = data.event;
+
+        // Update the selection to match what would have been selected if the user had
+        // done a full click on the target node rather than starting a drag from it
+        if (!selectionModel.isSelected(record) || e.hasModifier()) {
+            selectionModel.selectWithEvent(record, e);
+        }
+        data.records = selectionModel.getSelection();
+
+        me.ddel.update(me.getDragText());
+        me.proxy.update(me.ddel.dom);
+        me.onStartDrag(x, y);
         return true;
     },
 

@@ -10,7 +10,7 @@ Ext.define('Ext.draw.Surface', {
         observable: 'Ext.util.Observable'
     },
 
-    requires: ['Ext.draw.SpriteGroup'],
+    requires: ['Ext.draw.CompositeSprite'],
     uses: ['Ext.draw.engine.SVG', 'Ext.draw.engine.VML'],
 
     separatorRe: /[, ]+/,
@@ -19,23 +19,20 @@ Ext.define('Ext.draw.Surface', {
         /**
          * Create and return a new concrete Surface instance appropriate for the current environment.
          * @param {Object} config Initial configuration for the Surface instance
-         * @param {Array} implOrder Optional order of implementations to use; the first one that is
+         * @param {Array} enginePriority Optional order of implementations to use; the first one that is
          *                available in the current environment will be used. Defaults to
          *                <code>['SVG', 'VML']</code>.
          */
-        newInstance: function(config, implOrder) {
-            implOrder = implOrder || ['SVG', 'VML'];
+        create: function(config, enginePriority) {
+            enginePriority = enginePriority || ['SVG', 'VML'];
 
             var i = 0,
-                len = implOrder.length,
+                len = enginePriority.length,
                 surfaceClass;
 
             for (; i < len; i++) {
-                if (Ext.supports[implOrder[i]]) {
-                    surfaceClass = Ext.draw.engine[implOrder[i]];
-                    if (surfaceClass) {
-                        return new surfaceClass(config);
-                    }
+                if (Ext.supports[enginePriority[i]]) {
+                    return Ext.create('Ext.draw.engine.' + enginePriority[i], config);
                 }
             }
             return false;
@@ -168,8 +165,8 @@ Ext.define('Ext.draw.Surface', {
 
     initItems: function() {
         var items = this.items;
-        this.items = new Ext.draw.SpriteGroup();
-        this.groups = new Ext.draw.SpriteGroup();
+        this.items = Ext.create('Ext.draw.CompositeSprite');
+        this.groups = Ext.create('Ext.draw.CompositeSprite');
         if (items) {
             this.add(items);
         }
@@ -291,6 +288,9 @@ Ext.define('Ext.draw.Surface', {
      */
     addGradient: Ext.emptyFn,
 
+    /**
+     * Add a Sprite. See the Sprite documentation for the configuration object to be passed into this method.
+    */
     add: function() {
         var args = Array.prototype.slice.call(arguments),
             sprite,
@@ -311,7 +311,7 @@ Ext.define('Ext.draw.Surface', {
             return results;
         }
         sprite = this.prepareItems(args[0], true)[0];
-        this.positionSpriteInList(sprite);
+        this.normalizeSpriteCollection(sprite);
         this.onAdd(sprite);
         return sprite;
     },
@@ -326,7 +326,7 @@ Ext.define('Ext.draw.Surface', {
      * @param {Ext.draw.Sprite} sprite
      * @return {Number} the sprite's new index in the list
      */
-    positionSpriteInList: function(sprite) {
+    normalizeSpriteCollection: function(sprite) {
         var items = this.items,
             zIndex = sprite.attr.zIndex,
             idx = items.indexOf(sprite);
@@ -412,7 +412,6 @@ Ext.define('Ext.draw.Surface', {
             deg = sprite.attr.rotation.degrees,
             centerX = sprite.attr.rotation.x,
             centerY = sprite.attr.rotation.y;
-
         if (!Ext.isNumber(centerX) || !Ext.isNumber(centerY)) {
             bbox = this.getBBox(sprite);
             centerX = !Ext.isNumber(centerX) ? bbox.x + bbox.width / 2 : centerX;
@@ -492,7 +491,7 @@ Ext.define('Ext.draw.Surface', {
 
     getPathimage: function (el) {
         var a = el.attr;
-        return this.rectPath(a.x, a.y, a.width, a.height);
+        return this.rectPath(a.x || 0, a.y || 0, a.width, a.height);
     },
 
     getPathtext: function (el) {
@@ -503,7 +502,7 @@ Ext.define('Ext.draw.Surface', {
     createGroup: function(id) {
         var group = this.groups.get(id);
         if (!group) {
-            group = new Ext.draw.SpriteGroup({
+            group = Ext.create('Ext.draw.CompositeSprite', {
                 surface: this
             });
             group.id = id || Ext.id(null, 'ext-surface-group-');
@@ -535,6 +534,8 @@ Ext.define('Ext.draw.Surface', {
                 // Temporary, just take in configs...
                 item.surface = this;
                 items[i] = this.createItem(item);
+            } else {
+                item.surface = this;
             }
         }
         return items;

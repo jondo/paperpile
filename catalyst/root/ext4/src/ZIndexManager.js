@@ -3,7 +3,7 @@
  * <p>A class that manages a group of {@link Ext.Component#floating} Components and provides z-order management,
  * and Component activation behavior, including masking below the active (topmost) Component.</p>
  * <p>{@link Ext.Component#floating Floating} Components which are rendered directly into the document (Such as {@link Ext.window.Window Window}s which are
- * {@link Ext.Component#show show}n are managed by a {@link Ext.WindowMgr global instance}.</p>
+ * {@link Ext.Component#show show}n are managed by a {@link Ext.WindowManager global instance}.</p>
  * <p>{@link Ext.Component#floating Floating} Components which are descendants of {@link Ext.Component#floating floating} <i>Containers</i>
  * (For example a {Ext.view.BoundList BoundList} within an {@link Ext.window.Window Window}, or a {@link Ext.menu.Menu Menu}),
  * are managed by a ZIndexManager owned by that floating Container. So ComboBox dropdowns within Windows will have managed z-indices
@@ -22,7 +22,7 @@ Ext.define('Ext.ZIndexManager', {
         var me = this;
 
         me.list = {};
-        me.accessList = [];
+        me.zIndexStack = [];
         me.front = null;
 
         if (container) {
@@ -30,7 +30,7 @@ Ext.define('Ext.ZIndexManager', {
             // This is the ZIndexManager for an Ext.container.Container, base its zseed on the zIndex of the Container's element
             if (container.isContainer) {
                 container.on('resize', me._onContainerResize, me);
-                me.zseed = Ext.num(container.getEl().getStyle('zIndex'), me.getNextZSeed());
+                me.zseed = Ext.Number.from(container.getEl().getStyle('zIndex'), me.getNextZSeed());
                 // The containing element we will be dealing with (eg masking) is the content target
                 me.targetEl = container.getTargetEl();
                 me.container = container;
@@ -42,7 +42,7 @@ Ext.define('Ext.ZIndexManager', {
                 me.targetEl = Ext.get(container);
             }
         }
-        // No container passed means we are the global WindowMgr. Our target is the doc body.
+        // No container passed means we are the global WindowManager. Our target is the doc body.
         // DOM must be ready to collect that ref.
         else {
             Ext.EventManager.onWindowResize(me._onContainerResize, me);
@@ -59,37 +59,29 @@ Ext.define('Ext.ZIndexManager', {
 
     setBase: function(baseZIndex) {
         this.zseed = baseZIndex;
-        return this._orderFloaters();
+        return this.assignZIndices();
     },
 
     // private
-    _sortFloaters: function(d1, d2) {
-        return (!d1._lastAccess || d1._lastAccess < d2._lastAccess) ? -1 : 1;
-    },
-
-    // private
-    _orderFloaters: function() {
-        var a = this.accessList,
+    assignZIndices: function() {
+        var a = this.zIndexStack,
             len = a.length,
             i = 0,
             zIndex = this.zseed,
             comp;
 
-        if (len > 0) {
-            a.sort(this._sortFloaters);
-            for (; i < len; i++) {
-                comp = a[i];
-                if (comp && !comp.hidden) {
+        for (; i < len; i++) {
+            comp = a[i];
+            if (comp && !comp.hidden) {
 
-                    // Setting the zIndex of a Component returns the topmost zIndex consumed by
-                    // that Component.
-                    // If it's just a plain floating Component such as a BoundList, then the
-                    // return value is the passed value plus 10, ready for the next item.
-                    // If a floating *Container* has its zIndex set, it re-orders its managed
-                    // floating children, starting from that new base, and returns a value 10000 above
-                    // the highest zIndex which it allocates.
-                    zIndex = comp.setZIndex(zIndex);
-                }
+                // Setting the zIndex of a Component returns the topmost zIndex consumed by
+                // that Component.
+                // If it's just a plain floating Component such as a BoundList, then the
+                // return value is the passed value plus 10, ready for the next item.
+                // If a floating *Container* has its zIndex set, it re-orders its managed
+                // floating children, starting from that new base, and returns a value 10000 above
+                // the highest zIndex which it allocates.
+                zIndex = comp.setZIndex(zIndex);
             }
         }
         this._activateLast();
@@ -121,8 +113,8 @@ Ext.define('Ext.ZIndexManager', {
         // Go down through the z-index stack.
         // Activate the next visible one down.
         // Keep going down to find the next visible modal one to shift the modal mask down under
-        for (i = this.accessList.length-1; i >= 0; --i) {
-            comp = this.accessList[i];
+        for (i = this.zIndexStack.length-1; i >= 0; --i) {
+            comp = this.zIndexStack[i];
             if (!comp.hidden) {
                 if (!lastActivated) {
                     this._setActiveChild(comp);
@@ -196,7 +188,7 @@ MyDesktop.getDesktop().getManager().register(Ext.MessageBox);
         comp.zIndexManager = this;
 
         this.list[comp.id] = comp;
-        this.accessList.push(comp);
+        this.zIndexStack.push(comp);
         comp.on('hide', this._activateLast, this);
     },
 
@@ -210,7 +202,7 @@ MyDesktop.getDesktop().getManager().register(Ext.MessageBox);
         delete comp.zIndexManager;
         delete this.list[comp.id];
         comp.un('hide', this._activateLast);
-        Ext.Array.remove(this.accessList, comp);
+        Ext.Array.remove(this.zIndexStack, comp);
 
         // Destruction requires that the topmost visible floater be activated. Same as hiding.
         this._activateLast(comp);
@@ -234,8 +226,9 @@ MyDesktop.getDesktop().getManager().register(Ext.MessageBox);
     bringToFront : function(comp) {
         comp = this.get(comp);
         if (comp != this.front) {
-            comp._lastAccess = new Date().getTime();
-            this._orderFloaters();
+            Ext.Array.remove(this.zIndexStack, comp);
+            this.zIndexStack.push(comp);
+            this.assignZIndices();
             return true;
         }
         if (comp.modal) {
@@ -253,8 +246,9 @@ MyDesktop.getDesktop().getManager().register(Ext.MessageBox);
      */
     sendToBack : function(comp) {
         comp = this.get(comp);
-        comp._lastAccess = -(new Date().getTime());
-        this._orderFloaters();
+        Ext.Array.remove(this.zIndexStack, comp);
+        this.zIndexStack.unshift(comp);
+        this.assignZIndices();
         return comp;
     },
 
@@ -277,12 +271,12 @@ MyDesktop.getDesktop().getManager().register(Ext.MessageBox);
      */
     hide: function() {
         var i = 0,
-            ln = this.accessList.length,
+            ln = this.zIndexStack.length,
             comp;
 
         this.tempHidden = [];
         for (; i < ln; i++) {
-            comp = this.accessList[i];
+            comp = this.zIndexStack[i];
             if (comp.isVisible()) {
                 this.tempHidden.push(comp);
                 comp.hide();
@@ -330,11 +324,12 @@ MyDesktop.getDesktop().getManager().register(Ext.MessageBox);
      */
     getBy : function(fn, scope) {
         var r = [],
-            i = this.accessList.length-1,
+            i = 0,
+            len = this.zIndexStack.length,
             comp;
 
-        for(; i >=0; --i) {
-            comp = this.accessList[i];
+        for (; i < len; i++) {
+            comp = this.zIndexStack[i];
             if (fn.call(scope||comp, comp) !== false) {
                 r.push(comp);
             }
@@ -359,14 +354,14 @@ MyDesktop.getDesktop().getManager().register(Ext.MessageBox);
     },
 
     destroy: function() {
-        delete this.accessList;
+        delete this.zIndexStack;
         delete this.list;
         delete this.container;
         delete this.targetEl;
     }
 }, function() {
     /**
-     * @class Ext.WindowMgr
+     * @class Ext.WindowManager
      * @extends Ext.ZIndexManager
      * <p>The default global floating Component group that is available automatically.</p>
      * <p>This manages instances of floating Components which were rendered programatically without
@@ -375,5 +370,5 @@ MyDesktop.getDesktop().getManager().register(Ext.MessageBox);
      * there are managed by that ZIndexManager.</p>
      * @singleton
      */
-    Ext.WindowMgr = new this();
+    Ext.WindowManager = Ext.WindowMgr = new this();
 });

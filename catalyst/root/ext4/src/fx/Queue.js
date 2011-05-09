@@ -31,7 +31,7 @@ Ext.define('Ext.fx.Queue', {
     },
 
     // @private
-    stopFx: function(targetId) {
+    stopAnimation: function(targetId) {
         var me = this,
             queue = me.getFxQueue(targetId),
             ln = queue.length;
@@ -45,7 +45,7 @@ Ext.define('Ext.fx.Queue', {
      * @private
      * Returns current animation object if the element has any effects actively running or queued, else returns false.
      */
-    hasActiveFx: function(targetId) {
+    getActiveAnimation: function(targetId) {
         var queue = this.getFxQueue(targetId);
         return (queue && !!queue.length) ? queue[0] : false;
     },
@@ -74,7 +74,7 @@ Ext.define('Ext.fx.Queue', {
             // GarbageCollector will need to clean up Elements since they aren't currently observable
             if (target.type != 'element') {
                 target.target.on('destroy', function() {
-                    me.stopFx(targetId);
+                    me.stopAnimation(targetId);
                 });
             }
         }

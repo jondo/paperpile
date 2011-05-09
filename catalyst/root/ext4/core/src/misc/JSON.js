@@ -129,16 +129,28 @@ Ext.JSON = new(function() {
     /**
      * Decodes (parses) a JSON string to an object. If the JSON is invalid, this function throws a SyntaxError unless the safe option is set.
      * @param {String} json The JSON string
+     * @param {Boolean} safe (optional) Whether to return null or throw an exception if the JSON is invalid.
      * @return {Object} The resulting object
      */
     this.decode = function() {
         var dc;
-        return function(json) {
+        return function(json, safe) {
             if (!dc) {
                 // setup decoding function on first access
                 dc = isNative() ? JSON.parse : doDecode;
             }
-            return dc(json);
+            try {
+                return dc(json);
+            } catch (e) {
+                if (safe === true) {
+                    return null;
+                }
+                Ext.Error.raise({
+                    sourceClass: "Ext.JSON",
+                    sourceMethod: "decode",
+                    msg: "You're trying to decode and invalid JSON String: " + json
+                });
+            }
         };
     }();
 

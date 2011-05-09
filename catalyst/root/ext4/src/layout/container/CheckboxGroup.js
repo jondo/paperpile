@@ -1,13 +1,13 @@
 /**
  * @class Ext.layout.container.CheckboxGroup
- * @extends Ext.layout.Container
+ * @extends Ext.layout.container.Container
  * <p>This layout implements the column arrangement for {@link Ext.form.CheckboxGroup} and {@link Ext.form.RadioGroup}.
  * It groups the component's sub-items into columns based on the component's
  * {@link Ext.form.CheckboxGroup#columns columns} and {@link Ext.form.CheckboxGroup#vertical} config properties.</p>
  *
  */
 Ext.define('Ext.layout.container.CheckboxGroup', {
-    extend: 'Ext.layout.Container',
+    extend: 'Ext.layout.container.Container',
     alias: ['layout.checkboxgroup'],
 
 

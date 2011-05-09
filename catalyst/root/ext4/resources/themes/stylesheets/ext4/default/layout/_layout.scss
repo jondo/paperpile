@@ -28,6 +28,10 @@
     
     .#{$prefix}overflow-hidden {
         overflow:hidden !important;
+    }    
+    
+    .#{$prefix}inline-children > * {
+        display: inline-block !important;
     }
     
     .#{$prefix}abs-layout-item {
@@ -39,7 +43,7 @@
     }
 
     .#{$prefix}border-region-slide-in {
-        z-index: 3;
+        z-index: 5;
     }
 
     .#{$prefix}region-collapsed-placeholder {
@@ -47,7 +51,7 @@
     }
 
     .#{$prefix}accordion-hd .#{$prefix}panel-header-text {
-        color: #222;
+        color: $panel-header-color;
         font-weight: normal;
     }
 
@@ -83,6 +87,13 @@
                 background-position: -15px -240px;
             }
         }
+        
+        background-image: none;
+        @if $accordion-header-background-gradient {
+            @include background-gradient($accordion-header-background-color, $accordion-header-background-gradient);
+        } else {
+            background: $accordion-header-background-color;
+        }
     }
 
     .#{$prefix}frame-tl,
@@ -103,9 +114,6 @@
     .#{$prefix}frame-mc {
         position: relative;
         background-repeat: repeat-x;
-    }
-    
-    .#{$prefix}frame-mc {
         overflow: hidden;
     }
 
@@ -181,5 +189,10 @@
 
     .#{$prefix}column {
         float: left;
+    }
+    @if $include-ie {
+        .#{$prefix}ie6 .#{$prefix}column {
+            display: inline; /*prevent IE6 double-margin bug*/
+        }
     }
 }

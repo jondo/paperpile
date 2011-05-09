@@ -22,19 +22,22 @@ Value   Description
  'ne'    northeast
  'all'   all
 </pre>
+ * {@img Ext.resizer.Resizer/Ext.resizer.Resizer.png Ext.resizer.Resizer component}
  * <p>Here's an example showing the creation of a typical Resizer:</p>
  * <pre><code>
-var resizer = new Ext.resizer.Resizer({
-    el: 'elToResize',
-    handles: 'all',
-    minWidth: 200,
-    minHeight: 100,
-    maxWidth: 500,
-    maxHeight: 400,
-    pinned: true
-});
+    <div id="elToResize" style="width:200px; height:100px; background-color:#000000;"></div>
+    
+    Ext.create('Ext.resizer.Resizer', {
+        el: 'elToResize',
+        handles: 'all',
+        minWidth: 200,
+        minHeight: 100,
+        maxWidth: 500,
+        maxHeight: 400,
+        pinned: true
+    });
 </code></pre>
-  */
+*/
 Ext.define('Ext.resizer.Resizer', {
     mixins: {
         observable: 'Ext.util.Observable'
@@ -50,7 +53,8 @@ Ext.define('Ext.resizer.Resizer', {
     wrapCls:   Ext.baseCSSPrefix + 'resizable-wrap',
 
     /**
-     * @cfg {Boolean} <p>Specify as true to update the {@link #target} (Element or {@link Ext.Component Component}) dynamically during dragging.
+     * @cfg {Boolean} dynamic 
+     * <p>Specify as true to update the {@link #target} (Element or {@link Ext.Component Component}) dynamically during dragging.
      * This is <code>true</code> by default, but the {@link Ext.Component Component} class passes <code>false</code> when it
      * is configured as {@link Ext.Component#resizable}.</p>
      * <p>If specified as <code>false</code>, a proxy element is displayed during the resize operation, and the {@link #target}
@@ -255,6 +259,7 @@ Ext.define('Ext.resizer.Resizer', {
          * @property resizeTracker
          */
         me.resizeTracker = Ext.create('Ext.resizer.ResizeTracker', {
+            disabled: me.disabled,
             target: me.target,
             constrainTo: me.constrainTo,
             overCls: me.overCls,

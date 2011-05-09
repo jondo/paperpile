@@ -3,7 +3,7 @@
  * @class Ext.data.Request
  * @extends Object
  * 
- * <p>Simple class that represents a Request that will be made by any {@link Ext.data.ServerProxy} subclass.
+ * <p>Simple class that represents a Request that will be made by any {@link Ext.data.proxy.Server} subclass.
  * All this class does is standardize the representation of a Request as used by any ServerProxy subclass,
  * it does not contain any actual logic or perform the request itself.</p>
  * 

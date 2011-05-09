@@ -13,9 +13,9 @@
     var scripts = document.getElementsByTagName('script'),
         localhostTests = [
             /^localhost$/,
-            /\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/ // IP v4
+            /\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(:\d{1,5})?\b/ // IP v4
         ],
-        host = window.location.host,
+        host = window.location.hostname,
         isDevelopment = null,
         queryString = window.location.search,
         test, path, i, ln, scriptSrc, match;

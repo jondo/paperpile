@@ -1,3 +1,6 @@
+/**
+ * @class Ext.core.Element
+ */
 (function(){
     var doc = document,
         isCSS1 = doc.compatMode == "CSS1Compat",

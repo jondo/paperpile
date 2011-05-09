@@ -13,8 +13,8 @@ FocusManager is disabled by default.
 
 To enable the optional focus frame, pass `true` or `{focusFrame: true}` to {@link #enable}.
 
-Another feature of the FocusManager is to provide basic keyboard focus navigation scoped to any {@link Ext.Container}
-that would like to have navigation between its child {@link Ext.Component}'s. The {@link Ext.Container} can simply
+Another feature of the FocusManager is to provide basic keyboard focus navigation scoped to any {@link Ext.container.Container}
+that would like to have navigation between its child {@link Ext.Component}'s. The {@link Ext.container.Container} can simply
 call {@link #subscribe Ext.FocusManager.subscribe} to take advantage of this feature, and can at any time call
 {@link #unsubscribe Ext.FocusManager.unsubscribe} to turn the navigation off.
 
@@ -32,7 +32,7 @@ Ext.define('Ext.FocusManager', {
     },
     
     requires: [
-        'Ext.ComponentMgr',
+        'Ext.ComponentManager',
         'Ext.ComponentQuery',
         'Ext.util.HashMap',
         'Ext.util.KeyNav'
@@ -67,7 +67,7 @@ Ext.define('Ext.FocusManager', {
      * 6. Down
      * 
      * The FocusManager will not attempt to navigate when a component is an xtype (or descendents thereof)
-     * that belongs to this whitelist. E.g., an {@link Ext.form.Text} should allow
+     * that belongs to this whitelist. E.g., an {@link Ext.form.field.Text} should allow
      * the user to move the input cursor left and right, and to delete characters, etc.
      * 
      * This whitelist currently defaults to `['textfield']`.
@@ -75,6 +75,19 @@ Ext.define('Ext.FocusManager', {
      */
     whitelist: [
         'textfield'
+    ],
+    
+    tabIndexWhitelist: [
+        'a',
+        'button',
+        'embed',
+        'frame',
+        'iframe',
+        'img',
+        'input',
+        'object',
+        'select',
+        'textarea'
     ],
     
     constructor: function() {
@@ -122,7 +135,7 @@ Ext.define('Ext.FocusManager', {
         
         // Setup KeyNav that's bound to document to catch all
         // unhandled/bubbled key events for navigation
-        me.keyNav = new Ext.util.KeyNav(Ext.getDoc(), {
+        me.keyNav = Ext.create('Ext.util.KeyNav', Ext.getDoc(), {
             disabled: true,
             scope: me,
             
@@ -183,8 +196,8 @@ Ext.define('Ext.FocusManager', {
                     c = cmps[i];
                     if (CQ.is(c, ':focusable')) {
                         return [c];
-                    } else if (c.placeHolder && CQ.is(c.placeHolder, ':focusable')) {
-                        return [c.placeHolder];
+                    } else if (c.placeholder && CQ.is(c.placeholder, ':focusable')) {
+                        return [c.placeholder];
                     }
                 }
                 
@@ -217,11 +230,11 @@ Ext.define('Ext.FocusManager', {
      * Adds the specified xtype to the {@link #whitelist}.
      * @param {String/Array} xtype Adds the xtype(s) to the {@link #whitelist}.
      */
-    addWhitelistXType: function(xtype) {
+    addXTypeToWhitelist: function(xtype) {
         var me = this;
         
         if (Ext.isArray(xtype)) {
-            Ext.Array.forEach(xtype, me.addWhitelistXType, me);
+            Ext.Array.forEach(xtype, me.addXTypeToWhitelist, me);
             return;
         }
         
@@ -250,7 +263,7 @@ Ext.define('Ext.FocusManager', {
         delete me.options;
         me.enabled = false;
         
-        Ext.ComponentMgr.all.un('add', me.onComponentCreated, me);
+        Ext.ComponentManager.all.un('add', me.onComponentCreated, me);
         
         me.removeDOM();
         
@@ -283,7 +296,7 @@ Ext.define('Ext.FocusManager', {
         }
         
         // Handle components that are newly added after we are enabled
-        Ext.ComponentMgr.all.on('add', me.onComponentCreated, me);
+        Ext.ComponentManager.all.on('add', me.onComponentCreated, me);
         
         me.initDOM(options);
         
@@ -421,7 +434,7 @@ Ext.define('Ext.FocusManager', {
             goBack = e.shiftKey || key == EO.LEFT || key == EO.UP,
             checkWhitelist = key == EO.LEFT || key == EO.RIGHT || key == EO.UP || key == EO.DOWN,
             nextSelector = goBack ? 'prev' : 'next',
-            idx, next;
+            idx, next, focusedCmp;
         
         focusedCmp = (src.focusedCmp && src.focusedCmp.comp) || src.focusedCmp;
         if (!focusedCmp && !parent) {
@@ -583,11 +596,11 @@ Ext.define('Ext.FocusManager', {
      * Removes the specified xtype from the {@link #whitelist}.
      * @param {String/Array} xtype Removes the xtype(s) from the {@link #whitelist}.
      */
-    removeWhitelistXType: function(xtype) {
+    removeXTypeFromWhitelist: function(xtype) {
         var me = this;
         
         if (Ext.isArray(xtype)) {
-            Ext.Array.forEach(xtype, me.removeWhitelistXType, me);
+            Ext.Array.forEach(xtype, me.removeXTypeFromWhitelist, me);
             return;
         }
         
@@ -595,7 +608,14 @@ Ext.define('Ext.FocusManager', {
     },
     
     setFocus: function(cmp, focusable, options) {
-        var el, data, me = this;
+        var me = this,
+            el, dom, data,
+            
+            needsTabIndex = function(n) {
+                return !Ext.Array.contains(me.tabIndexWhitelist, n.tagName.toLowerCase())
+                    && n.tabIndex <= 0;
+            };
+            
         options = options || {};
         
         // Come back and do this after the component is rendered
@@ -605,15 +625,24 @@ Ext.define('Ext.FocusManager', {
         }
         
         el = cmp.getFocusEl();
+        dom = el.dom;
         
         // Decorate the component's focus el for focus-ability
         if ((focusable && !me.focusData[cmp.id]) || (!focusable && me.focusData[cmp.id])) {
             if (focusable) {
                 data = {
-                    tabIndex: el.dom.tabIndex,
                     focusFrame: options.focusFrame
                 };
-                el.dom.tabIndex = '-1';
+                
+                // Only set -1 tabIndex if we need it
+                // inputs, buttons, and anchor tags do not need it,
+                // and neither does any DOM that has it set already
+                // programmatically or in markup.
+                if (needsTabIndex(dom)) {
+                    data.tabIndex = dom.tabIndex;
+                    dom.tabIndex = -1;
+                }
+                
                 el.on({
                     focus: data.focusFn = Ext.bind(me.onComponentFocus, me, [cmp], 0),
                     blur: data.blurFn = Ext.bind(me.onComponentBlur, me, [cmp], 0),
@@ -629,7 +658,9 @@ Ext.define('Ext.FocusManager', {
                 me.focusData[cmp.id] = data;
             } else {
                 data = me.focusData[cmp.id];
-                el.dom.tabIndex = data.tabIndex;
+                if ('tabIndex' in data) {
+                    dom.tabIndex = data.tabIndex;
+                }
                 el.un('focus', data.focusFn, me);
                 el.un('blur', data.blurFn, me);
                 cmp.un('hide', me.onComponentHide, me);
@@ -643,7 +674,7 @@ Ext.define('Ext.FocusManager', {
     
     setFocusAll: function(focusable, options) {
         var me = this,
-            cmps = Ext.ComponentMgr.all.getArray(),
+            cmps = Ext.ComponentManager.all.getArray(),
             len = cmps.length,
             cmp,
             i = 0;
@@ -711,8 +742,8 @@ Ext.define('Ext.FocusManager', {
     },
     
     /**
-     * Subscribes an {@link Ext.Container} to provide basic keyboard focus navigation between its child {@link Ext.Component}'s.
-     * @param {Ext.Container} container A reference to the {@link Ext.Container} on which to enable keyboard functionality and focus management.
+     * Subscribes an {@link Ext.container.Container} to provide basic keyboard focus navigation between its child {@link Ext.Component}'s.
+     * @param {Ext.container.Container} container A reference to the {@link Ext.container.Container} on which to enable keyboard functionality and focus management.
      * @param {Boolean/Object} options An object of the following options:
         - keys : Array/Object
             An array containing the string names of navigation keys to be supported. The allowed values are:
@@ -786,8 +817,8 @@ Ext.define('Ext.FocusManager', {
     },
     
     /**
-     * Unsubscribes an {@link Ext.Container} from keyboard focus management.
-     * @param {Ext.Container} container A reference to the {@link Ext.Container} to unsubscribe from the FocusManager.
+     * Unsubscribes an {@link Ext.container.Container} from keyboard focus management.
+     * @param {Ext.container.Container} container A reference to the {@link Ext.container.Container} to unsubscribe from the FocusManager.
      * @markdown
      */
     unsubscribe: function(container) {
@@ -816,7 +847,7 @@ Ext.define('Ext.FocusManager', {
         data = subs.get(container.id);
         data.keyNav.destroy();
         container.un('beforedestroy', me.unsubscribe, me);
-        subs.removeByKey(container.id);
+        subs.removeAtKey(container.id);
         safeSetFocus(container);
         me.removeDOM();
     }

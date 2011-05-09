@@ -176,14 +176,14 @@ describe("Ext.EventManager", function() {
                 it("should throw an error if the element doesn't exist", function() {
                     expect(function() {
                         Ext.EventManager.addListener(undefined, "click");
-                    }).toThrow();
+                    }).toRaiseExtError();
                 });
             });
             
             it("should throw an error if the element doesn't exist", function() {
                 expect(function() {
                     Ext.EventManager.addListener(undefined, "click");
-                }).toThrow();
+                }).toRaiseExtError();
             });
             
             describe("event firing", function() {

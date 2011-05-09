@@ -130,13 +130,21 @@ Ext.core.Element.addMethods(
                 }
             },
             /**
-             * Returns true if this element is masked
+             * Returns true if this element is masked. Also re-centers any displayed message within the mask.
              * @return {Boolean}
              */
             isMasked : function() {
-                var m = data(this.dom, 'mask');
-                // force to bool
-                return !!(m && m.isVisible());
+                var me = this,
+                    mask = data(me.dom, 'mask'),
+                    maskMsg = data(me.dom, 'maskMsg');
+
+                if (mask && mask.isVisible()) {
+                    if (maskMsg) {
+                        maskMsg.center(me);
+                    }
+                    return true;
+                }
+                return false;
             },
 
             /**

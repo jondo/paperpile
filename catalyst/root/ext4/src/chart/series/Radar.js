@@ -13,7 +13,7 @@
             xField: 'name',
             yField: 'data1',
             showMarkers: true,
-            markerCfg: {
+            markerConfig: {
                 radius: 5,
                 size: 5
             },
@@ -26,7 +26,7 @@
             xField: 'name',
             yField: 'data2',
             showMarkers: true,
-            markerCfg: {
+            markerConfig: {
                 radius: 5,
                 size: 5
             },
@@ -39,7 +39,7 @@
             xField: 'name',
             yField: 'data3',
             showMarkers: true,
-            markerCfg: {
+            markerConfig: {
                 radius: 5,
                 size: 5
             },
@@ -52,7 +52,7 @@
  * 
  * In this configuration we add three series to the chart. Each of these series is bound to the same categories field, `name` but bound to different properties for each category,
  * `data1`, `data2` and `data3` respectively. All series display markers by having `showMarkers` enabled. The configuration for the markers of each series can be set by adding properties onto 
- * the markerCfg object. Finally we override some theme styling properties by adding properties to the `style` object.
+ * the markerConfig object. Finally we override some theme styling properties by adding properties to the `style` object.
  * 
  * @xtype radar
  * 
@@ -63,11 +63,14 @@ Ext.define('Ext.chart.series.Radar', {
 
     extend: 'Ext.chart.series.Series',
 
-    requires: ['Ext.chart.Shapes', 'Ext.fx.Anim'],
+    requires: ['Ext.chart.Shape', 'Ext.fx.Anim'],
 
     /* End Definitions */
 
-    type: "pie",
+    type: "radar",
+    alias: 'series.radar',
+
+    
     rad: Math.PI / 180,
 
     showInLegend: false,
@@ -120,6 +123,8 @@ Ext.define('Ext.chart.series.Radar', {
             axis = chart.axes && chart.axes.get(0),
             aggregate = !(axis && axis.maximum);
         
+        me.setBBox();
+
         maxValue = aggregate? 0 : (axis.maximum || 0);
         
         Ext.apply(seriesStyle, me.style || {});
@@ -149,7 +154,8 @@ Ext.define('Ext.chart.series.Radar', {
                 }
             });
         }
-
+        //ensure non-zero value.
+        maxValue = maxValue || 1;
         //create path and items
         startPath = []; path = [];
         store.each(function(record, i) {
@@ -165,7 +171,8 @@ Ext.define('Ext.chart.series.Radar', {
             }
             items.push({
                 sprite: false, //TODO(nico): add markers
-                point: [centerX + x, centerY + y]
+                point: [centerX + x, centerY + y],
+                series: me
             });
         });
         path.push('Z');
@@ -209,7 +216,7 @@ Ext.define('Ext.chart.series.Radar', {
             chart = me.chart,
             surface = chart.surface,
             markerStyle = Ext.apply({}, me.markerStyle || {}),
-            endMarkerStyle = Ext.apply(markerStyle, me.markerCfg),
+            endMarkerStyle = Ext.apply(markerStyle, me.markerConfig),
             items = me.items, 
             type = endMarkerStyle.type,
             markerGroup = me.markerGroup,
@@ -223,7 +230,7 @@ Ext.define('Ext.chart.series.Radar', {
             item = items[i];
             marker = markerGroup.getAt(i);
             if (!marker) {
-                marker = Ext.chart.Shapes[type](surface, Ext.apply({
+                marker = Ext.chart.Shape[type](surface, Ext.apply({
                     group: markerGroup,
                     x: 0,
                     y: 0,
@@ -262,6 +269,15 @@ Ext.define('Ext.chart.series.Radar', {
                 marker.setAttributes(Ext.apply(marker._to, endMarkerStyle || {}), true);
             }
         }
+    },
+    
+    isItemInPoint: function(x, y, item) {
+        var point,
+            tolerance = 10,
+            abs = Math.abs;
+        point = item.point;
+        return (abs(point[0] - x) <= tolerance &&
+                abs(point[1] - y) <= tolerance);
     },
 
     // @private callback for when creating a label sprite.

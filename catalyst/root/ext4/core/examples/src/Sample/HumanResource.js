@@ -1,9 +1,7 @@
 Ext.define('Sample.HumanResource', {
 
-    alias: 'layout.hbox',
-
     requires: 'Sample.Developer',
-    
+
     singleton: true,
 
     developers: [],

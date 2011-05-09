@@ -42,7 +42,11 @@ Ext.require('Ext.util.DelayedTask', function() {
 
                 //<debug error>
                 if (!fn) {
-                    throw new Error("["+Ext.getClassName(this.observable)+"#addListener -> Ext.util.Event#addListener] Invalid callback function: " + fn);
+                    Ext.Error.raise({
+                        sourceClass: Ext.getClassName(this.observable),
+                        sourceMethod: "addListener",
+                        msg: "The specified callback function is undefined"
+                    });
                 }
                 //</debug>
 
@@ -68,14 +72,16 @@ Ext.require('Ext.util.DelayedTask', function() {
                     },
                     handler = fn;
 
+                // The order is important. The 'single' wrapper must be wrapped by the 'buffer' and 'delayed' wrapper
+                // because the event removal that the single listener does destroys the listener's DelayedTask(s)
+                if (o.single) {
+                    handler = createSingle(handler, listener, o, scope);
+                }
                 if (o.delay) {
                     handler = createDelayed(handler, listener, o, scope);
                 }
                 if (o.buffer) {
                     handler = createBuffered(handler, listener, o, scope);
-                }
-                if (o.single) {
-                    handler = createSingle(handler, listener, o, scope);
                 }
 
                 listener.fireFn = handler;

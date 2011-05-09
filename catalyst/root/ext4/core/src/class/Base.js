@@ -130,7 +130,7 @@ var Base = Ext.Base = function() {};
         }),
 
         /**
-         * Call the overridden superclass' method. For example:
+         * Call the parent's overridden method. For example:
 
     Ext.define('My.own.A', {
         constructor: function(test) {
@@ -139,6 +139,8 @@ var Base = Ext.Base = function() {};
     });
 
     Ext.define('My.own.B', {
+        extend: 'My.own.A',
+
         constructor: function(test) {
             alert(test);
 
@@ -146,8 +148,20 @@ var Base = Ext.Base = function() {};
         }
     });
 
+    Ext.define('My.own.C', {
+        extend: 'My.own.B',
+
+        constructor: function() {
+            alert("Going to call parent's overriden constructor...");
+
+            this.callParent(arguments);
+        }
+    });
+
     var a = new My.own.A(1); // alerts '1'
     var b = new My.own.B(1); // alerts '1', then alerts '2'
+    var c = new My.own.C(2); // alerts "Going to call parent's overriden constructor..."
+                             // alerts '2', then alerts '3'
 
          * @protected
          * @param {Array/Arguments} args The arguments, either an array or the `arguments` object
@@ -162,7 +176,11 @@ var Base = Ext.Base = function() {};
             if (!method.$owner) {
                 //<debug error>
                 if (!method.caller) {
-                    throw new Error("[" + Ext.getClassName(this) + "#callParent] Calling a protected method from the public scope");
+                    Ext.Error.raise({
+                        sourceClass: Ext.getClassName(this),
+                        sourceMethod: "callParent",
+                        msg: "Attempting to call a protected method from the public scope, which is not allowed"
+                    });
                 }
                 //</debug>
 
@@ -174,8 +192,12 @@ var Base = Ext.Base = function() {};
 
             //<debug error>
             if (!(methodName in parentClass)) {
-                throw new Error("[" + Ext.getClassName(this) + "#" + methodName + "] this.callParent() was called but there's no such method (" + methodName + ") found in the parent class (" +
-                                (Ext.getClassName(parentClass) || 'Object') + ")");
+                Ext.Error.raise({
+                    sourceClass: Ext.getClassName(this),
+                    sourceMethod: methodName,
+                    msg: "this.callParent() was called but there's no such method (" + methodName +
+                         ") found in the parent class (" + (Ext.getClassName(parentClass) || 'Object') + ")"
+                 });
             }
             //</debug>
 
@@ -290,13 +312,20 @@ var Base = Ext.Base = function() {};
 
             //<debug error>
             if (!method.$owner) {
-                throw new Error("[" + Ext.getClassName(this) + "#callOverridden] Calling a protected method from the " +
-                                "public scope");
+                Ext.Error.raise({
+                    sourceClass: Ext.getClassName(this),
+                    sourceMethod: "callOverridden",
+                    msg: "Attempting to call a protected method from the public scope, which is not allowed"
+                });
             }
 
             if (!method.$previous) {
-                throw new Error("[" + Ext.getClassName(this) + "] this.callOverridden was called in '" + method.$name +
-                                "' but this method has never been overridden");
+                Ext.Error.raise({
+                    sourceClass: Ext.getClassName(this),
+                    sourceMethod: "callOverridden",
+                    msg: "this.callOverridden was called in '" + method.$name +
+                         "' but this method has never been overridden"
+                 });
             }
             //</debug>
 
@@ -308,19 +337,43 @@ var Base = Ext.Base = function() {};
 
     // These static properties will be copied to every newly created class with {@link Ext#define}
     Ext.apply(Ext.Base, {
+        /**
+         * Create a new instance of this Class.
+Ext.define('My.cool.Class', {
+    ...
+});
+
+My.cool.Class.create({
+    someConfig: true
+});
+         * @property create
+         * @static
+         * @type Function
+         * @markdown
+         */
+        create: function() {
+            return Ext.create.apply(Ext, [this].concat(Array.prototype.slice.call(arguments, 0)));
+        },
+
+        /**
+         * @private
+         */
+        own: flexSetter(function(name, value) {
+            if (typeof value === 'function') {
+                this.ownMethod(name, value);
+            }
+            else {
+                this.prototype[name] = value;
+            }
+        }),
 
         /**
          * @private
          */
         ownMethod: function(name, fn) {
-            var originalFn, className;
+            var originalFn;
 
-            if (fn === Ext.emptyFn) {
-                this.prototype[name] = fn;
-                return;
-            }
-
-            if (fn.$isOwned) {
+            if (fn.$owner !== undefined && fn !== Ext.emptyFn) {
                 originalFn = fn;
 
                 fn = function() {
@@ -329,6 +382,7 @@ var Base = Ext.Base = function() {};
             }
 
             //<debug>
+            var className;
             className = Ext.getClassName(this);
             if (className) {
                 fn.displayName = className + '#' + name;
@@ -336,26 +390,12 @@ var Base = Ext.Base = function() {};
             //</debug>
             fn.$owner = this;
             fn.$name = name;
-            fn.$isOwned = true;
 
             this.prototype[name] = fn;
         },
 
         /**
-         * @private
-         */
-        borrowMethod: function(name, fn) {
-            if (!fn.$isOwned) {
-                this.ownMethod(name, fn);
-            }
-            else {
-                this.prototype[name] = fn;
-            }
-        },
-
-        /**
-         * Add / override static properties of this class. This method is a {@link Ext.Function#flexSetter flexSetter}.
-         * It can either accept an object of key - value pairs or 2 arguments of name - value.
+         * Add / override static properties of this class.
 
     Ext.define('My.cool.Class', {
         ...
@@ -367,77 +407,126 @@ var Base = Ext.Base = function() {};
         method2: function() { ... }     // My.cool.Class.method2 = function() { ... };
     });
 
-    My.cool.Class.addStatics('method3', function(){ ... }); // My.cool.Class.method3 = function() { ... };
-
-         * @property extend
+         * @property addStatics
          * @static
          * @type Function
-         * @param {String/Object} name See {@link Ext.Function#flexSetter flexSetter}
-         * @param {Mixed} value See {@link Ext.Function#flexSetter flexSetter}
+         * @param {Object} members
          * @markdown
          */
-        addStatics: flexSetter(function(name, value) {
-            this[name] = value;
-        }),
+        addStatics: function(members) {
+            for (var name in members) {
+                if (members.hasOwnProperty(name)) {
+                    this[name] = members[name];
+                }
+            }
+
+            return this;
+        },
 
         /**
-         * Add / override prototype properties of this class. This method is a {@link Ext.Function#flexSetter flexSetter}.
-         * It can either accept an object of key - value pairs or 2 arguments of name - value.
+         * Add methods / properties to the prototype of this class.
 
-    Ext.define('My.cool.Class', {
-        ...
+    Ext.define('My.awesome.Cat', {
+        constructor: function() {
+            ...
+        }
     });
 
-    // Object with key - value pairs
-    My.cool.Class.extend({
-        someProperty: 'someValue',
-        method1: function() { ... },
-        method2: function() { ... }
-    });
+     My.awesome.Cat.implement({
+         meow: function() {
+            alert('Meowww...');
+         }
+     });
 
-    var cool = new My.cool.Class();
-    alert(cool.someProperty); // alerts 'someValue'
-    cool.method1();
-    cool.method2();
-
-    // name - value arguments
-    My.cool.Class.extend('method3', function(){ ... });
-    cool.method3();
+     var kitty = new My.awesome.Cat;
+     kitty.meow();
 
          * @property implement
          * @static
          * @type Function
-         * @param {String/Object} name See {@link Ext.Function#flexSetter flexSetter}
-         * @param {Mixed} value See {@link Ext.Function#flexSetter flexSetter}
+         * @param {Object} members
          * @markdown
          */
-        extend: flexSetter(function(name, value) {
-            if (Ext.isObject(this.prototype[name]) && Ext.isObject(value)) {
-                Ext.Object.merge(this.prototype[name], value);
-            }
-            else if (Ext.isFunction(value)) {
-                this.ownMethod(name, value);
-            }
-            else {
-                this.prototype[name] = value;
-            }
-        }),
+        implement: function(members) {
+            var prototype = this.prototype,
+                name, i, member, previous;
 
-        //<debug>
-        /**
-         * This method is deprecated, please use {@link Ext.Base#extend} instead
-         */
-        implement: function() {
-            if (Ext.isDefined(Ext.global.console)) {
-                Ext.global.console.warn("[DEPRECATED][Ext.Base] Class.implement is deprecated, please use Class.extend instead");
-                return this.extend.apply(this, arguments);
+            for (name in members) {
+                if (members.hasOwnProperty(name)) {
+                    member = members[name];
+
+                    if (typeof member === 'function') {
+                        member.$owner = this;
+                        member.$name = name;
+                    }
+
+                    prototype[name] = member;
+                }
+            }
+
+            if (Ext.enumerables) {
+                var enumerables = Ext.enumerables;
+
+                for (i = enumerables.length; i--;) {
+                    name = enumerables[i];
+
+                    if (members.hasOwnProperty(name)) {
+                        member = members[name];
+                        member.$owner = this;
+                        member.$name = name;
+                        prototype[name] = member;
+                    }
+                }
             }
         },
-        //</debug>
 
         /**
-         * Add / override prototype properties of this class. This method is similar to {@link Ext.Base#extend},
-         * except that it stores the reference of the overridden method which can be called later on via {@link Ext.Base#callOverridden}
+         * Borrow another class' members to the prototype of this class.
+
+Ext.define('Bank', {
+    money: '$$$',
+    printMoney: function() {
+        alert('$$$$$$$');
+    }
+});
+
+Ext.define('Thief', {
+    ...
+});
+
+Thief.borrow(Bank, ['money', 'printMoney']);
+
+var steve = new Thief();
+
+alert(steve.money); // alerts '$$$'
+steve.printMoney(); // alerts '$$$$$$$'
+
+         * @property borrow
+         * @static
+         * @type Function
+         * @param {Ext.Base} fromClass The class to borrow members from
+         * @param {Array/String} members The names of the members to borrow
+         * @return {Ext.Base} this
+         * @markdown
+         */
+        borrow: function(fromClass, members) {
+            var fromPrototype = fromClass.prototype,
+                i, ln, member;
+
+            members = Ext.Array.from(members);
+
+            for (i = 0, ln = members.length; i < ln; i++) {
+                member = members[i];
+
+                this.own(member, fromPrototype[member]);
+            }
+
+            return this;
+        },
+
+        /**
+         * Override prototype members of this class. Overridden methods can be invoked via
+         * {@link Ext.Base#callOverridden}
 
     Ext.define('My.Cat', {
         constructor: function() {
@@ -466,59 +555,89 @@ var Base = Ext.Base = function() {};
          * @property override
          * @static
          * @type Function
-         * @param {String/Object} name See {@link Ext.Function#flexSetter flexSetter}
-         * @param {Mixed} value See {@link Ext.Function#flexSetter flexSetter}
+         * @param {Object} members
+         * @return {Ext.Base} this
          * @markdown
          */
-        override: flexSetter(function(name, value) {
-            if (Ext.isObject(this.prototype[name]) && Ext.isObject(value)) {
-                Ext.Object.merge(this.prototype[name], value);
-            }
-            else if (Ext.isFunction(value)) {
-                if (Ext.isFunction(this.prototype[name])) {
-                    var previous = this.prototype[name];
-                    this.ownMethod(name, value);
-                    this.prototype[name].$previous = previous;
-                }
-                else {
-                    this.ownMethod(name, value);
-                }
-            }
-            else {
-                this.prototype[name] = value;
-            }
-        }),
+        override: function(members) {
+            var prototype = this.prototype,
+                name, i, member, previous;
 
-       /**
+            for (name in members) {
+                if (members.hasOwnProperty(name)) {
+                    member = members[name];
+
+                    if (typeof member === 'function') {
+                        if (typeof prototype[name] === 'function') {
+                            previous = prototype[name];
+                            member.$previous = previous;
+                        }
+
+                        this.ownMethod(name, member);
+                    }
+                    else {
+                        prototype[name] = member;
+                    }
+                }
+            }
+
+            if (Ext.enumerables) {
+                var enumerables = Ext.enumerables;
+
+                for (i = enumerables.length; i--;) {
+                    name = enumerables[i];
+
+                    if (members.hasOwnProperty(name)) {
+                        if (prototype[name] !== undefined) {
+                            previous = prototype[name];
+                            members[name].$previous = previous;
+                        }
+
+                        this.ownMethod(name, members[name]);
+                    }
+                }
+            }
+
+            return this;
+        },
+
+        /**
          * Used internally by the mixins pre-processor
          * @private
          */
         mixin: flexSetter(function(name, cls) {
-            var mixinPrototype = cls.prototype,
-                myPrototype = this.prototype,
-                i;
+            var mixin = cls.prototype,
+                my = this.prototype,
+                i, fn;
 
-            for (i in mixinPrototype) {
-                if (mixinPrototype.hasOwnProperty(i)) {
-                    if (myPrototype[i] === undefined) {
-                        if (Ext.isFunction(mixinPrototype[i])) {
-                            this.borrowMethod(i, mixinPrototype[i]);
+            for (i in mixin) {
+                if (mixin.hasOwnProperty(i)) {
+                    if (my[i] === undefined) {
+                        if (typeof mixin[i] === 'function') {
+                            fn = mixin[i];
+
+                            if (fn.$owner === undefined) {
+                                this.ownMethod(i, fn);
+                            }
+                            else {
+                                my[i] = fn;
+                            }
                         }
                         else {
-                            myPrototype[i] = mixinPrototype[i];
+                            my[i] = mixin[i];
                         }
                     }
-                    else if (i === 'config' && Ext.isObject(myPrototype[i]) && Ext.isObject(mixinPrototype[i])) {
-                        Ext.Object.merge(myPrototype[i], mixinPrototype[i]);
+                    else if (i === 'config' && my.config !== undefined && mixin.config !== undefined) {
+                        Ext.Object.merge(my.config, mixin.config);
                     }
                 }
             }
 
-            if (!myPrototype.mixins) {
-                myPrototype.mixins = {};
+            if (my.mixins === undefined) {
+                my.mixins = {};
             }
 
-            myPrototype.mixins[name] = mixinPrototype;
+            my.mixins[name] = mixin;
         }),
 
         /**
@@ -530,6 +649,8 @@ var Base = Ext.Base = function() {};
         }
     });
 
+    My.cool.Class.getName(); // 'My.cool.Class'
+
          * @return {String} className
          * @markdown
          */
@@ -538,7 +659,7 @@ var Base = Ext.Base = function() {};
         },
 
         /**
-         * Create aliases for current prototype methods. Example:
+         * Create aliases for existing prototype methods. Example:
 
     Ext.define('My.cool.Class', {
         method1: function() { ... },

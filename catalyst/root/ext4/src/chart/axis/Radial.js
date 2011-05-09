@@ -13,6 +13,8 @@ Ext.define('Ext.chart.axis.Radial', {
 
     position: 'radial',
 
+    alias: 'axis.radial',
+
     drawAxis: function(init) {
         var chart = this.chart,
             surface = chart.surface,
@@ -28,7 +30,7 @@ Ext.define('Ext.chart.axis.Radial', {
             cos = Math.cos, sin = Math.sin;
 
         if (this.sprites && !chart.resizing) {
-            this.drawLabels();
+            this.drawLabel();
             return;
         }
 
@@ -80,10 +82,10 @@ Ext.define('Ext.chart.axis.Radial', {
         }
         this.sprites = sprites;
 
-        this.drawLabels();
+        this.drawLabel();
     },
 
-    drawLabels: function() {
+    drawLabel: function() {
         var chart = this.chart,
             surface = chart.surface,
             bbox = chart.chartBBox,
@@ -95,7 +97,7 @@ Ext.define('Ext.chart.axis.Radial', {
             labelArray = [], label,
             fields = [], nfields,
             categories = [], xField,
-            aggregate = !!this.maximum,
+            aggregate = !this.maximum,
             maxValue = this.maximum || 0,
             steps = this.steps, i = 0, j, dx, dy,
             pi2 = Math.PI * 2,
@@ -123,7 +125,6 @@ Ext.define('Ext.chart.axis.Radial', {
             }
             categories.push(record.get(xField));
         });
-
         if (!this.labelArray) {
             if (display != 'categories') {
                 //draw scale

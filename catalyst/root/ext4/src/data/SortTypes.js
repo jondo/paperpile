@@ -1,6 +1,5 @@
 /**
  * @class Ext.data.SortTypes
- * @singleton
  * This class defines a series of static methods that are used on a
  * {@link Ext.data.Field} for performing sorting. The methods cast the 
  * underlying values into a data type that is appropriate for sorting on
@@ -38,6 +37,7 @@ Ext.regModel('Employee', {
 });
  * </code></pre>
  * </p>
+ * @singleton
  * @docauthor Evan Trimboli <evan@sencha.com>
  */
 Ext.define('Ext.data.SortTypes', {

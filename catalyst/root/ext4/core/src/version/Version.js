@@ -4,7 +4,7 @@
 (function() {
 
 // Current core version
-var version = '4.0.0beta1',
+var version = '4.0.0rc',
     Version = Ext.Version = Ext.extend(Object, {
 
         /**
@@ -41,23 +41,23 @@ var version = '4.0.0beta1',
                 return version;
             }
 
-            this.version = this.simplified = String(version).toLowerCase().replace(/_/g, '.').replace(/[\-+]/g, '');
+            this.version = this.shortVersion = String(version).toLowerCase().replace(/_/g, '.').replace(/[\-+]/g, '');
 
             releaseStartIndex = this.version.search(/([^\d\.])/);
 
             if (releaseStartIndex !== -1) {
                 this.release = this.version.substr(releaseStartIndex, version.length);
-                this.simplified = this.version.substr(0, releaseStartIndex);
+                this.shortVersion = this.version.substr(0, releaseStartIndex);
             }
 
-            this.simplified = this.simplified.replace(/[^\d]/g, '');
+            this.shortVersion = this.shortVersion.replace(/[^\d]/g, '');
 
             parts = this.version.split('.');
 
-            this.major = parseInt(parts.shift(), 10);
-            this.minor = parseInt(parts.shift(), 10);
-            this.patch = parseInt(parts.shift(), 10);
-            this.build = parseInt(parts.shift(), 10);
+            this.major = parseInt(parts.shift() || 0, 10);
+            this.minor = parseInt(parts.shift() || 0, 10);
+            this.patch = parseInt(parts.shift() || 0, 10);
+            this.build = parseInt(parts.shift() || 0, 10);
 
             return this;
         },
@@ -130,30 +130,12 @@ var version = '4.0.0beta1',
         },
 
         /**
-         * Convenient shortcut for {@link Ext.Version#isGreaterThan isGreaterThan}
-         * @param {String/Number} target The version to compare with
-         * @return {Boolean} True if this version if greater than the target, false otherwise
-         */
-        gt: function() {
-            return this.isGreaterThan.apply(this, arguments);
-        },
-
-        /**
          * Returns whether this version if smaller than the supplied argument
          * @param {String/Number} target The version to compare with
          * @return {Boolean} True if this version if smaller than the target, false otherwise
          */
-        isSmallerThan: function(target) {
+        isLessThan: function(target) {
             return Version.compare(this.version, target) === -1;
-        },
-
-        /**
-         * Convenient shortcut for {@link Ext.Version#isSmallerThan isSmallerThan}
-         * @param {String/Number} target The version to compare with
-         * @return {Boolean} True if this version if smaller than the target, false otherwise
-         */
-        lt: function() {
-            return this.isSmallerThan.apply(this, arguments);
         },
 
         /**
@@ -163,15 +145,6 @@ var version = '4.0.0beta1',
          */
         equals: function(target) {
             return Version.compare(this.version, target) === 0;
-        },
-
-        /**
-         * Convenient shortcut for {@link Ext.Version#equals equals}
-         * @param {String/Number} target The version to compare with
-         * @return {Boolean} True fs this version equals to the target, false otherwise
-         */
-        eq: function() {
-            return this.equals.apply(this, arguments);
         },
 
         /**
@@ -200,11 +173,11 @@ var version = '4.0.0beta1',
         },
 
         /**
-         * Returns simplified version without dots and release
+         * Returns shortVersion version without dots and release
          * @return {String}
          */
-        getSimplified: function() {
-            return this.simplified;
+        getShortVersion: function() {
+            return this.shortVersion;
         }
     });
 
@@ -224,6 +197,8 @@ var version = '4.0.0beta1',
 
         /**
          * Converts a version component to a comparable value
+         *
+         * @static
          * @param {Mixed} value The value to convert
          * @return {Mixed}
          */
@@ -235,6 +210,8 @@ var version = '4.0.0beta1',
          * Compare 2 specified versions, starting from left to right. If a part contains special version strings,
          * they are handled in the following order:
          * 'dev' < 'alpha' = 'a' < 'beta' = 'b' < 'RC' = 'rc' < '#' < 'pl' = 'p' < 'anything else'
+         *
+         * @static
          * @param {String} current The current version to compare to
          * @param {String} target The target version to compare to
          * @return {Number} Returns -1 if the current version is smaller than the target version, 1 if greater, and 0 if they're equivalent
@@ -261,38 +238,62 @@ var version = '4.0.0beta1',
     });
 
     Ext.apply(Ext, {
-        // @private
+        /**
+         * @private
+         */
         versions: {},
 
         /**
-         * Set version number of the supplied package name.
-         * Note: This is not meant to be called from the application-level, only from framework-level
+         * @private
+         */
+        lastRegisteredVersion: null,
+
+        /**
+         * Set version number for the given package name.
+         *
          * @param {String} packageName The package name, for example: 'core', 'touch', 'extjs'
-         * @param {String} version The version, for example: '1.2.3alpha', '2.4.0-dev'
+         * @param {String/Ext.Version} version The version, for example: '1.2.3alpha', '2.4.0-dev'
          * @return {Ext}
          */
         setVersion: function(packageName, version) {
             Ext.versions[packageName] = new Version(version);
+            Ext.lastRegisteredVersion = Ext.versions[packageName];
 
             return this;
         },
 
         /**
-         * Get the version number of the supplied package name
-         * @param {String} packageName The package name, for example: 'core', 'touch', 'extjs'
+         * Get the version number of the supplied package name; will return the last registered version
+         * (last Ext.setVersion call) if there's no package name given.
+         *
+         * @param {String} packageName (Optional) The package name, for example: 'core', 'touch', 'extjs'
          * @return {Ext.Version} The version
          */
         getVersion: function(packageName) {
+            if (packageName === undefined) {
+                return Ext.lastRegisteredVersion;
+            }
+
             return Ext.versions[packageName];
         },
 
         /**
-         * Create a closure for deprecated code. Note that for max performance, this will be stripped out automatically
-         * when being built with JSBuilder
+         * Create a closure for deprecated code.
+         *
+    // This means Ext.oldMethod is only supported in 4.0.0beta and older.
+    // If Ext.getVersion('extjs') returns a version that is later than '4.0.0beta', for example '4.0.0RC',
+    // the closure will not be invoked
+    Ext.deprecate('extjs', '4.0.0beta', function() {
+        Ext.oldMethod = Ext.newMethod;
+
+        ...
+    });
+
          * @param {String} packageName The package name
          * @param {String} since The last version before it's deprecated
          * @param {Function} closure The callback function to be executed with the specified version is less than the current version
          * @param {Object} scope The execution scope (<tt>this</tt>) if the closure
+         * @markdown
          */
         deprecate: function(packageName, since, closure, scope) {
             if (Version.compare(Ext.getVersion(packageName), since) < 1) {
@@ -300,7 +301,7 @@ var version = '4.0.0beta1',
             }
         }
     }); // End Versioning
-    
+
     Ext.setVersion('core', version);
 
 })();

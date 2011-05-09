@@ -2,7 +2,7 @@
  * @class Ext.tip.QuickTip
  * @extends Ext.tip.ToolTip
  * A specialized tooltip class for tooltips that can be specified in markup and automatically managed by the global
- * {@link Ext.tip.QuickTips} instance.  See the QuickTips class header for additional usage details and examples.
+ * {@link Ext.tip.QuickTipManager} instance.  See the QuickTipManager class header for additional usage details and examples.
  * @constructor
  * Create a new Tip
  * @param {Object} config The configuration options
@@ -10,7 +10,6 @@
  */
 Ext.define('Ext.tip.QuickTip', {
     extend: 'Ext.tip.ToolTip',
-    alias: 'widget.quicktip',
     alternateClassName: 'Ext.QuickTip',
     /**
      * @cfg {Mixed} target The target HTMLElement, Ext.core.Element or id to associate with this Quicktip (defaults to the document).
@@ -25,7 +24,7 @@ Ext.define('Ext.tip.QuickTip', {
 
     // private
     tagConfig : {
-        namespace : "ext",
+        namespace : "data-",
         attribute : "qtip",
         width : "qwidth",
         target : "target",
@@ -47,7 +46,7 @@ Ext.define('Ext.tip.QuickTip', {
 
     /**
      * Configures a new quick tip instance and assigns it to a target element.  The following config values are
-     * supported (for example usage, see the {@link Ext.tip.QuickTips} class header):
+     * supported (for example usage, see the {@link Ext.tip.QuickTipManager} class header):
      * <div class="mdetail-params"><ul>
      * <li>autoHide</li>
      * <li>cls</li>
@@ -106,18 +105,26 @@ Ext.define('Ext.tip.QuickTip', {
     },
     
     getTipCfg: function(e) {
-        var t = e.getTarget(), 
+        var t = e.getTarget(),
             ttp, 
             cfg;
-            
+        
         if(this.interceptTitles && t.title && Ext.isString(t.title)){
             ttp = t.title;
             t.qtip = ttp;
             t.removeAttribute("title");
             e.preventDefault();
-        }else{
+        } 
+        else {
             cfg = this.tagConfig;
-            ttp = t.qtip || Ext.fly(t).getAttribute(cfg.attribute, cfg.namespace);
+            t = e.getTarget('[' + cfg.namespace + cfg.attribute + ']');
+            ttp = t && t[cfg.attribute];
+            if (!ttp) {
+                t = e.getTarget('[' + cfg.namespace + cfg.attribute + ']');
+                if (t) {
+                    ttp = t.getAttribute(cfg.namespace + cfg.attribute);
+                }
+            }
         }
         return ttp;
     },
@@ -131,7 +138,7 @@ Ext.define('Ext.tip.QuickTip', {
             ns,
             ttp,
             autoHide;
-            
+        
         if (me.disabled) {
             return;
         }
@@ -163,19 +170,19 @@ Ext.define('Ext.tip.QuickTip', {
         ttp = me.getTipCfg(e);
         
         if (ttp) {
-            autoHide = elTarget.getAttribute(cfg.hide, ns);
+            autoHide = elTarget.getAttribute(ns + cfg.hide);
                  
             me.activeTarget = {
                 el: target,
                 text: ttp,
-                width: +elTarget.getAttribute(cfg.width, ns) || null,
+                width: +elTarget.getAttribute(ns + cfg.width) || null,
                 autoHide: autoHide != "user" && autoHide !== 'false',
-                title: elTarget.getAttribute(cfg.title, ns),
-                cls: elTarget.getAttribute(cfg.cls, ns),
-                align: elTarget.getAttribute(cfg.align, ns)
+                title: elTarget.getAttribute(ns + cfg.title),
+                cls: elTarget.getAttribute(ns + cfg.cls),
+                align: elTarget.getAttribute(ns + cfg.align)
                 
             };
-            me.anchor = elTarget.getAttribute(cfg.anchor, ns);
+            me.anchor = elTarget.getAttribute(ns + cfg.anchor);
             if (me.anchor) {
                 me.anchorTarget = target;
             }

@@ -42,9 +42,14 @@ Ext.define('Ext.ComponentLoader', {
                     target = loader.getTarget(),
                     items = [];
 
+                //<debug>
                 if (!target.isContainer) {
-                    throw 'Components can only be loader to a container';
+                    Ext.Error.raise({
+                        target: target,
+                        msg: 'Components can only be loaded into a container'
+                    });
                 }
+                //</debug>
 
                 try {
                     items = Ext.decode(response.responseText);

@@ -1,7 +1,7 @@
 /**
  * Component layout for editors
  * @class Ext.layout.component.Editor
- * @extends Ext.layout.Component
+ * @extends Ext.layout.component.Component
  * @private
  */
 Ext.define('Ext.layout.component.Editor', {
@@ -10,7 +10,7 @@ Ext.define('Ext.layout.component.Editor', {
 
     alias: ['layout.editor'],
 
-    extend: 'Ext.layout.Component',
+    extend: 'Ext.layout.component.Component',
 
     /* End Definitions */
 

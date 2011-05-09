@@ -47,7 +47,7 @@ Ext.define('Ext.menu.CheckItem', {
 
     afterRender: function() {
         var me = this;
-        Ext.menu.CheckItem.superclass.afterRender.call(me);
+        this.callParent();
         me.checked = !me.checked;
         me.setChecked(!me.checked, true);
     },
@@ -62,7 +62,7 @@ Ext.define('Ext.menu.CheckItem', {
              * @param {Boolean} checked
              */
             'beforecheckchange',
-            
+
             /**
              * @event checkchange
              * Fires after a change event.
@@ -74,7 +74,7 @@ Ext.define('Ext.menu.CheckItem', {
 
         me.callParent(arguments);
 
-        Ext.menu.MenuManager.registerCheckable(me);
+        Ext.menu.Manager.registerCheckable(me);
 
         if (me.group) {
             if (!me.iconCls) {
@@ -112,11 +112,11 @@ Ext.define('Ext.menu.CheckItem', {
         if(!me.disabled && !me.checkChangeDisabled && !(me.checked && me.group)) {
             me.setChecked(!me.checked);
         }
-        Ext.menu.CheckItem.superclass.onClick.call(me, e);
+        this.callParent([e]);
     },
 
     onDestroy: function() {
-        Ext.menu.MenuManager.unregisterCheckable(this);
+        Ext.menu.Manager.unregisterCheckable(this);
         this.callParent(arguments);
     },
 
@@ -133,7 +133,7 @@ Ext.define('Ext.menu.CheckItem', {
                 me.el[checked  ? 'addCls' : 'removeCls'](me.checkedCls)[!checked ? 'addCls' : 'removeCls'](me.uncheckedCls);
             }
             me.checked = checked;
-            Ext.menu.MenuManager.onCheckChange(me, checked);
+            Ext.menu.Manager.onCheckChange(me, checked);
             if (!suppressEvents) {
                 Ext.callback(me.checkHandler, me.scope, [me, checked]);
                 me.fireEvent('checkchange', me, checked);

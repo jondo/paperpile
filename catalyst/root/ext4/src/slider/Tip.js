@@ -1,14 +1,17 @@
 /**
  * @class Ext.slider.Tip
  * @extends Ext.tip.Tip
- * Simple plugin for using an Ext.tip.Tip with a slider to show the slider value. Example usage:
+ * Simple plugin for using an Ext.tip.Tip with a slider to show the slider value. 
+ * {@img Ext.slider.Tip/Ext.slider.Tip1.png Ext.slider.Tip component}
+ * Example usage:
 <pre>
-new Ext.slider.Slider({
-    width: 214,
-    minValue: 0,
-    maxValue: 100,
-    plugins: new Ext.slider.Tip()
-});
+    Ext.create('Ext.slider.Single', {
+        width: 214,
+        minValue: 0,
+        maxValue: 100,
+        plugins: new Ext.slider.Tip(),
+        renderTo: Ext.getBody()
+    });   
 </pre>
  * Optionally provide your own tip text by overriding getText:
  <pre>

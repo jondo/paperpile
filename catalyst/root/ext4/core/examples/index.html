@@ -45,12 +45,11 @@
 
                     sources[name] = pre.innerHTML;
                 }
-            };
+            }
 
             function run(id) {
                 eval(sources[id]);
-            };
-
+            }
         </script>
     </head>
     <body onload="storeCode();">
@@ -69,7 +68,7 @@ Ext.require('Sample.Person', function() {
 
     aaron.eat("Salad"); // alerts "I'm eating: Salad"
 
-    aaron.setGender('something weird');
+    aaron.setGender('weird');
     alert(aaron.getGender()); // 'unknown'
 
     aaron.resetGender();

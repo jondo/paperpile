@@ -2,7 +2,7 @@
  * @class Ext.form.RadioGroup
  * @extends Ext.form.CheckboxGroup
  * <p>A {@link Ext.form.FieldContainer field container} which has a specialized layout for arranging
- * {@link Ext.form.Radio} controls into columns, and provides convenience {@link Ext.form.Field} methods
+ * {@link Ext.form.field.Radio} controls into columns, and provides convenience {@link Ext.form.field.Field} methods
  * for {@link #getValue getting}, {@link #setValue setting}, and {@link #validate validating} the group
  * of radio buttons as a whole.</p>
  * <p><b>Validation:</b> Individual radio buttons themselves have no default validation behavior, but
@@ -44,7 +44,7 @@ Ext.define('Ext.form.RadioGroup', {
     alias: 'widget.radiogroup',
 
     /**
-     * @cfg {Array} items An Array of {@link Ext.form.Radio Radio}s or Radio config objects
+     * @cfg {Array} items An Array of {@link Ext.form.field.Radio Radio}s or Radio config objects
      * to arrange in the group.
      */
     /**

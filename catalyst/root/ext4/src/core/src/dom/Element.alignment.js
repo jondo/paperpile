@@ -123,7 +123,13 @@ Ext.core.Element.addMethods({
 
         el = Ext.get(el);
         if(!el || !el.dom){
-            throw "Element.alignToXY with an element that doesn't exist";
+            //<debug>
+            Ext.Error.raise({
+                sourceClass: 'Ext.core.Element',
+                sourceMethod: 'getAlignVector',
+                msg: 'Attempted to align an element that doesn\'t exist'
+            });
+            //</debug>
         }
 
         elRegion = el.getRegion();
@@ -141,7 +147,13 @@ Ext.core.Element.addMethods({
         el = Ext.get(el);
 
         if(!el || !el.dom){
-            throw "Element.alignToXY with an element that doesn't exist";
+            //<debug>
+            Ext.Error.raise({
+                sourceClass: 'Ext.core.Element',
+                sourceMethod: 'getAlignToXY',
+                msg: 'Attempted to align an element that doesn\'t exist'
+            });
+            //</debug>
         }
 
         o = o || [0,0];
@@ -176,7 +188,16 @@ Ext.core.Element.addMethods({
             m = p.match(/^([a-z]+)-([a-z]+)(\?)?$/);
 
         if(!m){
-           throw "Element.alignTo with an invalid alignment " + p;
+            //<debug>
+            Ext.Error.raise({
+                sourceClass: 'Ext.core.Element',
+                sourceMethod: 'getAlignToXY',
+                el: el,
+                position: p,
+                offset: o,
+                msg: 'Attemmpted to align an element with an invalid position: "' + p + '"'
+            });
+            //</debug>
         }
 
         p1 = m[1];

@@ -1,6 +1,6 @@
 /**
  * @class Ext.layout.component.ProgressBar
- * @extends Ext.layout.Component
+ * @extends Ext.layout.component.Component
  * @private
  */
 
@@ -10,7 +10,7 @@ Ext.define('Ext.layout.component.ProgressBar', {
 
     alias: ['layout.progressbar'],
 
-    extend: 'Ext.layout.Component',
+    extend: 'Ext.layout.component.Component',
 
     /* End Definitions */
 

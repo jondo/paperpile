@@ -43,9 +43,14 @@
     }
 
     .#{$prefix}form-invalid-under {
-        padding: 2px;
-        line-height: 16px;
+        padding: 2px 2px 2px 18px;
         clear: left;
+
+        color: $form-error-msg-color;
+        font: $form-error-msg-font;
+        line-height: $form-error-msg-line-height;
+
+        background: theme-image($theme-name, $form-exclamation-icon) no-repeat 0 2px;
     }
     
     .#{$prefix}form-invalid-icon {
@@ -58,6 +63,11 @@
         left: 0;
         top: 0;
         
-        background: transparent no-repeat 2px 3px;
+        background: theme-image($theme-name, $form-exclamation-icon) no-repeat 2px 3px;
+
+        ul {
+            /* prevent inner elements from interfering with QuickTip hovering */
+            display: none;
+        }
     }
 }

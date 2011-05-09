@@ -5,19 +5,16 @@
  * The 'chart' member must be set prior to rendering.
  * The legend class displays a list of legend items each of them related with a
  * series being rendered. In order to render the legend item of the proper series
- * the series configuration object must have <code>showInSeries</code> set to
- * true.
+ * the series configuration object must have `showInSeries` set to true.
  *
- * The legend configuration object accepts a <code>position</code> as parameter.
- * The <code>position</code> parameter can be <code>left</code>, <code>right</code>
- * <code>top</code> or <code>bottom</code>. For example:
+ * The legend configuration object accepts a `position` as parameter.
+ * The `position` parameter can be `left`, `right`
+ * `top` or `bottom`. For example:
  *
-   <pre><code>
-        legend: {
-            position: 'right'
-        },
-    </code></pre>
- *
+ *     legend: {
+ *         position: 'right'
+ *     },
+ * 
  * @constructor
  */
 Ext.define('Ext.chart.Legend', {
@@ -129,6 +126,14 @@ Ext.define('Ext.chart.Legend', {
         if (!me.created && me.isDisplayed()) {
             me.createBox();
             me.created = true;
+
+            // Listen for changes to series titles to trigger regeneration of the legend
+            me.chart.series.each(function(series) {
+                series.on('titlechange', function() {
+                    me.create();
+                    me.updatePosition();
+                });
+            });
         }
     },
 
@@ -177,7 +182,7 @@ Ext.define('Ext.chart.Legend', {
         chart.series.each(function(series, i) {
             if (series.showInLegend) {
                 Ext.each([].concat(series.yField), function(field, j) {
-                    item = new Ext.chart.LegendItem({
+                    item = Ext.create('Ext.chart.LegendItem', {
                         legend: this,
                         series: series,
                         surface: chart.surface,

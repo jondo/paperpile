@@ -46,9 +46,13 @@ Ext.define('Ext.slider.Thumb', {
      * Renders the thumb into a slider
      */
     render: function() {
-        this.el = this.slider.innerEl.insertFirst({cls: this.cls});
-
-        this.initEvents();
+        var me = this;
+        
+        me.el = me.slider.innerEl.insertFirst({cls: me.cls});
+        if (me.disabled) {
+            me.disable();
+        }
+        me.initEvents();
     },
     
     /**
@@ -59,7 +63,7 @@ Ext.define('Ext.slider.Thumb', {
         if(!animate){
             this.el.setLeft(v);
         }else{
-            new Ext.fx.Anim({
+            Ext.create('Ext.fx.Anim', {
                 target: this.el,
                 duration: 350,
                 to: {
@@ -89,16 +93,24 @@ Ext.define('Ext.slider.Thumb', {
      * Enables the thumb if it is currently disabled
      */
     enable: function() {
-        this.disabled = false;
-        this.el.removeCls(this.slider.disabledCls);
+        var me = this;
+        
+        me.disabled = false;
+        if (me.el) {
+            me.el.removeCls(me.slider.disabledCls);
+        }
     },
 
     /**
      * Disables the thumb if it is currently enabled
      */
     disable: function() {
-        this.disabled = true;
-        this.el.addCls(this.slider.disabledCls);
+        var me = this;
+        
+        me.disabled = true;
+        if (me.el) {
+            me.el.addCls(me.slider.disabledCls);
+        }
     },
 
     /**
@@ -108,7 +120,7 @@ Ext.define('Ext.slider.Thumb', {
         var me = this,
             el = me.el;
 
-        me.tracker = new Ext.dd.DragTracker({
+        me.tracker = Ext.create('Ext.dd.DragTracker', {
             onBeforeStart: Ext.Function.bind(me.onBeforeDragStart, me),
             onStart      : Ext.Function.bind(me.onDragStart, me),
             onDrag       : Ext.Function.bind(me.onDrag, me),
@@ -226,7 +238,7 @@ Ext.define('Ext.slider.Thumb', {
                 if (!animate) {
                     this.el.setBottom(v);
                 } else {
-                    new Ext.fx.Anim({
+                    Ext.create('Ext.fx.Anim', {
                         target: this.el,
                         duration: 350,
                         to: {

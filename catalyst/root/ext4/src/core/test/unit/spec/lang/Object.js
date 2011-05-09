@@ -38,38 +38,38 @@ describe("Ext.Object", function(){
         });
     });
 
-    describe("keyOf", function(){
-        var keyOf = Ext.Object.keyOf;
+    describe("getKey", function(){
+        var getKey = Ext.Object.getKey;
 
         it("should return null for a null object", function(){
-            expect(keyOf(null, 'foo')).toBeNull();
+            expect(getKey(null, 'foo')).toBeNull();
         });
 
         it("should return null for an empty object", function(){
-            expect(keyOf({}, 'foo')).toBeNull();
+            expect(getKey({}, 'foo')).toBeNull();
         });
 
         it("should return null if the value doesn't exist", function(){
-            expect(keyOf({
+            expect(getKey({
                 foo: 1,
                 bar: 2
             }, 3)).toBeNull();
         });
 
         it("should only do strict matching", function(){
-            expect(keyOf({
+            expect(getKey({
                 foo: 1
             }, '1')).toBeNull();
         });
 
         it("should return the correct key if it matches", function(){
-            expect(keyOf({
+            expect(getKey({
                 foo: 1
             }, 1)).toEqual('foo');
         });
 
         it("should only return the first matched value", function(){
-            expect(keyOf({
+            expect(getKey({
                 bar: 1,
                 foo: 1
             }, 1)).toEqual('bar');
@@ -210,7 +210,7 @@ describe("Ext.Object", function(){
                 var d = new Date(2011, 0, 1);
                 expect(toQueryString({
                     foo: d
-                })).toEqual('foo=2011-01-01T00:00:00');
+                })).toEqual('foo=2011-01-01T00%3A00%3A00');
             });
 
             it("should url encode the key", function(){
@@ -255,25 +255,20 @@ describe("Ext.Object", function(){
             });
         });
 
-        describe("prefix", function(){
-            it("should have no prefix by default", function(){
-                expect(toQueryString({
-                    foo: 'val'
-                })).toEqual('foo=val');
-            });
-
-            it("should prefix the querystring with the passed value", function(){
-                expect(toQueryString({
-                    foo: 1
-                }, 'pre')).toEqual('pre&foo=1')
-            });
-
-            it("should include a leading ampersand when the prefix is specified", function(){
-                expect(toQueryString({
-                    val: 'val2'
-                }, 'aprefix=val1')).toEqual('aprefix=val1&val=val2');
-            });
+        describe("recursive", function() {
+            it("should support both nested arrays and objects", function() {
+                expect(decodeURIComponent(Ext.Object.toQueryString({
+                    username: 'Jacky',
+                    dateOfBirth: {
+                        day: 1,
+                        month: 2,
+                        year: 1911
+                    },
+                    hobbies: ['coding', 'eating', 'sleeping', [1,2]]
+                }, true))).toEqual('username=Jacky&dateOfBirth[day]=1&dateOfBirth[month]=2&dateOfBirth[year]=1911&hobbies[0]=coding&hobbies[1]=eating&hobbies[2]=sleeping&hobbies[3][0]=1&hobbies[3][1]=2')
+            })
         });
+
     });
 
     describe("merge", function(){
@@ -306,31 +301,21 @@ describe("Ext.Object", function(){
         });
 
         describe("complex values", function(){
-            it("should copy a date but not have the same reference", function(){
-                var d = new Date(2011, 0, 1),
-                    result = merge({}, 'prop', d);
-
-                expect(result.prop).toEqual(d);
-                expect(result.prop).not.toBe(d);
-            });
-
             it("should copy a simple object but not have the same reference", function(){
                 var o = {
-                    foo: 'prop'
+                    foo: 'prop',
+                    tada: {
+                        blah: 'bleh'
+                    }
                 }, result = merge({}, 'prop', o);
 
                 expect(result.prop).toEqual({
-                    foo: 'prop'
+                    foo: 'prop',
+                    tada: {
+                        blah: 'bleh'
+                    }
                 });
                 expect(result.prop).not.toBe(o);
-            });
-
-            it("should copy an array but not have the same reference", function(){
-                var arr = [1, 2, 3],
-                    result = merge({}, 'prop1', arr);
-
-                expect(result.prop1).toEqual([1, 2, 3]);
-                expect(result.prop1).not.toBe(arr);
             });
 
             it("should NOT merge an instance (the constructor of which is not Object)", function(){
@@ -417,6 +402,215 @@ describe("Ext.Object", function(){
             expect(result.foo).toEqual('bar');
             expect(result).toBe(o);
 
+        });
+    });
+
+    describe("toQueryObjects", function() {
+        var object = {
+            username: 'Jacky',
+            dateOfBirth: {
+                day: 1,
+                month: 2,
+                year: 1911
+            },
+            hobbies: ['coding', 'eating', 'sleeping', [1,2,3]]
+        };
+
+        it("simple key value", function() {
+            expect(Ext.Object.toQueryObjects('username', 'Jacky')).toEqual([
+                {
+                    name: 'username',
+                    value: 'Jacky'
+                }
+            ]);
+        });
+
+        it("non-recursive array", function() {
+            expect(Ext.Object.toQueryObjects('hobbies', ['eating', 'sleeping', 'coding'])).toEqual([
+                {
+                    name: 'hobbies',
+                    value: 'eating'
+                },
+                {
+                    name: 'hobbies',
+                    value: 'sleeping'
+                },
+                {
+                    name: 'hobbies',
+                    value: 'coding'
+                }
+            ]);
+        });
+
+        it("recursive object", function() {
+            expect(Ext.Object.toQueryObjects('dateOfBirth', {
+                day: 1,
+                month: 2,
+                year: 1911,
+                somethingElse: {
+                    nested: {
+                        very: 'very',
+                        deep: {
+                            inHere: true
+                        }
+                    }
+                }
+            }, true)).toEqual([
+                {
+                    name: 'dateOfBirth[day]',
+                    value: 1
+                },
+                {
+                    name: 'dateOfBirth[month]',
+                    value: 2
+                },
+                {
+                    name: 'dateOfBirth[year]',
+                    value: 1911
+                },
+                {
+                    name: 'dateOfBirth[somethingElse][nested][very]',
+                    value: 'very'
+                },
+                {
+                    name: 'dateOfBirth[somethingElse][nested][deep][inHere]',
+                    value: true
+                }
+            ]);
+        });
+
+        it("recursive array", function() {
+            expect(Ext.Object.toQueryObjects('hobbies', [
+                'eating', 'sleeping', 'coding', ['even', ['more']]
+            ], true)).toEqual([
+                {
+                    name: 'hobbies[0]',
+                    value: 'eating'
+                },
+                {
+                    name: 'hobbies[1]',
+                    value: 'sleeping'
+                },
+                {
+                    name: 'hobbies[2]',
+                    value: 'coding'
+                },
+                {
+                    name: 'hobbies[3][0]',
+                    value: 'even'
+                },
+                {
+                    name: 'hobbies[3][1][0]',
+                    value: 'more'
+                }
+            ]);
+        });
+    });
+
+    describe("fromQueryString", function() {
+        var fromQueryString = Ext.Object.fromQueryString;
+
+        describe("standard mode", function() {
+            it("empty string", function(){
+                expect(fromQueryString('')).toEqual({});
+            });
+
+            it("simple single key value pair", function(){
+                expect(fromQueryString('name=Jacky')).toEqual({name: 'Jacky'});
+            });
+
+            it("simple single key value pair with empty value", function(){
+                expect(fromQueryString('name=')).toEqual({name: ''});
+            });
+
+            it("multiple key value pairs", function(){
+                expect(fromQueryString('name=Jacky&loves=food')).toEqual({name: 'Jacky', loves: 'food'});
+            });
+
+            it("multiple key value pairs with URI encoded component", function(){
+                expect(fromQueryString('a%20property=%24300%20%26%205%20cents')).toEqual({'a property': '$300 & 5 cents'});
+            });
+
+            it("simple array", function(){
+                expect(fromQueryString('foo=1&foo=2&foo=3')).toEqual({foo: ['1', '2', '3']});
+            });
+        });
+
+        describe("recursive mode", function() {
+            it("empty string", function(){
+                expect(fromQueryString('', true)).toEqual({});
+            });
+
+            it("simple single key value pair", function(){
+                expect(fromQueryString('name=Jacky', true)).toEqual({name: 'Jacky'});
+            });
+
+            it("simple single key value pair with empty value", function(){
+                expect(fromQueryString('name=', true)).toEqual({name: ''});
+            });
+
+            it("multiple key value pairs", function(){
+                expect(fromQueryString('name=Jacky&loves=food', true)).toEqual({name: 'Jacky', loves: 'food'});
+            });
+
+            it("multiple key value pairs with URI encoded component", function(){
+                expect(fromQueryString('a%20property=%24300%20%26%205%20cents', true)).toEqual({'a property': '$300 & 5 cents'});
+            });
+
+            it("simple array (last value with the same name will overwrite previous value)", function(){
+                expect(fromQueryString('foo=1&foo=2&foo=3', true)).toEqual({foo: '3'});
+            });
+
+            it("simple array with empty brackets", function(){
+                expect(fromQueryString('foo[]=1&foo[]=2&foo[]=3', true)).toEqual({foo: ['1', '2', '3']});
+            });
+
+            it("simple array with non-empty brackets", function(){
+                expect(fromQueryString('foo[0]=1&foo[1]=2&foo[2]=3', true)).toEqual({foo: ['1', '2', '3']});
+            });
+
+            it("simple array with non-empty brackets and non sequential keys", function(){
+                expect(fromQueryString('foo[3]=1&foo[1]=2&foo[2]=3&foo[0]=0', true)).toEqual({foo: ['0', '2', '3', '1']});
+            });
+
+            it("simple array with non-empty brackets and non sequential keys and holes", function(){
+                expect(fromQueryString('foo[3]=1&foo[1]=2&foo[2]=3', true)).toEqual({foo: [undefined, '2', '3', '1']});
+            });
+
+            it("nested array", function(){
+                expect(fromQueryString('some[0][0]=stuff&some[0][1]=morestuff&some[0][]=otherstuff&some[1]=thingelse', true)).toEqual({
+                    some: [
+                        ['stuff', 'morestuff', 'otherstuff'],
+                        'thingelse'
+                    ]
+                });
+            });
+
+            it("nested object", function(){
+                expect(fromQueryString('dateOfBirth[day]=1&dateOfBirth[month]=2&dateOfBirth[year]=1911&dateOfBirth[extra][hour]=4&dateOfBirth[extra][minute]=30', true)).toEqual({
+                    dateOfBirth: {
+                        day: '1',
+                        month: '2',
+                        year: '1911',
+                        extra: {
+                            hour: '4',
+                            minute: '30'
+                        }
+                    }
+                });
+            });
+
+            it("nested mixed types", function(){
+                expect(fromQueryString('username=Jacky&dateOfBirth[day]=1&dateOfBirth[month]=2&dateOfBirth[year]=1911&hobbies[0]=coding&hobbies[1]=eating&hobbies[2]=sleeping&hobbies[3][0]=nested&hobbies[3][1]=stuff', true)).toEqual({
+                    username: 'Jacky',
+                    dateOfBirth: {
+                        day: '1',
+                        month: '2',
+                        year: '1911'
+                    },
+                    hobbies: ['coding', 'eating', 'sleeping', ['nested', 'stuff']]
+                });
+            });
         });
     });
 

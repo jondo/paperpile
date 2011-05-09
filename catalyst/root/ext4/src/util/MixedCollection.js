@@ -92,7 +92,7 @@ Ext.define('Ext.util.MixedCollection', {
         }
 
         //sort the temporary array
-        c.sort(function(a, b){
+        Ext.Array.sort(c, function(a, b){
             var v = fn(a[property], b[property]) * dsc;
             if(v === 0){
                 v = (a.index < b.index ? -1 : 1);
@@ -130,7 +130,7 @@ Ext.define('Ext.util.MixedCollection', {
             };
         }
 
-        temp.sort(function(a, b) {
+        Ext.Array.sort(temp, function(a, b) {
             var v = sorterFn(a.value, b.value);
             if (v === 0) {
                 v = (a.index < b.index ? -1 : 1);

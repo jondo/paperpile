@@ -4,7 +4,7 @@
  * <p>Provides {@link Ext.direct.Manager} support for loading form data.</p>
  * <p>This example illustrates usage of Ext.direct.Direct to <b>load</b> a form through Ext.Direct.</p>
  * <pre><code>
-var myFormPanel = new Ext.form.FormPanel({
+var myFormPanel = new Ext.form.Panel({
     // configs for FormPanel
     title: 'Basic Information',
     renderTo: document.body,
@@ -125,7 +125,7 @@ Ext.define('Ext.form.action.DirectLoad', {
             result = {};
         }
         this.callParent([result]);
-        Ext.form.action.DirectLoad.superclass.onSuccess.call(this, result);
+        this.callParent([result]);
     }
 });
 

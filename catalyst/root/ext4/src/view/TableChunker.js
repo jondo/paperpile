@@ -56,7 +56,7 @@ Ext.define('Ext.view.TableChunker', {
     },
 
     metaRowTpl: [
-        '<tr class="' + Ext.baseCSSPrefix + 'grid-row {addlSelector} {[this.embedRowCls()]}">',
+        '<tr class="' + Ext.baseCSSPrefix + 'grid-row {addlSelector} {[this.embedRowCls()]}" {[this.embedRowAttr()]}>',
             '<tpl for="columns">',
                 '<td class="' + Ext.baseCSSPrefix + 'grid-cell ' + Ext.baseCSSPrefix + 'grid-cell-{id} {{id}-modified} {{id}-tdCls}" {{id}-tdAttr}><div unselectable="on" class="' + Ext.baseCSSPrefix + 'grid-cell-inner ' + Ext.baseCSSPrefix + 'unselectable" style="{{id}-style}; text-align: {align};">{{id}}</div></td>',
             '</tpl>',
@@ -64,6 +64,9 @@ Ext.define('Ext.view.TableChunker', {
     ],
     embedRowCls: function() {
         return '{rowCls}';
+    },
+    embedRowAttr: function() {
+        return '{rowAttr}';
     },
     openTableWrap: function() {
         return '';
@@ -87,7 +90,8 @@ Ext.define('Ext.view.TableChunker', {
             ln = features.length,
             i  = 0,
             memberFns = {
-                embedRowCls: this.embedRowCls
+                embedRowCls: this.embedRowCls,
+                embedRowAttr: this.embedRowAttr
             },
             // copy the default
             metaRowTpl = Array.prototype.slice.call(this.metaRowTpl, 0),
@@ -97,21 +101,21 @@ Ext.define('Ext.view.TableChunker', {
             if (!features[i].disabled) {
                 features[i].mutateMetaRowTpl(metaRowTpl);
                 Ext.apply(memberFns, features[i].getMetaRowTplFragments());
-                Ext.apply(tplMemberFns, features[i].getTplFragments());
+                Ext.apply(tplMemberFns, features[i].getFragmentTpl());
                 Ext.apply(tableTplMemberFns, features[i].getTableFragments());
             }
         }
         
-        metaRowTpl = new Ext.XTemplate(metaRowTpl.join(''), memberFns);
+        metaRowTpl = Ext.create('Ext.XTemplate', metaRowTpl.join(''), memberFns);
         cfg.row = metaRowTpl.applyTemplate(cfg);
         
-        metaTableTpl = new Ext.XTemplate(this.metaTableTpl.join(''), tableTplMemberFns);
+        metaTableTpl = Ext.create('Ext.XTemplate', this.metaTableTpl.join(''), tableTplMemberFns);
         
         tpl = metaTableTpl.applyTemplate(cfg);
         
         // TODO: Investigate eliminating.
         if (!textOnly) {
-            tpl = new Ext.XTemplate(tpl, tplMemberFns);
+            tpl = Ext.create('Ext.XTemplate', tpl, tplMemberFns);
         }
         return tpl;
         

@@ -18,6 +18,8 @@ these convenient shorthands:
  */
 (function(Class, alias) {
 
+    var slice = Array.prototype.slice;
+
     var Manager = Ext.ClassManager = {
 
         /**
@@ -51,38 +53,36 @@ these convenient shorthands:
             nameToAliases: {}
         },
 
-        /**
-         * @private
-         */
-        packages: {},
+        /** @private */
+        enableNamespaceParseCache: true,
+
+        /** @private */
+        namespaceParseCache: {},
+
+        /** @private */
+        instantiators: [],
+
+        //<debug>
+        /** @private */
+        instantiationCounts: {},
+        //</debug>
 
         /**
-         * Checks to see if a class has already been created. If the provided argument is an array, it will return true if
-         * all corresponding classes exist, false otherwise.
+         * Checks if a class has already been created.
          *
-         * @param {String/Array} className
+         * @param {String} className
          * @return {Boolean} exist
          */
-        exist: function(className) {
+        isCreated: function(className) {
             var i, ln, part, root, parts;
 
-            if (!className) {
-                return false;
-            }
-
-            if (Ext.isArray(className)) {
-                for (i = 0; i < className.length; i++) {
-                    if (!this.exist.call(this, className[i])) {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
             //<debug error>
-            if (!Ext.isString(className)) {
-                throw new Error("[Ext.ClassManager.exist] Invalid classname, must be a string");
+            if (typeof className !== 'string' || className.length < 1) {
+                Ext.Error.raise({
+                    sourceClass: "Ext.ClassManager",
+                    sourceMethod: "exist",
+                    msg: "Invalid classname, must be a string and must not be empty"
+                });
             }
             //</debug>
 
@@ -96,7 +96,7 @@ these convenient shorthands:
             for (i = 0, ln = parts.length; i < ln; i++) {
                 part = parts[i];
 
-                if (!Ext.isString(part)) {
+                if (typeof part !== 'string') {
                     root = part;
                 } else {
                     if (!root || !root[part]) {
@@ -120,10 +120,22 @@ these convenient shorthands:
          */
         parseNamespace: function(namespace) {
             //<debug error>
-            if (!Ext.isString(namespace)) {
-                throw new Error("[Ext.ClassManager.parseNamespace] namespace must be a string");
+            if (typeof namespace !== 'string') {
+                Ext.Error.raise({
+                    sourceClass: "Ext.ClassManager",
+                    sourceMethod: "parseNamespace",
+                    msg: "Invalid namespace, must be a string"
+                });
             }
             //</debug>
+
+            var cache = this.namespaceParseCache;
+
+            if (this.enableNamespaceParseCache) {
+                if (cache.hasOwnProperty(namespace)) {
+                    return cache[namespace];
+                }
+            }
 
             var parts = [],
                 rewrites = this.namespaceRewrites,
@@ -137,7 +149,7 @@ these convenient shorthands:
                 if (namespace === from || namespace.substring(0, from.length) === from) {
                     namespace = namespace.substring(from.length);
 
-                    if (!Ext.isString(to)) {
+                    if (typeof to !== 'string') {
                         root = to;
                     } else {
                         parts = parts.concat(to.split('.'));
@@ -151,13 +163,17 @@ these convenient shorthands:
 
             parts = parts.concat(namespace.split('.'));
 
-            return Ext.Array.clean(parts);
+            if (this.enableNamespaceParseCache) {
+                cache[namespace] = parts;
+            }
+
+            return parts;
         },
 
         /**
          * Creates a namespace and assign the `value` to the created object
 
-    Ext.ClassManager.assignNamespace('MyCompany.pkg.Example', someObject);
+    Ext.ClassManager.setNamespace('MyCompany.pkg.Example', someObject);
 
     alert(MyCompany.pkg.Example === someObject); // alerts true
 
@@ -165,7 +181,7 @@ these convenient shorthands:
          * @param {Mixed} value
          * @markdown
          */
-        assignNamespace: function(name, value) {
+        setNamespace: function(name, value) {
             var root = Ext.global,
                 parts = this.parseNamespace(name),
                 leaf = parts.pop(),
@@ -174,7 +190,7 @@ these convenient shorthands:
             for (i = 0, ln = parts.length; i < ln; i++) {
                 part = parts[i];
 
-                if (!Ext.isString(part)) {
+                if (typeof part !== 'string') {
                     root = part;
                 } else {
                     if (!root[part]) {
@@ -196,16 +212,15 @@ these convenient shorthands:
          */
         createNamespaces: function() {
             var root = Ext.global,
-                namespaces = Ext.Array.toArray(arguments),
                 parts, part, i, j, ln, subLn;
 
-            for (i = 0, ln = namespaces.length; i < ln; i++) {
-                parts = this.parseNamespace(namespaces[i]);
+            for (i = 0, ln = arguments.length; i < ln; i++) {
+                parts = this.parseNamespace(arguments[i]);
 
                 for (j = 0, subLn = parts.length; j < subLn; j++) {
                     part = parts[j];
 
-                    if (!Ext.isString(part)) {
+                    if (typeof part !== 'string') {
                         root = part;
                     } else {
                         if (!root[part]) {
@@ -230,7 +245,7 @@ these convenient shorthands:
         set: function(name, value) {
             var targetName = this.getName(value);
 
-            this.classes[name] = this.assignNamespace(name, value);
+            this.classes[name] = this.setNamespace(name, value);
 
             if (targetName && targetName !== name) {
                 this.maps.alternateToName[name] = targetName;
@@ -257,7 +272,7 @@ these convenient shorthands:
             for (i = 0, ln = parts.length; i < ln; i++) {
                 part = parts[i];
 
-                if (!Ext.isString(part)) {
+                if (typeof part !== 'string') {
                     root = part;
                 } else {
                     if (!root || !root[part]) {
@@ -271,18 +286,6 @@ these convenient shorthands:
             return root;
         },
 
-        registerPackage: Ext.Function.flexSetter(function(id, names) {
-            this.packages[id] = Ext.Array.from(names);
-        }),
-
-        getPackage: function(id) {
-            return this.packages[id];
-        },
-
-        hasPackage: function(id) {
-            return this.packages.hasOwnProperty(id);
-        },
-
         /**
          * Register the alias for a class.
          *
@@ -294,7 +297,7 @@ these convenient shorthands:
                 nameToAliasesMap = this.maps.nameToAliases,
                 className;
 
-            if (Ext.isString(cls)) {
+            if (typeof cls === 'string') {
                 className = cls;
             } else {
                 className = this.getName(cls);
@@ -345,7 +348,7 @@ these convenient shorthands:
         /**
          * Get the name of a class by its alternate name.
          *
-         * @param {String} alias
+         * @param {String} alternate
          * @return {String} className
          */
         getNameByAlternate: function(alternate) {
@@ -385,7 +388,7 @@ these convenient shorthands:
     Ext.ClassManager.getClass(component); // returns Ext.Component
              *
          * @param {Object} object
-         * @return {Class/null} class
+         * @return {Class} class
          * @markdown
          */
         getClass: function(object) {
@@ -434,30 +437,61 @@ these convenient shorthands:
             var manager = this;
 
             //<debug error>
-            if (!Ext.isString(className)) {
-                throw new Error("[Ext.define] Invalid class name of: '" + className + "', must be a valid string");
+            if (typeof className !== 'string') {
+                Ext.Error.raise({
+                    sourceClass: "Ext",
+                    sourceMethod: "define",
+                    msg: "Invalid class name '" + className + "' specified, must be a non-empty string"
+                });
             }
             //</debug>
 
             data.$className = className;
 
             return new Class(data, function() {
-                var postprocessors = Ext.Array.from(data.postprocessors || manager.getDefaultPostprocessors()),
-                    process = function(clsName, cls, clsData) {
-                        var name = postprocessors.shift();
+                var postprocessorStack = data.postprocessors || manager.defaultPostprocessors,
+                    registeredPostprocessors = manager.postprocessors,
+                    index = 0,
+                    postprocessors = [],
+                    postprocessor, postprocessors, process, i, ln;
 
-                        if (!name) {
-                            manager.set(className, cls);
+                delete data.postprocessors;
 
-                            if (Ext.isFunction(createdFn)) {
-                                createdFn.call(cls, cls);
+                for (i = 0, ln = postprocessorStack.length; i < ln; i++) {
+                    postprocessor = postprocessorStack[i];
+
+                    if (typeof postprocessor === 'string') {
+                        postprocessor = registeredPostprocessors[postprocessor];
+
+                        if (!postprocessor.always) {
+                            if (data[postprocessor.name] !== undefined) {
+                                postprocessors.push(postprocessor.fn);
                             }
+                        }
+                        else {
+                            postprocessors.push(postprocessor.fn);
+                        }
+                    }
+                    else {
+                        postprocessors.push(postprocessor);
+                    }
+                }
 
-                            return;
+                process = function(clsName, cls, clsData) {
+                    postprocessor = postprocessors[index++];
+
+                    if (!postprocessor) {
+                        manager.set(className, cls);
+
+                        if (createdFn) {
+                            createdFn.call(cls, cls);
                         }
 
-                        this.getPostprocessor(name).call(this, clsName, cls, clsData, process);
-                    };
+                        return;
+                    }
+
+                    postprocessor.call(this, clsName, cls, clsData, process);
+                };
 
                 process.call(manager, className, this, data);
             });
@@ -477,8 +511,8 @@ these convenient shorthands:
          * @markdown
          */
         instantiateByAlias: function() {
-            var args = Ext.Array.toArray(arguments),
-                alias = args.shift(),
+            var alias = arguments[0],
+                args = slice.call(arguments),
                 className = this.getNameByAlias(alias);
 
             if (!className) {
@@ -486,7 +520,11 @@ these convenient shorthands:
 
                 //<debug error>
                 if (!className) {
-                    throw new Error("[Ext.ClassManager] Cannot create an instance of unrecognized alias: " + alias);
+                    Ext.Error.raise({
+                        sourceClass: "Ext",
+                        sourceMethod: "createByAlias",
+                        msg: "Cannot create an instance of unrecognized alias: " + alias
+                    });
                 }
                 //</debug>
 
@@ -497,14 +535,10 @@ these convenient shorthands:
                 }
                 //</debug>
 
-                Ext.Loader.enableSyncMode(true);
-                Ext.require(className, function() {
-                    Ext.Loader.triggerReady();
-                    Ext.Loader.enableSyncMode(false);
-                });
+                Ext.syncRequire(className);
             }
 
-            args.unshift(className);
+            args[0] = className;
 
             return this.instantiate.apply(this, args);
         },
@@ -533,17 +567,19 @@ these convenient shorthands:
          * @markdown
          */
         instantiate: function() {
-            var args = Ext.Array.toArray(arguments),
-                name = args.shift(),
+            var name = arguments[0],
+                args = slice.call(arguments, 1),
                 alias = name,
-                temp = function() {},
-                possibleName, cls, constructor, instanceCls;
+                possibleName, cls;
 
-            if (!Ext.isFunction(name)) {
+            if (typeof name !== 'function') {
                 //<debug error>
-                if ((!Ext.isString(name) || name.length < 1)) {
-                    throw new Error("[Ext.create] Invalid class name or alias: '" + name + "', must be a valid string");
-
+                if ((typeof name !== 'string' || name.length < 1)) {
+                    Ext.Error.raise({
+                        sourceClass: "Ext",
+                        sourceMethod: "create",
+                        msg: "Invalid class name or alias '" + name + "' specified, must be a non-empty string"
+                    });
                 }
                 //</debug>
 
@@ -584,38 +620,69 @@ these convenient shorthands:
                 }
                 //</debug>
 
-                Ext.Loader.enableSyncMode(true);
-
-                Ext.require(name, function() {
-                    // Switch Ext.Loader back to async mode right after this class and all
-                    // its dependencies have been resolved
-                    Ext.Loader.triggerReady();
-                    Ext.Loader.enableSyncMode(false);
-                });
+                Ext.syncRequire(name);
 
                 cls = this.get(name);
             }
 
             //<debug error>
             if (!cls) {
-                throw new Error("[Ext.ClassManager] Cannot create an instance of unrecognized class name / alias: " + alias);
+                Ext.Error.raise({
+                    sourceClass: "Ext",
+                    sourceMethod: "create",
+                    msg: "Cannot create an instance of unrecognized class name / alias: " + alias
+                });
             }
 
-            if (!Ext.isFunction(cls)) {
-                throw new Error("[Ext.create] '" + name + "' is a singleton and cannot be instantiated");
+            if (typeof cls !== 'function') {
+                Ext.Error.raise({
+                    sourceClass: "Ext",
+                    sourceMethod: "create",
+                    msg: "'" + name + "' is a singleton and cannot be instantiated"
+                });
             }
             //</debug>
 
-            constructor = cls.prototype.constructor;
-            instanceCls = function() {
-                return constructor.apply(this, args);
-            };
+            //<debug>
+            if (!this.instantiationCounts[name]) {
+                this.instantiationCounts[name] = 0;
+            }
 
-            temp.prototype = cls.prototype;
-            instanceCls.prototype = new temp();
-            instanceCls.prototype.constructor = instanceCls;
+            this.instantiationCounts[name]++;
+            //</debug>
 
-            return new instanceCls();
+            return this.getInstantiator(args.length)(cls, args);
+        },
+
+        /**
+         * @private
+         * @param name
+         * @param args
+         */
+        dynInstantiate: function(name, args) {
+            args = Ext.Array.from(args, true);
+            args.unshift(name);
+
+            return this.instantiate.apply(this, args);
+        },
+
+        /**
+         * @private
+         * @param length
+         */
+        getInstantiator: function(length) {
+            if (!this.instantiators[length]) {
+                var i = length,
+                    args = [];
+
+                for (i = 0; i < length; i++) {
+                    args.push('a['+i+']');
+                }
+
+                this.instantiators[length] = new Function('c', 'a', 'return new c('+args.join(',')+')');
+            }
+
+            return this.instantiators[length];
         },
 
         /**
@@ -624,34 +691,24 @@ these convenient shorthands:
         postprocessors: {},
 
         /**
-         * Register post-processors. This method is a {@link Ext.Function#flexSetter flexSetter}
+         * @private
+         */
+        defaultPostprocessors: [],
+
+        /**
+         * Register a post-processor function.
          *
          * @param {String} name
          * @param {Function} postprocessor
          */
-        registerPostprocessor: Ext.Function.flexSetter(function(name, fn) {
-            this.postprocessors[name] = fn;
+        registerPostprocessor: function(name, fn, always) {
+            this.postprocessors[name] = {
+                name: name,
+                always: always ||  false,
+                fn: fn
+            };
 
             return this;
-        }),
-
-        /**
-         * Retrieve a post processor by name
-         *
-         * @param {String} name
-         * @return {Class} postProcessor
-         */
-        getPostprocessor: function(name) {
-            return this.postprocessors[name];
-        },
-
-        /**
-         * Get the default post-processors array stack which are applied to every class.
-         *
-         * @return {Array} defaultPostprocessors
-         */
-        getDefaultPostprocessors: function() {
-            return this.defaultPostprocessors || [];
         },
 
         /**
@@ -671,17 +728,17 @@ these convenient shorthands:
          * any existing post-processor
          *
          * @param {String} name The post-processor name. Note that it needs to be registered with
-         * {@link Ext.ClassManager#registerPostprocessor registerPostprocessor} before this
+         * {@link Ext.ClassManager#registerPostprocessor} before this
          * @param {String} offset The insertion position. Four possible values are:
          * 'first', 'last', or: 'before', 'after' (relative to the name provided in the third argument)
          * @param {String} relativeName
          * @return {Ext.ClassManager} this
          */
-        insertDefaultPostprocessor: function(name, offset, relativeName) {
+        setDefaultPostprocessorPosition: function(name, offset, relativeName) {
             var defaultPostprocessors = this.defaultPostprocessors,
                 index;
 
-            if (Ext.isString(offset)) {
+            if (typeof offset === 'string') {
                 if (offset === 'first') {
                     defaultPostprocessors.unshift(name);
 
@@ -728,8 +785,12 @@ these convenient shorthands:
                 name, alias, aliases, possibleName, regex, i, ln;
 
             //<debug error>
-            if (!Ext.isString(expression) || expression.length < 1) {
-                throw new Error("[Ext.ClassManager.getNamesByExpression] expression must be a valid string");
+            if (typeof expression !== 'string' || expression.length < 1) {
+                Ext.Error.raise({
+                    sourceClass: "Ext.ClassManager",
+                    sourceMethod: "getNamesByExpression",
+                    msg: "Expression " + expression + " is invalid, must be a non-empty string"
+                });
             }
             //</debug>
 
@@ -777,72 +838,74 @@ these convenient shorthands:
         }
     };
 
-    Manager.registerPostprocessor({
-        alias: function(name, cls, data, fn) {
-            var aliases = Ext.Array.from(data.alias),
-                widgetPrefix = 'widget.',
-                i, ln, alias;
+    Manager.registerPostprocessor('alias', function(name, cls, data, fn) {
+        var aliases = data.alias,
+            widgetPrefix = 'widget.',
+            i, ln, alias;
 
-            for (i = 0, ln = aliases.length; i < ln; i++) {
-                alias = aliases[i];
+        if (!(aliases instanceof Array)) {
+            aliases = [aliases];
+        }
 
-                //<debug error>
-                if (!Ext.isString(alias)) {
-                    throw new Error("[Ext.define] Invalid alias of: '" + alias + "' for class: '" + name + "'; must be a valid string");
-                }
-                //</debug>
+        for (i = 0, ln = aliases.length; i < ln; i++) {
+            alias = aliases[i];
 
-                this.setAlias(cls, alias);
+            //<debug error>
+            if (typeof alias !== 'string') {
+                Ext.Error.raise({
+                    sourceClass: "Ext",
+                    sourceMethod: "define",
+                    msg: "Invalid alias of: '" + alias + "' for class: '" + name + "'; must be a valid string"
+                });
             }
+            //</debug>
 
-            // This is ugly, will change to make use of parseNamespace for alias later on
-            for (i = 0, ln = aliases.length; i < ln; i++) {
-                alias = aliases[i];
+            this.setAlias(cls, alias);
+        }
 
-                if (alias.substring(0, widgetPrefix.length) === widgetPrefix) {
-                    // Only the first alias with 'widget.' prefix will be used for xtype
-                    // TODO change the property name to $xtype instead
-                    cls.xtype = cls.$xtype = alias.substring(widgetPrefix.length);
-                    break;
-                }
-            }
+        // This is ugly, will change to make use of parseNamespace for alias later on
+        for (i = 0, ln = aliases.length; i < ln; i++) {
+            alias = aliases[i];
 
-            if (fn) {
-                fn.call(this, name, cls, data);
-            }
-        },
-
-        singleton: function(name, cls, data, fn) {
-            if (data.singleton === true) {
-                cls = new cls();
-            }
-
-            if (fn) {
-                fn.call(this, name, cls, data);
-            }
-        },
-
-        alternateClassName: function(name, cls, data, fn) {
-            var alternates = Ext.Array.from(data.alternateClassName),
-                i, ln, alternate;
-
-            for (i = 0, ln = alternates.length; i < ln; i++) {
-                alternate = alternates[i];
-
-                //<debug error>
-                if (!Ext.isString(alternate)) {
-                    throw new Error("[Ext.define] Invalid alternate of: '" + alternate + "' for class: '" + name +
-                                    "'; must be a valid string");
-                }
-                //</debug>
-
-                this.set(alternate, cls);
-            }
-
-            if (fn) {
-                fn.call(this, name, cls, data);
+            if (alias.substring(0, widgetPrefix.length) === widgetPrefix) {
+                // Only the first alias with 'widget.' prefix will be used for xtype
+                cls.xtype = cls.$xtype = alias.substring(widgetPrefix.length);
+                break;
             }
         }
+
+        fn.call(this, name, cls, data);
+    });
+
+    Manager.registerPostprocessor('singleton', function(name, cls, data, fn) {
+        fn.call(this, name, new cls(), data);
+    });
+
+    Manager.registerPostprocessor('alternateClassName', function(name, cls, data, fn) {
+        var alternates = data.alternateClassName,
+            i, ln, alternate;
+
+        if (!(alternates instanceof Array)) {
+            alternates = [alternates];
+        }
+
+        for (i = 0, ln = alternates.length; i < ln; i++) {
+            alternate = alternates[i];
+
+            //<debug error>
+            if (typeof alternate !== 'string') {
+                Ext.Error.raise({
+                    sourceClass: "Ext",
+                    sourceMethod: "define",
+                    msg: "Invalid alternate of: '" + alternate + "' for class: '" + name + "'; must be a valid string"
+                });
+            }
+            //</debug>
+
+            this.set(alternate, cls);
+        }
+
+        fn.call(this, name, cls, data);
     });
 
     Manager.setDefaultPostprocessors(['alias', 'singleton', 'alternateClassName']);
@@ -856,12 +919,14 @@ these convenient shorthands:
         create: alias(Manager, 'instantiate'),
 
         /**
+         * @private
+         * API to be stablized
          *
          * @param {Mixed} item
          * @param {String} namespace
          */
         factory: function(item, namespace) {
-            if (Ext.isArray(item)) {
+            if (item instanceof Array) {
                 var i, ln;
 
                 for (i = 0, ln = item.length; i < ln; i++) {
@@ -870,24 +935,29 @@ these convenient shorthands:
 
                 return item;
             }
-            else if (Ext.isString(item) || Ext.isPlainObject(item)) {
+
+            var isString = (typeof item === 'string');
+
+            if (isString || (item instanceof Object && item.constructor === Object)) {
                 var name, config = {};
 
-                if (Ext.isString(item)) {
+                if (isString) {
                     name = item;
                 }
                 else {
-                    name = item.name;
-                    config = item.config;
+                    name = item.className;
+                    config = item;
+                    delete config.className;
                 }
 
-                if (namespace) {
+                if (namespace !== undefined && name.indexOf(namespace) === -1) {
                     name = namespace + '.' + Ext.String.capitalize(name);
                 }
 
                 return Ext.create(name, config);
             }
-            else if (Ext.isFunction(item)) {
+
+            if (typeof item === 'function') {
                 return Ext.create(item);
             }
 
@@ -905,7 +975,10 @@ these convenient shorthands:
          * @markdown
          */
         widget: function(name) {
-            return Manager.instantiateByAlias.apply(Manager, ['widget.' + name].concat(Array.prototype.slice.call(arguments, 1)));
+            var args = slice.call(arguments);
+            args[0] = 'widget.' + name;
+
+            return Manager.instantiateByAlias.apply(Manager, args);
         },
 
         /**
@@ -998,10 +1071,10 @@ these convenient shorthands:
             //</debug>
         }
 
-        if (fn) {
-            fn.call(this, cls, data);
-        }
+        fn.apply(this, arguments);
 
-    }).insertDefaultPreprocessor('className', 'first');
+    }, true);
+
+    Class.setDefaultPreprocessorPosition('className', 'first');
 
 })(Ext.Class, Ext.Function.alias);

@@ -13,8 +13,8 @@
  * <li><b>v</b> : Mixed<div class="sub-desc">The data value as read by the Reader, if undefined will use
  * the configured <tt>{@link Ext.data.Field#defaultValue defaultValue}</tt>.</div></li>
  * <li><b>rec</b> : Mixed<div class="sub-desc">The data object containing the row as read by the Reader.
- * Depending on the Reader type, this could be an Array ({@link Ext.data.ArrayReader ArrayReader}), an object
- * ({@link Ext.data.JsonReader JsonReader}), or an XML element.</div></li>
+ * Depending on the Reader type, this could be an Array ({@link Ext.data.reader.Array ArrayReader}), an object
+ * ({@link Ext.data.reader.Json JsonReader}), or an XML element.</div></li>
  * </ul></div></div></li>
  * <li><code>sortType</code> : <i>Function</i> <div class="sub-desc">A function to convert the stored data into comparable form, as defined by {@link Ext.data.SortTypes}.</div></li>
  * <li><code>type</code> : <i>String</i> <div class="sub-desc">A textual data type name.</div></li>

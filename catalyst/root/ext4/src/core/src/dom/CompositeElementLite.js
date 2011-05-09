@@ -299,7 +299,15 @@ Ext.core.Element.select = function(selector, root){
     }else if(selector.length !== undefined){
         els = selector;
     }else{
-        throw "Invalid selector";
+        //<debug>
+        Ext.Error.raise({
+            sourceClass: "Ext.core.Element",
+            sourceMethod: "select",
+            selector: selector,
+            root: root,
+            msg: "Invalid selector specified: " + selector
+        });
+        //</debug>
     }
     return new Ext.CompositeElementLite(els);
 };

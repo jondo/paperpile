@@ -1,3 +1,6 @@
+/**
+ * @class Ext.core.Element
+ */
 Ext.applyIf(Ext.core.Element, {
     unitRe: /\d+(px|em|%|en|ex|pt|in|cm|mm|pc)$/i,
     camelRe: /(-[a-z])/gi,
@@ -189,12 +192,10 @@ console.log(Ext.core.Element.parseStyles(css));
             matches;
             
         if (styles) {
-            /**
-             * Since we're using the g flag on the regex, we need to set the lastIndex.
-             * This automatically happens on some implementations, but not others, see:
-             * http://stackoverflow.com/questions/2645273/javascript-regular-expression-literal-persists-between-function-calls
-             * http://blog.stevenlevithan.com/archives/fixing-javascript-regexp
-             */
+            // Since we're using the g flag on the regex, we need to set the lastIndex.
+            // This automatically happens on some implementations, but not others, see:
+            // http://stackoverflow.com/questions/2645273/javascript-regular-expression-literal-persists-between-function-calls
+            // http://blog.stevenlevithan.com/archives/fixing-javascript-regexp
             cssRe.lastIndex = 0;
             while ((matches = cssRe.exec(styles))) {
                 out[matches[1]] = matches[2];

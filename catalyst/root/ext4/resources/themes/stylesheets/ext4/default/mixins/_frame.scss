@@ -13,6 +13,11 @@
     @if $ui != null {
         $cls-ui: $cls + '-' + $ui;
     }
+    
+    $vertical: false;
+    @if $background-direction == left or $background-direction == right {
+        $vertical: true;
+    }
 
     $frame-top: max(top($border-radius), right($border-radius));
     $frame-right: max(right($border-radius), bottom($border-radius));
@@ -49,7 +54,7 @@
     @if $padding-left < $frame-left {
         $padding-left: $frame-left - left($border-width);
     }
-      
+     
     .#{$prefix}#{$cls-ui} {
         @if $supports-border-radius {
             @if length($border-radius) == 2 {
@@ -58,12 +63,12 @@
             } @else if length($border-radius) == 3 {
                 @include border-top-left-radius(nth($border-radius, 1));
                 @include border-top-right-radius(nth($border-radius, 2));
-                @include border-bottom-left-radius(nth($border-radius, 3));
+                @include border-bottom-right-radius(nth($border-radius, 3));
             } @else if length($border-radius) == 4 {
                 @include border-top-left-radius(nth($border-radius, 1));
                 @include border-top-right-radius(nth($border-radius, 2));
-                @include border-bottom-left-radius(nth($border-radius, 3));
-                @include border-bottom-right-radius(nth($border-radius, 4));
+                @include border-bottom-right-radius(nth($border-radius, 3));
+                @include border-bottom-left-radius(nth($border-radius, 4));
             } @else {
                 @include border-radius($border-radius);
             }
@@ -85,7 +90,7 @@
         .#{$prefix}nlg {
             .#{$prefix}#{$cls-ui}-mc {
                 @if $background-gradient != null {
-                    background-image: theme-image($theme-name, '#{$cls}/#{$cls-ui}-bg.png');
+                    background-image: theme-image($theme-name, '#{$cls}/#{$cls-ui}-bg.gif');
                 }
                 @if $background-color != null {
                     background-color: $background-color;
@@ -97,8 +102,8 @@
     @if not $supports-border-radius or $compile-all {
         .#{$prefix}nbr {
             .#{$prefix}#{$cls-ui} {
-                padding: 0;
-                border-width: 0;
+                padding: 0 !important;
+                border-width: 0 !important;
                 @include border-radius(0px);
                 @if $background-color != null {
                     background-color: transparent;
@@ -122,8 +127,13 @@
                 @if $table == true {
                     $type: '110';
                 }
+                $direction: '100';
+                @if $vertical == true {
+                    $direction: '110';
+                }
+                
                 $left: $type + pad(top($border-radius)) + pad(right($border-radius)) + 'px';
-                $top: $type + pad(bottom($border-radius)) + pad(left($border-radius)) + 'px';
+                $top: $direction + pad(bottom($border-radius)) + pad(left($border-radius)) + 'px';
                 background-position: unquote($left) unquote($top);
             }
 
@@ -132,18 +142,42 @@
             .#{$prefix}#{$cls-ui}-tr,
             .#{$prefix}#{$cls-ui}-br,
             .#{$prefix}#{$cls-ui}-tc,
-            .#{$prefix}#{$cls-ui}-bc {
-                background-image: theme-image($theme-name, '#{$cls}/#{$cls-ui}-corners.png');
-            }
-
+            .#{$prefix}#{$cls-ui}-bc,
             .#{$prefix}#{$cls-ui}-ml,
             .#{$prefix}#{$cls-ui}-mr {
-                background-image: theme-image($theme-name, '#{$cls}/#{$cls-ui}-sides.png');
-                background-position: 0 0;
-                @if $background-gradient == null {
-                    background-repeat: repeat-y;
+                zoom:1;
+                
+                @if $background-color != transparent {
+                    background-image: theme-image($theme-name, '#{$cls}/#{$cls-ui}-corners.gif');
                 }
             }
+            
+            @if $vertical == true {
+                .#{$prefix}#{$cls-ui}-tc,
+                .#{$prefix}#{$cls-ui}-bc {
+                    zoom:1;
+
+                    @if $background-color != transparent {
+                        background-image: theme-image($theme-name, '#{$cls}/#{$cls-ui}-sides.gif');
+                        background-position: 0 0;
+                        background-repeat: repeat-x;
+                    }
+                }
+            } @else {
+                .#{$prefix}#{$cls-ui}-ml,
+                .#{$prefix}#{$cls-ui}-mr {
+                    zoom:1;
+
+                    @if $background-color != transparent {
+                        background-image: theme-image($theme-name, '#{$cls}/#{$cls-ui}-sides.gif');
+                        background-position: 0 0;
+                        @if $background-gradient == null {
+                            background-repeat: repeat-y;
+                        }
+                    }
+                }
+            }
+            
 
             $padding-top: $padding-top - $frame-top;
             $padding-right: $padding-right - $frame-right;

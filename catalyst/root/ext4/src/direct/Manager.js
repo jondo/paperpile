@@ -95,8 +95,8 @@ Ext.define('Ext.direct.Manager', {
              */
             'exception'
         );
-        me.transactions = new Ext.util.MixedCollection();
-        me.providers = new Ext.util.MixedCollection();
+        me.transactions = Ext.create('Ext.util.MixedCollection');
+        me.providers = Ext.create('Ext.util.MixedCollection');
         
         me.mixins.observable.constructor.call(me);
     },

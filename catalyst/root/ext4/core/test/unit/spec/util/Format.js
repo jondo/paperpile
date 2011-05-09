@@ -10,10 +10,13 @@ describe("Ext.util.Format", function() {
 
     describe("usMoney", function(){
         it("should format with 2 decimals, prefixed by a dollar sign", function() {
-            expect(usMoney(1234.567)).toEqual("$1234.57");
+            expect(usMoney(1234.567)).toEqual("$1,234.57");
         });
         it("should format with 2 decimals, prefixed by a negative sign, and a dollar sign", function() {
-            expect(usMoney(-1234.567)).toEqual("-$1234.57");
+            expect(usMoney(-1234.567)).toEqual("-$1,234.57");
+        });
+        it("should format with a comma as a thousand separator", function() {
+            expect(usMoney(1234567.89)).toEqual("$1,234,567.89");
         });
     });
 
@@ -31,10 +34,10 @@ describe("Ext.util.Format", function() {
         });
 
         it("should format with 2 decimals, prefixed by a euro sign", function() {
-            expect(currency(1234.567)).toEqual("\u20ac1234,57");
+            expect(currency(1234.567)).toEqual("\u20ac1.234,57");
         });
         it("should format with 2 decimals, prefixed by a negative sign, and a euro sign", function() {
-            expect(currency(-1234.567)).toEqual("-\u20ac1234,57");
+            expect(currency(-1234.567)).toEqual("-\u20ac1.234,57");
         });
     });
 

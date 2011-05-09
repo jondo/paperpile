@@ -164,6 +164,12 @@ Ext.supports = {
     },
 
     /**
+     * @property CSS3BoxShadow True if document environment supports the CSS3 box-shadow style.
+     * @type {Boolean}
+     */
+    CSS3BoxShadow: Ext.isDefined(document.documentElement.style.boxShadow),
+
+    /**
      * @property ClassList True if document environment supports the HTML5 classList API.
      * @type {Boolean}
      */
@@ -437,6 +443,18 @@ Ext.supports = {
                 return 'placeholder' in doc.createElement('input');
             }
         },
+        
+        /**
+         * @property Direct2DBug True if when asking for an element's dimension via offsetWidth or offsetHeight, 
+         * getBoundingClientRect, etc. the browser returns the subpixel width rounded to the nearest pixel.
+         * @type {Boolean}
+         */
+        {
+            identity: 'Direct2DBug',
+            fn: function() {
+                return Ext.isString(document.body.style.msTransformOrigin);
+            }
+        },
         /**
          * @property BoundingClientRect True if the browser supports the getBoundingClientRect method on elements
          * @type {Boolean}
@@ -453,6 +471,41 @@ Ext.supports = {
                 var el = Ext.get(div.childNodes[1].firstChild);
                 return el.getWidth() == 210;
             }
+        },
+        
+        /**
+         * @property ArraySort True if the Array sort native method isn't bugged.
+         * @type {Boolean}
+         */
+        {
+            identity: 'ArraySort',
+            fn: function() {
+                var a = [1,2,3,4,5].sort(function(){ return 0; });
+                return a[0] === 1 && a[1] === 2 && a[2] === 3 && a[3] === 4 && a[4] === 5;
+            }
+        },
+        /**
+         * @property Range True if browser support document.createRange native method.
+         * @type {Boolean}
+         */
+        {
+            identity: 'Range',
+            fn: function() {
+                return !!document.createRange;
+            }
+        },
+        /**
+         * @property CreateContextualFragment True if browser support CreateContextualFragment range native methods.
+         * @type {Boolean}
+         */
+        {
+            identity: 'CreateContextualFragment',
+            fn: function() {
+                var range = Ext.supports.Range ? document.createRange() : false;
+                
+                return range && !!range.createContextualFragment;
+            }
         }
+        
     ]
 };

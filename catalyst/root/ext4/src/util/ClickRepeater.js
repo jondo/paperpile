@@ -1,13 +1,13 @@
 /**
  * @class Ext.util.ClickRepeater
  * @extends Ext.util.Observable
- * 
+ *
  * A wrapper class which can be applied to any element. Fires a "click" event while the
  * mouse is pressed. The interval between firings may be specified in the config but
  * defaults to 20 milliseconds.
- * 
+ *
  * Optionally, a CSS class may be applied to the element during the time it is pressed.
- * 
+ *
  * @constructor
  * @param {Mixed} el The element to listen on
  * @param {Object} config
@@ -15,7 +15,7 @@
 
 Ext.define('Ext.util.ClickRepeater', {
     extend: 'Ext.util.Observable',
-    
+
     constructor : function(el, config){
         this.el = Ext.get(el);
         this.el.unselectable();
@@ -56,9 +56,9 @@ Ext.define('Ext.util.ClickRepeater', {
             this.on("click", this.handler,  this.scope || this);
         }
 
-        Ext.util.ClickRepeater.superclass.constructor.call(this);        
+        this.callParent();
     },
-    
+
     /**
      * @cfg {Mixed} el The element to act as a button.
      */
@@ -66,12 +66,12 @@ Ext.define('Ext.util.ClickRepeater', {
     /**
      * @cfg {String} pressedCls A CSS class name to be applied to the element while pressed.
      */
-     
+
     /**
      * @cfg {Boolean} accelerate True if autorepeating should start slowly and accelerate.
      * "interval" and "delay" are ignored.
      */
-     
+
     /**
      * @cfg {Number} interval The interval between firings of the "click" event. Default 20 ms.
      */

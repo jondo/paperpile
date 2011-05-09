@@ -25,11 +25,12 @@ this.menuEl.un(this.mouseLeaveMonitor);
             timer,
             listeners = {
                 mouseleave: function(e) {
-                    timer = setTimeout(Ext.Function.bind(handler, scope||me, [new Ext.EventObjectImpl(e)]), delay);
+                    timer = setTimeout(Ext.Function.bind(handler, scope||me, [e]), delay);
                 },
                 mouseenter: function() {
                     clearTimeout(timer);
-                }
+                },
+                freezeEvent: true
             };
 
         me.on(listeners);
@@ -137,7 +138,7 @@ this.menuEl.un(this.mouseLeaveMonitor);
             loader = data(dom, 'loader');
             
         if (!loader) {
-            loader = new Ext.ElementLoader({
+            loader = Ext.create('Ext.ElementLoader', {
                 target: this
             });
             data(dom, 'loader', loader);

@@ -7,25 +7,22 @@
  * As with all other series, the Pie Series must be appended in the *series* Chart array configuration. See the Chart 
  * documentation for more information. A typical configuration object for the pie series could be:
  * 
-  <pre><code>
-    series: [{
-        type: 'pie',
-        field: 'data1',
-        showInLegend: true,
-        highlight: {
-          segment: {
-            margin: 20
-          }
-        },
-        label: {
-            field: 'name',
-            display: 'rotate',
-            contrast: true,
-            font: '18px Arial'
-        }
-    }]
-   </code></pre>
- 
+ *     series: [{
+ *         type: 'pie',
+ *         field: 'data1',
+ *         showInLegend: true,
+ *         highlight: {
+ *           segment: {
+ *             margin: 20
+ *           }
+ *         },
+ *         label: {
+ *             field: 'name',
+ *             display: 'rotate',
+ *             contrast: true,
+ *             font: '18px Arial'
+ *         }
+ *     }]
  * 
  * In this configuration we set `pie` as the type for the series, set an object with specific style properties for highlighting options 
  * (triggered when hovering elements). We also set true to `showInLegend` so all the pie slices can be represented by a legend item. 
@@ -41,11 +38,16 @@ Ext.define('Ext.chart.series.Pie', {
 
     /* Begin Definitions */
 
+    alternateClassName: ['Ext.chart.PieSeries', 'Ext.chart.PieChart'],
+
     extend: 'Ext.chart.series.Series',
 
     /* End Definitions */
 
     type: "pie",
+    
+    alias: 'series.pie',
+
     rad: Math.PI / 180,
 
     /**
@@ -810,7 +812,7 @@ Ext.define('Ext.chart.series.Pie', {
 
 
                 if (animate) {
-                    label.stopFx();
+                    label.stopAnimation();
                     label.animate({
                         to: {
                             translate: {
@@ -848,7 +850,7 @@ Ext.define('Ext.chart.series.Pie', {
                         segment: Ext.apply(to, me.highlightCfg.segment)
                     };
                     if (animate) {
-                        shadow.stopFx();
+                        shadow.stopAnimation();
                         shadow.animate({
                             to: attrs,
                             duration: me.highlightDuration
@@ -907,7 +909,7 @@ Ext.define('Ext.chart.series.Pie', {
                             }
                         }: {});
                         if (animate) {
-                            label.stopFx();
+                            label.stopAnimation();
                             label.animate({
                                 to: attrs,
                                 duration: me.highlightDuration
@@ -932,7 +934,7 @@ Ext.define('Ext.chart.series.Pie', {
                             }
                             shadow = shadows[j];
                             if (shadow) {
-                                shadow.stopFx();
+                                shadow.stopAnimation();
                                 shadow.animate({
                                     to: {
                                         segment: to

@@ -2,7 +2,7 @@
  * Component layout for components which maintain an inner body element which must be resized to synchronize with the
  * Component size.
  * @class Ext.layout.component.Body
- * @extends Ext.layout.Component
+ * @extends Ext.layout.component.Component
  * @private
  */
 
@@ -12,16 +12,17 @@ Ext.define('Ext.layout.component.Body', {
 
     alias: ['layout.body'],
 
-    extend: 'Ext.layout.Component',
+    extend: 'Ext.layout.component.Component',
 
-    uses: ['Ext.layout.Container'],
+    uses: ['Ext.layout.container.Container'],
 
     /* End Definitions */
 
     type: 'body',
-
+    
     onLayout: function(width, height) {
-        var me = this;
+        var me = this,
+            owner = me.owner;
 
         // Size the Component's encapsulating element according to the dimensions
         me.setTargetSize(width, height);
@@ -29,6 +30,16 @@ Ext.define('Ext.layout.component.Body', {
         // Size the Component's body element according to the content box of the encapsulating element
         me.setBodySize.apply(me, arguments);
 
+        // We need to bind to the owner whenever we do not have a user set height or width.
+        if (owner && owner.layout && owner.layout.isLayout) {
+            if (!Ext.isNumber(owner.height) || !Ext.isNumber(owner.width)) {
+                owner.layout.bindToOwnerCtComponent = true;
+            }
+            else {
+                owner.layout.bindToOwnerCtComponent = false;
+            }
+        }
+        
         me.callParent(arguments);
     },
 
@@ -36,17 +47,19 @@ Ext.define('Ext.layout.component.Body', {
      * @private
      * <p>Sizes the Component's body element to fit exactly within the content box of the Component's encapsulating element.<p>
      * <p>Uses Container layout's getLayoutTargetSize method to ascertain the content box</p>
-     * @returns
      */
     setBodySize: function(width, height) {
-        var size = Ext.layout.Container.prototype.getLayoutTargetSize.call(this);
+        var me = this,
+            isNumber = Ext.isNumber,
+            isDefined = Ext.isDefined,
+            bodySize, bodyWidth, bodyHeight;
 
-        if (!Ext.isDefined(width)) {
-            size.width = undefined;
+        if (isDefined(width) || isDefined(height)) {
+            bodySize = Ext.layout.container.Container.prototype.getLayoutTargetSize.call(me);
+            bodyWidth = isNumber(width) ? bodySize.width : width;
+            bodyHeight = isNumber(height) ? bodySize.height : height;
         }
-        if (!Ext.isDefined(height)) {
-            size.height = undefined;
-        }
-        this.owner.body.setSize(size);
+
+        me.setElementSize(me.owner.body, bodyWidth, bodyHeight);
     }
 });

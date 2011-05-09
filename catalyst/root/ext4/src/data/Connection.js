@@ -2,43 +2,43 @@
  * @class Ext.data.Connection
  * The Connection class encapsulates a connection to the page's originating domain, allowing requests to be made either
  * to a configured URL, or to a URL specified at request time.
- * 
+ *
  * Requests made by this class are asynchronous, and will return immediately. No data from the server will be available
- * to the statement immediately following the {@link #request} call. To process returned data, use a success callback 
+ * to the statement immediately following the {@link #request} call. To process returned data, use a success callback
  * in the request options object, or an {@link #requestcomplete event listener}.
  *
  * <p><u>File Uploads</u></p>
  *
  * File uploads are not performed using normal "Ajax" techniques, that is they are not performed using XMLHttpRequests.
  * Instead the form is submitted in the standard manner with the DOM &lt;form&gt; element temporarily modified to have its
- * target set to refer to a dynamically generated, hidden &lt;iframe&gt; which is inserted into the document but removed 
+ * target set to refer to a dynamically generated, hidden &lt;iframe&gt; which is inserted into the document but removed
  * after the return data has been gathered.
- * 
- * The server response is parsed by the browser to create the document for the IFRAME. If the server is using JSON to 
- * send the return object, then the Content-Type header must be set to "text/html" in order to tell the browser to 
+ *
+ * The server response is parsed by the browser to create the document for the IFRAME. If the server is using JSON to
+ * send the return object, then the Content-Type header must be set to "text/html" in order to tell the browser to
  * insert the text unchanged into the document body.
- * 
- * Characters which are significant to an HTML parser must be sent as HTML entities, so encode "&lt;" as "&amp;lt;", "&amp;" as 
+ *
+ * Characters which are significant to an HTML parser must be sent as HTML entities, so encode "&lt;" as "&amp;lt;", "&amp;" as
  * "&amp;amp;" etc.
- * 
- * The response text is retrieved from the document, and a fake XMLHttpRequest object is created containing a 
+ *
+ * The response text is retrieved from the document, and a fake XMLHttpRequest object is created containing a
  * responseText property in order to conform to the requirements of event handlers and callbacks.
- * 
- * Be aware that file upload packets are sent with the content type multipart/form and some server technologies 
+ *
+ * Be aware that file upload packets are sent with the content type multipart/form and some server technologies
  * (notably JEE) may require some custom processing in order to retrieve parameter names and parameter values from the
  * packet content.
- * 
+ *
  * Also note that it's not possible to check the response code of the hidden iframe, so the success handler will ALWAYS fire.
  */
 Ext.define('Ext.data.Connection', {
     mixins: {
         observable: 'Ext.util.Observable'
     },
-    
+
     statics: {
         requestId: 0
     },
-    
+
     url: null,
     async: true,
     method: null,
@@ -62,6 +62,10 @@ Ext.define('Ext.data.Connection', {
      * @cfg {Number} timeout (Optional) The timeout in milliseconds to be used for requests. (defaults to 30000)
      */
     timeout : 30000,
+
+    /**
+     * @param {Object} extraParams (Optional) Any parameters to be appended to the request.
+     */
 
     useDefaultHeader : true,
     defaultPostHeader : 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -106,7 +110,7 @@ Ext.define('Ext.data.Connection', {
         this.requests = {};
         this.mixins.observable.constructor.call(this);
     },
-    
+
     /**
      * <p>Sends an HTTP request to a remote server.</p>
      * <p><b>Important:</b> Ajax server requests are asynchronous, and this call will
@@ -212,18 +216,18 @@ failure: function(response, opts) {
             password = options.password || me.password || '',
             async,
             requestOptions,
-            request, 
+            request,
             headers,
             xhr;
-            
+
         if (me.fireEvent('beforerequest', me, options) !== false) {
-            
-            requestOptions = me.setupOptions(options, scope);       
-            
+
+            requestOptions = me.setOptions(options, scope);
+
             if (this.isFormUpload(options) === true) {
                 this.upload(options.form, requestOptions.url, requestOptions.data, options);
                 return null;
-            }     
+            }
 
             // if autoabort is set, cancel the current transactions
             if (options.autoAbort === true || me.autoAbort) {
@@ -232,7 +236,7 @@ failure: function(response, opts) {
 
             // create a connection object
             xhr = this.getXhrInstance();
-            
+
             async = options.async !== false ? (options.async || me.async) : false;
 
             // open the request
@@ -326,16 +330,18 @@ failure: function(response, opts) {
         });
 
         // add dynamic params
-        Ext.iterate(Ext.urlDecode(params, false), function(name, value){
-            hiddenItem = document.createElement('input');
-            Ext.fly(hiddenItem).set({
-                type: 'hidden',
-                value: value,
-                name: name
+        if (params) {
+            Ext.iterate(Ext.Object.fromQueryString(params), function(name, value){
+                hiddenItem = document.createElement('input');
+                Ext.fly(hiddenItem).set({
+                    type: 'hidden',
+                    value: value,
+                    name: name
+                });
+                form.appendChild(hiddenItem);
+                hiddens.push(hiddenItem);
             });
-            form.appendChild(hiddenItem);
-            hiddens.push(hiddenItem);
-        });
+        }
 
         Ext.fly(frame).on('load', Ext.Function.bind(this.onUploadComplete, this, [frame, options]), null, {single: true});
         form.submit();
@@ -403,23 +409,23 @@ failure: function(response, opts) {
     },
 
     /**
-     * Setup various options such as the url, params for the request
+     * Set various options such as the url, params for the request
      * @param {Object} options The initial options
      * @param {Object} scope The scope to execute in
      * @return {Object} The params for the request
      */
-    setupOptions: function(options, scope){
+    setOptions: function(options, scope){
         var me =  this,
             params = options.params || {},
-            extraParams = options.extraParams,
+            extraParams = me.extraParams,
             urlParams = options.urlParams,
             url = options.url || me.url,
             jsonData = options.jsonData,
             method,
             disableCache,
             data;
-            
-        
+
+
         // allow params to be a method that returns the params object
         if (Ext.isFunction(params)) {
             params = params.call(scope, options);
@@ -429,55 +435,68 @@ failure: function(response, opts) {
         if (Ext.isFunction(url)) {
             url = url.call(scope, options);
         }
-        
+
         url = this.setupUrl(options, url);
-        
+
+        //<debug>
         if (!url) {
-            throw 'No URL specified';
+            Ext.Error.raise({
+                options: options,
+                msg: 'No URL specified'
+            });
         }
+        //</debug>
 
         // check for xml or json data, and make sure json data is encoded
         data = options.rawData || options.xmlData || jsonData || null;
         if (jsonData && !Ext.isPrimitive(jsonData)) {
             data = Ext.encode(data);
         }
-        
+
         // make sure params are a url encoded string and include any extraParams if specified
-        params = Ext.urlEncode(extraParams, Ext.isObject(params) ? Ext.urlEncode(params) : params);
-        
-        urlParams = Ext.isObject(urlParams) ? Ext.urlEncode(urlParams) : urlParams;
-        
+        if (Ext.isObject(params)) {
+            params = Ext.Object.toQueryString(params);
+        }
+
+        if (Ext.isObject(extraParams)) {
+            extraParams = Ext.Object.toQueryString(extraParams);
+        }
+
+        params = params + ((extraParams) ? ((params) ? '&' : '') + extraParams : '');
+
+        urlParams = Ext.isObject(urlParams) ? Ext.Object.toQueryString(urlParams) : urlParams;
+
         params = this.setupParams(options, params);
-        
+
         // decide the proper method for this request
         method = (options.method || me.method || ((params || data) ? 'POST' : 'GET')).toUpperCase();
         this.setupMethod(options, method);
-        
-        
+
+
         disableCache = options.disableCaching !== false ? (options.disableCaching || me.disableCaching) : false;
         // if the method is get append date to prevent caching
         if (method === 'GET' && disableCache) {
             url = Ext.urlAppend(url, (options.disableCachingParam || me.disableCachingParam) + '=' + (new Date().getTime()));
         }
-        
+
         // if the method is get or there is json/xml data append the params to the url
         if ((method == 'GET' || data) && params) {
             url = Ext.urlAppend(url, params);
             params = null;
         }
-        
+
         // allow params to be forced into the url
         if (urlParams) {
             url = Ext.urlAppend(url, urlParams);
         }
-        
+
         return {
             url: url,
             method: method,
             data: data || params || null
         };
     },
-    
+
     /**
      * Template method for overriding url
      * @private
@@ -493,7 +512,7 @@ failure: function(response, opts) {
         return url;
     },
 
-    
+
     /**
      * Template method for overriding params
      * @private
@@ -541,7 +560,7 @@ failure: function(response, opts) {
             xmlData = options.xmlData,
             key,
             header;
-            
+
         if (!headers['Content-Type'] && (data || params)) {
             if (data) {
                 if (options.rawData) {
@@ -556,7 +575,7 @@ failure: function(response, opts) {
             }
             headers['Content-Type'] = contentType;
         }
-        
+
         if (me.useDefaultXhrHeader && !headers['X-Requested-With']) {
             headers['X-Requested-With'] = me.defaultXhrHeader;
         }
@@ -567,7 +586,7 @@ failure: function(response, opts) {
                     header = headers[key];
                     xhr.setRequestHeader(key, header);
                 }
-                
+
             }
         } catch(e) {
             me.fireEvent('exception', key, header);
@@ -624,7 +643,7 @@ failure: function(response, opts) {
         var me = this,
             requests = me.requests,
             id;
-            
+
         if (request && me.isLoading(request)) {
             /**
              * Clear out the onreadystatechange here, this allows us
@@ -660,7 +679,7 @@ failure: function(response, opts) {
             this.cleanup(request);
         }
     },
-    
+
     /**
      * Clear the timeout on the request
      * @private
@@ -670,7 +689,7 @@ failure: function(response, opts) {
         clearTimeout(request.timeout);
         delete request.timeout;
     },
-    
+
     /**
      * Clean up any left over information from the request
      * @private
@@ -711,7 +730,7 @@ failure: function(response, opts) {
         delete me.requests[request.id];
         return response;
     },
-    
+
     /**
      * Check if the response status was successful
      * @param {Number} status The status code
@@ -723,7 +742,7 @@ failure: function(response, opts) {
 
         var success = (status >= 200 && status < 300) || status == 304,
             isException = false;
-            
+
         if (!success) {
             switch (status) {
                 case 12002:
@@ -738,7 +757,7 @@ failure: function(response, opts) {
         }
         return {
             success: success,
-            isException: isException    
+            isException: isException
         };
     },
 

@@ -781,7 +781,7 @@ el.un('click', this.handlerFn);
      * Retrieves Ext.core.Element objects.
      * <p><b>This method does not retrieve {@link Ext.Component Component}s.</b> This method
      * retrieves Ext.core.Element objects which encapsulate DOM elements. To retrieve a Component by
-     * its ID, use {@link Ext.ComponentMgr#get}.</p>
+     * its ID, use {@link Ext.ComponentManager#get}.</p>
      * <p>Uses simple caching to consistently return the same object. Automatically fixes if an
      * object was recreated with the same id via AJAX or DOM.</p>
      * @param {Mixed} el The id of the node, a DOM Node or an existing Element.
@@ -977,7 +977,7 @@ el.un('click', this.handlerFn);
      * Retrieves Ext.core.Element objects.
      * <p><b>This method does not retrieve {@link Ext.Component Component}s.</b> This method
      * retrieves Ext.core.Element objects which encapsulate DOM elements. To retrieve a Component by
-     * its ID, use {@link Ext.ComponentMgr#get}.</p>
+     * its ID, use {@link Ext.ComponentManager#get}.</p>
      * <p>Uses simple caching to consistently return the same object. Automatically fixes if an
      * object was recreated with the same id via AJAX or DOM.</p>
      * Shorthand of {@link Ext.core.Element#get}

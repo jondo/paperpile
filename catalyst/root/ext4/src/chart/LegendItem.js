@@ -1,6 +1,6 @@
 /**
  * @class Ext.chart.LegendItem
- * @extends Ext.draw.SpriteGroup
+ * @extends Ext.draw.CompositeSprite
  * A single item of a legend (marker plus label)
  * @constructor
  */
@@ -8,9 +8,9 @@ Ext.define('Ext.chart.LegendItem', {
 
     /* Begin Definitions */
 
-    extend: 'Ext.draw.SpriteGroup',
+    extend: 'Ext.draw.CompositeSprite',
 
-    requires: ['Ext.chart.Shapes'],
+    requires: ['Ext.chart.Shape'],
 
     /* End Definitions */
 
@@ -21,13 +21,13 @@ Ext.define('Ext.chart.LegendItem', {
 
     constructor: function(config) {
         this.callParent(arguments);
-        this.createSprites(config);
+        this.createLegend(config);
     },
 
     /**
      * Creates all the individual sprites for this legend item
      */
-    createSprites: function(config) {
+    createLegend: function(config) {
         var me = this,
             index = config.yFieldIndex,
             series = me.series,
@@ -38,7 +38,7 @@ Ext.define('Ext.chart.LegendItem', {
             refX = legend.x + me.x,
             refY = legend.y + me.y,
             bbox, z = me.zIndex,
-            markerCfg, label, mask,
+            markerConfig, label, mask,
             radius, toggle = false,
             seriesStyle = Ext.apply(series.seriesStyle, series.style);
 
@@ -73,13 +73,13 @@ Ext.define('Ext.chart.LegendItem', {
                 }));
             }
             if (series.showMarkers || seriesType === 'scatter') {
-                markerCfg = Ext.apply(series.markerStyle, series.markerCfg || {});
-                me.add('marker', Ext.chart.Shapes[markerCfg.type](surface, {
-                    fill: markerCfg.fill,
+                markerConfig = Ext.apply(series.markerStyle, series.markerConfig || {});
+                me.add('marker', Ext.chart.Shape[markerConfig.type](surface, {
+                    fill: markerConfig.fill,
                     x: 8.5,
                     y: 0.5,
                     zIndex: z,
-                    radius: markerCfg.radius || markerCfg.size,
+                    radius: markerConfig.radius || markerConfig.size,
                     style: {
                         cursor: 'pointer'
                     }

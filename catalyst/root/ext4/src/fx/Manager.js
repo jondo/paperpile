@@ -15,7 +15,7 @@ Ext.define('Ext.fx.Manager', {
                'Ext.fx.target.Element',
                'Ext.fx.target.CompositeElement',
                'Ext.fx.target.Sprite',
-               'Ext.fx.target.SpriteGroup',
+               'Ext.fx.target.CompositeSprite',
                'Ext.fx.target.Component'],
 
     mixins: {
@@ -91,7 +91,7 @@ Ext.define('Ext.fx.Manager', {
             }
             // Draw Sprite Composite
             else if (target.isSpriteGroup) {
-                targetObj = Ext.create('Ext.fx.target.SpriteGroup', target);
+                targetObj = Ext.create('Ext.fx.target.CompositeSprite', target);
             }
             // Component
             else if (target.isComponent) {
@@ -140,7 +140,7 @@ Ext.define('Ext.fx.Manager', {
                 interval: this.interval,
                 scope: this
             };
-            Ext.TaskMgr.start(task);
+            Ext.TaskManager.start(task);
         }
 
         // //Start the timer if not already running
@@ -160,7 +160,7 @@ Ext.define('Ext.fx.Manager', {
         items.remove(anim);
         // Stop the timer if there are no more managed Anims
         if (task && !items.length) {
-            Ext.TaskMgr.stop(task);
+            Ext.TaskManager.stop(task);
             delete this.task;
         }
     },

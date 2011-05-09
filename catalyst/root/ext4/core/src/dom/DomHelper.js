@@ -370,7 +370,7 @@ Ext.core.DomHelper = function(){
         /**
          * Inserts an HTML fragment into the DOM.
          * @param {String} where Where to insert the html in relation to el - beforeBegin, afterBegin, beforeEnd, afterEnd.
-         * @param {HTMLElement} el The context element
+         * @param {HTMLElement/TextNode} el The context element
          * @param {String} html The HTML fragment
          * @return {HTMLElement} The new node
          */
@@ -387,11 +387,13 @@ Ext.core.DomHelper = function(){
             // add these here because they are used in both branches of the condition.
             hash[beforebegin] = ['BeforeBegin', 'previousSibling'];
             hash[afterend] = ['AfterEnd', 'nextSibling'];
-
+            
+            // if IE and context element is an HTMLElement
             if (el.insertAdjacentHTML) {
                 if(tableRe.test(el.tagName) && (rs = insertIntoTable(el.tagName.toLowerCase(), where, el, html))){
                     return rs;
                 }
+                
                 // add these two to the hash.
                 hash[afterbegin] = ['AfterBegin', 'firstChild'];
                 hash[beforeend] = ['BeforeEnd', 'lastChild'];
@@ -399,29 +401,34 @@ Ext.core.DomHelper = function(){
                     el.insertAdjacentHTML(hashVal[0], html);
                     return el[hashVal[1]];
                 }
+            // if (not IE and context element is an HTMLElement) or TextNode
             } else {
-                range = el.ownerDocument.createRange();
+                // we cannot insert anything inside a textnode so...
+                if (Ext.isTextNode(el)) {
+                    where = where === 'afterbegin' ? 'beforebegin' : where; 
+                    where = where === 'beforeend' ? 'afterend' : where;
+                }
+                range = Ext.supports.CreateContextualFragment ? el.ownerDocument.createRange() : undefined;
                 setStart = 'setStart' + (endRe.test(where) ? 'After' : 'Before');
                 if (hash[where]) {
-                    range[setStart](el);
-                    if (!range.createContextualFragment) {
-                        frag = createContextualFragment(html);
-                    }
-                    else {
+                    if (range) {
+                        range[setStart](el);
                         frag = range.createContextualFragment(html);
+                    } else {
+                        frag = createContextualFragment(html);
                     }
                     el.parentNode.insertBefore(frag, where == beforebegin ? el : el.nextSibling);
                     return el[(where == beforebegin ? 'previous' : 'next') + 'Sibling'];
                 } else {
                     rangeEl = (where == afterbegin ? 'first' : 'last') + 'Child';
                     if (el.firstChild) {
-                        range[setStart](el[rangeEl]);
-                        if (!range.createContextualFragment) {
+                        if (range) {
+                            range[setStart](el[rangeEl]);
+                            frag = range.createContextualFragment(html);
+                        } else {
                             frag = createContextualFragment(html);
                         }
-                        else {
-                            frag = range.createContextualFragment(html);
-                        }
+                        
                         if(where == afterbegin){
                             el.insertBefore(frag, el.firstChild);
                         }else{
@@ -433,7 +440,15 @@ Ext.core.DomHelper = function(){
                     return el[rangeEl];
                 }
             }
-            throw 'Illegal insertion point -> "' + where + '"';
+            //<debug>
+            Ext.Error.raise({
+                sourceClass: 'Ext.core.DomHelper',
+                sourceMethod: 'insertHtml',
+                htmlToInsert: html,
+                targetElement: el,
+                msg: 'Illegal insertion point reached: "' + where + '"'
+            });
+            //</debug>
         },
 
         /**
@@ -512,7 +527,7 @@ Ext.core.DomHelper = function(){
          */
         createTemplate : function(o){
             var html = Ext.core.DomHelper.createHtml(o);
-            return new Ext.Template(html);
+            return Ext.create('Ext.Template', html);
         }
     };
     return pub;

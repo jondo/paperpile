@@ -4,14 +4,14 @@
 A mixin for {@link Ext.container.Container} components that are likely to have form fields in their
 items subtree. Adds the following capabilities:
 
-- Methods for handling the addition and removal of {@link Ext.form.Labelable} and {@link Ext.form.Field}
+- Methods for handling the addition and removal of {@link Ext.form.Labelable} and {@link Ext.form.field.Field}
   instances at any depth within the container.
 - Events ({@link #fieldvaliditychange} and {@link #fielderrorchange}) for handling changes to the state
   of individual fields at the container level.
 - Automatic application of {@link #fieldDefaults} config properties to each field added within the
   container, to facilitate uniform configuration of all fields.
 
-This mixin is primarily for internal use by {@link Ext.form.FormPanel} and {@link Ext.form.FieldContainer},
+This mixin is primarily for internal use by {@link Ext.form.Panel} and {@link Ext.form.FieldContainer},
 and should not normally need to be used directly.
 
  * @markdown
@@ -22,13 +22,13 @@ Ext.define('Ext.form.FieldAncestor', {
     /**
      * @cfg {Object} fieldDefaults
      * <p>If specified, the properties in this object are used as default config values for each
-     * {@link Ext.form.Labelable} instance (e.g. {@link Ext.form.BaseField} or {@link Ext.form.FieldContainer})
+     * {@link Ext.form.Labelable} instance (e.g. {@link Ext.form.field.Base} or {@link Ext.form.FieldContainer})
      * that is added as a descendant of this container. Corresponding values specified in an individual field's
      * own configuration, or from the {@link Ext.container.Container#defaults defaults config} of its parent container,
      * will take precedence. See the documentation for {@link Ext.form.Labelable} to see what config
      * options may be specified in the <tt>fieldDefaults</tt>.</p>
      * <p>Example:</p>
-     * <pre><code>new Ext.form.FormPanel({
+     * <pre><code>new Ext.form.Panel({
     fieldDefaults: {
         labelAlign: 'left',
         labelWidth: 100
@@ -70,7 +70,7 @@ Ext.define('Ext.form.FieldAncestor', {
         me.addEvents(
             /**
              * @event fielderrorchange
-             * Fires when the validity state of any one of the {@link Ext.form.Field} instances within this
+             * Fires when the validity state of any one of the {@link Ext.form.field.Field} instances within this
              * container changes.
              * @param {Ext.form.FieldAncestor} this
              * @param {Ext.form.Labelable} The Field instance whose validity changed
@@ -141,12 +141,12 @@ Ext.define('Ext.form.FieldAncestor', {
         // buffer slightly to avoid excessive firing while sub-fields are changing en masse
         me.mon(labelable, 'errorchange', me.handleFieldErrorChange, me, {buffer: 10});
 
-        labelable.applyFieldDefaults(me.fieldDefaults);
+        labelable.setFieldDefaults(me.fieldDefaults);
     },
 
     /**
-     * @protected Called when a {@link Ext.form.Field} instance is added to the container's subtree.
-     * @param {Ext.form.Field} field The field which was added
+     * @protected Called when a {@link Ext.form.field.Field} instance is added to the container's subtree.
+     * @param {Ext.form.field.Field} field The field which was added
      */
     onFieldAdded: function(field) {
         var me = this;
@@ -163,8 +163,8 @@ Ext.define('Ext.form.FieldAncestor', {
     },
 
     /**
-     * @protected Called when a {@link Ext.form.Field} instance is removed from the container's subtree.
-     * @param {Ext.form.Field} field The field which was removed
+     * @protected Called when a {@link Ext.form.field.Field} instance is removed from the container's subtree.
+     * @param {Ext.form.field.Field} field The field which was removed
      */
     onFieldRemoved: function(field) {
         var me = this;
@@ -191,7 +191,7 @@ Ext.define('Ext.form.FieldAncestor', {
 
     /**
      * @protected Fired when the validity of any field within the container changes.
-     * @param {Ext.form.Field} The sub-field whose validity changed
+     * @param {Ext.form.field.Field} The sub-field whose validity changed
      * @param {String} The new validity state
      */
     onFieldValidityChange: Ext.emptyFn,

@@ -4,7 +4,7 @@
  * 
  * <p>
  * The Editor class is used to provide inline editing for elements on the page. The editor
- * is backed by a {@link Ext.form.Field} that will be displayed to edit the underlying content.
+ * is backed by a {@link Ext.form.field.Field} that will be displayed to edit the underlying content.
  * The editor is a floating Component, when the editor is shown it is automatically aligned to 
  * display over the top of the bound element it is editing. The Editor contains several options 
  * for how to handle key presses:
@@ -31,6 +31,7 @@ var editor = new Ext.Editor({
 var el = Ext.get('my-text'); // The element to 'edit'
 editor.startEdit(el); // The value of the field will be taken as the innerHTML of the element.
  * </code></pre>
+ * {@img Ext.Editor/Ext.Editor.png Ext.Editor component}
  * 
  * @constructor
  * Create a new Editor
@@ -52,7 +53,7 @@ Ext.define('Ext.Editor', {
    componentLayout: 'editor',
 
     /**
-    * @cfg {Ext.form.Field} field
+    * @cfg {Ext.form.field.Field} field
     * The Field object (or descendant) or config object for field
     */
 
@@ -162,11 +163,10 @@ autoSize: {
 
     initComponent : function() {
         var me = this,
-            field = me.field = Ext.ComponentMgr.create(me.field, 'textfield');
+            field = me.field = Ext.ComponentManager.create(me.field, 'textfield');
 
         Ext.apply(field, {
             inEditor: true,
-            hideLabel: true,
             msgTarget: field.msgTarget == 'title' ? 'title' :  'qtip'
         });
         me.mon(field, {
@@ -176,7 +176,7 @@ autoSize: {
         });
 
         if (field.grow) {
-            me.mon(field, 'autosize', me.doComponentLayout,  me, {delay: 1});
+            me.mon(field, 'autosize', me.onAutoSize,  me, {delay: 1});
         }
         me.floating = {
             constrain: me.constrain
@@ -234,11 +234,16 @@ autoSize: {
              * Fires when any key related to navigation (arrows, tab, enter, esc, etc.) is pressed.  You can check
              * {@link Ext.EventObject#getKey} to determine which key was pressed.
              * @param {Ext.Editor} this
-             * @param {Ext.form.Field} The field attached to this editor
+             * @param {Ext.form.field.Field} The field attached to this editor
              * @param {Ext.EventObject} event The event object
              */
             'specialkey'
         );
+    },
+    
+    // private
+    onAutoSize: function(){
+        this.doComponentLayout();
     },
 
     // private
@@ -249,6 +254,7 @@ autoSize: {
         me.callParent(arguments);
 
         field.render(me.el);
+        //field.hide();
         // Ensure the field doesn't get submitted as part of any form
         field.inputEl.dom.name = '';
         if (me.swallowKeys) {
@@ -293,14 +299,13 @@ autoSize: {
      */
     startEdit : function(el, value) {
         var me = this,
-            field = me.field,
-            rendered = me.rendered;
+            field = me.field;
             
         me.completeEdit();
         me.boundEl = Ext.get(el);
         value = Ext.isDefined(value) ? value : me.boundEl.dom.innerHTML;
         
-        if (!rendered) {
+        if (!me.rendered) {
             me.render(me.parentEl || document.body);
         }
         
@@ -308,12 +313,12 @@ autoSize: {
             me.startValue = value;
             me.show();
             field.reset();
-            field.show().focus(false, 10);
             field.setValue(value);
+            me.realign(true);
+            field.focus(false, 10);
             if (field.autoSize) {
                 field.autoSize();
             }
-            me.realign(rendered); // only force a layout after first time
             me.editing = true;
         }
     },
@@ -434,10 +439,11 @@ autoSize: {
             field.collapse();
         }
         
-        me.el.hide();
+        //field.hide();
         if (me.hideEl !== false) {
             me.boundEl.show();
         }
+        me.callParent(arguments);
     },
 
     /**

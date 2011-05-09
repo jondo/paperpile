@@ -148,7 +148,7 @@ Ext.core.Element.addMethods({
             return Ext.core.DomHelper.insertBefore(insertBefore, config, returnDom !== true);
         }
         else {
-            return Ext.core.DomHelper[!this.dom.firstChild ? 'overwrite' : 'append'](this.dom, config,  returnDom !== true);
+            return Ext.core.DomHelper[!this.dom.firstChild ? 'insertFirst' : 'append'](this.dom, config,  returnDom !== true);
         }
     },
 

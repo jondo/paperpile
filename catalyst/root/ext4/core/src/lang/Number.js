@@ -44,18 +44,37 @@ Ext.Number = {
         }
 
         return value.toFixed(precision);
+    },
+
+    /**
+     * Validate that a value is numeric and convert it to a number if necessary. Returns the specified default value if
+     * it is not.
+
+Ext.Number.from('1.23', 1); // returns 1.23
+Ext.Number.from('abc', 1); // returns 1
+
+     * @param {Mixed} value
+     * @param {Number} defaultValue The value to return if the original value is non-numeric
+     * @return {Number} value, if numeric, defaultValue otherwise
+     */
+    from: function(value, defaultValue) {
+        if (isFinite(value)) {
+            value = parseFloat(value);
+        }
+
+        return !isNaN(value) ? value : defaultValue;
     }
 };
 
 })();
 
 /**
- * Utility method for validating that a value is numeric, returning the specified default value if it is not.
- * @param {Mixed} value Should be a number, but any type will be handled appropriately
- * @param {Number} defaultValue The value to return if the original value is non-numeric
- * @return {Number} Value, if numeric, else defaultValue
+ * This method is deprecated, please use {@link Ext.Number.from} instead
+ *
+ * @deprecated 4.0.0 Replaced by Ext.Number.from
+ * @member Ext
+ * @method num
  */
-Ext.num = function(v, defaultValue) {
-    v = Number(Ext.isEmpty(v) || Ext.isArray(v) || typeof v === 'boolean' || (typeof v === 'string' && Ext.String.trim(v).length === 0) ? NaN : v);
-    return isNaN(v) ? defaultValue : v;
+Ext.num = function() {
+    return Ext.Number.from.apply(this, arguments);
 };

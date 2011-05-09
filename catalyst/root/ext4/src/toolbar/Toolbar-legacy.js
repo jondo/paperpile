@@ -35,7 +35,7 @@ Ext.toolbar.Toolbar.override({
      * Adds a dynamically rendered Ext.form field (Text, ComboBox, etc). Note: the field should not have
      * been rendered yet. For a field that has already been rendered, use {@link #addElement}.
      * <br><p><b>Note</b>: See the notes within {@link Ext.container.Container#add}.</p>
-     * @param {Ext.form.Field} field
+     * @param {Ext.form.field.Field} field
      * @return {Ext.Toolbar.Item}
      */
     addField : function(field){

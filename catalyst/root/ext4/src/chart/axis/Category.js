@@ -1,7 +1,7 @@
 /**
  * @class Ext.chart.axis.Category
  * @extends Ext.chart.axis.Axis
- * 
+ *
  * A type of axis that displays items in categories. This axis is generally used to
  * display categorical information like names of items, month names, quarters, etc.
  * but no quantitative values. For that other type of information <em>Number</em>
@@ -15,9 +15,9 @@
         position: 'bottom',
         fields: ['name'],
         title: 'Month of the Year'
-    }    
+    }
     </code></pre>
-    
+
     In this example with set the category axis to the bottom of the surface, bound the axis to
     the <em>name</em> property and set as title <em>Month of the Year</em>.
  */
@@ -27,6 +27,10 @@ Ext.define('Ext.chart.axis.Category', {
     /* Begin Definitions */
 
     extend: 'Ext.chart.axis.Axis',
+
+    alternateClassName: 'Ext.chart.CategoryAxis',
+
+    alias: 'axis.category',
 
     /* End Definitions */
 
@@ -66,7 +70,7 @@ Ext.define('Ext.chart.axis.Category', {
 
     // @private calculates labels positions and marker positions for rendering.
     applyData: function() {
-        Ext.chart.axis.Category.superclass.applyData.call(this);
+        this.callParent();
         this.setLabels();
         var count = this.chart.store.getCount();
         return {

@@ -1,8 +1,11 @@
 describe("Ext.ClassManager", function() {
     var manager = Ext.ClassManager,
-        cls;
+        cls, emptyFn = function(){};
+
+    
 
     beforeEach(function() {
+        manager.enableNamespaceParseCache = false;
         window.My = {
             awesome: {
                 Class: function(){console.log(11);},
@@ -40,6 +43,7 @@ describe("Ext.ClassManager", function() {
             delete window.I;
             delete window.Test;
         } catch (e) {}
+        manager.enableNamespaceParseCache = true;
     });
 
     describe("parseNamespace", function() {
@@ -58,13 +62,8 @@ describe("Ext.ClassManager", function() {
 
     describe("exist", function() {
         it("should return whether a single class exists", function() {
-            expect(manager.exist('My.notexisting.Class')).toBeFalsy();
-            expect(manager.exist('My.awesome.Class')).toBeTruthy();
-        });
-
-        it("should return whether multiple classes exist", function() {
-            expect(manager.exist(['My.notexisting.Class', 'My.awesome.Class'])).toBeFalsy();
-            expect(manager.exist(['My.awesome.Class', 'My.cool.AnotherClass'])).toBeTruthy();
+            expect(manager.isCreated('My.notexisting.Class')).toBe(false);
+            expect(manager.isCreated('My.awesome.Class')).toBe(true);
         });
     });
 
@@ -91,21 +90,21 @@ describe("Ext.ClassManager", function() {
                 classNames;
 
 
-            spyOn(Ext, 'require').andCallFake(function(classes, fn) {
+            spyOn(Ext.Loader, 'require').andCallFake(function(classes, fn) {
                 classNames = classes;
                 fn();
             });
 
-            Ext.Class.getPreprocessor('loader')(cls, data);
+            Ext.Class.getPreprocessor('loader').fn(cls, data, emptyFn);
 
-            expect(Ext.require).toHaveBeenCalled();
+            expect(Ext.Loader.require).toHaveBeenCalled();
             expect(classNames).toEqual(['My.awesome.Class', 'My.cool.AnotherClass1']);
             expect(data).toEqual(expected);
         });
     });
 
     describe("create", function() {
-        var subClass, parentClass, mixinClass1, mixinClass2;
+        var subClass, parentClass, mixinClass1, mixinClass2, subSubClass;
 
         beforeEach(function() {
             mixinClass1 = manager.create('I.am.the.MixinClass1', {
@@ -142,6 +141,7 @@ describe("Ext.ClassManager", function() {
                 mixins: {
                     mixin1: 'I.am.the.MixinClass1'
                 },
+
                 config: {
                     name: 'parentClass',
                     isCool: false,
@@ -151,6 +151,11 @@ describe("Ext.ClassManager", function() {
                     },
                     hobbies: ['football', 'bowling']
                 },
+
+                onClassExtended: function(subClass, data) {
+                    subClass.onClassExtendedCalled = true;
+                },
+
                 constructor: function(config) {
                     this.initConfig(config);
 
@@ -213,8 +218,10 @@ describe("Ext.ClassManager", function() {
             it("single with name - value arguments", function() {
                 var called = false;
 
-                subClass.addStatics('staticMethod', function(){
-                    called = true;
+                subClass.addStatics({
+                    staticMethod: function(){
+                        called = true;
+                    }
                 });
 
                 expect(subClass.staticMethod).toBeDefined();
@@ -231,24 +238,6 @@ describe("Ext.ClassManager", function() {
 
                 expect(subClass.staticProperty).toEqual('something');
                 expect(subClass.staticMethod).toBeDefined();
-            });
-        });
-
-        describe("extend", function() {
-            it("should extend", function() {
-                subClass.extend({
-                    newMethod: function(){}
-                });
-
-                expect((new subClass()).newMethod).toBeDefined();
-            });
-
-            it("should extend from data", function() {
-                subClass.extend({
-                    newMethod: function(){}
-                });
-
-                expect((new subClass()).newMethod).toBeDefined();
             });
         });
 
@@ -286,7 +275,7 @@ describe("Ext.ClassManager", function() {
                 var obj = new subClass();
 
                 expect(obj.getName()).toEqual('subClass');
-                expect(obj.isCool()).toEqual(true);
+                expect(obj.getIsCool()).toEqual(true);
                 expect(obj.getHobbies()).toEqual(['sleeping', 'eating', 'movies']);
             });
 
@@ -300,7 +289,7 @@ describe("Ext.ClassManager", function() {
                 });
 
                 expect(obj.getName()).toEqual('newName');
-                expect(obj.isCool()).toEqual(false);
+                expect(obj.getIsCool()).toEqual(false);
                 expect(obj.getMembers().aaron).toEqual('Aaron Conran');
             });
         });
@@ -331,6 +320,17 @@ describe("Ext.ClassManager", function() {
             it("should store multiple aliases", function() {
                 expect(manager.getByAlias('parentclass')).toBe(parentClass);
                 expect(manager.getByAlias('superclass')).toBe(parentClass);
+            });
+        });
+
+        describe("onClassExtended", function() {
+            it("should store an internal reference", function() {
+                expect(parentClass.prototype.$onExtended).toBeDefined();
+                expect(subClass.prototype.$onExtended).toBeDefined();
+            });
+
+            it("should invoke the internal reference", function() {
+                expect(subClass.onClassExtendedCalled).toBe(true);
             });
         });
     });

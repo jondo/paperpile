@@ -63,7 +63,7 @@ Ext.define('Ext.resizer.SplitterTracker', {
 
             // Region constructor accepts (top, right, bottom, left)
             // anchored/calculated from the left
-            prevConstrainRegion = new Ext.util.Region(
+            prevConstrainRegion = Ext.create('Ext.util.Region',
                 prevBox.y,
                 // Right boundary is x + maxWidth if there IS a maxWidth.
                 // Otherwise it is calculated based upon the minWidth of the next Component
@@ -72,7 +72,7 @@ Ext.define('Ext.resizer.SplitterTracker', {
                 prevBox.x + (prevCmp.minWidth || defaultMin)
             );
             // anchored/calculated from the right
-            nextConstrainRegion = new Ext.util.Region(
+            nextConstrainRegion = Ext.create('Ext.util.Region',
                 nextBox.y,
                 nextBox.right - (nextCmp.minWidth || defaultMin),
                 nextBox.bottom,
@@ -82,7 +82,7 @@ Ext.define('Ext.resizer.SplitterTracker', {
             );
         } else {
             // anchored/calculated from the top
-            prevConstrainRegion = new Ext.util.Region(
+            prevConstrainRegion = Ext.create('Ext.util.Region',
                 prevBox.y + (prevCmp.minHeight || defaultMin),
                 prevBox.right,
                 // Bottom boundary is y + maxHeight if there IS a maxHeight.
@@ -91,7 +91,7 @@ Ext.define('Ext.resizer.SplitterTracker', {
                 prevBox.x
             );
             // anchored/calculated from the bottom
-            nextConstrainRegion = new Ext.util.Region(
+            nextConstrainRegion = Ext.create('Ext.util.Region',
                 // Top boundary is bottom - maxHeight if there IS a maxHeight.
                 // Otherwise it is calculated based upon the minHeight of the previous Component
                 (nextCmp.maxHeight ? nextBox.bottom - nextCmp.maxHeight : prevBox.y + (prevCmp.minHeight || defaultMin)) - splitWidth,

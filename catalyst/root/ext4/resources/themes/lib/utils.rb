@@ -34,6 +34,21 @@ module ExtJS4
         def parseint(value)
           Sass::Script::Number.new(value.to_i)
         end
+        
+        def theme_image(theme, path, without_url = false)
+          path = path.value
+          
+          images_path = File.join($ext_path, 'resources', 'themes', 'images', theme.value)
+          image_path = File.join(images_path, path)
+          
+          if !without_url
+            url = "url('#{image_path}')"
+          else
+            url = "#{image_path}"
+          end
+          
+          Sass::Script::String.new(url)
+        end
       end
     end
   end

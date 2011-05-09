@@ -2,9 +2,7 @@
     .#{$prefix}toolbar {
         font-size: $toolbar-font-size;
 
-        border: 1px solid;
-        border-color: $toolbar-border-color;
-        background-color: $toolbar-background-color;
+        border: 1px solid transparent;
 
         .#{$prefix}btn {
             margin: $toolbar-margin;
@@ -66,8 +64,44 @@
 
     // Background for overflow button inserted by the Menu box overflow handler within a toolbar
     .#{$prefix}toolbar-more-icon {
-        background-image: url(../../resources/themes/images/default/toolbar/more.gif)!important;
-        background-position: 2px center!important;
+        background-image: theme-image($theme-name, 'toolbar/more.gif') !important;
+        background-position: 2px center !important;
         background-repeat: no-repeat;
+    }
+}
+
+/**
+ * @mixin ext-toolbar-ui
+ * @class Ext.toolbar.Toolbar
+ * @param {String} $ui The name of the UI
+ * @param {Color} $background-color The background color of the toolbar (defaults to transparent)
+ * @param {Gradient/color-stops} $background-gradient The background gradient of the toolbar (defaults to null)
+ * @param {Color} $border-color The border color of the toolbar (defaults to null)
+ */
+@mixin extjs-toolbar-ui(
+    $ui,
+    
+    $background-color: transparent,
+    $background-gradient: null,
+    
+    $border-color: null
+) {
+    .#{$prefix}toolbar-#{$ui} {
+        @if $border-color != null {
+            border-color: $border-color;
+        }
+        
+        @include background-gradient($background-color, $background-gradient);
+    }
+    
+    @if not $supports-gradients or $compile-all {
+        @if $background-gradient != null {
+            .#{$prefix}nlg {
+                .#{$prefix}toolbar-#{$ui} {
+                    background-image: theme-image($theme-name, 'toolbar/toolbar-bg.gif') !important;
+                    background-repeat: repeat-x;
+                }
+            }
+        }
     }
 }

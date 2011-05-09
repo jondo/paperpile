@@ -104,12 +104,18 @@
         padding-bottom: 1px;
     }
 
-    .#{$prefix}html-editor-tb .#{$prefix}toolbar {
-        position: static !important;
+    .#{$prefix}html-editor-tb {
+        .#{$prefix}toolbar {
+            position: static !important;
+        }
+        .#{$prefix}font-select {
+            font-size: 11px;
+        }
     }
 
     .x-html-editor-wrap textarea {
         border: 0;
         padding: 3px 2px;
+        overflow: auto;
     }
 }

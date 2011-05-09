@@ -11,7 +11,7 @@
  * 
  * <p>AbstractStore provides the basic configuration for anything that can be considered a Store. It expects to be 
  * given a {@link Ext.data.Model Model} that represents the type of data in the Store. It also expects to be given a 
- * {@link Ext.data.Proxy Proxy} that handles the loading of data into the Store.</p>
+ * {@link Ext.data.proxy.Proxy Proxy} that handles the loading of data into the Store.</p>
  * 
  * <p>AbstractStore provides a few helpful methods such as {@link #load} and {@link #sync}, which load and save data
  * respectively, passing the requests through the configured {@link #proxy}. Both built-in Store subclasses add extra
@@ -26,7 +26,7 @@
  * 
  */
 Ext.define('Ext.data.AbstractStore', {
-    requires: ['Ext.util.MixedCollection', 'Ext.data.Operation', 'Ext.util.Filter', 'Ext.util.Grouper'],
+    requires: ['Ext.util.MixedCollection', 'Ext.data.Operation', 'Ext.util.Filter'],
     
     mixins: {
         observable: 'Ext.util.Observable',
@@ -49,7 +49,7 @@ Ext.define('Ext.data.AbstractStore', {
     remoteFilter: false,
 
     /**
-     * @cfg {String/Ext.data.Proxy/Object} proxy The Proxy to use for this Store. This can be either a string, a config
+     * @cfg {String/Ext.data.proxy.Proxy/Object} proxy The Proxy to use for this Store. This can be either a string, a config
      * object or a Proxy instance - see {@link #setProxy} for details.
      */
 
@@ -102,7 +102,7 @@ Ext.define('Ext.data.AbstractStore', {
     implicitModel: false,
 
     /**
-     * The string type of the Proxy to create if none is specified. This defaults to creating a {@link Ext.data.MemoryProxy memory proxy}.
+     * The string type of the Proxy to create if none is specified. This defaults to creating a {@link Ext.data.proxy.Memory memory proxy}.
      * @property defaultProxyType
      * @type String
      */
@@ -120,7 +120,7 @@ Ext.define('Ext.data.AbstractStore', {
 
     /**
      * @cfg {String} storeId Optional unique identifier for this store. If present, this Store will be registered with 
-     * the {@link Ext.data.StoreMgr}, making it easy to reuse elsewhere. Defaults to undefined.
+     * the {@link Ext.data.StoreManager}, making it easy to reuse elsewhere. Defaults to undefined.
      */
 
     sortRoot: 'data',
@@ -207,9 +207,8 @@ Ext.define('Ext.data.AbstractStore', {
         me.removed = [];
 
         me.mixins.observable.constructor.apply(me, arguments);
-        
-        me.model = Ext.ModelMgr.getModel(config.model || me.model);
-        
+        me.model = Ext.ModelManager.getModel(config.model || me.model);
+
         /**
          * @property modelDefaults
          * @type Object
@@ -223,10 +222,11 @@ Ext.define('Ext.data.AbstractStore', {
         });
 
         //Supports the 3.x style of simply passing an array of fields to the store, implicitly creating a model
-        if (!me.model && config.fields) {
-            me.model = Ext.regModel('Ext.data.Store.ImplicitModel-' + (me.storeId || Ext.id()), {
-                fields: config.fields,
-                proxy: config.proxy
+        if (!me.model && me.fields) {
+            me.model = Ext.define('Ext.data.Store.ImplicitModel-' + (me.storeId || Ext.id()), {
+                extend: 'Ext.data.Model',
+                fields: me.fields,
+                proxy: me.proxy || me.defaultProxyType
             });
 
             delete me.fields;
@@ -235,7 +235,7 @@ Ext.define('Ext.data.AbstractStore', {
         }
 
         //ensures that the Proxy is instantiated correctly
-        me.setProxy(config.proxy || me.model.getProxy());
+        me.setProxy(config.proxy || me.proxy || me.model.getProxy());
 
         if (me.id && !me.storeId) {
             me.storeId = me.id;
@@ -243,28 +243,10 @@ Ext.define('Ext.data.AbstractStore', {
         }
 
         if (me.storeId) {
-            Ext.data.StoreMgr.register(me);
+            Ext.data.StoreManager.register(me);
         }
         
-        if (!config.groupers && config.groupField) {
-            config.groupers = [
-                {
-                    property : config.groupField,
-                    direction: config.groupDir
-                }
-            ];
-        }
-        
-        /**
-         * The collection of {@link Ext.util.Grouper Groupers} currently applied to this Store
-         * @property groupers
-         * @type Ext.util.MixedCollection
-         */
-        me.groupers = Ext.create('Ext.util.MixedCollection');
-        me.groupers.addAll(me.decodeGroupers(config.groupers));
-        
-        me.mixins.sortable.initSortable.call(me);
-        me.sort(me.groupers.items, 'prepend', false);
+        me.mixins.sortable.initSortable.call(me);        
         
         /**
          * The collection of {@link Ext.util.Filter Filters} currently applied to this Store
@@ -275,22 +257,23 @@ Ext.define('Ext.data.AbstractStore', {
         me.filters.addAll(me.decodeFilters(config.filters));
     },
 
-    onBeforeSort: function() {
-        this.sort(this.groupers.items, 'prepend', false);
-    },
-
     /**
      * Sets the Store's Proxy by string, config object or Proxy instance
-     * @param {String|Object|Ext.data.Proxy} proxy The new Proxy, which can be either a type string, a configuration object
-     * or an Ext.data.Proxy instance
-     * @return {Ext.data.Proxy} The attached Proxy object
+     * @param {String|Object|Ext.data.proxy.Proxy} proxy The new Proxy, which can be either a type string, a configuration object
+     * or an Ext.data.proxy.Proxy instance
+     * @return {Ext.data.proxy.Proxy} The attached Proxy object
      */
     setProxy: function(proxy) {
         var me = this;
         
-        if (proxy instanceof Ext.data.Proxy) {
+        if (proxy instanceof Ext.data.proxy.Proxy) {
             proxy.setModel(me.model);
         } else {
+            if (Ext.isString(proxy)) {
+                proxy = {
+                    type: proxy    
+                };
+            }
             Ext.applyIf(proxy, {
                 model: me.model
             });
@@ -305,7 +288,7 @@ Ext.define('Ext.data.AbstractStore', {
 
     /**
      * Returns the proxy currently attached to this proxy instance
-     * @return {Ext.data.Proxy} The Proxy instance
+     * @return {Ext.data.proxy.Proxy} The Proxy instance
      */
     getProxy: function() {
         return this.proxy;
@@ -314,7 +297,7 @@ Ext.define('Ext.data.AbstractStore', {
     //saves any phantom records
     create: function(data, options) {
         var me = this,
-            instance = Ext.ModelMgr.create(Ext.applyIf(data, me.modelDefaults), me.model.modelName),
+            instance = Ext.ModelManager.create(Ext.applyIf(data, me.modelDefaults), me.model.modelName),
             operation;
         
         options = options || {};
@@ -513,61 +496,6 @@ Ext.define('Ext.data.AbstractStore', {
 
     },
     
-    
-    /**
-     * @private
-     * Normalizes an array of grouper objects, ensuring that they are all Ext.util.Grouper instances
-     * @param {Array} groupers The groupers array
-     * @return {Array} Array of Ext.util.Grouper objects
-     */
-    decodeGroupers: function(groupers) {
-        if (!Ext.isArray(groupers)) {
-            if (groupers === undefined) {
-                groupers = [];
-            } else {
-                groupers = [groupers];
-            }
-        }
-
-        var length  = groupers.length,
-            Grouper = Ext.util.Grouper,
-            config, i;
-
-        for (i = 0; i < length; i++) {
-            config = groupers[i];
-
-            if (!(config instanceof Grouper)) {
-                if (Ext.isString(config)) {
-                    config = {
-                        property: config
-                    };
-                }
-                
-                Ext.applyIf(config, {
-                    root     : 'data',
-                    direction: "ASC"
-                });
-
-                //support for 3.x style sorters where a function can be defined as 'fn'
-                if (config.fn) {
-                    config.sorterFn = config.fn;
-                }
-
-                //support a function to be passed as a sorter definition
-                if (typeof config == 'function') {
-                    config = {
-                        sorterFn: config
-                    };
-                }
-
-                groupers[i] = new Grouper(config);
-            }
-        }
-
-        return groupers;
-    },
-
-
     /**
      * Synchronizes the Store with its Proxy. This asks the Proxy to batch together any new, updated
      * and deleted records in the store, updating the Store's internal representation of the records
@@ -616,9 +544,9 @@ Ext.define('Ext.data.AbstractStore', {
             };
 
         if (me.batchUpdateMode == 'operation') {
-            listeners['operationcomplete'] = me.onBatchOperationComplete;
+            listeners.operationcomplete = me.onBatchOperationComplete;
         } else {
-            listeners['complete'] = me.onBatchComplete;
+            listeners.complete = me.onBatchComplete;
         }
 
         return listeners;
@@ -632,7 +560,7 @@ Ext.define('Ext.data.AbstractStore', {
     /**
      * Loads the Store using its configured {@link #proxy}.
      * @param {Object} options Optional config object. This is passed into the {@link Ext.data.Operation Operation}
-     * object that is created and then sent to the proxy's {@link Ext.data.Proxy#read} function
+     * object that is created and then sent to the proxy's {@link Ext.data.proxy.Proxy#read} function
      */
     load: function(options) {
         var me = this,
@@ -645,7 +573,7 @@ Ext.define('Ext.data.AbstractStore', {
             filters: me.filters.items,
             sorters: me.getSorters()
         });
-
+        
         operation = Ext.create('Ext.data.Operation', options);
 
         if (me.fireEvent('beforeload', me, operation) !== false) {
@@ -665,7 +593,7 @@ Ext.define('Ext.data.AbstractStore', {
         var me = this;
         
         if (me.autoSync) {
-            me.sync()
+            me.sync();
         }
         
         me.fireEvent('update', me, record, Ext.data.Model.EDIT);
@@ -696,7 +624,7 @@ Ext.define('Ext.data.AbstractStore', {
         
         if (!me.isDestroyed) {
             if (me.storeId) {
-                Ext.data.StoreMgr.unregister(me);
+                Ext.data.StoreManager.unregister(me);
             }
             me.clearData();
             me.data = null;
@@ -735,5 +663,14 @@ Ext.define('Ext.data.AbstractStore', {
     // and fire a clear event afterwards
     removeAll: function() {
 
-    }
+
+    },
+
+    /**
+     * Returns true if the Store is currently performing a load operation
+     * @return {Boolean} True if the Store is currently loading
+     */
+    isLoading: function() {
+        return this.loading;
+     }
 });

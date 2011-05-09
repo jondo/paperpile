@@ -143,9 +143,9 @@ Ext.define('Ext.util.Region', {
             }
         } else {
             p = axis;
-            var d = new Ext.util.Offset();
-                d.x = this.getOutOfBoundOffsetX(p.x);
-                d.y = this.getOutOfBoundOffsetY(p.y);
+            var d = Ext.create('Ext.util.Offset');
+            d.x = this.getOutOfBoundOffsetX(p.x);
+            d.y = this.getOutOfBoundOffsetY(p.y);
             return d;
         }
 

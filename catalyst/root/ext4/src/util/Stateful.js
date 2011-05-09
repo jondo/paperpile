@@ -1,6 +1,6 @@
 /**
  * @class Ext.util.Stateful
- * Represents any object whose data can be saved by a {@link Ext.data.Proxy Proxy}. Ext.Model
+ * Represents any object whose data can be saved by a {@link Ext.data.proxy.Proxy Proxy}. Ext.Model
  * and Ext.View both inherit from this class as both can save state (Models save field state,
  * Views save configuration)
  */
@@ -72,19 +72,18 @@ Ext.define('Ext.util.Stateful', {
          */
         if (arguments.length == 1 && Ext.isObject(fieldName)) {
             for (key in fieldName) {
-                if (!fieldName.hasOwnProperty(key)) {
-                    continue;
+                if (fieldName.hasOwnProperty(key)) {
+                
+                    //here we check for the custom convert function. Note that if a field doesn't have a convert function,
+                    //we default it to its type's convert function, so we have to check that here. This feels rather dirty.
+                    field = fields.get(key);
+                    if (field && field.convert !== field.type.convert) {
+                        convertFields.push(key);
+                        continue;
+                    }
+                    
+                    me.set(key, fieldName[key]);
                 }
-
-                //here we check for the custom convert function. Note that if a field doesn't have a convert function,
-                //we default it to its type's convert function, so we have to check that here. This feels rather dirty.
-                field = fields.get(key);
-                if (field && field.convert !== field.type.convert) {
-                    convertFields.push(key);
-                    continue;
-                }
-
-                me.set(key, fieldName[key]);
             }
 
             for (i = 0; i < convertFields.length; i++) {
@@ -102,7 +101,7 @@ Ext.define('Ext.util.Stateful', {
             }
             currentValue = me.get(fieldName);
             me[me.persistanceProperty][fieldName] = value;
-            if (currentValue !== value) {
+            if (!me.isEqual(currentValue, value)) {
                 me.dirty = true;
                 me.modified[fieldName] = currentValue;
             }
@@ -111,6 +110,21 @@ Ext.define('Ext.util.Stateful', {
                 me.afterEdit();
             }
         }
+    },
+    
+    /**
+     * Checks if two values are equal, taking into account certain
+     * special factors, for example dates.
+     * @private
+     * @param {Object} a The first value
+     * @param {Object} b The second value
+     * @return {Boolean} True if the values are equal
+     */
+    isEqual: function(a, b){
+        if (Ext.isDate(a) && Ext.isDate(b)) {
+            return a.getTime() === b.getTime();
+        }
+        return a === b;
     },
     
     /**
@@ -213,7 +227,10 @@ Ext.define('Ext.util.Stateful', {
 
     //<debug>
     markDirty : function() {
-        throw new Error("Stateful: markDirty has been deprecated. Please use setDirty.");
+        if (Ext.isDefined(Ext.global.console)) {
+            Ext.global.console.warn('Ext.util.Stateful: markDirty has been deprecated. Use setDirty instead.');
+        }
+        return this.setDirty.apply(this, arguments);
     },
     //</debug>
 

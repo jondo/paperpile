@@ -1,7 +1,6 @@
 /**
  * @class Ext.chart.series.Cartesian
  * @extends Ext.chart.series.Series
- * @private
  *
  * Common base class for series implementations which plot values using x/y coordinates.
  *
@@ -13,13 +12,15 @@ Ext.define('Ext.chart.series.Cartesian', {
 
     extend: 'Ext.chart.series.Series',
 
+    alternateClassName: ['Ext.chart.CartesianSeries', 'Ext.chart.CartesianChart'],
+
     /* End Definitions */
 
     /**
      * The field used to access the x axis value from the items from the data
      * source.
      *
-     * @property xField
+     * @cfg xField
      * @type String
      */
     xField: null,
@@ -28,7 +29,7 @@ Ext.define('Ext.chart.series.Cartesian', {
      * The field used to access the y-axis value from the items from the data
      * source.
      *
-     * @property yField
+     * @cfg yField
      * @type String
      */
     yField: null,

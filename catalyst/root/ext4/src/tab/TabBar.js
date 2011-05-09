@@ -27,8 +27,8 @@ Ext.define('Ext.tab.TabBar', {
 
     // @private
     renderTpl: [
-        '<div class="{baseCls}-body<tpl if="ui"> {baseCls}-body-{ui}</tpl>"<tpl if="bodyStyle"> style="{bodyStyle}"</tpl>></div>',
-        '<div class="{baseCls}-strip<tpl if="ui"> {baseCls}-strip-{ui}</tpl>"></div>'
+        '<div class="{baseCls}-body<tpl if="ui"><tpl for="ui"> {parent.baseCls}-body-{.}</tpl></tpl>"<tpl if="bodyStyle"> style="{bodyStyle}"</tpl>></div>',
+        '<div class="{baseCls}-strip<tpl if="ui"><tpl for="ui"> {parent.baseCls}-strip-{.}</tpl></tpl>"></div>'
     ],
 
     /**
@@ -47,7 +47,7 @@ Ext.define('Ext.tab.TabBar', {
             keys;
 
         if (me.plain) {
-            me.ui = 'plain';
+            me.ui = [me.ui, me.ui + '-plain'];
         }
 
         me.addEvents(
@@ -70,7 +70,6 @@ Ext.define('Ext.tab.TabBar', {
         // TabBar must override the Header's align setting.
         me.layout.align = (me.orientation == 'vertical') ? 'left' : 'top';
         me.layout.overflowHandler = Ext.create('Ext.layout.container.boxOverflow.Scroller', me.layout);
-        me.layout.overflowHandler.on('scroll', me.updateStrip, me);
         me.items.removeAt(me.items.getCount() - 1);
         me.items.removeAt(me.items.getCount() - 1);
         
@@ -108,13 +107,14 @@ Ext.define('Ext.tab.TabBar', {
             delegate: '.' + Ext.baseCSSPrefix + 'tab'
         });
         me.callParent(arguments);
+        
     },
 
     afterComponentLayout : function() {
         var me = this;
-
+        
         me.callParent(arguments);
-        me.updateStrip();
+        me.strip.setWidth(me.el.getWidth());
     },
 
     // @private
@@ -176,42 +176,16 @@ Ext.define('Ext.tab.TabBar', {
             return;
         }
         var me = this;
-
+        if (me.activeTab) {
+            me.activeTab.deactivate();
+        }
+        tab.activate();
+        
         if (me.rendered) {
-            if (me.activeTab) {
-                me.activeTab.deactivate();
-            }
-            tab.activate();
             me.layout.layout();
             tab.el.scrollIntoView(me.layout.getRenderTarget());
         }
         me.activeTab = tab;
-        me.updateStrip();
         me.fireEvent('change', me, tab, tab.card);
-    },
-    
-    /**
-     * @private
-     * Makes the strip border move under the active tab.
-     */
-    updateStrip: function() {
-        var me = this,
-            stripBorder,
-            activeTab = me.activeTab,
-            top = (me.dock == 'top');
-
-        // @TODO: clean up this super nasty (really nasty) uber nasty hack
-        Ext.defer(function() {
-            if (me.rendered && activeTab && activeTab.rendered) {
-                me.strip.setWidth(me.el.getWidth());
-                if (!me.stripBorder) {
-                    me.stripBorder = me.body.createChild({
-                        cls: me.baseCls + '-strip-border'
-                    });
-                }
-                me.stripBorder.setWidth(activeTab.getWidth());
-                me.stripBorder.alignTo(activeTab.el, (top ? 'bl' : 'tl'));
-            }
-        }, 1);
     }
 });

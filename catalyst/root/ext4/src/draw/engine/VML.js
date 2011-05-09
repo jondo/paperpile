@@ -178,17 +178,15 @@ Ext.define('Ext.draw.engine.VML', {
     },
 
     // Create the VML element/elements and append them to the DOM
-    createElement: function(sprite) {
+    createSprite: function(sprite) {
         var me = this,
             attr = sprite.attr,
             type = sprite.type,
             zoom = me.zoom,
             vml = sprite.vml || (sprite.vml = {}),
             round = Math.round,
-            el = me.createNode("shape"),
-            skew = me.createNode("skew"),
-            path,
-            textPath;
+            el = (type === 'image') ? me.createNode('image') : me.createNode('shape'),
+            path, skew, textPath;
 
         el.coordsize = zoom + ' ' + zoom;
         el.coordorigin = attr.coordorigin || "0 0";
@@ -204,10 +202,13 @@ Ext.define('Ext.draw.engine.VML', {
         el.id = sprite.id;
         sprite.el = Ext.get(el);
         me.el.appendChild(el);
-        skew.on = true;
-        el.appendChild(skew);
-        sprite.skew = skew;
-        sprite.matrix = new Ext.draw.Matrix;
+        if (type !== 'image') {
+            skew = me.createNode("skew");
+            skew.on = true;
+            el.appendChild(skew);
+            sprite.skew = skew;
+        }
+        sprite.matrix = Ext.create('Ext.draw.Matrix');
         sprite.bbox = {
             plain: null,
             transform: null
@@ -244,7 +245,7 @@ Ext.define('Ext.draw.engine.VML', {
             spriteAttr = sprite.attr,
             el = sprite.el,
             dom = el.dom,
-            style, name, groups, i, ln, scrubbedAttrs, font, key;
+            style, name, groups, i, ln, scrubbedAttrs, font, key, bbox;
 
         if (group) {
             groups = [].concat(group);
@@ -261,12 +262,23 @@ Ext.define('Ext.draw.engine.VML', {
             me.setZIndex(sprite);
         }
 
-        if (sprite.type == 'image') {
-            dom.src = scrubbedAttrs.src;
-        }
-
         // Apply minimum default attributes
         Ext.applyIf(scrubbedAttrs, me.minDefaults[sprite.type]);
+
+        if (sprite.type == 'image') {
+            Ext.apply(sprite.attr, {
+                x: scrubbedAttrs.x,
+                y: scrubbedAttrs.y,
+                width: scrubbedAttrs.width,
+                height: scrubbedAttrs.height
+            });
+            bbox = sprite.getBBox();
+            el.setStyle({
+                width: bbox.width + 'px',
+                height: bbox.height + 'px'
+            });
+            dom.src = scrubbedAttrs.src;
+        }
 
         if (dom.href) {
             dom.href = scrubbedAttrs.href;
@@ -301,7 +313,8 @@ Ext.define('Ext.draw.engine.VML', {
                             Math.round((cy + ry) * me.zoom),
                             Math.round(cx * me.zoom));
                 sprite.dirtyPath = false;
-            } else if (sprite.type != "text") {
+            }
+            else if (sprite.type !== "text" && sprite.type !== 'image') {
                 sprite.attr.path = scrubbedAttrs.path = me.setPaths(sprite, scrubbedAttrs) || scrubbedAttrs.path;
                 dom.path = me.path2vml(scrubbedAttrs.path);
                 sprite.dirtyPath = false;
@@ -367,9 +380,6 @@ Ext.define('Ext.draw.engine.VML', {
         }
         else if (sprite.type == 'path' && spriteAttr.path) {
             return Ext.draw.Draw.pathToAbsolute(spriteAttr.path);
-        }
-        else if (sprite.type == 'image') {
-            return Ext.draw.Draw.rectPath(sprite);
         }
         return false;
     },
@@ -715,7 +725,7 @@ Ext.define('Ext.draw.engine.VML', {
 
         // Create sprite element if necessary
         if (!sprite.el) {
-            this.createElement(sprite);
+            this.createSprite(sprite);
         }
 
         if (sprite.dirty) {
@@ -727,7 +737,7 @@ Ext.define('Ext.draw.engine.VML', {
     },
 
     rotationCompensation: function (deg, dx, dy) {
-        var matrix = new Ext.draw.Matrix;
+        var matrix = Ext.create('Ext.draw.Matrix');
         matrix.rotate(-deg, 0.5, 0.5);
         return {
             x: matrix.x(dx, dy),
@@ -737,7 +747,7 @@ Ext.define('Ext.draw.engine.VML', {
 
     transform: function(sprite) {
         var me = this,
-            matrix = new Ext.draw.Matrix,
+            matrix = Ext.create('Ext.draw.Matrix'),
             transforms = sprite.transformations,
             transformsLength = transforms.length,
             i = 0,
@@ -770,7 +780,7 @@ Ext.define('Ext.draw.engine.VML', {
         }
 
         if (me.viewBoxShift) {
-            matrix.scale(me.viewBoxShift.scale, me.viewBoxShift.scale, 0, 0);
+            matrix.scale(me.viewBoxShift.scale, me.viewBoxShift.scale, -1, -1);
             matrix.add(1, 0, 0, 1, me.viewBoxShift.dx, me.viewBoxShift.dy);
         }
 
@@ -779,13 +789,14 @@ Ext.define('Ext.draw.engine.VML', {
 
         // Hide element while we transform
 
-        if (me.type != "image" && skew) {
+        if (sprite.type != "image" && skew) {
             // matrix transform via VML skew
             skew.matrix = matrix.toString();
             skew.offset = matrix.offset();
-        } else {
-            deltaX = matrix.m[0][2];
-            deltaY = matrix.m[1][2];
+        }
+        else {
+            deltaX = matrix.matrix[0][2];
+            deltaY = matrix.matrix[1][2];
             // Scale via coordsize property
             zoomScaleX = zoom / deltaScaleX;
             zoomScaleY = zoom / deltaScaleY;
@@ -825,7 +836,7 @@ Ext.define('Ext.draw.engine.VML', {
     },
 
     createItem: function (config) {
-        return new Ext.draw.Sprite(config);
+        return Ext.create('Ext.draw.Sprite', config);
     },
 
     getRegion: function() {
@@ -850,9 +861,9 @@ Ext.define('Ext.draw.engine.VML', {
      * @param {Object} gradient
      */
     addGradient: function(gradient) {
-        var gradients = this.gradientsColl || (this.gradientsColl = new Ext.util.MixedCollection()),
+        var gradients = this.gradientsColl || (this.gradientsColl = Ext.create('Ext.util.MixedCollection')),
             colors = [],
-            stops = new Ext.util.MixedCollection();
+            stops = Ext.create('Ext.util.MixedCollection');
 
         // Build colors string
         stops.addAll(gradient.stops);

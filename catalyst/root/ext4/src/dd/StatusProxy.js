@@ -7,7 +7,7 @@
  */
 Ext.define('Ext.dd.StatusProxy', {
     animRepair: false,
-    
+
     constructor: function(config){
         Ext.apply(this, config);
         this.id = this.id || Ext.id();
@@ -20,12 +20,12 @@ Ext.define('Ext.dd.StatusProxy', {
             shadow: !config || config.shadow !== false,
             renderTo: document.body
         });
-        
+
         this.el = this.proxy.el;
         this.el.show();
         this.el.setVisibilityMode(Ext.core.Element.VISIBILITY);
         this.el.hide();
-        
+
         this.ghost = Ext.get(this.el.dom.childNodes[1]);
         this.dropStatus = this.dropNotAllowed;
     },
@@ -155,7 +155,7 @@ Ext.define('Ext.dd.StatusProxy', {
                     x: xy[0],
                     y: xy[1]
                 },
-                stopFx: true,
+                stopAnimation: true,
                 callback: this.afterRepair,
                 scope: this
             });
@@ -173,8 +173,8 @@ Ext.define('Ext.dd.StatusProxy', {
         this.callback = null;
         this.scope = null;
     },
-    
+
     destroy: function(){
-        Ext.destroy(this.ghost, this.el);    
+        Ext.destroy(this.ghost, this.proxy, this.el);
     }
 });

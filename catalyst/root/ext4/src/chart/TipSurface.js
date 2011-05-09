@@ -14,7 +14,7 @@ Ext.define('Ext.chart.TipSurface', {
     renderFirst: true,
 
     constructor: function(config) {
-        Ext.chart.TipSurface.superclass.constructor.call(this, config);
+        this.callParent([config]);
         if (config.sprites) {
             this.spriteArray = [].concat(config.sprites);
             delete config.sprites;
@@ -27,7 +27,7 @@ Ext.define('Ext.chart.TipSurface', {
             l = 0,
             sp,
             sprites;
-            Ext.chart.TipSurface.superclass.onRender.apply(me, arguments);
+            this.callParent(arguments);
         sprites = me.spriteArray;
         if (me.renderFirst && sprites) {
             me.renderFirst = false;

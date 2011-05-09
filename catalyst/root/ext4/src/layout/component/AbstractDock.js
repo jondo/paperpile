@@ -1,6 +1,6 @@
 /**
  * @class Ext.layout.component.AbstractDock
- * @extends Ext.layout.Component
+ * @extends Ext.layout.component.Component
  * @private
  * This ComponentLayout handles docking for Panels. It takes care of panels that are
  * part of a ContainerLayout that sets this Panel's size and Panels that are part of
@@ -12,7 +12,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
 
     /* Begin Definitions */
 
-    extend: 'Ext.layout.Component',
+    extend: 'Ext.layout.component.Component',
 
     /* End Definitions */
 
@@ -62,6 +62,16 @@ Ext.define('Ext.layout.component.AbstractDock', {
         
         Ext.applyIf(info, me.getTargetInfo());
 
+        // We need to bind to the ownerCt whenever we do not have a user set height or width.
+        if (owner && owner.ownerCt && owner.ownerCt.layout && owner.ownerCt.layout.isLayout) {
+            if (!Ext.isNumber(owner.height) || !Ext.isNumber(owner.width)) {
+                owner.ownerCt.layout.bindToOwnerCtComponent = true;
+            }
+            else {
+                owner.ownerCt.layout.bindToOwnerCtComponent = false;
+            }
+        }
+
         // Determine if we have an autoHeight or autoWidth.
         if (height === undefined || height === null || width === undefined || width === null) {
             padding = info.padding;
@@ -72,14 +82,14 @@ Ext.define('Ext.layout.component.AbstractDock', {
             if ((height === undefined || height === null) && (width === undefined || width === null)) {
                 autoHeight = true;
                 autoWidth = true;
-                me.setTargetSize(null, null);
+                me.setTargetSize(null);
                 me.setBodyBox({width: null, height: null});
             }
             // Auto-height
             else if (height === undefined || height === null) {
                 autoHeight = true;
                 // Clear any sizing that we already set in a previous layout
-                me.setTargetSize(width, null);
+                me.setTargetSize(width);
                 me.setBodyBox({width: width - padding.left - border.left - padding.right - border.right - frameSize.left - frameSize.right, height: null});
             // Auto-width
             }
@@ -330,16 +340,18 @@ Ext.define('Ext.layout.component.AbstractDock', {
             bodyBox = info.bodyBox,
             size = info.size,
             boxes = info.boxes,
+            boxesLn = boxes.length,
             pos = box.type,
             frameSize = this.frameSize,
             padding = info.padding,
             border = info.border,
             autoSizedCtLayout = info.autoSizedCtLayout,
+            ln = (boxesLn < index) ? boxesLn : index,
             i, adjustBox;
 
         if (pos == 'top' || pos == 'bottom') {
             // This can affect the previously set left and right and bottom docked items
-            for (i = 0; i < index; i++) {
+            for (i = 0; i < ln; i++) {
                 adjustBox = boxes[i];
                 if (adjustBox.stretched && adjustBox.type == 'left' || adjustBox.type == 'right') {
                     adjustBox.height += box.height;
@@ -495,6 +507,61 @@ Ext.define('Ext.layout.component.AbstractDock', {
         }
         return result;
     },
+    
+    /**
+     * @protected
+     * Render the top and left docked items before any existing DOM nodes in our render target,
+     * and then render the right and bottom docked items after. This is important, for such things
+     * as tab stops and ARIA readers, that the DOM nodes are in a meaningful order.
+     * Our collection of docked items will already be ordered via Panel.getDockedItems().
+     */
+    renderItems: function(items, target) {
+        var cns = target.dom.childNodes,
+            cnsLn = cns.length,
+            ln = items.length,
+            domLn = 0,
+            i, j, cn, item;
+        
+        // Calculate the number of DOM nodes in our target that are not our docked items
+        for (i = 0; i < cnsLn; i++) {
+            cn = Ext.get(cns[i]);
+            for (j = 0; j < ln; j++) {
+                item = items[j];
+                if (item.rendered && (cn.id == item.el.id || cn.down('#' + item.el.id))) {
+                    break;
+                }
+            }
+            
+            if (j === ln) {
+                domLn++;
+            }
+        }
+
+        // Now we go through our docked items and render/move them
+        for (i = 0, j = 0; i < ln; i++, j++) {
+            item = items[i];
+            
+            // If we're now at the right/bottom docked item, we jump ahead in our
+            // DOM position, just past the existing DOM nodes.
+            //
+            // TODO: This is affected if users provide custom weight values to their
+            // docked items, which puts it out of (t,l,r,b) order. Avoiding a second
+            // sort operation here, for now, in the name of performance. getDockedItems()
+            // needs the sort operation not just for this layout-time rendering, but
+            // also for getRefItems() to return a logical ordering (FocusManager, CQ, et al).
+            if (i === j && (item.dock === 'right' || item.dock === 'bottom')) {
+                j += domLn;
+            }
+            
+            // Same logic as Layout.renderItems()
+            if (item && !item.rendered) {
+                this.renderItem(item, target, j);
+            }
+            else if (!this.isValidParent(item, target, j)) {
+                this.moveItem(item, target, j);
+            }
+        }
+    },
 
     /**
      * @protected
@@ -560,7 +627,6 @@ Ext.define('Ext.layout.component.AbstractDock', {
         if (dom) {
             dom.parentNode.removeChild(dom);
         }
-
         this.childrenChanged = true;
     }
 });

@@ -1,6 +1,6 @@
 /**
  * @class Ext.layout.component.Draw
- * @extends Ext.layout.Component
+ * @extends Ext.layout.component.Component
  * @private
  *
  */

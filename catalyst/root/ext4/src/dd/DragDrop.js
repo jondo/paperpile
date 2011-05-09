@@ -53,7 +53,7 @@
  */
 
 Ext.define('Ext.dd.DragDrop', {
-    requires: ['Ext.dd.DragDropMgr'],
+    requires: ['Ext.dd.DragDropManager'],
     constructor: function(id, sGroup, config) {
         if(id) {
             this.init(id, sGroup, config);
@@ -601,7 +601,7 @@ Ext.define('Ext.dd.DragDrop', {
         this.config = config || {};
 
         // create a local reference to the drag and drop manager
-        this.DDMInstance = Ext.dd.DragDropMgr;
+        this.DDMInstance = Ext.dd.DragDropManager;
         // initialize the groups array
         this.groups = {};
 
@@ -993,7 +993,7 @@ Ext.define('Ext.dd.DragDrop', {
             }
         }
 
-        this.xTicks.sort(this.DDMInstance.numericSort) ;
+        Ext.Array.sort(this.xTicks, this.DDMInstance.numericSort);
     },
 
     /**
@@ -1022,7 +1022,7 @@ Ext.define('Ext.dd.DragDrop', {
             }
         }
 
-        this.yTicks.sort(this.DDMInstance.numericSort) ;
+        Ext.Array.sort(this.yTicks, this.DDMInstance.numericSort);
     },
 
     /**

@@ -27,7 +27,7 @@
  */
 Ext.define('Ext.dd.DDProxy', {
     extend: 'Ext.dd.DD',
-    
+
     statics: {
         /**
          * The default drag frame div id
@@ -37,7 +37,7 @@ Ext.define('Ext.dd.DDProxy', {
          */
         dragElId: "ygddfdiv"
     },
-    
+
     constructor: function(id, sGroup, config) {
         if (id) {
             this.init(id, sGroup, config);
@@ -107,7 +107,7 @@ Ext.define('Ext.dd.DDProxy', {
     },
 
     applyConfig: function() {
-        Ext.dd.DDProxy.superclass.applyConfig.call(this);
+        this.callParent();
 
         this.resizeFrame = (this.config.resizeFrame !== false);
         this.centerFrame = (this.config.centerFrame);

@@ -1,11 +1,11 @@
 /**
  * Component layout for {@link Ext.view.BoundList}. Handles constraining the height to the configured maxHeight.
  * @class Ext.layout.component.BoundList
- * @extends Ext.layout.Component
+ * @extends Ext.layout.component.Component
  * @private
  */
 Ext.define('Ext.layout.component.BoundList', {
-    extend: 'Ext.layout.Component',
+    extend: 'Ext.layout.component.Component',
     alias: 'layout.boundlist',
 
     type: 'component',

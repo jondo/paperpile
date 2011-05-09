@@ -147,7 +147,7 @@ TestAction.multiply(
             'call'
         );
         me.namespace = (Ext.isString(me.namespace)) ? Ext.ns(me.namespace) : me.namespace || window;
-        me.transactions = new Ext.util.MixedCollection();
+        me.transactions = Ext.create('Ext.util.MixedCollection');
         me.callBuffer = [];
     },
     
@@ -220,7 +220,9 @@ TestAction.multiply(
             me.connected = true;
             me.fireEvent('connect', me);
         } else if(!me.url) {
-            throw 'Error initializing RemotingProvider, no url configured.';
+            //<debug>
+            Ext.Error.raise('Error initializing RemotingProvider, no url configured.');
+            //</debug>
         }
     },
 
@@ -418,7 +420,7 @@ TestAction.multiply(
         me.callBuffer.push(transaction);
         if (enableBuffer) {
             if (!me.callTask) {
-                me.callTask = new Ext.util.DelayedTask(me.combineAndSend, me);
+                me.callTask = Ext.create('Ext.util.DelayedTask', me.combineAndSend, me);
             }
             me.callTask.delay(Ext.isNumber(enableBuffer) ? enableBuffer : 10);
         } else {

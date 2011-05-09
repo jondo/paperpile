@@ -4,32 +4,36 @@
  * <p>This is a layout that manages multiple Panels in an expandable accordion style such that only
  * <b>one Panel can be expanded at any given time</b>. Each Panel has built-in support for expanding and collapsing.</p>
  * <p>Note: Only Ext.Panels <b>and all subclasses of Ext.panel.Panel</b> may be used in an accordion layout Container.</p>
+ * {@img Ext.layout.container.Accordion/Ext.layout.container.Accordion.png Ext.layout.container.Accordion container layout}
  * <p>Example usage:</p>
  * <pre><code>
-var accordion = new Ext.panel.Panel({
-    title: 'Accordion Layout',
-    layout:'accordion',
-    defaults: {
-        // applied to each contained panel
-        bodyStyle: 'padding:15px'
-    },
-    layoutConfig: {
-        // layout-specific configs go here
-        titleCollapse: false,
-        animate: true,
-        activeOnTop: true
-    },
-    items: [{
-        title: 'Panel 1',
-        html: '&lt;p&gt;Panel content!&lt;/p&gt;'
-    },{
-        title: 'Panel 2',
-        html: '&lt;p&gt;Panel content!&lt;/p&gt;'
-    },{
-        title: 'Panel 3',
-        html: '&lt;p&gt;Panel content!&lt;/p&gt;'
-    }]
-});
+    Ext.create('Ext.panel.Panel', {
+        title: 'Accordion Layout',
+        width: 300,
+        height: 300,
+        layout:'accordion',
+        defaults: {
+            // applied to each contained panel
+            bodyStyle: 'padding:15px'
+        },
+        layoutConfig: {
+            // layout-specific configs go here
+            titleCollapse: false,
+            animate: true,
+            activeOnTop: true
+        },
+        items: [{
+            title: 'Panel 1',
+            html: '<p>Panel content!</p>'
+        },{
+            title: 'Panel 2',
+            html: '<p>Panel content!</p>'
+        },{
+            title: 'Panel 3',
+            html: '<p>Panel content!</p>'
+        }],
+        renderTo: Ext.getBody()
+    });
 </code></pre>
  */
 Ext.define('Ext.layout.container.Accordion', {
@@ -305,10 +309,13 @@ Ext.define('Ext.layout.container.Accordion', {
         comp.addCls(comp.collapsedCls);
         comp.header.addCls(comp.collapsedHeaderCls);
         comp.height = comp.header.getHeight();
+        comp.el.setHeight(comp.height);
         comp.collapsed = true;
         delete comp.flex;
         comp.fireEvent('collapse', comp);
-        comp.collapseTool.setType('expand-' + comp.getOppositeDirection(comp.collapseDirection));
+        if (comp.collapseTool) {
+            comp.collapseTool.setType('expand-' + comp.getOppositeDirection(comp.collapseDirection));
+        }
     },
 
     setExpanded: function(comp) {
@@ -327,12 +334,15 @@ Ext.define('Ext.layout.container.Accordion', {
         }
         delete comp.collapsed;
         delete comp.height;
+        delete comp.componentLayout.lastComponentSize;
         comp.suspendLayout = false;
         comp.flex = 1;
         comp.removeCls(comp.collapsedCls);
         comp.header.removeCls(comp.collapsedHeaderCls);
         comp.fireEvent('expand', comp);
-        comp.collapseTool.setType('collapse-' + comp.collapseDirection);
+        if (comp.collapseTool) {
+            comp.collapseTool.setType('collapse-' + comp.collapseDirection);
+        }
         comp.setAutoScroll(comp.initialConfig.autoScroll);
     }
 });

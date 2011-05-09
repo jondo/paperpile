@@ -54,7 +54,7 @@ Ext.define('Ext.env.OS', {
      * if (Ext.os.is.iOS32) { ... } // Equivalent to (Ext.os.is.iOS && Ext.os.version.equals(3.2))
      * </code></pre>
      *
-     * Note that only {@link Ext.Version#getMajor major component}  and {@link Ext.Version#getSimplified simplified}
+     * Note that only {@link Ext.Version#getMajor major component}  and {@link Ext.Version#getShortVersion shortVersion}
      * value of the version are available via direct property checking.
      *
      * Supported values are: iOS, iPad, iPhone, iPod, Android, WebOS, BlackBerry, MacOSX, Windows, Linux and Other
@@ -87,7 +87,7 @@ Ext.define('Ext.env.OS', {
             actualVersionMatch;
 
         if (osMatch) {
-            name = selfClass.osNames[Ext.Object.keyOf(selfClass.osPrefixes, osMatch[1])];
+            name = selfClass.osNames[Ext.Object.getKey(selfClass.osPrefixes, osMatch[1])];
             version = osMatch[2];
 
             if (name === 'BlackBerry') {
@@ -117,7 +117,7 @@ Ext.define('Ext.env.OS', {
 
         this.is[this.name] = true;
         this.is[this.name + (this.version.getMajor() || '')] = true;
-        this.is[this.name + this.version.getSimplified()] = true;
+        this.is[this.name + this.version.getShortVersion()] = true;
 
         Ext.Object.each(selfClass.osNames, function(key, name) {
             this.is[name] = (this.name === name);

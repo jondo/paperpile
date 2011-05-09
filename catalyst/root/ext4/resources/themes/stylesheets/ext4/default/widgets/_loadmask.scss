@@ -41,7 +41,7 @@
         padding: $loadmask-msg-inner-padding;
         
         //if an icon is defined show it
-        @if $loadmask-msg-inner-icon {
+        @if $loadmask-msg-inner-icon != null {
             background-image: theme-image($theme-name, $loadmask-msg-inner-icon);
             background-repeat: no-repeat;
             background-position: 5px center;
@@ -60,6 +60,6 @@
 
 @if not $supports-gradients or $compile-all {
     .#{$prefix}nlg .#{$prefix}mask-msg {
-      background-image: theme-image($theme-name, 'mask/mask-bg.png');
+      background-image: theme-image($theme-name, 'mask/mask-bg.gif');
     } 
 }

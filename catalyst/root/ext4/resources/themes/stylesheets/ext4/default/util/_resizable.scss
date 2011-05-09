@@ -20,88 +20,120 @@
         width: 6px;
         height: 100%;
         
-        cursor: e-resize;
-        
         right: 0;
         top: 0;
+    }
+    
+    .#{$prefix}resizable-over {
+        .#{$prefix}resizable-handle-east {
+            cursor: e-resize;
+        }
     }
     
     .#{$prefix}resizable-handle-south {
         width: 100%;
         height: 6px;
         
-        cursor: s-resize;
-        
         left: 0;
         bottom: 0;
+    }
+    
+    .#{$prefix}resizable-over {
+        .#{$prefix}resizable-handle-south {
+            cursor: s-resize;
+        }
     }
     
     .#{$prefix}resizable-handle-west {
         width: 6px;
         height: 100%;
         
-        cursor: w-resize;
-        
         left: 0;
         top: 0;
+    }
+    
+    .#{$prefix}resizable-over {
+        .#{$prefix}resizable-handle-west {
+            cursor: w-resize;
+        }
     }
 
     .#{$prefix}resizable-handle-north {
         width: 100%;
         height: 6px;
         
-        cursor: n-resize;
-        
         left: 0;
         top: 0;
+    }
+    
+    .#{$prefix}resizable-over {
+        .#{$prefix}resizable-handle-north {
+            cursor: n-resize;
+        }
     }
 
     .#{$prefix}resizable-handle-southeast {
         width: 6px;
         height: 6px;
         
-        cursor: se-resize;
-        
         right: 0;
         bottom: 0;
         
         z-index: 101;
+    }
+    
+    .#{$prefix}resizable-over {
+        .#{$prefix}resizable-handle-southeast {
+            cursor: se-resize;
+        }
     }
 
     .#{$prefix}resizable-handle-northwest {
         width: 6px;
         height: 6px;
         
-        cursor: nw-resize;
-        
         left: 0;
         top: 0;
         
         z-index: 101;
+    }
+    
+    .#{$prefix}resizable-over {
+        .#{$prefix}resizable-handle-northwest {
+            cursor: nw-resize;
+        }
     }
 
     .#{$prefix}resizable-handle-northeast {
         width: 6px;
         height: 6px;
         
-        cursor: ne-resize;
-        
         right: 0;
         top: 0;
         
         z-index: 101;
+    }
+    
+    .#{$prefix}resizable-over {
+        .#{$prefix}resizable-handle-northeast {
+            cursor: ne-resize;
+        }
     }
 
     .#{$prefix}resizable-handle-southwest {
         width: 6px;
         height: 6px;
         
-        cursor: sw-resize;
-        
         left: 0;
         bottom: 0;
         
         z-index: 101;
+    }
+    
+    .#{$prefix}resizable-over {
+        .#{$prefix}resizable-handle-southwest {
+            cursor: sw-resize;
+        }
     }
     
     /*IE rounding error*/
@@ -127,7 +159,7 @@
         display: none;
     }
 
-.#{$prefix}resizable-proxy {
+    .#{$prefix}resizable-proxy {
         border: 1px dashed #3b5a82;
         position: absolute;
         left: 0;

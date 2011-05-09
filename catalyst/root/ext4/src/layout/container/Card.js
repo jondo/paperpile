@@ -14,53 +14,57 @@
   * common navigation routine -- for this example, the implementation of that routine has been ommitted since
   * it can be any type of custom logic.  Note that other uses of a CardLayout (like a tab control) would require a
   * completely different implementation.  For serious implementations, a better approach would be to extend
-  * CardLayout to provide the custom functionality needed.  Example usage:</p>
+  * CardLayout to provide the custom functionality needed.  
+  * {@img Ext.layout.container.Card/Ext.layout.container.Card.png Ext.layout.container.Card container layout}
+  * Example usage:</p>
   * <pre><code>
- var navHandler = function(direction){
-     // This routine could contain business logic required to manage the navigation steps.
-     // It would call setActiveItem as needed, manage navigation button state, handle any
-     // branching logic that might be required, handle alternate actions like cancellation
-     // or finalization, etc.  A complete wizard implementation could get pretty
-     // sophisticated depending on the complexity required, and should probably be
-     // done as a subclass of CardLayout in a real-world implementation.
- };
+    var navHandler = function(direction){
+         // This routine could contain business logic required to manage the navigation steps.
+         // It would call setActiveItem as needed, manage navigation button state, handle any
+         // branching logic that might be required, handle alternate actions like cancellation
+         // or finalization, etc.  A complete wizard implementation could get pretty
+         // sophisticated depending on the complexity required, and should probably be
+         // done as a subclass of CardLayout in a real-world implementation.
+     };
 
- var card = new Ext.panel.Panel({
-     title: 'Example Wizard',
-     layout: 'card',
-     activeItem: 0, // make sure the active item is set on the container config!
-     bodyStyle: 'padding:15px',
-     defaults: {
-         // applied to each contained panel
-         border:false
-     },
-     // just an example of one possible navigation scheme, using buttons
-     bbar: [
-         {
-             id: 'move-prev',
-             text: 'Back',
-             handler: navHandler.createDelegate(this, [-1]),
-             disabled: true
-         },
-         '->', // greedy spacer so that the buttons are aligned to each side
-         {
-             id: 'move-next',
-             text: 'Next',
-             handler: navHandler.createDelegate(this, [1])
-         }
-     ],
-     // the panels (or "cards") within the layout
-     items: [{
-         id: 'card-0',
-         html: '&lt;h1&gt;Welcome to the Wizard!&lt;/h1&gt;&lt;p&gt;Step 1 of 3&lt;/p&gt;'
-     },{
-         id: 'card-1',
-         html: '&lt;p&gt;Step 2 of 3&lt;/p&gt;'
-     },{
-         id: 'card-2',
-         html: '&lt;h1&gt;Congratulations!&lt;/h1&gt;&lt;p&gt;Step 3 of 3 - Complete&lt;/p&gt;'
-     }]
- });
+    Ext.create('Ext.panel.Panel', {
+        title: 'Example Wizard',
+        width: 300,
+        height: 200,
+        layout: 'card',
+        activeItem: 0, // make sure the active item is set on the container config!
+        bodyStyle: 'padding:15px',
+        defaults: {
+            // applied to each contained panel
+            border:false
+        },
+        // just an example of one possible navigation scheme, using buttons
+        bbar: [
+        {
+            id: 'move-prev',
+            text: 'Back',
+            handler: navHandler(this, [-1]),
+            disabled: true
+        },
+        '->', // greedy spacer so that the buttons are aligned to each side
+        {
+            id: 'move-next',
+            text: 'Next',
+            handler: navHandler(this, [1])
+        }],
+        // the panels (or "cards") within the layout
+        items: [{
+            id: 'card-0',
+            html: '<h1>Welcome to the Wizard!</h1><p>Step 1 of 3</p>'
+        },{
+            id: 'card-1',
+            html: '<p>Step 2 of 3</p>'
+        },{
+            id: 'card-2',
+            html: '<h1>Congratulations!</h1><p>Step 3 of 3 - Complete</p>'
+        }],
+        renderTo: Ext.getBody()
+    });  
  </code></pre>
   */
 Ext.define('Ext.layout.container.Card', {
@@ -117,7 +121,7 @@ Ext.define('Ext.layout.container.Card', {
                 me.setItemBox(newCard, me.getTargetBox());
             }
             else {
-                // onLayout calls setItemBox which sizes the active item via setCalculatedSize.
+                // onLayout calls setItemBox
                 me.onLayout();
             }
 
@@ -137,11 +141,9 @@ Ext.define('Ext.layout.container.Card', {
 
             me.layoutBusy = false;
 
-            // The conditional upward call to the owner's doComponentLayout from the newCard's layout's afterLayout will have been prevented by our layoutBusy flag
-            // Call it now.
             if (!me.sizeAllCards) {
-                if (!me.owner.componentLayout.layoutBusy) {
-                    me.owner.doComponentLayout();
+                if (!owner.componentLayout.layoutBusy) {
+                    me.onLayout();
                 }
             }
             return newCard;

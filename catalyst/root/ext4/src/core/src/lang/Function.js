@@ -189,6 +189,29 @@ sayHiToFriend('Brian'); // alerts "Hi, Brian"
     },
 
     /**
+    * Creates a delegate (callback) which, when called, executes after a specific delay.
+    * @param {Function} fn The function which will be called on a delay when the returned function is called.
+    * Optionally, a replacement (or additional) argument list may be specified.
+    * @param {Number} delay The number of milliseconds to defer execution by whenever called.
+    * @param {Object} scope (optional) The scope (<code>this</code> reference) used by the function at execution time.
+    * @param {Array} args (optional) Override arguments for the call. (Defaults to the arguments passed by the caller)
+    * @param {Boolean/Number} appendArgs (optional) if True args are appended to call args instead of overriding,
+    * if a number the args are inserted at the specified position.
+    * @return {Function} A function which, when called, executes the original function after the specified delay.
+    */
+    createDelayed: function(fn, delay, scope, args, appendArgs) {
+        if (scope || args) {
+            fn = Ext.Function.bind(fn, scope, args, appendArgs);
+        }
+        return function() {
+            var me = this;
+            setTimeout(function() {
+                fn.apply(me, arguments);
+            }, delay);
+        };
+    },
+
+    /**
      * Calls this function after the number of millseconds specified, optionally in a specific scope. Example usage:
      * <pre><code>
 var sayHi = function(name){
@@ -224,7 +247,6 @@ Ext.Function.defer(function(){
         fn();
         return 0;
     },
-
 
     /**
      * Create a combined function call sequence of the original function + the passed function.
@@ -270,10 +292,6 @@ sayGoodbye('Fred'); // both alerts show
      * If called again within that period, the impending invocation will be canceled, and the
      * timeout period will begin again.</p>
      *
-     * <p>The resulting function is also an instance of {@link Ext.util.DelayedTask}, and so
-     * therefore implements the <code>{@link Ext.util.DelayedTask#cancel cancel}</code> and
-     * <code>{@link Ext.util.DelayedTask#delay delay}</code> methods.</p>
-     *
      * @param {Function} fn The function to invoke on a buffered timer.
      * @param {Number} buffer The number of milliseconds by which to buffer the invocation of the
      * function.
@@ -284,10 +302,19 @@ sayGoodbye('Fred'); // both alerts show
      * @return {Function} A function which invokes the passed function after buffering for the specified time.
      */
     createBuffered: function(fn, buffer, scope, args) {
-        var task = fn.task || (fn.task = new Ext.util.DelayedTask());
-        return Ext.apply(function() {
-            task.delay(buffer, fn, scope || this, args || Ext.toArray(arguments));
-        }, task);
+        return function(){
+            var timerId;
+            return function() {
+                var me = this;
+                if (timerId) {
+                    clearInterval(timerId);
+                    timerId = null;
+                }
+                timerId = setTimeout(function(){
+                    fn.apply(me || scope, args || arguments);
+                }, buffer);
+            };
+        }();
     },
 
     /**

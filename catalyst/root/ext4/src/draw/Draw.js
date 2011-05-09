@@ -48,7 +48,7 @@ Ext.define('Ext.draw.Draw', {
         type = String(type).toLowerCase();
         return (type == "object" && o === Object(o)) ||
             (type == "undefined" && typeof o == type) ||
-            (type == "null" && o == null) ||
+            (type == "null" && o === null) ||
             (type == "array" && Array.isArray && Array.isArray(o)) ||
             (Object.prototype.toString.call(o).toLowerCase().slice(8, -1)) == type;
     },
@@ -662,7 +662,8 @@ Ext.define('Ext.draw.Draw', {
                 n1 = cp1[0]*cp2[1] - cp1[1]*cp2[0],
                 n2 = s[0]*e[1] - s[1]*e[0],
                 n3 = 1 / (dcx*dpy - dcy*dpx);
-            p[0] = (n1*dpx - n2*dcx) * n3,
+
+            p[0] = (n1*dpx - n2*dcx) * n3;
             p[1] = (n1*dpy - n2*dcy) * n3;
             return p;
         };
@@ -926,7 +927,7 @@ Ext.define('Ext.draw.Draw', {
             }
         }
         // Sort by pct property
-        stopsArr.sort(me.sorter);
+        Ext.Array.sort(stopsArr, me.sorter);
         if (type == 'linear') {
             return {
                 id: gradient.id,

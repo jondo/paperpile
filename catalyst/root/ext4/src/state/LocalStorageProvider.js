@@ -50,14 +50,16 @@ Ext.define('Ext.state.LocalStorageProvider', {
     },
     
     getStorageObject: function(){
-         try {
+        try {
             var supports = 'localStorage' in window && window['localStorage'] !== null;
             if (supports) {
                 return window.localStorage;
             }
-          } catch (e) {
+        } catch (e) {
             return false;
-          }
-          throw 'LocalStorage not supported by the browser';
+        }
+        //<debug>
+        Ext.Error.raise('LocalStorage is not supported by the current browser');
+        //</debug>
     }    
 });

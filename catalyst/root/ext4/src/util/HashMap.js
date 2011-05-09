@@ -173,7 +173,7 @@ Ext.define('Ext.util.HashMap', {
     remove: function(o) {
         var key = this.findKey(o);
         if (key !== undefined) {
-            return this.removeByKey(key);
+            return this.removeAtKey(key);
         }
         return false;
     },
@@ -183,7 +183,7 @@ Ext.define('Ext.util.HashMap', {
      * @param {String} key The key to remove.
      * @return {Boolean} True if the item was successfully removed.
      */
-    removeByKey: function(key) {
+    removeAtKey: function(key) {
         var me = this,
             value;
 

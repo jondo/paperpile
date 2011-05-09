@@ -8,12 +8,10 @@ $window-background-color:  lighten(desaturate($base-color, 20%), 4%) !default;
 $window-body-border-width: 1px !default;
 $window-body-border-style: solid !default;
 $window-body-border-color: darken($panel-base-color, 10%) !default;
-$window-body-background-color: #fff !default;
+$window-body-background-color: #dfe8f6 !default;
 $window-body-color: #000 !default;
 
 $window-header-padding: 5px 5px 0 !default;
-$window-header-height: 22px !default;
-$collapsed-window-header-height: 27px !default;
 $window-header-font-size: ceil($font-size * .9) !default; //11px
 $window-header-color: $panel-header-color !default;
 $window-header-font-weight: bold !default;

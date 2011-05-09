@@ -25,19 +25,21 @@ Ext.define('Ext.selection.CellModel', {
         this.addEvents(
             /**
              * @event deselect
-             * Fired after a record is deselected
-             * @param {Ext.selection.RowSelectionModel} this
-             * @param {Ext.data.Model} record The deselected record
-             * @param {Number} index The row index deselected
+             * Fired after a cell is deselected
+             * @param {Ext.selection.CellModel} this
+             * @param {Ext.data.Model} record The record of the deselected cell
+             * @param {Number} row The row index deselected
+             * @param {Number} column The column index deselected
              */
             'deselect',
             
             /**
              * @event select
-             * Fired after a record is selected
-             * @param {Ext.selection.RowSelectionModel} this
-             * @param {Ext.data.Model} record The selected record
-             * @param {Number} index The row index selected
+             * Fired after a cell is selected
+             * @param {Ext.selection.CellModel} this
+             * @param {Ext.data.Model} record The record of the selected cell
+             * @param {Number} row The row index selected
+             * @param {Number} column The column index selected
              */
             'select'
         );
@@ -76,7 +78,7 @@ Ext.define('Ext.selection.CellModel', {
 
         // view.el has tabIndex -1 to allow for
         // keyboard events to be passed to it.
-        me.keyNav = new Ext.util.KeyNav(view.el, {
+        me.keyNav = Ext.create('Ext.util.KeyNav', view.el, {
             up: me.onKeyUp,
             down: me.onKeyDown,
             right: me.onKeyRight,
@@ -92,7 +94,7 @@ Ext.define('Ext.selection.CellModel', {
     
     getActiveHeader: function() {
         if (this.position) {
-            return this.getHeaderCt().getHeaderByIndex(this.position.column);
+            return this.getHeaderCt().getHeaderAtIndex(this.position.column);
         }
         return false;
 
@@ -157,30 +159,53 @@ Ext.define('Ext.selection.CellModel', {
     // notify the view that the cell has been selected to update the ui
     // approriately and bring the cell into focus
     onCellSelect: function(position) {
-        this.primaryView.onCellSelect(position);
+        var me = this,
+            store = me.view.getStore(),
+            record = store.getAt(position.row);
+        
+        me.doSelect(record);
+        me.primaryView.onCellSelect(position);
         // TODO: Remove temporary cellFocus call here.
-        this.primaryView.onCellFocus(position);
+        me.primaryView.onCellFocus(position);
+        
+        me.fireEvent('select', me, record, position.row, position.column);
     },
     
     // notify view that the cell has been deselected to update the ui
     // appropriately
     onCellDeselect: function(position) {
-        this.primaryView.onCellDeselect(position);
+        var me = this,
+            store = me.view.getStore(),
+            record = store.getAt(position.row);
+        
+        me.doDeselect(record);
+        me.primaryView.onCellDeselect(position);
+        
+        me.fireEvent('deselect', me, record, position.row, position.column);
     },
     
     
     onKeyTab: function(e, t) {
-        var direction = e.shiftKey ? 'left' : 'right';
-        this.move(direction, e);
+        var me = this,
+            direction = e.shiftKey ? 'left' : 'right',
+            editingPlugin = me.view.editingPlugin,
+            position = me.move(direction, e);
+        
+        if (editingPlugin && position && me.wasEditing) {
+            editingPlugin.startEditByPosition(position);
+        }
+        delete me.wasEditing;
     },
     
     onEditorTab: function(editingPlugin, e) {
-        var direction = e.shiftKey ? 'left' : 'right',
-            position  = this.move(direction, e);
+        var me = this,
+            direction = e.shiftKey ? 'left' : 'right',
+            position  = me.move(direction, e);
+        
         if (position) {
             editingPlugin.startEditByPosition(position);
+            me.wasEditing = true;
         }
-        
     },
     
     refresh: function() {

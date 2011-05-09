@@ -46,14 +46,14 @@ isHandle   True if the element passed in triggers<br />
             el = document.getElementById(el);
         }
         data.ddel = el;
-        this.elements[getId(el)] = data;
+        this.elements[this.getId(el)] = data;
         if (data.isHandle !== false) {
             this.handles[data.ddel.id] = data;
         }
         if (data.handles) {
             var hs = data.handles;
             for (var i = 0, len = hs.length; i < len; i++) {
-                this.handles[getId(hs[i])] = data;
+                this.handles[this.getId(hs[i])] = data;
             }
         }
     },
@@ -63,14 +63,14 @@ isHandle   True if the element passed in triggers<br />
      * @param {String/HTMLElement} element The id or DOM node to unregister
      */
     unregister : function(el){
-        var id = getId(el, false);
+        var id = this.getId(el, false);
         var data = this.elements[id];
         if(data){
             delete this.elements[id];
             if(data.handles){
                 var hs = data.handles;
                 for (var i = 0, len = hs.length; i < len; i++) {
-                    delete this.handles[getId(hs[i], false)];
+                    delete this.handles[this.getId(hs[i], false)];
                 }
             }
         }

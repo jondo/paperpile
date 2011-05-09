@@ -63,7 +63,7 @@ Ext.define('Ext.util.KeyNav', {
             this.map.destroy();
         }
         
-        var map = new Ext.util.KeyMap(el, null, this.getKeyEvent('forceKeyDown' in config ? config.forceKeyDown : this.forceKeyDown)),
+        var map = Ext.create('Ext.util.KeyMap', el, null, this.getKeyEvent('forceKeyDown' in config ? config.forceKeyDown : this.forceKeyDown)),
             keys = Ext.util.KeyNav.keyOptions,
             scope = config.scope || this,
             key;

@@ -17,7 +17,7 @@ Ext.define('Ext.fx.target.Component', {
     constructor: function(target) {
         this.target = target;
         this.id = this.getId();
-        Ext.fx.target.Component.superclass.constructor.call(this, target);
+        this.callParent([target]);
     },
 
     // Methods to call to retrieve unspecified "from" values from a target Component
@@ -86,7 +86,7 @@ Ext.define('Ext.fx.target.Component', {
                     // meth.setPagePosition['x'] = 100
                     // meth.setPagePosition['y'] = 100
                     meth[me.compMethod[attr]].target = o[0];
-                    meth[me.compMethod[attr]][attr] = o[1];
+                    meth[me.compMethod[attr]][attr] = parseInt(o[1], 10);
                 }
                 if (meth.setPosition.target) {
                     o = meth.setPosition;

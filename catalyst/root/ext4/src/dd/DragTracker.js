@@ -152,7 +152,7 @@ Ext.define('Ext.dd.DragTracker', {
             'drag'
         );
 
-        this.dragRegion = new Ext.util.Region(0,0,0,0);
+        this.dragRegion = Ext.create('Ext.util.Region', 0,0,0,0);
 
         if (this.el) {
             this.initEl(this.el);
@@ -160,6 +160,9 @@ Ext.define('Ext.dd.DragTracker', {
 
         // Dont pass the config so that it is not applied to 'this' again
         this.mixins.observable.constructor.call(this);
+        if (this.disabled) {
+            this.disable();
+        }
 
     },
 
@@ -209,19 +212,23 @@ Ext.define('Ext.dd.DragTracker', {
         this.disabled = false;
     },
 
-    destroy : function(){
+    destroy : function() {
+        this.clearListeners();
         delete this.el;
     },
 
     // When the pointer enters a tracking element, fire a mouseover if the mouse entered from outside.
     // This is mouseenter functionality, but we cannot use mouseenter because we are using "delegate" to filter mouse targets
     onMouseOver: function(e, target) {
-        if (Ext.EventManager.contains(e)) {
-            this.mouseIsOut = false;
-            if (this.overCls) {
-                this.el.addCls(this.overCls);
+        var me = this;
+        if (!me.disabled) {
+            if (Ext.EventManager.contains(e) || me.delegate) {
+                me.mouseIsOut = false;
+                if (me.overCls) {
+                    me.el.addCls(me.overCls);
+                }
+                me.fireEvent('mouseover', me, e, me.delegate ? e.getTarget(me.delegate, target) : me.handle);
             }
-            this.fireEvent('mouseover', this, e, this.delegate ? e.getTarget(this.delegate, target) : this.handle);
         }
     },
 
@@ -275,9 +282,8 @@ Ext.define('Ext.dd.DragTracker', {
 
     onMouseMove: function(e, target){
         // BrowserBug: IE hack to see if button was released outside of window.
-        // Needed in IE6-8 in quirks and strictmode, needed in 9 in quirks mode only
-        // This will fire early in IE9 strict mode and trigger an early resize.
-        if (this.active && Ext.isIE && !(Ext.isIE9 && Ext.isStrict) && !e.browserEvent.button) {
+        // Needed in IE6-9 in quirks and strictmode
+        if (this.active && Ext.isIE && !e.browserEvent.button) {
             e.preventDefault();
             this.onMouseUp(e);
             return;

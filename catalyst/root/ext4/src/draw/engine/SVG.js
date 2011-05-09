@@ -117,10 +117,12 @@ Ext.define('Ext.draw.engine.SVG', {
         // Create svg element and append to the DOM.
         var el = this.createSVGElement(sprite.type);
         el.id = sprite.id;
-        el.style.webkitTapHighlightColor = "rgba(0,0,0,0)";
+        if (el.style) {
+            el.style.webkitTapHighlightColor = "rgba(0,0,0,0)";
+        }
         sprite.el = Ext.get(el);
         this.applyZIndex(sprite); //performs the insertion
-        sprite.matrix = new Ext.draw.Matrix;
+        sprite.matrix = Ext.create('Ext.draw.Matrix');
         sprite.bbox = {
             plain: 0,
             transform: 0
@@ -187,7 +189,7 @@ Ext.define('Ext.draw.engine.SVG', {
 
     transform: function(sprite) {
         var me = this,
-            matrix = new Ext.draw.Matrix,
+            matrix = Ext.create('Ext.draw.Matrix'),
             transforms = sprite.transformations,
             transformsLength = transforms.length,
             i = 0,
@@ -285,12 +287,32 @@ Ext.define('Ext.draw.engine.SVG', {
                     fill: "#000",
                     stroke: "none",
                     opacity: 0
-                });
+                }),
+                webkitRect;
+            
+                if (Ext.isSafari3) {
+                    // Rect that we will show/hide to fix old WebKit bug with rendering issues.
+                    webkitRect = me.createSVGElement("rect", {
+                        x: -10,
+                        y: -10,
+                        width: "110%",
+                        height: "110%",
+                        fill: "none",
+                        stroke: "#000"
+                    });
+                }
             el.appendChild(defs);
+            if (Ext.isSafari3) {
+                el.appendChild(webkitRect);
+            }
             el.appendChild(bgRect);
             container.appendChild(el);
             me.el = Ext.get(el);
             me.bgRect = Ext.get(bgRect);
+            if (Ext.isSafari3) {
+                me.webkitRect = Ext.get(webkitRect);
+                me.webkitRect.hide();
+            }
             me.el.on({
                 scope: me,
                 mouseup: me.onMouseUp,
@@ -339,25 +361,24 @@ Ext.define('Ext.draw.engine.SVG', {
     /* @private - Wrap SVG text inside a tspan to allow for line wrapping.  In addition this normallizes
      * the baseline for text the vertical middle of the text to be the same as VML.
      */
-    
-     tuneText: function (sprite, attrs) {
-         var el = sprite.el.dom,
-             tspans = [],
-             height, tspan, text, i, ln, texts;
+    tuneText: function (sprite, attrs) {
+        var el = sprite.el.dom,
+            tspans = [],
+            height, tspan, text, i, ln, texts;
 
-         if (attrs.hasOwnProperty("text")) {
-            tspans = this.setText(sprite, attrs.text);
-         }
-         // Normalize baseline via a DY shift of first tspan. Shift other rows by height * line height (1.2)
-         if (tspans.length) {
-             height = this.getBBoxText(sprite).height;
-             for (i = 0, ln = tspans.length; i < ln; i++) {
-                 tspans[i].setAttribute("dy", i ? height * 1.2 : height / 4);
-             }
-             sprite.dirty = true;
-         }
-     },
-     
+        if (attrs.hasOwnProperty("text")) {
+           tspans = this.setText(sprite, attrs.text);
+        }
+        // Normalize baseline via a DY shift of first tspan. Shift other rows by height * line height (1.2)
+        if (tspans.length) {
+            height = this.getBBoxText(sprite).height;
+            for (i = 0, ln = tspans.length; i < ln; i++) {
+                tspans[i].setAttribute("dy", i ? height * 1.2 : height / 4);
+            }
+            sprite.dirty = true;
+        }
+    },
+
     setText: function(sprite, textString) {
          var me = this,
              el = sprite.el.dom,
@@ -475,6 +496,14 @@ Ext.define('Ext.draw.engine.SVG', {
         }
 
         sprite.dirty = false;
+
+        if (Ext.isSafari3) {
+            // Refreshing the view to fix bug EXTJSIV-1: rendering issue in old Safari 3
+            me.webkitRect.show();
+            setTimeout(function () {
+                me.webkitRect.hide();
+            });
+        }
     },
 
     setClip: function(sprite, params) {
@@ -510,7 +539,7 @@ Ext.define('Ext.draw.engine.SVG', {
      * @param {Ext.draw.Sprite} sprite
      */
     applyZIndex: function(sprite) {
-        var idx = this.positionSpriteInList(sprite),
+        var idx = this.normalizeSpriteCollection(sprite),
             el = sprite.el,
             prevEl;
         if (this.el.dom.childNodes[idx + 2] !== el.dom) { //shift by 2 to account for defs and bg rect 
@@ -526,7 +555,7 @@ Ext.define('Ext.draw.engine.SVG', {
     },
 
     createItem: function (config) {
-        var sprite = new Ext.draw.Sprite(config);
+        var sprite = Ext.create('Ext.draw.Sprite', config);
         sprite.surface = this;
         return sprite;
     },

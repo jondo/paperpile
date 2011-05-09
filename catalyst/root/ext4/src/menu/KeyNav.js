@@ -42,7 +42,7 @@ Ext.define('Ext.menu.KeyNav', {
     },
 
     escape: function(e) {
-        Ext.menu.MenuManager.hideAll();
+        Ext.menu.Manager.hideAll();
     },
 
     focusNextItem: function(step) {

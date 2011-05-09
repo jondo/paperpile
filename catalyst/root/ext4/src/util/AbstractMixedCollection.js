@@ -1,3 +1,6 @@
+/**
+ * @class Ext.util.AbstractMixedCollection
+ */
 Ext.define('Ext.util.AbstractMixedCollection', {
     requires: ['Ext.util.Filter'],
     
@@ -255,7 +258,10 @@ mc.add(otherEl);
 
     //<deprecated since="0.99">
     find : function() {
-        throw new Error("[Ext.util.MixedCollection] Stateful: find has been deprecated. Please use findBy.");
+        if (Ext.isDefined(Ext.global.console)) {
+            Ext.global.console.warn('Ext.util.MixedCollection: find has been deprecated. Use findBy instead.');
+        }
+        return this.findBy.apply(this, arguments);
     },
     //</deprecated>
 
@@ -277,7 +283,7 @@ mc.add(otherEl);
         }
         if (me.containsKey(myKey)) {
             me.suspendEvents();
-            me.removeByKey(myKey);
+            me.removeAtKey(myKey);
             me.resumeEvents();
         }
         if (index >= me.length) {
@@ -345,7 +351,7 @@ mc.add(otherEl);
      * @param {String} key The key of the item to remove.
      * @return {Object} The item removed or false if no item was removed.
      */
-    removeByKey : function(key){
+    removeAtKey : function(key){
         return this.removeAt(this.indexOfKey(key));
     },
 

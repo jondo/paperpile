@@ -99,8 +99,9 @@ Ext.define('Ext.container.ButtonGroup', {
 
         // Pugly hack for a pugly browser:
         // If not an explicitly set width, then size the width to match the inner table
-        if (this.layout.table && (!Ext.isStrict || Ext.isIE6) && !this.width) {
-            this.el.setWidth(this.layout.table.offsetWidth + this.frameSize.left + this.frameSize.right);
+        if (this.layout.table && (Ext.isIEQuirks || Ext.isIE6) && !this.width) {
+            var t = this.getTargetEl();
+            t.setWidth(this.layout.table.offsetWidth + t.getPadding('lr'));
         }
     },
 
@@ -120,7 +121,7 @@ Ext.define('Ext.container.ButtonGroup', {
     // private
     onBeforeAdd: function(component) {
         if (component.is('button')) {
-            component.ui = 'toolbar';
+            component.ui = component.ui + '-toolbar';
         }
         this.callParent(arguments);
     },

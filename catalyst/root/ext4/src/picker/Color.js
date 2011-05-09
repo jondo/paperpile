@@ -16,6 +16,7 @@ cp.on('select', function(picker, selColor){
     // do something with selColor
 });
 </code></pre>
+ * {@img Ext.picker.Color/Ext.picker.Color.png Ext.picker.Color component}
  *
  * @constructor
  * Create a new ColorPicker
@@ -103,7 +104,7 @@ cp.colors = ['000000', '993300', '333300'];
     colorRe: /(?:^|\s)color-(.{6})(?:\s|$)/,
     
     constructor: function() {
-        this.renderTpl = new Ext.XTemplate('<tpl for="colors"><a href="#" class="color-{.}" hidefocus="on"><em><span style="background:#{.}" unselectable="on">&#160;</span></em></a></tpl>');
+        this.renderTpl = Ext.create('Ext.XTemplate', '<tpl for="colors"><a href="#" class="color-{.}" hidefocus="on"><em><span style="background:#{.}" unselectable="on">&#160;</span></em></a></tpl>');
         this.callParent(arguments);
     },
     

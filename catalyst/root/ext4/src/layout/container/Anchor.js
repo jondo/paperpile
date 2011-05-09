@@ -1,10 +1,10 @@
 /**
  * @class Ext.layout.container.Anchor
- * @extends Ext.layout.Container
+ * @extends Ext.layout.container.Container
  * <p>This is a layout that enables anchoring of contained elements relative to the container's dimensions.
  * If the container is resized, all anchored items are automatically rerendered according to their
  * <b><tt>{@link #anchor}</tt></b> rules.</p>
- * <p>This class is intended to be extended or created via the layout: 'anchor' {@link Ext.layout.AbstractContainer#layout}
+ * <p>This class is intended to be extended or created via the layout: 'anchor' {@link Ext.layout.container.AbstractContainer#layout}
  * config, and should generally not need to be created directly via the new keyword.</p>
  * <p>AnchorLayout does not have any direct config options (other than inherited ones). By default,
  * AnchorLayout will calculate anchor measurements based on the size of the container itself. However, the
@@ -22,7 +22,7 @@ Ext.define('Ext.layout.container.Anchor', {
     /* Begin Definitions */
 
     alias: 'layout.anchor',
-    extend: 'Ext.layout.Container',
+    extend: 'Ext.layout.container.Container',
     alternateClassName: 'Ext.layout.AnchorLayout',
 
     /* End Definitions */
@@ -133,6 +133,11 @@ anchor: '-50 75%'
             anchorHeight = owner.initialConfig.height;
         }
 
+        // Work around WebKit RightMargin bug. We're going to inline-block all the children only ONCE and remove it when we're done
+        if (!Ext.supports.RightMargin) {
+            target.addCls(Ext.baseCSSPrefix + 'inline-children');
+        }
+
         for (i = 0; i < len; i++) {
             component = components[i];
             el = component.el;
@@ -167,6 +172,11 @@ anchor: '-50 75%'
                     anchor: false
                 });
             }
+        }
+
+        // Work around WebKit RightMargin bug. We're going to inline-block all the children only ONCE and remove it when we're done
+        if (!Ext.supports.RightMargin) {
+            target.removeCls(Ext.baseCSSPrefix + 'inline-children');
         }
 
         for (i = 0; i < len; i++) {

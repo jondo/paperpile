@@ -22,13 +22,13 @@
 
 Ext.define('Ext.dd.DD', {
     extend: 'Ext.dd.DragDrop',
-    requires: ['Ext.dd.DragDropMgr'],
+    requires: ['Ext.dd.DragDropManager'],
     constructor: function(id, sGroup, config) {
         if (id) {
             this.init(id, sGroup, config);
         }
     },
-    
+
     /**
      * When set to true, the utility automatically tries to scroll the browser
      * window when a drag and drop element is dragged near the viewport boundary.
@@ -249,7 +249,7 @@ Ext.define('Ext.dd.DD', {
      * inheritance chain are called
      */
     applyConfig: function() {
-        Ext.dd.DD.superclass.applyConfig.call(this);
+        this.callParent();
         this.scroll = (this.config.scroll !== false);
     },
 

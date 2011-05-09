@@ -13,78 +13,74 @@ The container's configured {@link #items} will be layed out within the field bod
 configured {@link #layout} type. The default layout is `'autocontainer'`.
 
 Like regular fields, FieldContainer can inherit its decoration configuration from the
-{@link Ext.form.FormPanel#fieldDefaults fieldDefaults} of an enclosing FormPanel. In addition,
+{@link Ext.form.Panel#fieldDefaults fieldDefaults} of an enclosing FormPanel. In addition,
 FieldContainer itself can pass {@link #fieldDefaults} to any {@link Ext.form.Labelable fields}
 it may itself contain.
 
-If you are grouping a set of {@link Ext.form.Checkbox Checkbox} or {@link Ext.form.Radio Radio}
+If you are grouping a set of {@link Ext.form.field.Checkbox Checkbox} or {@link Ext.form.field.Radio Radio}
 fields in a single labeled container, consider using a {@link Ext.form.CheckboxGroup}
 or {@link Ext.form.RadioGroup} instead as they are specialized for handling those types.
-
+{@img Ext.form.FieldContainer/Ext.form.FieldContainer1.png Ext.form.FieldContainer component}
 __Example usage:__
 
-    Ext.create('Ext.form.FormPanel', {
-        renderTo: Ext.getBody(),
+    Ext.create('Ext.form.Panel', {
         title: 'FieldContainer Example',
-        width: 600,
+        width: 550,
         bodyPadding: 10,
-
+    
         items: [{
             xtype: 'fieldcontainer',
-            fieldLabel: 'Panels',
-            labelWidth: 75,
-
-            // The body area will contain three panels, arranged
+            fieldLabel: 'Last Three Jobs',
+            labelWidth: 100,
+    
+            // The body area will contain three text fields, arranged
             // horizontally, separated by draggable splitters.
             layout: 'hbox',
-            defaults: {
-                height: 50,
-                flex: 1
-            },
             items: [{
-                xtype: 'panel',
-                title: 'Panel 1'
+                xtype: 'textfield',
+                flex: 1
             }, {
                 xtype: 'splitter'
             }, {
-                xtype: 'panel',
-                title: 'Panel 2'
+                xtype: 'textfield',
+                flex: 1
             }, {
                 xtype: 'splitter'
             }, {
-                xtype: 'panel',
-                title: 'Panel 3'
+                xtype: 'textfield',
+                flex: 1
             }]
-        }]
+        }],
+        renderTo: Ext.getBody()
     });
 
 __Usage of {@link #fieldDefaults}:__
+{@img Ext.form.FieldContainer/Ext.form.FieldContainer2.png Ext.form.FieldContainer component}
 
-    Ext.create('Ext.form.FormPanel', {
-        renderTo: Ext.getBody(),
+    Ext.create('Ext.form.Panel', {
         title: 'FieldContainer Example',
         width: 350,
         bodyPadding: 10,
-
+    
         items: [{
             xtype: 'fieldcontainer',
             fieldLabel: 'Your Name',
             labelWidth: 75,
             defaultType: 'textfield',
-
+    
             // Arrange fields vertically, stretched to full width
             layout: 'anchor',
             defaults: {
                 layout: '100%'
             },
-
+    
             // These config values will be applied to both sub-fields, except
             // for Last Name which will use its own msgTarget.
             fieldDefaults: {
                 msgTarget: 'under',
                 labelAlign: 'top'
             },
-
+    
             items: [{
                 fieldLabel: 'First Name',
                 name: 'firstName'
@@ -93,8 +89,10 @@ __Usage of {@link #fieldDefaults}:__
                 name: 'lastName',
                 msgTarget: 'under'
             }]
-        }]
+        }],
+        renderTo: Ext.getBody()
     });
+
 
  * @constructor
  * Creates a new Ext.form.FieldContainer instance.
@@ -143,7 +141,7 @@ Ext.define('Ext.form.FieldContainer', {
         // Init mixins
         me.initLabelable();
         me.initFieldAncestor();
-        
+
         me.callParent();
     },
 
@@ -180,7 +178,7 @@ Ext.define('Ext.form.FieldContainer', {
     initRenderTpl: function() {
         var me = this;
         if (!me.hasOwnProperty('renderTpl')) {
-            me.renderTpl = me.labelableRenderTpl;
+            me.renderTpl = me.getTpl('labelableRenderTpl');
         }
         return me.callParent();
     },
@@ -215,57 +213,50 @@ Ext.define('Ext.form.FieldContainer', {
         }
     },
 
-    //private
-    onDisable: function() {
-        Ext.Array.forEach(this.query('[isFormField]'), function(field) {
-            field.disable();
-        });
-    },
-
-    //private
-    onEnable: function() {
-        Ext.Array.forEach(this.query('[isFormField]'), function(field) {
-            field.enable();
-        });
-    },
-
 
     /**
      * @private Fired when the error message of any field within the container changes, and updates the
      * combined error message to match.
      */
     onFieldErrorChange: function(field, activeError) {
-        var me = this,
-            oldError = me.getActiveError(),
-            invalidFields = Ext.Array.filter(me.query('[isFormField]'), function(field) {
-                return field.hasActiveError();
-            }),
-            newError = me.buildCombinedError(invalidFields);
+        if (this.combineErrors) {
+            var me = this,
+                oldError = me.getActiveError(),
+                invalidFields = Ext.Array.filter(me.query('[isFormField]'), function(field) {
+                    return field.hasActiveError();
+                }),
+                newErrors = me.getCombinedErrors(invalidFields);
 
-        if (newError) {
-            me.setActiveError(newError);
-        } else {
-            me.unsetActiveError();
-        }
+            if (newErrors) {
+                me.setActiveErrors(newErrors);
+            } else {
+                me.unsetActiveError();
+            }
 
-        if (oldError !== newError) {
-            me.doComponentLayout();
+            if (oldError !== me.getActiveError()) {
+                me.doComponentLayout();
+            }
         }
     },
 
     /**
-     * Takes an Array of invalid {@link Ext.form.Field} objects and builds a combined error message
-     * string from them. Defaults to placing each error message on a new line, each one preceded by
-     * the field name and a colon. This can be overridden to provide custom combined error message
-     * handling, for instance changing the output markup format or sorting the array (it is sorted
-     * in order of appearance by default).
+     * Takes an Array of invalid {@link Ext.form.field.Field} objects and builds a combined list of error
+     * messages from them. Defaults to prepending each message by the field name and a colon. This
+     * can be overridden to provide custom combined error message handling, for instance changing
+     * the format of each message or sorting the array (it is sorted in order of appearance by default).
      * @param {Array} invalidFields An Array of the sub-fields which are currently invalid.
-     * @return {String} The combined error message
+     * @return {Array} The combined list of error messages
      */
-    buildCombinedError: function(invalidFields) {
-        return Ext.Array.map(invalidFields, function(field) {
-            return field.getFieldLabel() + ': ' + field.getActiveError();
-        }).join('<br>');
+    getCombinedErrors: function(invalidFields) {
+        var forEach = Ext.Array.forEach,
+            errors = [];
+        forEach(invalidFields, function(field) {
+            forEach(field.getActiveErrors(), function(error) {
+                var label = field.getFieldLabel();
+                errors.push((label ? label + ': ' : '') + error);
+            });
+        });
+        return errors;
     },
 
     getTargetEl: function() {

@@ -2,7 +2,7 @@
  * @class Ext.picker.Time
  * @extends Ext.view.BoundList
  * <p>A time picker which provides a list of times from which to choose. This is used by the
- * {@link Ext.form.Time} class to allow browsing and selection of valid times, but could also be used
+ * {@link Ext.form.field.Time} class to allow browsing and selection of valid times, but could also be used
  * with other components.</p>
  * <p>By default, all times starting at midnight and incrementing every 15 minutes will be presented.
  * This list of available times can be controlled using the {@link #minValue}, {@link #maxValue}, and
@@ -81,7 +81,7 @@ Ext.define('Ext.picker.Time', {
         me.store = me.createStore();
         me.updateList();
 
-        Ext.picker.Time.superclass.initComponent.call(me);
+        this.callParent();
     },
 
     /**
@@ -152,7 +152,7 @@ Ext.define('Ext.picker.Time', {
             min = utilDate.add(min, 'mi', me.increment);
         }
 
-        return new Ext.data.Store({
+        return Ext.create('Ext.data.Store', {
             fields: ['disp', 'date'],
             data: times
         });

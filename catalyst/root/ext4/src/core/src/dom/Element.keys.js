@@ -28,7 +28,7 @@ Ext.core.Element.addMethods({
                 scope: scope
             };
         }
-        return new Ext.util.KeyMap(this, config);
+        return Ext.create('Ext.util.KeyMap', this, config);
     },
 
     /**
@@ -37,7 +37,7 @@ Ext.core.Element.addMethods({
      * @return {Ext.util.KeyMap} The KeyMap created
      */
     addKeyMap : function(config){
-        return new Ext.util.KeyMap(this, config);
+        return Ext.create('Ext.util.KeyMap', this, config);
     }
 });
 

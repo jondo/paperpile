@@ -8,13 +8,17 @@
 		background-position: 0 0;
 		
 		width: $form-trigger-width;
-		height: $form-trigger-height;
+		height: $form-trigger-height - $form-trigger-border-bottom-width;
 		float: left;
 
 		border-bottom: $form-trigger-border-bottom;
 
         cursor: pointer;
         cursor: hand;
+    }
+
+    .#{$prefix}border-box .#{$prefix}form-trigger {
+        height: $form-trigger-height;
     }
     
     .#{$prefix}form-trigger-over {
@@ -47,7 +51,7 @@
     }
 
     .#{$prefix}form-trigger-icon {
-        height: $form-trigger-width - 1;
+        height: $form-trigger-width - $form-trigger-border-bottom-width;
         
         background-repeat: no-repeat;
         background-position: $form-trigger-icon-background-position;
@@ -75,19 +79,22 @@
     .#{$prefix}form-date-trigger {
         background-image: theme-image($theme-name, 'form/date-trigger.gif');
     }
-    
-    .#{$prefix}form-spinner-up,
-    .#{$prefix}form-spinner-down {
-        background-image: theme-image($theme-name, 'form/spinner.gif');
-        
-        width: $form-trigger-width;
-        height: 11px;
-        
-        font-size: 0; /*for IE*/
-    }
-    .#{$prefix}form-spinner-down {
-        background-position: 0 -11px;
-        height: 10px;
+    .#{$prefix}form-trigger-wrap {
+        .#{$prefix}form-spinner-up,
+        .#{$prefix}form-spinner-down {
+            background-image: theme-image($theme-name, 'form/spinner.gif');
+
+            width: $form-trigger-width;
+            height: 11px;
+
+            font-size: 0; /*for IE*/
+
+            border-bottom: 0;
+        }
+        .#{$prefix}form-spinner-down {
+            background-position: 0 -11px;
+            height: 10px;
+        }
     }
     .#{$prefix}form-trigger-wrap-focus .#{$prefix}form-spinner-down {
         background-position: -($form-trigger-width * 3) -11px;
@@ -102,5 +109,11 @@
     .#{$prefix}form-spinner-down-click,
     .#{$prefix}form-trigger-wrap-focus .#{$prefix}form-spinner-down-click {
         background-position: -($form-trigger-width * 2) -11px;
+    }
+
+
+    .#{$prefix}trigger-noedit {
+        cursor: pointer;
+        cursor: hand;
     }
 }

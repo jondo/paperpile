@@ -1,6 +1,6 @@
 /**
  * @class Ext.grid.RowNumberer
- * @extends Ext.grid.Header
+ * @extends Ext.grid.column.Column
  * This is a utility class that can be passed into a {@link Ext.grid.Header} as a column config that provides
  * an automatic row numbering column.
  * <br>Usage:<br>
@@ -17,7 +17,7 @@
  * @param {Object} config The configuration options
  */
 Ext.define('Ext.grid.RowNumberer', {
-    extend: 'Ext.grid.Header',
+    extend: 'Ext.grid.column.Column',
     alias: 'widget.rownumberer',
     /**
      * @cfg {String} text Any valid text or HTML fragment to display in the header cell for the row

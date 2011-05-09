@@ -1,67 +1,13 @@
 /**
  * @class Ext.AbstractDataView
  * @extends Ext.Component
- * A mechanism for displaying data using custom layout templates and formatting. DataView uses an {@link Ext.XTemplate}
- * as its internal templating mechanism, and is bound to an {@link Ext.data.Store}
- * so that as the data in the store changes the view is automatically updated to reflect the changes.  The view also
- * provides built-in behavior for many common events that can occur for its contained items including click, doubleclick,
- * mouseover, mouseout, etc. as well as a built-in selection model. <b>In order to use these features, an {@link #itemSelector}
- * config must be provided for the DataView to determine what nodes it will be working with.</b>
- *
- * <p>The example below binds a DataView to a {@link Ext.data.Store} and renders it into an {@link Ext.panel.Panel}.</p>
- * <pre><code>
-var store = new Ext.data.JsonStore({
-    url: 'get-images.php',
-    root: 'images',
-    fields: [
-        'name', 'url',
-        {name:'size', type: 'float'},
-        {name:'lastmod', type:'date', dateFormat:'timestamp'}
-    ]
-});
-store.load();
-
-var tpl = new Ext.XTemplate(
-    '&lt;tpl for="."&gt;',
-        '&lt;div class="thumb-wrap" id="{name}"&gt;',
-        '&lt;div class="thumb"&gt;&lt;img src="{url}" title="{name}"&gt;&lt;/div&gt;',
-        '&lt;span class="x-editable"&gt;{shortName}&lt;/span&gt;&lt;/div&gt;',
-    '&lt;/tpl&gt;',
-    '&lt;div class="x-clear"&gt;&lt;/div&gt;'
-);
-
-var panel = new Ext.panel.Panel({
-    id:'images-view',
-    frame:true,
-    width:535,
-    autoHeight:true,
-    collapsible:true,
-    layout:'fit',
-    title:'Simple DataView',
-
-    items: new Ext.DataView({
-        store: store,
-        tpl: tpl,
-        autoHeight:true,
-        multiSelect: true,
-        overCls:'x-view-over',
-        itemSelector:'div.thumb-wrap',
-        emptyText: 'No images to display'
-    })
-});
-panel.render(document.body);
-</code></pre>
- * @constructor
- * Create a new DataView
- * @param {Object} config The config object
- * @xtype dataview
+ * This is an abstract superclass and should not be used directly. Please see {@link Ext.DataView}.
  */
-// dataview will extend from DataPanel/BoundPanel
 Ext.define('Ext.AbstractDataView', {
     extend: 'Ext.Component',
     requires: [
         'Ext.LoadMask',
-        'Ext.data.StoreMgr',
+        'Ext.data.StoreManager',
         'Ext.CompositeElementLite',
         'Ext.DomQuery',
         'Ext.selection.DataViewModel'
@@ -78,7 +24,7 @@ Ext.define('Ext.AbstractDataView', {
     },
     
     /**
-     * @cfg {String/Array} tpl
+     * @cfg {String/Array/Ext.XTemplate} tpl
      * @required
      * The HTML fragment or an array of fragments that will make up the template used by this DataView.  This should
      * be specified in the same format expected by the constructor of {@link Ext.XTemplate}.
@@ -94,9 +40,22 @@ Ext.define('Ext.AbstractDataView', {
      * @required
      * <b>This is a required setting</b>. A simple CSS selector (e.g. <tt>div.some-class</tt> or
      * <tt>span:first-child</tt>) that will be used to determine what nodes this DataView will be
-     * working with.
+     * working with. The itemSelector is used to map DOM nodes to records. As such, there should
+     * only be one root level element that matches the selector for each record.
      */
     
+    /**
+     * @cfg {String} itemCls
+     * Specifies the class to be assigned to each element in the view when used in conjunction with the
+     * {@link #itemTpl} configuration.
+     */
+    itemCls: Ext.baseCSSPrefix + 'dataview-item',
+    
+    /**
+     * @cfg {String/Array/Ext.XTemplate} itemTpl
+     * The inner portion of the item template to be rendered. Follows an XTemplate
+     * structure and will be placed inside of a tpl.
+     */
 
     /**
      * @cfg {String} overItemCls
@@ -110,6 +69,19 @@ Ext.define('Ext.AbstractDataView', {
      * contents will continue to display normally until the new data is loaded and the contents are replaced.
      */
     loadingText: 'Loading...',
+    
+    /**
+     * @cfg {String} loadingCls
+     * The CSS class to apply to the loading message element (defaults to Ext.LoadMask.prototype.msgCls "x-mask-loading")
+     */
+    
+    /**
+     * @cfg {Boolean} loadingUseMsg
+     * Whether or not to use the loading message.
+     * @private
+     */
+    loadingUseMsg: true,
+    
 
     /**
      * @cfg {Number} loadingHeight
@@ -167,38 +139,65 @@ Ext.define('Ext.AbstractDataView', {
     // private
     initComponent : function(){
         var me = this,
-            isDef = Ext.isDefined;
+            isDef = Ext.isDefined,
+            itemTpl = me.itemTpl,
+            memberFn = {};
+            
+        if (itemTpl) {
+            if (Ext.isArray(itemTpl)) {
+                // string array
+                itemTpl = itemTpl.join('');
+            } else if (Ext.isObject(itemTpl)) {
+                // tpl instance
+                memberFn = Ext.apply(memberFn, itemTpl.initialConfig);
+                itemTpl = itemTpl.html;
+            }
+            
+            if (!me.itemSelector) {
+                me.itemSelector = '.' + me.itemCls;
+            }
+            
+            itemTpl = Ext.String.format('<tpl for="."><div class="{0}">{1}</div></tpl>', me.itemCls, itemTpl);
+            me.tpl = Ext.create('Ext.XTemplate', itemTpl, memberFn);
+        }
 
         //<debug>
-        if (!isDef(me.tpl) || !isDef(me.store) || !isDef(me.itemSelector)) {
-            throw "DataView requires tpl, store and itemSelector configurations to be defined.";
+        if (!isDef(me.tpl) || !isDef(me.itemSelector)) {
+            Ext.Error.raise({
+                sourceClass: 'Ext.DataView',
+                tpl: me.tpl,
+                itemSelector: me.itemSelector,
+                msg: "DataView requires both tpl and itemSelector configurations to be defined."
+            });
         }
         //</debug>
 
         me.callParent();
         if(Ext.isString(me.tpl) || Ext.isArray(me.tpl)){
-            me.tpl = new Ext.XTemplate(me.tpl);
+            me.tpl = Ext.create('Ext.XTemplate', me.tpl);
         }
 
+        //<debug>
         // backwards compat alias for overClass/selectedClass
         // TODO: Consider support for overCls generation Ext.Component config
         if (isDef(me.overCls) || isDef(me.overClass)) {
+            if (Ext.isDefined(Ext.global.console)) {
+                Ext.global.console.warn('Ext.DataView: Using the deprecated overCls or overClass configuration. Use overItemCls instead.');
+            }
             me.overItemCls = me.overCls || me.overClass;
             delete me.overCls;
             delete me.overClass;
-            //<debug>
-            throw "Using the deprecated overCls or overClass configuration. Use overItemCls.";
-            //</debug>
         }
 
         if (isDef(me.selectedCls) || isDef(me.selectedClass)) {
+            if (Ext.isDefined(Ext.global.console)) {
+                Ext.global.console.warn('Ext.DataView: Using the deprecated selectedCls or selectedClass configuration. Use selectedItemCls instead.');
+            }
             me.selectedItemCls = me.selectedCls || me.selectedClass;
             delete me.selectedCls;
             delete me.selectedClass;
-            //<debug>
-            throw "Using the deprecated selectedCls or selectedClass configuration. Use selectedItemCls.";
-            //</debug>
         }
+        //</debug>
         
         me.addEvents(
             /**
@@ -212,34 +211,60 @@ Ext.define('Ext.AbstractDataView', {
              * Fires when the view is refreshed
              * @param {Ext.DataView} this The DataView object
              */
-            'refresh'
+            'refresh',
+            /**
+             * @event itemupdate
+             * Fires when the node associated with an individual record is updated
+             * @param {Ext.data.Model} record The model instance
+             * @param {Number} index The index of the record/node
+             * @param {HTMLElement} node The node that has just been updated
+             */
+            'itemupdate',
+            /**
+             * @event itemadd
+             * Fires when the nodes associated with an recordset have been added to the underlying store
+             * @param {Array[Ext.data.Model]} records The model instance
+             * @param {Number} index The index at which the set of record/nodes starts
+             * @param {Array[HTMLElement]} node The node that has just been updated
+             */
+            'itemadd',
+            /**
+             * @event itemremove
+             * Fires when the node associated with an individual record is removed
+             * @param {Ext.data.Model} record The model instance
+             * @param {Number} index The index of the record/node
+             */
+            'itemremove'
         );
-        
+
         me.addCmpEvents();
 
-        me.store = Ext.data.StoreMgr.lookup(me.store);
+        if (me.store) {
+            me.store = Ext.data.StoreManager.lookup(me.store);
+        }
         me.all = new Ext.CompositeElementLite();
         me.getSelectionModel().bindComponent(me);
     },
-    
-    onRender : function() {
-        var me = this, undef,
-            loadingHeight = me.loadingHeight,
-            loadingText = me.loadingText;
+
+    onRender: function() {
+        var me = this;
 
         me.callParent(arguments);
-
-        if (loadingText) {
-            me.loadMask = new Ext.LoadMask(me.el.dom.parentNode, {
-                msg: loadingText,
+        if (me.loadingText) {
+            
+            // Attach the LoadMask to a *Component* so that it can be sensitive to resizing during long loads.
+            // If this DataView is floating, then mask this DataView.
+            // Otherwise, mask its owning Container (or this, if there *is* no owning Container).
+            // LoadMask captures the element upon render.
+            me.loadMask = Ext.create('Ext.LoadMask', me.floating ? me : me.ownerCt || me, {
+                msg: me.loadingText,
+                msgCls: me.loadingCls,
+                useMsg: me.loadingUseMsg,
                 listeners: {
                     beforeshow: function() {
                         me.getTargetEl().update('');
                         me.getSelectionModel().deselectAll();
                         me.all.clear();
-                        if (Ext.isNumber(loadingHeight)) {
-                            me.setCalculatedSize(undef, loadingHeight);
-                        }
                     }
                 }
             });
@@ -249,7 +274,7 @@ Ext.define('Ext.AbstractDataView', {
     getSelectionModel: function(){
         var me = this,
             mode = 'SINGLE';
-            
+
         if (!me.selModel) {
             me.selModel = {};
         }
@@ -259,16 +284,16 @@ Ext.define('Ext.AbstractDataView', {
         } else if (me.multiSelect) {
             mode = 'MULTI';
         }
-        
+
         Ext.applyIf(me.selModel, {
             allowDeselect: me.allowDeselect,
             mode: mode
-        });        
-        
+        });
+
         if (!me.selModel.events) {
-            me.selModel = new Ext.selection.DataViewModel(me.selModel);
+            me.selModel = Ext.create('Ext.selection.DataViewModel', me.selModel);
         }
-        
+
         if (!me.selModel.hasRelaySetup) {
             me.relayEvents(me.selModel, ['selectionchange', 'beforeselect', 'select', 'deselect']);
             me.selModel.hasRelaySetup = true;
@@ -279,7 +304,7 @@ Ext.define('Ext.AbstractDataView', {
         if (me.disableSelection) {
             me.selModel.locked = true;
         }
-        
+
         return me.selModel;
     },
 
@@ -310,6 +335,7 @@ Ext.define('Ext.AbstractDataView', {
             me.all.fill(Ext.query(me.getItemSelector(), el.dom));
             me.updateIndexes(0);
         }
+        
         me.selModel.refresh();
         me.hasSkippedEmptyText = true;
         me.fireEvent('refresh', me);
@@ -379,7 +405,9 @@ Ext.define('Ext.AbstractDataView', {
             // Maintain selection after update
             // TODO: Move to approriate event handler.
             me.selModel.refresh();
+            me.fireEvent('itemupdate', record, index, node);
         }
+
     },
 
     // private
@@ -397,6 +425,7 @@ Ext.define('Ext.AbstractDataView', {
 
         me.selModel.refresh();
         me.updateIndexes(index);
+        me.fireEvent('itemadd', records, index, nodes);
     },
 
     doAdd: function(nodes, records, index) {
@@ -420,6 +449,7 @@ Ext.define('Ext.AbstractDataView', {
         if (me.store.getCount() === 0){
             me.refresh();
         }
+        me.fireEvent('itemremove', record, index);
     },
     
     doRemove: function(record, index) {
@@ -436,11 +466,13 @@ Ext.define('Ext.AbstractDataView', {
 
     // private
     updateIndexes : function(startIndex, endIndex) {
-        var ns = this.all.elements;
+        var ns = this.all.elements,
+            records = this.store.getRange();
         startIndex = startIndex || 0;
         endIndex = endIndex || ((endIndex === 0) ? 0 : (ns.length - 1));
         for(var i = startIndex; i <= endIndex; i++){
             ns[i].viewIndex = i;
+            ns[i].viewRecordId = records[i].internalId;
             if (!ns[i].boundView) {
                 ns[i].boundView = this.id;
             }
@@ -473,7 +505,7 @@ Ext.define('Ext.AbstractDataView', {
                     add: me.onAdd,
                     remove: me.onRemove,
                     update: me.onUpdate,
-                    clear: me.refresh                    
+                    clear: me.refresh
                 });
             }
             if (!store) {
@@ -484,14 +516,14 @@ Ext.define('Ext.AbstractDataView', {
             }
         }
         if (store) {
-            store = Ext.data.StoreMgr.lookup(store);
+            store = Ext.data.StoreManager.lookup(store);
             me.mon(store, {
                 scope: me,
                 datachanged: me.onDataChanged,
                 add: me.onAdd,
                 remove: me.onRemove,
                 update: me.onUpdate,
-                clear: me.refresh                    
+                clear: me.refresh
             });
             if (me.loadMask) {
                 me.loadMask.bindStore(store);
@@ -563,7 +595,7 @@ Ext.define('Ext.AbstractDataView', {
             len = nodes.length;
 
         for (; i < len; i++) {
-            records[records.length] = this.store.getAt(nodes[i].viewIndex);
+            records[records.length] = this.store.data.getByKey(nodes[i].viewRecordId);
         }
 
         return r;
@@ -576,7 +608,7 @@ Ext.define('Ext.AbstractDataView', {
      * @return {Record} record The {@link Ext.data.Model} object
      */
     getRecord: function(node){
-        return this.store.getAt(Ext.getDom(node).viewIndex);
+        return this.store.data.getByKey(Ext.getDom(node).viewRecordId);
     },
     
 
@@ -622,12 +654,28 @@ Ext.define('Ext.AbstractDataView', {
         } else if (Ext.isNumber(nodeInfo)) {
             return this.all.elements[nodeInfo];
         } else if (nodeInfo instanceof Ext.data.Model) {
-            var idx = this.store.indexOf(nodeInfo);
-            return this.all.elements[idx];
+            return this.getNodeByRecord(nodeInfo);
         }
         return nodeInfo;
     },
-
+    
+    /**
+     * @private
+     */
+    getNodeByRecord: function(record) {
+        var ns = this.all.elements,
+            ln = ns.length,
+            i = 0;
+        
+        for (; i < ln; i++) {
+            if (ns[i].viewRecordId === record.internalId) {
+                return ns[i];
+            }
+        }
+        
+        return null;
+    },
+    
     /**
      * Gets a range nodes.
      * @param {Number} start (optional) The index of the first node in the range

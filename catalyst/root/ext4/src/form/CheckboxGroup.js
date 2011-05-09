@@ -2,7 +2,7 @@
  * @class Ext.form.CheckboxGroup
  * @extends Ext.form.FieldContainer
  * <p>A {@link Ext.form.FieldContainer field container} which has a specialized layout for arranging
- * {@link Ext.form.Checkbox} controls into columns, and provides convenience {@link Ext.form.Field} methods
+ * {@link Ext.form.field.Checkbox} controls into columns, and provides convenience {@link Ext.form.field.Field} methods
  * for {@link #getValue getting}, {@link #setValue setting}, and {@link #validate validating} the group
  * of checkboxes as a whole.</p>
  * <p><b>Validation:</b> Individual checkbox fields themselves have no default validation behavior, but
@@ -15,24 +15,31 @@
  * use a completely different layout by setting the {@link #layout} to one of the other supported layout
  * types; for instance you may wish to use a custom arrangement of hbox and vbox containers. In that case
  * the checkbox components at any depth will still be managed by the CheckboxGroup's validation.</p>
+ * {@img Ext.form.RadioGroup/Ext.form.RadioGroup.png Ext.form.RadioGroup component}
  * <p>Example usage:</p>
  * <pre><code>
-var myCheckboxGroup = new Ext.form.CheckboxGroup({
-    id:'myGroup',
-    xtype: 'checkboxgroup',
-    fieldLabel: 'Single Column',
-    // Arrange checkboxes into three columns, distributed vertically
-    columns: 3,
-    vertical: true,
-    items: [
-        {boxLabel: 'Item 1', name: 'cb-1'},
-        {boxLabel: 'Item 2', name: 'cb-2', checked: true},
-        {boxLabel: 'Item 3', name: 'cb-3'}
-        {boxLabel: 'Item 4', name: 'cb-4'}
-        {boxLabel: 'Item 5', name: 'cb-5'}
-        {boxLabel: 'Item 6', name: 'cb-6'}
-    ]
-});
+    Ext.create('Ext.form.Panel', {
+        title: 'RadioGroup Example',
+        width: 300,
+        height: 125,
+        bodyPadding: 10,
+        renderTo: Ext.getBody(),        
+        items:[{            
+            xtype: 'radiogroup',
+            fieldLabel: 'Two Columns',
+            // Arrange radio buttons into two columns, distributed vertically
+            columns: 2,
+            vertical: true,
+            items: [
+                {boxLabel: 'Item 1', name: 'rb', inputValue: '1'},
+                {boxLabel: 'Item 2', name: 'rb', inputValue: '2', checked: true},
+                {boxLabel: 'Item 3', name: 'rb', inputValue: '3'},
+                {boxLabel: 'Item 4', name: 'rb', inputValue: '4'},
+                {boxLabel: 'Item 5', name: 'rb', inputValue: '5'},
+                {boxLabel: 'Item 6', name: 'rb', inputValue: '6'}
+            ]
+        }]
+    });
  * </code></pre>
  * @constructor
  * Creates a new CheckboxGroup
@@ -42,10 +49,10 @@ var myCheckboxGroup = new Ext.form.CheckboxGroup({
 Ext.define('Ext.form.CheckboxGroup', {
     extend:'Ext.form.FieldContainer',
     mixins: {
-        field: 'Ext.form.Field'
+        field: 'Ext.form.field.Field'
     },
     alias: 'widget.checkboxgroup',
-    requires: ['Ext.layout.container.CheckboxGroup'],
+    requires: ['Ext.layout.container.CheckboxGroup', 'Ext.form.field.Base'],
 
     /**
      * @cfg {String} name
@@ -53,7 +60,7 @@ Ext.define('Ext.form.CheckboxGroup', {
      */
 
     /**
-     * @cfg {Array} items An Array of {@link Ext.form.Checkbox Checkbox}es or Checkbox config objects
+     * @cfg {Array} items An Array of {@link Ext.form.field.Checkbox Checkbox}es or Checkbox config objects
      * to arrange in the group.
      */
 
@@ -108,16 +115,8 @@ Ext.define('Ext.form.CheckboxGroup', {
     // private
     layout: 'checkboxgroup',
 
-    baseFieldDefaults: {
-        hideLabel: true
-    },
-
     initComponent: function() {
         var me = this;
-
-        // Default all children to hide their main fieldLabel
-        me.fieldDefaults = Ext.apply({}, me.fieldDefaults, me.baseFieldDefaults);
-
         me.callParent();
         me.initField();
     },
@@ -158,7 +157,7 @@ Ext.define('Ext.form.CheckboxGroup', {
     },
 
     // private override - the group value is a complex object, compare using object serialization
-    areValuesEqual: function(value1, value2) {
+    isEqual: function(value1, value2) {
         var toQueryString = Ext.Object.toQueryString;
         return toQueryString(value1) === toQueryString(value2);
     },
@@ -194,7 +193,7 @@ Ext.define('Ext.form.CheckboxGroup', {
 
     /**
      * Returns an Array of all checkboxes in the container which are currently checked
-     * @return {Array} Array of Ext.form.Checkbox components
+     * @return {Array} Array of Ext.form.field.Checkbox components
      */
     getChecked: function() {
         return Ext.Array.filter(this.getBoxes(), function(cb) {
@@ -218,7 +217,7 @@ Ext.define('Ext.form.CheckboxGroup', {
     },
 
     /**
-     * Resets the checked state of all {@link Ext.form.Checkbox checkboxes} in the group to their
+     * Resets the checked state of all {@link Ext.form.field.Checkbox checkboxes} in the group to their
      * originally loaded values and clears any validation messages.
      * See {@link Ext.form.Basic}.{@link Ext.form.Basic#trackResetOnLoad trackResetOnLoad}
      */
@@ -255,8 +254,8 @@ Ext.define('Ext.form.CheckboxGroup', {
      * have either a single or multiple values:</p>
      * <ul>
      *   <li>A single Boolean or String value will be passed to the <code>setValue</code> method of the
-     *   checkbox with that name. See the rules in {@link Ext.form.Checkbox#setValue} for accepted values.</li>
-     *   <li>An Array of String values will be matched against the {@link Ext.form.Checkbox#inputValue inputValue}
+     *   checkbox with that name. See the rules in {@link Ext.form.field.Checkbox#setValue} for accepted values.</li>
+     *   <li>An Array of String values will be matched against the {@link Ext.form.field.Checkbox#inputValue inputValue}
      *   of checkboxes in the group with that name; those checkboxes whose inputValue exists in the array will be
      *   checked and others will be unchecked.</li>
      * </ul>
@@ -321,9 +320,9 @@ myCheckboxGroup.setValue({
 
     /**
      * <p>Returns an object containing the values of all checked checkboxes within the group. Each key-value pair
-     * in the object corresponds to a checkbox {@link Ext.form.Checkbox#name name}. If there is only one checked
+     * in the object corresponds to a checkbox {@link Ext.form.field.Checkbox#name name}. If there is only one checked
      * checkbox with a particular name, the value of that pair will be the String
-     * {@link Ext.form.Checkbox#inputValue inputValue} of that checkbox. If there are multiple checked checkboxes
+     * {@link Ext.form.field.Checkbox#inputValue inputValue} of that checkbox. If there are multiple checked checkboxes
      * with that name, the value of that pair will be an Array of the selected inputValues.</p>
      * <p>The object format returned from this method can also be passed directly to the {@link #setValue} method.</p>
      * <p>NOTE: In Ext 3, this method returned an array of Checkbox components; this was changed to make it more
@@ -360,15 +359,14 @@ myCheckboxGroup.setValue({
 
     validate: function() {
         var me = this,
-            error = me.getErrors()[0],
-            undef,
-            isValid = error === undef,
+            errors = me.getErrors(),
+            isValid = Ext.isEmpty(errors),
             wasValid = !me.hasActiveError();
 
         if (isValid) {
             me.unsetActiveError();
         } else {
-            me.setActiveError(error);
+            me.setActiveError(errors);
         }
         if (isValid !== wasValid) {
             me.fireEvent('validitychange', me, isValid);
@@ -377,6 +375,10 @@ myCheckboxGroup.setValue({
 
         return isValid;
     }
+
+}, function() {
+
+    this.borrow(Ext.form.field.Base, ['markInvalid', 'clearInvalid']);
 
 });
 

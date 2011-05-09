@@ -491,8 +491,8 @@ Ext.core.DomQuery = Ext.DomQuery = function(){
                         var m = path.match(t.re);
                         if(m){
                             fn[fn.length] = t.select.replace(tplRe, function(x, i){
-                return m[i];
-                });
+                                return m[i];
+                            });
                             path = path.replace(m[0], "");
                             matched = true;
                             break;
@@ -500,7 +500,13 @@ Ext.core.DomQuery = Ext.DomQuery = function(){
                     }
                     // prevent infinite loop on bad selector
                     if(!matched){
-                        throw 'Error parsing selector, parsing failed at "' + path + '"';
+                        //<debug>
+                        Ext.Error.raise({
+                            sourceClass: 'Ext.DomQuery',
+                            sourceMethod: 'compile',
+                            msg: 'Error parsing selector. Parsing failed at "' + path + '"'
+                        });
+                        //</debug>
                     }
                 }
                 if(modeMatch[1]){
@@ -523,9 +529,9 @@ Ext.core.DomQuery = Ext.DomQuery = function(){
          * @return {Array} An Array of DOM elements which match the selector. If there are
          * no matches, and empty Array is returned.
          */
-    jsSelect: function(path, root, type){
-        // set root to doc if not specified.
-        root = root || document;
+        jsSelect: function(path, root, type){
+            // set root to doc if not specified.
+            root = root || document;
 
             if(typeof root == "string"){
                 root = document.getElementById(root);
@@ -540,7 +546,13 @@ Ext.core.DomQuery = Ext.DomQuery = function(){
                 if(!cache[subPath]){
                     cache[subPath] = Ext.DomQuery.compile(subPath);
                     if(!cache[subPath]){
-                        throw subPath + " is not a valid selector";
+                        //<debug>
+                        Ext.Error.raise({
+                            sourceClass: 'Ext.DomQuery',
+                            sourceMethod: 'jsSelect',
+                            msg: subPath + ' is not a valid selector'
+                        });
+                        //</debug>
                     }
                 }
                 var result = cache[subPath](root);
@@ -556,23 +568,25 @@ Ext.core.DomQuery = Ext.DomQuery = function(){
             }
             return results;
         },
-    isXml: function(el) {
-        var docEl = (el ? el.ownerDocument || el : 0).documentElement;
-        return docEl ? docEl.nodeName !== "HTML" : false;
-    },
+
+        isXml: function(el) {
+            var docEl = (el ? el.ownerDocument || el : 0).documentElement;
+            return docEl ? docEl.nodeName !== "HTML" : false;
+        },
+        
         select : document.querySelectorAll ? function(path, root, type) {
-        root = root || document;
-        if (!Ext.DomQuery.isXml(root)) {
-        try {
-            var cs = root.querySelectorAll(path);
-            return Ext.Array.toArray(cs);
-        }
-        catch (ex) {}
-        }
-        return Ext.DomQuery.jsSelect.call(this, path, root, type);
-    } : function(path, root, type) {
-        return Ext.DomQuery.jsSelect.call(this, path, root, type);
-    },
+            root = root || document;
+            if (!Ext.DomQuery.isXml(root)) {
+            try {
+                var cs = root.querySelectorAll(path);
+                return Ext.Array.toArray(cs);
+            }
+            catch (ex) {}
+            }
+            return Ext.DomQuery.jsSelect.call(this, path, root, type);
+        } : function(path, root, type) {
+            return Ext.DomQuery.jsSelect.call(this, path, root, type);
+        },
 
         /**
          * Selects a single element.

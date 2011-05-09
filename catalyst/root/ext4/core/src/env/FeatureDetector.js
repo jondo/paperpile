@@ -104,9 +104,15 @@ Ext.define('Ext.env.FeatureDetector', {
     },
 
     registerTest: function(name, fn, isDefault) {
+        //<debug>
         if (this.hasTest(name)) {
-            throw new Error("[Ext.env.FeatureDetector] Test name " + name + " has already been registered");
+            Ext.Error.raise({
+                sourceClass: "Ext.env.FeatureDetector",
+                sourceMethod: "registerTest",
+                msg: "Test name " + name + " has already been registered"
+            });
         }
+        //<debug>
 
         this.tests[name] = fn;
 
@@ -130,9 +136,15 @@ Ext.define('Ext.env.FeatureDetector', {
     },
 
     getTest: function(name) {
+        //<debug>
         if (!this.hasTest(name)) {
-            throw new Error("[Ext.env.FeatureDetector] Test name " + name + " does not exist");
+            Ext.Error.raise({
+                sourceClass: "Ext.env.FeatureDetector",
+                sourceMethod: "getTest",
+                msg: "Test name " + name + " does not exist"
+            });
         }
+        //<debug>
 
         return this.tests[name];
     },

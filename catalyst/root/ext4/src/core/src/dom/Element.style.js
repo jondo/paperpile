@@ -10,6 +10,7 @@
         trimRe = /^\s+|\s+$/g,
         spacesRe = /\s+/,
         wordsRe = /\w/g,
+        adjustDirect2DTableRe = /table-row|table-.*-group/,
         INTERNAL = '_internal',
         PADDING = 'padding',
         MARGIN = 'margin',
@@ -268,7 +269,7 @@
          */
         getColor : function(attr, defaultValue, prefix){
             var v = this.getStyle(attr),
-                color = prefix === 'undefined' ? prefix : '#',
+                color = prefix || prefix === '' ? prefix : '#',
                 h;
 
             if(!v || (/transparent|inherit/.test(v))) {
@@ -326,22 +327,31 @@
          * the default animation (<tt>{duration: .35, easing: 'easeIn'}</tt>)
          * @return {Ext.core.Element} this
          */
-         setOpacity : function(opacity, animate){
+        setOpacity: function(opacity, animate) {
             var me = this,
-                s = me.dom.style,
-                val;
+                dom = me.dom,
+                val,
+                style;
 
-            if(!animate || !me.anim){
-                if(!Ext.supports.Opacity){
-                    opacity = opacity < 1 ? 'alpha(opacity=' + opacity * 100 + ')' : '';
-                    val = s.filter.replace(opacityRe, '').replace(trimRe, '');
+            if (!me.dom) {
+                return me;
+            }
 
-                    s.zoom = 1;
-                    s.filter = val + (val.length > 0 ? ' ' : '') + opacity;
-                }else{
-                    s.opacity = opacity;
+            style = me.dom.style;
+
+            if (!animate || !me.anim) {
+                if (!Ext.supports.Opacity) {
+                    opacity = opacity < 1 ? 'alpha(opacity=' + opacity * 100 + ')': '';
+                    val = style.filter.replace(opacityRe, '').replace(trimRe, '');
+
+                    style.zoom = 1;
+                    style.filter = val + (val.length > 0 ? ' ': '') + opacity;
                 }
-            }else{
+                else {
+                    style.opacity = opacity;
+                }
+            }
+            else {
                 if (!Ext.isObject(animate)) {
                     animate = {
                         duration: 350,
@@ -352,10 +362,12 @@
                     to: {
                         opacity: opacity
                     }
-                }, animate));
+                },
+                animate));
             }
             return me;
         },
+
 
         /**
          * Clears any opacity settings from this element. Required in some cases for IE.
@@ -372,17 +384,50 @@
             }
             return this;
         },
+        
+        /**
+         * @private
+         * Returns 1 if the browser returns the subpixel dimension rounded to the lowest pixel.
+         * @return {Number} 0 or 1 
+         */
+        adjustDirect2DDimension: function(dimension) {
+            var me = this,
+                dom = me.dom,
+                display = me.getStyle('display'),
+                inlineDisplay = dom.style['display'],
+                inlinePosition = dom.style['position'],
+                originIndex = dimension === 'width' ? 0 : 1,
+                floating;
+                
+            if (display === 'inline') {
+                dom.style['display'] = 'inline-block';
+            }
 
+            dom.style['position'] = display.match(adjustDirect2DTableRe) ? 'absolute' : 'static';
+
+            // floating will contain digits that appears after the decimal point
+            // if height or width are set to auto we fallback to msTransformOrigin calculation
+            floating = (parseFloat(me.getStyle(dimension)) || parseFloat(dom.currentStyle.msTransformOrigin.split(' ')[originIndex]) * 2) % 1;
+            
+            dom.style['position'] = inlinePosition;
+            
+            if (display === 'inline') {
+                dom.style['display'] = inlineDisplay;
+            }
+
+            return floating;
+        },
+        
         /**
          * Returns the offset height of the element
          * @param {Boolean} contentHeight (optional) true to get the height minus borders and padding
          * @return {Number} The element's height
          */
-        getHeight: function(contentHeight) {
+        getHeight: function(contentHeight, preciseHeight) {
             var me = this,
                 dom = me.dom,
                 hidden = Ext.isIE && me.isStyle('display', 'none'),
-                height, overflow, style;
+                height, overflow, style, floating;
 
             // IE Quirks mode acts more like a max-size measurement unless overflow is hidden during measurement.
             // We will put the overflow back to it's original value when we are done measuring.
@@ -392,7 +437,20 @@
                 me.setStyle({ overflow: 'hidden'});
             }
 
-            height = MATH.max(dom.offsetHeight, hidden ? 0 : dom.clientHeight) || 0;
+            height = dom.offsetHeight;
+
+            height = MATH.max(height, hidden ? 0 : dom.clientHeight) || 0;
+
+            // IE9 Direct2D dimension rounding bug
+            if (!hidden && Ext.supports.Direct2DBug) {
+                floating = me.adjustDirect2DDimension('height');
+                if (preciseHeight) {
+                    height += floating;
+                }
+                else if (floating > 0 && floating < 0.5) {
+                    height++;
+                }
+            }
 
             if (contentHeight) {
                 height -= (me.getBorderWidth("tb") + me.getPadding("tb"));
@@ -407,43 +465,66 @@
             }
             return height;
         },
-
+                
         /**
          * Returns the offset width of the element
          * @param {Boolean} contentWidth (optional) true to get the width minus borders and padding
          * @return {Number} The element's width
          */
-        getWidth: function(contentWidth) {
+        getWidth: function(contentWidth, preciseWidth) {
             var me = this,
                 dom = me.dom,
                 hidden = Ext.isIE && me.isStyle('display', 'none'),
-                rect, width, overflow, style;
+                rect, width, overflow, style, floating, parentPosition;
 
             // IE Quirks mode acts more like a max-size measurement unless overflow is hidden during measurement.
             // We will put the overflow back to it's original value when we are done measuring.
             if (Ext.isIEQuirks) {
                 style = dom.style;
                 overflow = style.overflow;
-                me.setStyle({ overflow: 'hidden'});
+                me.setStyle({overflow: 'hidden'});
             }
-
+            
+            // Fix Opera 10.5x width calculation issues 
+            if (Ext.isOpera10_5) {
+                if (dom.parentNode.currentStyle.position === 'relative') {
+                    parentPosition = dom.parentNode.style.position;
+                    dom.parentNode.style.position = 'static';
+                    width = dom.offsetWidth;
+                    dom.parentNode.style.position = parentPosition;
+                }
+                width = Math.max(width || 0, dom.offsetWidth)
+            
             // Gecko will in some cases report an offsetWidth that is actually less than the width of the
             // text contents, because it measures fonts with sub-pixel precision but rounds the calculated
             // value down. Using getBoundingClientRect instead of offsetWidth allows us to get the precise
             // subpixel measurements so we can force them to always be rounded up. See
             // https://bugzilla.mozilla.org/show_bug.cgi?id=458617
-            if (Ext.supports.BoundingClientRect) {
+            } else if (Ext.supports.BoundingClientRect) {
                 rect = dom.getBoundingClientRect();
-                width = Math.ceil(rect.right - rect.left);
+                width = rect.right - rect.left;
+                width = preciseWidth ? width : Math.ceil(width);
             } else {
                 width = dom.offsetWidth;
             }
+
             width = MATH.max(width, hidden ? 0 : dom.clientWidth) || 0;
 
+            // IE9 Direct2D dimension rounding bug
+            if (!hidden && Ext.supports.Direct2DBug) {
+                floating = me.adjustDirect2DDimension('width');
+                if (preciseWidth) {
+                    width += floating;
+                }
+                else if (floating > 0 && floating < 0.5) {
+                    width++;
+                }
+            }
+            
             if (contentWidth) {
                 width -= (me.getBorderWidth("lr") + me.getPadding("lr"));
             }
-
+            
             if (Ext.isIEQuirks) {
                 me.setStyle({ overflow: overflow});
             }
@@ -851,9 +932,9 @@ Ext.fly('elId').setHeight(150, {
             // Else use clientHeight/clientWidth
             }
             else {
-                // IE Quirks mode acts more like a max-size measurement unless overflow is hidden during measurement.
+                // IE 6 & IE Quirks mode acts more like a max-size measurement unless overflow is hidden during measurement.
                 // We will put the overflow back to it's original value when we are done measuring.
-                if (Ext.isIEQuirks) {
+                if (Ext.isIE6 || Ext.isIEQuirks) {
                     style = dom.style;
                     overflow = style.overflow;
                     me.setStyle({ overflow: 'hidden'});
@@ -862,7 +943,7 @@ Ext.fly('elId').setHeight(150, {
                     width : dom.clientWidth,
                     height : dom.clientHeight
                 };
-                if (Ext.isIEQuirks) {
+                if (Ext.isIE6 || Ext.isIEQuirks) {
                     me.setStyle({ overflow: overflow });
                 }
             }

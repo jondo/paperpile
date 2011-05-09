@@ -18,6 +18,11 @@ Ext.define('Ext.resizer.Splitter', {
     requires: ['Ext.XTemplate'],
     uses: ['Ext.resizer.SplitterTracker'],
     alias: 'widget.splitter',
+
+    renderTpl: [
+        '<tpl if="collapsible===true"><div class="' + Ext.baseCSSPrefix + 'collapse-el ' + Ext.baseCSSPrefix + 'layout-split-{collapseDir}">&nbsp;</div></tpl>'
+    ],
+
     baseCls: Ext.baseCSSPrefix + 'splitter',
     collapsedCls: Ext.baseCSSPrefix + 'splitter-collapsed',
 
@@ -86,7 +91,7 @@ Ext.define('Ext.resizer.Splitter', {
             collapseEl: '.' + Ext.baseCSSPrefix + 'collapse-el'
         });
 
-        Ext.resizer.Splitter.superclass.onRender.apply(me, arguments);
+        this.callParent(arguments);
 
         // Add listeners on the mini-collapse tool unless performCollapse is set to false
         if (me.performCollapse !== false) {
@@ -154,7 +159,7 @@ Ext.define('Ext.resizer.Splitter', {
                 cmp.expand(cmp.animCollapse);
             // collapse
             } else {
-                cmp.collapse(null, cmp.animCollapse);
+                cmp.collapse(this.renderData.collapseDir, cmp.animCollapse);
             }
         }
     },
@@ -169,8 +174,4 @@ Ext.define('Ext.resizer.Splitter', {
             me.el.repaint();
         }
     }
-}, function() {
-    this.prototype.renderTpl = new Ext.XTemplate(
-        '<tpl if="collapsible===true"><div class="' + Ext.baseCSSPrefix + 'collapse-el ' + Ext.baseCSSPrefix + 'layout-split-{collapseDir}">&nbsp;</div></tpl>'
-    );
 });

@@ -61,7 +61,7 @@ var embeddedColumns = new Ext.container.Container({
  * {@link Ext.layout.container.Anchor}, {@link Ext.layout.container.VBox}, {@link Ext.layout.container.HBox}, and
  * {@link Ext.layout.container.Table}. For example:<pre><code>
 //  Create the GridPanel.
-var myNewGrid = new Ext.grid.GridPanel({
+var myNewGrid = new Ext.grid.Panel({
     store: myStore,
     headers: myHeaders,
     title: 'Results', // the title becomes the title of the tab

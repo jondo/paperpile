@@ -159,9 +159,9 @@ describe("Ext.JSON", function() {
             var date;
             
             it("should encode a date object", function() {
-                date = new Date("October 13, 1975 11:13:00");
-                
-                expect(encode(date)).toEqual("\"1975-10-13T11:13:00\"");
+                date = new Date("October 13, 1983 04:04:00");
+    
+                expect(encode(date)).toEqual("\"1983-10-13T04:04:00\"");
             });
             
             it("should format integers to have at least two digits", function() {
@@ -192,6 +192,24 @@ describe("Ext.JSON", function() {
                     woo: {
                         chu: "a\tb"
                     }            
+            });
+        });
+        
+        it("should raise an Ext.Error with invalid data", function() {
+            expect(function(){
+                Ext.decode('{foo:"bar", x}');
+            }).toRaiseExtError();
+        });
+            
+        describe("with safe param", function(){
+            it("should decode valid data", function() {
+                expect(Ext.decode("{\"foo\":\"bar\"}", true)).toEqual({
+                    foo: "bar"        
+                });
+            });
+            
+            it("should return null with invalid data", function() {
+                expect(Ext.decode('{foo+"bar"}', true)).toBeNull();
             });
         });
     });

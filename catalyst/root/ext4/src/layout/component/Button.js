@@ -1,7 +1,7 @@
 /**
  * Component layout for buttons
  * @class Ext.layout.component.Button
- * @extends Ext.layout.Component
+ * @extends Ext.layout.component.Component
  * @private
  */
 Ext.define('Ext.layout.component.Button', {
@@ -10,13 +10,18 @@ Ext.define('Ext.layout.component.Button', {
 
     alias: ['layout.button'],
 
-    extend: 'Ext.layout.Component',
+    extend: 'Ext.layout.component.Component',
 
     /* End Definitions */
 
     type: 'button',
 
     cellClsRE: /-btn-(tl|br)\b/,
+    htmlRE: /<.*>/,
+
+    beforeLayout: function() {
+        return this.callParent(arguments) || this.lastText !== this.owner.text;
+    },
 
     /**
      * Set the dimensions of the inner &lt;button&gt; element to match the
@@ -28,20 +33,16 @@ Ext.define('Ext.layout.component.Button', {
             owner = me.owner,
             ownerEl = owner.el,
             btnEl = owner.btnEl,
+            btnInnerEl = owner.btnInnerEl,
             minWidth = owner.minWidth,
             maxWidth = owner.maxWidth,
-            btnWidth, btnHeight, ownerWidth, adjWidth, btnFrameWidth, metrics;
+            ownerWidth, btnFrameWidth, metrics;
 
         me.getTargetInfo();
         me.callParent(arguments);
 
-        adjWidth = me.adjWidth;
-        btnWidth = (isNum(width) ? width - adjWidth : width);
-        btnHeight = (isNum(height) ? height - me.adjHeight : height);
-
-        btnEl.unclip();
+        btnInnerEl.unclip();
         me.setTargetSize(width, height);
-        me.setElementSize(btnEl, btnWidth, btnHeight);
 
         if (!isNum(width)) {
             // In IE7 strict mode button elements with width:auto get strange extra side margins within
@@ -49,30 +50,61 @@ Ext.define('Ext.layout.component.Button', {
             // the size of the text and set the width to match.
             if (owner.text && Ext.isIE7 && Ext.isStrict && btnEl && btnEl.getWidth() > 20) {
                 btnFrameWidth = me.btnFrameWidth;
-                metrics = Ext.util.TextMetrics.measure(btnEl, owner.text);
-                ownerEl.setWidth(metrics.width + btnFrameWidth + adjWidth);
+                metrics = Ext.util.TextMetrics.measure(btnInnerEl, owner.text);
+                ownerEl.setWidth(metrics.width + btnFrameWidth + me.adjWidth);
                 btnEl.setWidth(metrics.width + btnFrameWidth);
+                btnInnerEl.setWidth(metrics.width + btnFrameWidth);
             } else {
                 // Remove any previous fixed widths
                 ownerEl.setWidth(null);
                 btnEl.setWidth(null);
+                btnInnerEl.setWidth(null);
             }
 
             // Handle maxWidth/minWidth config
             if (minWidth || maxWidth) {
                 ownerWidth = ownerEl.getWidth();
                 if (minWidth && (ownerWidth < minWidth)) {
-                    ownerWidth = minWidth;
-                    me.setTargetSize(ownerWidth, height);
-                    me.setElementSize(btnEl, ownerWidth - adjWidth, btnHeight);
+                    me.setTargetSize(minWidth, height);
                 }
                 else if (maxWidth && (ownerWidth > maxWidth)) {
-                    btnEl.clip();
-                    ownerWidth = maxWidth;
-                    me.setTargetSize(ownerWidth, height);
-                    me.setElementSize(btnEl, ownerWidth - adjWidth, btnHeight);
+                    btnInnerEl.clip();
+                    me.setTargetSize(maxWidth, height);
                 }
             }
+        }
+
+        this.lastText = owner.text;
+    },
+
+    setTargetSize: function(width, height) {
+        var me = this,
+            owner = me.owner,
+            isNum = Ext.isNumber,
+            btnInnerEl = owner.btnInnerEl,
+            btnWidth = (isNum(width) ? width - me.adjWidth : width),
+            btnHeight = (isNum(height) ? height - me.adjHeight : height),
+            btnFrameHeight = me.btnFrameHeight,
+            text = owner.getText(),
+            textHeight;
+
+        me.callParent(arguments);
+        me.setElementSize(owner.btnEl, btnWidth, btnHeight);
+        me.setElementSize(btnInnerEl, btnWidth, btnHeight);
+        if (isNum(btnHeight)) {
+            btnInnerEl.setStyle('line-height', btnHeight - btnFrameHeight + 'px');
+        }
+
+        // Button text may contain markup that would force it to wrap to more than one line (e.g. 'Button<br>Label').
+        // When this happens, we cannot use the line-height set above for vertical centering; we instead reset the
+        // line-height to normal, measure the rendered text height, and add padding-top to center the text block
+        // vertically within the button's height. This is more expensive than the basic line-height approach so
+        // we only do it if the text contains markup.
+        if (text && this.htmlRE.test(text)) {
+            btnInnerEl.setStyle('line-height', 'normal');
+            textHeight = Ext.util.TextMetrics.measure(btnInnerEl, text).height;
+            btnInnerEl.setStyle('padding-top', me.btnFrameTop + Math.max(btnInnerEl.getHeight() - btnFrameHeight - textHeight, 0) / 2 + 'px');
+            me.setElementSize(btnInnerEl, btnWidth, btnHeight);
         }
     },
 
@@ -80,14 +112,21 @@ Ext.define('Ext.layout.component.Button', {
         var me = this,
             owner = me.owner,
             ownerEl = owner.el,
-            frameSize = me.frameSize;
+            frameSize = me.frameSize,
+            frameBody = owner.frameBody,
+            btnWrap = owner.btnWrap,
+            innerEl = owner.btnInnerEl;
 
         if (!('adjWidth' in me)) {
             Ext.apply(me, {
                 // Width adjustment must take into account the arrow area. The btnWrap is the <em> which has padding to accommodate the arrow.
-                adjWidth: frameSize.left + frameSize.right + ownerEl.getBorderWidth('lr') + ownerEl.getPadding('lr') + owner.btnWrap.getPadding('lr'),
-                adjHeight: frameSize.top + frameSize.bottom + ownerEl.getBorderWidth('tb') + ownerEl.getPadding('tb') + owner.btnWrap.getPadding('tb'),
-                btnFrameWidth: owner.btnEl.getFrameWidth('lr')
+                adjWidth: frameSize.left + frameSize.right + ownerEl.getBorderWidth('lr') + ownerEl.getPadding('lr') +
+                          btnWrap.getPadding('lr') + (frameBody ? frameBody.getFrameWidth('lr') : 0),
+                adjHeight: frameSize.top + frameSize.bottom + ownerEl.getBorderWidth('tb') + ownerEl.getPadding('tb') +
+                           btnWrap.getPadding('tb') + (frameBody ? frameBody.getFrameWidth('tb') : 0),
+                btnFrameWidth: innerEl.getFrameWidth('lr'),
+                btnFrameHeight: innerEl.getFrameWidth('tb'),
+                btnFrameTop: innerEl.getFrameWidth('t')
             });
         }
 

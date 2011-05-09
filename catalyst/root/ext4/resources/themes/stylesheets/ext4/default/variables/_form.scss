@@ -3,7 +3,7 @@
  */
 
 /**
- * @class Ext.form.Field
+ * @class Ext.form.field.Base
  */
 
 $form-field-height: 21px !default;
@@ -38,7 +38,7 @@ $form-field-invalid-background-repeat: repeat-x !default;
 $form-field-invalid-background-position: bottom !default;
 
 /**
- * @class Ext.form.Textarea
+ * @class Ext.form.field.TextArea
  */
 $form-textarea-padding: 2px 3px !default;
 
@@ -49,6 +49,17 @@ $form-label-font-weight: normal !default;
 $form-label-font-size: $font-size !default;
 $form-label-font-family: $font-family !default;
 $form-label-font: $form-label-font-weight $form-label-font-size $form-label-font-family !default;
+
+/**
+ * @class Ext.form.field.Checkbox
+ */
+$form-checkbox-image: 'form/checkbox.gif' !default;
+$form-checkbox-size: 13px !default;
+
+/**
+ * @class Ext.form.field.Radio
+ */
+$form-radio-image: 'form/radio.gif' !default;
 
 /**
  * Error messages

@@ -2,7 +2,7 @@
  * @class Ext.ComponentQuery
  * @extends Object
  *
- * Provides searching of Components within Ext.ComponentMgr (globally) or a specific
+ * Provides searching of Components within Ext.ComponentManager (globally) or a specific
  * Ext.container.Container on the document with a similar syntax to a CSS selector.
  *
  * Components can be retrieved by using their {@link Ext.Component xtype} with an optional . prefix
@@ -76,7 +76,7 @@ For easy access to queries based from a particular Container see the {@link Ext.
  */
 Ext.define('Ext.ComponentQuery', {
     singleton: true,
-    uses: ['Ext.ComponentMgr']
+    uses: ['Ext.ComponentManager']
 }, function() {
 
     var cq = this,
@@ -251,7 +251,7 @@ Ext.define('Ext.ComponentQuery', {
          * Executes this Query upon the selected root.
          * The root provides the initial source of candidate Component matches which are progressively
          * filtered by iterating through this Query's operations cache.
-         * If no root is provided, all registered Components are searched via the ComponentMgr.
+         * If no root is provided, all registered Components are searched via the ComponentManager.
          * root may be a Container who's descendant Components are filtered
          * root may be a Component with an implementation of getRefItems which provides some nested Components such as the
          * docked items within a Panel.
@@ -266,7 +266,7 @@ Ext.define('Ext.ComponentQuery', {
 
             // no root, use all Components in the document
             if (!root) {
-                workingItems = Ext.ComponentMgr.all.getArray();
+                workingItems = Ext.ComponentManager.all.getArray();
             }
             // Root is a candidate Array
             else if (Ext.isArray(root)) {
@@ -305,16 +305,23 @@ Ext.define('Ext.ComponentQuery', {
 
         is: function(component) {
             var operations = this.operations,
-                length = operations.length,
-                i = 0,
-                workingItems = Ext.isArray(component) ? component : [ component ];
+                components = Ext.isArray(component) ? component : [component],
+                originalLength = components.length,
+                lastOperation = operations[operations.length-1],
+                ln, i;
 
-            // Filter the Component array by each operation in turn.
-            // Quit immediately if the results are ever filtered to zero length
-            for (; i < length && workingItems.length; i++) {
-                workingItems = filterItems(workingItems, operations[i]);
+            components = filterItems(components, lastOperation);
+            if (components.length === originalLength) {
+                if (operations.length > 1) {
+                    for (i = 0, ln = components.length; i < ln; i++) {
+                        if (Ext.Array.indexOf(this.execute(), components[i]) === -1) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
             }
-            return workingItems.length !== 0;
+            return false;
         }
     });
 
@@ -486,10 +493,12 @@ Ext.define('Ext.ComponentQuery', {
                             selector = selector.replace(selectorMatch[0], '');
                             break; // Break on match
                         }
+                        //<debug>
                         // Exhausted all matches: It's an error
                         if (i === (length - 1)) {
-                            throw "Invalid ComponentQuery selector: \"" + arguments[0] + "\"";
+                            Ext.Error.raise('Invalid ComponentQuery selector: "' + arguments[0] + '"');
                         }
+                        //</debug>
                     }
                 }
 

@@ -2,8 +2,8 @@
  * @class Ext.form.FieldSet
  * @extends Ext.container.Container
 
-A container for grouping sets of fields, rendered as a HTML `<fieldset>` element. The {@link #title}
-config will be rendered as the fieldset's `<legend>`.
+A container for grouping sets of fields, rendered as a HTML `fieldset` element. The {@link #title}
+config will be rendered as the fieldset's `legend`.
 
 While FieldSets commonly contain simple groups of fields, they are general {@link Ext.container.Container Containers}
 and may therefore contain any type of components in their {@link #items}, including other nested containers.
@@ -15,19 +15,19 @@ FieldSets may also be collapsed if configured to do so; this can be done in two 
 1. Set the {@link #collapsible} config to true; this will result in a collapse button being rendered next to
    the {@link #title legend title}, or:
 1. Set the {@link #checkboxToggle} config to true; this is similar to using {@link #collapsible} but renders
-   a {@link Ext.form.Checkbox checkbox} in place of the toggle button. The fieldset will be expanded when the
+   a {@link Ext.form.field.Checkbox checkbox} in place of the toggle button. The fieldset will be expanded when the
    checkbox is checked and collapsed when it is unchecked. The checkbox will also be included in the
    {@link Ext.form.Basic#submit form submit parameters} using the {@link #checkboxName} as its parameter name.
-
+{@img Ext.form.FieldSet/Ext.form.FieldSet.png Ext.form.FieldSet component}
 Example usage:
 
-    var form = new Ext.form.FormPanel({
+    Ext.create('Ext.form.Panel', {
         title: 'Simple Form with FieldSets',
         labelWidth: 75, // label settings here cascade unless overridden
         url: 'save-form.php',
         frame: true,
         bodyStyle: 'padding:5px 5px 0',
-        width: 700,
+        width: 550,
         renderTo: Ext.getBody(),
         layout: 'column', // arrange fieldsets side by side
         defaults: {
@@ -62,7 +62,7 @@ Example usage:
                 anchor: '100%',
                 title: 'Panel inside a fieldset',
                 frame: true,
-                height: 100
+                height: 52
             }]
         }]
     });
@@ -77,7 +77,7 @@ Example usage:
 Ext.define('Ext.form.FieldSet', {
     extend: 'Ext.container.Container',
     alias: 'widget.fieldset',
-    uses: ['Ext.form.Checkbox', 'Ext.panel.Tool', 'Ext.layout.container.Anchor', 'Ext.layout.component.Body'],
+    uses: ['Ext.form.field.Checkbox', 'Ext.panel.Tool', 'Ext.layout.container.Anchor', 'Ext.layout.component.Body'],
 
     /**
      * @cfg {String} title
@@ -193,7 +193,7 @@ Ext.define('Ext.form.FieldSet', {
             // Title
             legendItems.push(me.createTitleCmp());
 
-            legend = me.legend = new Ext.container.Container({
+            legend = me.legend = Ext.create('Ext.container.Container', {
                 baseCls: me.baseCls + '-header',
                 ariaRole: '',
                 getElConfig: function(){
@@ -217,7 +217,7 @@ Ext.define('Ext.form.FieldSet', {
      */
     createTitleCmp: function() {
         var me = this;
-        me.titleCmp = new Ext.Component({
+        me.titleCmp = Ext.create('Ext.Component', {
             html: me.title,
             cls: me.baseCls + '-header-text'
         });
@@ -227,8 +227,8 @@ Ext.define('Ext.form.FieldSet', {
 
     /**
      * @property checkboxCmp
-     * @type Ext.form.Checkbox
-     * Refers to the {@link Ext.form.Checkbox} component that is added next to the title in the legend. Only
+     * @type Ext.form.field.Checkbox
+     * Refers to the {@link Ext.form.field.Checkbox} component that is added next to the title in the legend. Only
      * populated if the fieldset is configured with <tt>{@link #checkboxToggle}:true</tt>.
      */
 
@@ -242,11 +242,10 @@ Ext.define('Ext.form.FieldSet', {
         var me = this,
             suffix = '-checkbox';
             
-        me.checkboxCmp = new Ext.form.Checkbox({
+        me.checkboxCmp = Ext.create('Ext.form.field.Checkbox', {
             name: me.checkboxName || me.id + suffix,
             cls: me.baseCls + '-header' + suffix,
             checked: !me.collapsed,
-            hideLabel: true,
             listeners: {
                 change: me.onCheckChange,
                 scope: me
@@ -270,7 +269,7 @@ Ext.define('Ext.form.FieldSet', {
      */
     createToggleCmp: function() {
         var me = this;
-        me.toggleCmp = new Ext.panel.Tool({
+        me.toggleCmp = Ext.create('Ext.panel.Tool', {
             type: me.collapsed ? 'down' : 'up',
             handler: me.toggle,
             scope: me

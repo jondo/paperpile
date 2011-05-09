@@ -174,11 +174,11 @@ Ext.define('Ext.util.Inflector', {
     },
     
     /**
-     * Returns true if the given word is uncountable (the word is its own singular and plural form - e.g. sheep, fish)
+     * Returns true if the given word is transnumeral (the word is its own singular and plural form - e.g. sheep, fish)
      * @param {String} word The word to test
-     * @return {Boolean} True if the word is uncountable
+     * @return {Boolean} True if the word is transnumeral
      */
-    isUncountable: function(word) {
+    isTransnumeral: function(word) {
         return Ext.Array.indexOf(this.uncountable, word) != -1;
     },
 
@@ -188,7 +188,7 @@ Ext.define('Ext.util.Inflector', {
      * @return {String} The pluralized form of the word
      */
     pluralize: function(word) {
-        if (this.isUncountable(word)) {
+        if (this.isTransnumeral(word)) {
             return word;
         }
 
@@ -214,7 +214,7 @@ Ext.define('Ext.util.Inflector', {
      * @return {String} The singularized form of the word
      */
     singularize: function(word) {
-        if (this.isUncountable(word)) {
+        if (this.isTransnumeral(word)) {
             return word;
         }
 

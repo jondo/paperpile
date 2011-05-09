@@ -3,7 +3,7 @@
  * @class Ext.data.Operation
  * @extends Object
  * 
- * <p>Represents a single read or write operation performed by a {@link Ext.data.Proxy Proxy}.
+ * <p>Represents a single read or write operation performed by a {@link Ext.data.proxy.Proxy Proxy}.
  * Operation objects are used to enable communication between Stores and Proxies. Application
  * developers should rarely need to interact with Operation objects directly.</p>
  * 

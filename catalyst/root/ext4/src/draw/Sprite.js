@@ -1,7 +1,54 @@
 /**
  * @class Ext.draw.Sprite
  * @extends Object
- * Base drawing spriteitive class.  Provides bucket for all spriteitive attributes and basic methods for updating them.
+ *
+ * A Sprite is an object rendered in a Drawing surface. There are different options and types of sprites.
+ * The configuration of a Sprite is an object with the following properties:
+ *
+ * - **type** - (String) The type of the sprite. Possible options are 'circle', 'path', 'rect', 'text', 'square'. 
+ * - **width** - (Number) Used in rectangle sprites, the width of the rectangle.
+ * - **height** - (Number) Used in rectangle sprites, the height of the rectangle.
+ * - **size** - (Number) Used in square sprites, the dimension of the square.
+ * - **radius** - (Number) Used in circle sprites, the radius of the circle.
+ * - **x** - (Number) The position along the x-axis.
+ * - **y** - (Number) The position along the y-axis.
+ * - **path** - (Array) Used in path sprites, the path of the sprite written in SVG-like path syntax.
+ * - **opacity** - (Number) The opacity of the sprite.
+ * - **fill** - (String) The fill color.
+ * - **stroke** - (String) The stroke color.
+ * - **stroke-width** - (Number) The width of the stroke.
+ * - **font** - (String) Used with text type sprites. The full font description. Uses the same syntax as the CSS `font` parameter.
+ * - **text** - (String) Used with text type sprites. The text itself.
+ * 
+ * Additionally there are three transform objects that can be set with `setAttributes` which are `translate`, `rotate` and
+ * `scale`.
+ * 
+ * For translate, the configuration object contains x and y attributes for the translation. For example:
+ * 
+ *     sprite.setAttributes({
+ *       translate: {
+ *        x: 10,
+ *        y: 10
+ *       }
+ *     }, true);
+ * 
+ * For rotate, the configuration object contains x and y attributes for the center of the rotation (which are optional),
+ * and a degrees attribute that specifies the rotation in degrees. For example:
+ * 
+ *     sprite.setAttributes({
+ *       rotate: {
+ *        degrees: 90
+ *       }
+ *     }, true);
+ * 
+ * For scale, the configuration object contains x and y attributes for the x-axis and y-axis scaling. For example:
+ * 
+ *     sprite.setAttributes({
+ *       scale: {
+ *        x: 10,
+ *        y: 3
+ *       }
+ *     }, true);
  */
 Ext.define('Ext.draw.Sprite', {
     /* Begin Definitions */
@@ -10,6 +57,8 @@ Ext.define('Ext.draw.Sprite', {
         observable: 'Ext.util.Observable',
         animate: 'Ext.util.Animate'
     },
+    
+    requires: ['Ext.draw.SpriteDD'],
 
     /* End Definitions */
 
@@ -45,13 +94,14 @@ Ext.define('Ext.draw.Sprite', {
         'cy'
     ],
     constructor: function(config) {
+        var me = this;
         config = config || {};
-        this.id = Ext.id(null, 'ext-sprite-');
-        this.transformations = [];
-        Ext.copyTo(this, config, 'surface,group,type');
+        me.id = Ext.id(null, 'ext-sprite-');
+        me.transformations = [];
+        Ext.copyTo(this, config, 'surface,group,type,draggable');
         //attribute bucket
-        this.bbox = {};
-        this.attr = {
+        me.bbox = {};
+        me.attr = {
             zIndex: 0,
             translation: {
                 x: null,
@@ -73,16 +123,35 @@ Ext.define('Ext.draw.Sprite', {
         delete config.surface;
         delete config.group;
         delete config.type;
-        this.setAttributes(config);
-        this.addEvents(
+        delete config.draggable;
+        me.setAttributes(config);
+        me.addEvents(
             'render',
             'mousedown',
             'mouseup',
             'mouseover',
             'mouseout',
+            'mousemove',
             'click'
         );
-        this.mixins.observable.constructor.apply(this, arguments);
+        me.mixins.observable.constructor.apply(this, arguments);
+    },
+    
+    initDraggable: function() {
+        /**
+         * <p>If this Sprite is configured {@link #draggable}, this property will contain
+         * an instance of {@link Ext.dd.DragSource} which handles dragging the Sprite.</p>
+         * The developer must provide implementations of the abstract methods of {@link Ext.dd.DragSource}
+         * in order to supply behaviour for each stage of the drag/drop process. See {@link #draggable}.
+         * @type Ext.dd.DragSource.
+         * @property dd
+         */
+        this.draggable = true;
+        //create element if it doesn't exist.
+        if (!this.el) {
+            this.surface.createSprite(this);
+        }
+        this.dd = Ext.create('Ext.draw.SpriteDD', this, Ext.isBoolean(this.draggable) ? null : this.draggable);
     },
 
     /**
@@ -97,7 +166,8 @@ Ext.define('Ext.draw.Sprite', {
             fontPropsLength = fontProps.length,
             pathProps = me.pathProperties,
             pathPropsLength = pathProps.length,
-            custom = me.surface.customAttributes,
+            hasSurface = !!me.surface,
+            custom = hasSurface && me.surface.customAttributes || {},
             spriteAttrs = me.attr,
             attr, i, translate, translation, rotate, rotation, scale, scaling;
 
@@ -174,7 +244,7 @@ Ext.define('Ext.draw.Sprite', {
         Ext.apply(spriteAttrs, attrs);
         me.dirty = true;
 
-        if (redraw === true) {
+        if (redraw === true && hasSurface) {
             me.redraw();
         }
         return this;
@@ -214,6 +284,25 @@ Ext.define('Ext.draw.Sprite', {
             hidden: false
         }, redraw);
         return this;
+    },
+
+    /**
+     * Remove the sprite.
+     */
+    remove: function() {
+        if (this.surface) {
+            this.surface.remove(this);
+            return true;
+        }
+        return false;
+    },
+    
+    /**
+     * Removes the sprite and clears all listeners.
+     */
+    destroy: function() {
+        this.remove();
+        this.clearListeners();
     },
 
     /**

@@ -3,16 +3,18 @@
  * @extends Ext.slider.Multi
  * Slider which supports vertical or horizontal orientation, keyboard adjustments,
  * configurable snapping, axis clicking and animation. Can be added as an item to
- * any container. Example usage:
+ * any container. 
+ * {@img Ext.slider.Single/Ext.slider.Single.png Ext.slider.Single component}
+ * Example usage:
 <pre><code>
-new Ext.slider.Single({
-    renderTo: Ext.getBody(),
-    width: 200,
-    value: 50,
-    increment: 10,
-    minValue: 0,
-    maxValue: 100
-});
+    Ext.create('Ext.slider.Single', {
+        width: 200,
+        value: 50,
+        increment: 10,
+        minValue: 0,
+        maxValue: 100,
+        renderTo: Ext.getBody()
+    });
 </code></pre>
  * The class Ext.slider.Single is aliased to Ext.Slider for backwards compatibility.
  * @xtype slider

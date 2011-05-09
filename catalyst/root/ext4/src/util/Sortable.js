@@ -1,7 +1,7 @@
 /**
  * @class Ext.util.Sortable
 
-A mixin which allows a data component to be sorted. This is used by e.g. {@link Ext.data.Store} and {@link Ext.form.TreeStore}.
+A mixin which allows a data component to be sorted. This is used by e.g. {@link Ext.data.Store} and {@link Ext.data.TreeStore}.
 
 **NOTE**: This mixin is mainly for internal library use and most users should not need to use it directly. It
 is more likely you will want to use one of the component classes that import this mixin, such as
@@ -226,7 +226,7 @@ store.sort('myField', 'DESC');
                     field = fields.get(config.property);
                     config.transform = field ? field.sortType : undefined;
                 }
-                sorters[i] = new Sorter(config);
+                sorters[i] = Ext.create('Ext.util.Sorter', config);
             }
         }
 
@@ -240,12 +240,11 @@ store.sort('myField', 'DESC');
     /**
      * Returns an object describing the current sort state of this Store.
      * @return {Object} The sort state of the Store. An object with two properties:<ul>
-     * <li><b>field : String<p class="sub-desc">The name of the field by which the Records are sorted.</p></li>
-     * <li><b>direction : String<p class="sub-desc">The sort order, 'ASC' or 'DESC' (case-sensitive).</p></li>
+     * <li><b>field</b> : String<p class="sub-desc">The name of the field by which the Records are sorted.</p></li>
+     * <li><b>direction</b> : String<p class="sub-desc">The sort order, 'ASC' or 'DESC' (case-sensitive).</p></li>
      * </ul>
      * See <tt>{@link #sortInfo}</tt> for additional details.
      */
-     // @TODO: remove this?
     getSortState : function() {
         return this.sortInfo;
     }

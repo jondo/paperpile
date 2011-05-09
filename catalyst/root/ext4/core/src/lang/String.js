@@ -12,37 +12,6 @@ Ext.String = {
     escapeRegexRe: /([-.*+?^${}()|[\]\/\\])/g,
 
     /**
-     * Takes an encoded URL and and converts it to an object. Example:
-     * <pre><code>
-Ext.String.parseQueryString("foo=1&bar=2"); // returns {foo: "1", bar: "2"}
-Ext.String.parseQueryString("foo=1&bar=2&bar=3&bar=4", false); // returns {foo: "1", bar: ["2", "3", "4"]}
-     * </code></pre>
-     * @param {String} string
-     * @param {Boolean} overwrite (optional) Items of the same name will overwrite previous values instead of creating an an array (Defaults to false).
-     * @return {Object} A literal with members
-     */
-    parseQueryString : function(string, overwrite) {
-        if (Ext.isEmpty(string)) {
-            return {};
-        }
-
-        var obj = {},
-        pairs = string.split('&'),
-        d = decodeURIComponent,
-        name,
-        value;
-
-        Ext.each(pairs, function(pair) {
-            pair = pair.split('=');
-            name = d(pair[0]);
-            value = pair[1] ? d(pair[1]) : undefined;
-            obj[name] = overwrite || !obj[name] ? value : [].concat(obj[name]).concat(value);
-        });
-
-        return obj;
-    },
-
-    /**
      * Convert certain characters (&, <, >, and ') to their HTML character equivalents for literal display in web pages.
      * @param {String} value The string to encode
      * @return {String} The encoded text
@@ -238,10 +207,3 @@ var s = Ext.String.format('&lt;div class="{0}">{1}&lt;/div>', cls, text);
         });
     }
 };
-
-//Ext.deprecate('core', '4.0dev', function() {
-//    Ext.urlDecode = function() {
-//        console.warn("[DEPRECATED][core][4.0dev][Ext.urlDecode] please use Ext.String.parseQueryString instead");
-//        return Ext.String.parseQueryString.apply(Ext.String, arguments);
-//    };
-//});

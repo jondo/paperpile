@@ -1,5 +1,6 @@
 /**
  * @class Ext.util.ComponentDragger
+ * @extends Ext.dd.DragTracker
  * <p>A subclass of Ext.dd.DragTracker which handles dragging any Component.</p>
  * <p>This is configured with a Component to be made draggable, and a config object for the
  * {@link Ext.dd.DragTracker} class.</p>
@@ -64,7 +65,7 @@ Ext.define('Ext.util.ComponentDragger', {
             c = me.initialConstrainTo,
             delegateRegion,
             elRegion,
-            shadowSize = comp.el.shadow && comp.el.shadow.offset;
+            shadowSize = comp.el.shadow ? comp.el.shadow.offset : 0;
 
         // The configured constrainTo might be a Region or an element
         if (!(c instanceof Ext.util.Region)) {
@@ -72,7 +73,6 @@ Ext.define('Ext.util.ComponentDragger', {
         }
 
         // Reduce the constrain region to allow for shadow
-        // TODO: Rewrite the Shadow class. When that's done, get the extra for each side from the Shadow.
         if (shadowSize) {
             c.adjust(0, -shadowSize, -shadowSize, shadowSize);
         }
@@ -94,18 +94,13 @@ Ext.define('Ext.util.ComponentDragger', {
         return c;
     },
 
-    // Move either the ghost or the Component to its new position on drag
+    // Move either the ghost Component or the target Component to its new position on drag
     onDrag: function(e) {
         var me = this,
-            comp = me.comp,
-            offset = me.getOffset(me.constrain || me.constrainDelegate ? 'dragTarget' : null),
-            newPos = [me.startPosition[0] + offset[0], me.startPosition[1] + offset[1]];
+            comp = (me.proxy && !me.comp.liveDrag) ? me.proxy : me.comp,
+            offset = me.getOffset(me.constrain || me.constrainDelegate ? 'dragTarget' : null);
 
-        if (this.proxy && !this.comp.liveDrag) {
-            me.proxy.setPosition(newPos);
-        } else {
-            comp.setPosition(newPos);
-        }
+        comp.setPosition.apply(comp, [me.startPosition[0] + offset[0], me.startPosition[1] + offset[1]]);
     },
 
     onEnd: function(e) {

@@ -131,15 +131,15 @@ Ext.define('Ext.Action', {
      * a background image that will be used as the icon image.
      * @param {String} cls The CSS class supplying the icon image
      */
-    setIconClass : function(cls){
+    setIconCls : function(cls){
         this.initialConfig.iconCls = cls;
-        this.callEach('setIconClass', [cls]);
+        this.callEach('setIconCls', [cls]);
     },
 
     /**
      * Gets the icon CSS class currently used by all components configured by this Action.
      */
-    getIconClass : function(){
+    getIconCls : function(){
         return this.initialConfig.iconCls;
     },
 

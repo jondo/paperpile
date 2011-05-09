@@ -4,7 +4,7 @@
  * <p>Provides Ext.direct support for submitting form data.</p>
  * <p>This example illustrates usage of Ext.direct.Direct to <b>submit</b> a form through Ext.Direct.</p>
  * <pre><code>
-var myFormPanel = new Ext.form.FormPanel({
+var myFormPanel = new Ext.form.Panel({
     // configs for FormPanel
     title: 'Basic Information',
     renderTo: document.body,

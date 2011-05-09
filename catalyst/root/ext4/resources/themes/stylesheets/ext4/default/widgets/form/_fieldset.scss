@@ -19,15 +19,18 @@
         padding: $fieldset-header-padding;
         line-height: 16px;
 
-        .#{$prefix}form-item,
-        .#{$prefix}tool,
         .#{$prefix}fieldset-header-text {
             float: left;
         }
         
+        .#{$prefix}form-item,
         .#{$prefix}tool {
-            margin-right: 3px;
-            margin-left: 0;
+            float: left;
+            margin: 0 3px 0 0;
+        }
+
+        .#{$prefix}form-cb-wrap {
+            padding: 0;
         }
     }
 

@@ -9,26 +9,26 @@ in that form using the {@link #forId} property.
 and associated config properties ({@link Ext.form.Labelable#labelAlign}, {@link Ext.form.Labelable#labelWidth},
 etc.) in field components themselves, as that allows labels to be uniformly sized throughout the form.
 Ext.form.Label should only be used when your layout can not be achieved with the standard
-{@link Ext.layout.component.form.Field field layout}.
+{@link Ext.form.Labelable field layout}.
 
-You will likely be associating the label with a field component that extends {@link Ext.form.BaseField}, so
-you should make sure the {@link #forId} is set to the same value as the {@link Ext.form.BaseField#inputId inputId}
+You will likely be associating the label with a field component that extends {@link Ext.form.field.Base}, so
+you should make sure the {@link #forId} is set to the same value as the {@link Ext.form.field.Base#inputId inputId}
 of that field.
 
 The label's text can be set using either the {@link #text} or {@link #html} configuration properties; the
 difference between the two is that the former will automatically escape HTML characters when rendering, while
 the latter will not.
-
+{@img Ext.form.Label/Ext.form.Label.png Ext.form.Label component}
 #Example usage:#
 
 This example creates a Label after its associated Text field, an arrangement that cannot currently
 be achieved using the standard Field layout's labelAlign.
 
-    new Ext.form.FormPanel({
-        renderTo: Ext.getBody(),
+    Ext.create('Ext.form.Panel', {
+        title: 'Field with Label',
         width: 400,
         bodyPadding: 10,
-        title: 'Field with Label',
+        renderTo: Ext.getBody(),
         layout: {
             type: 'hbox',
             align: 'middle'
@@ -65,8 +65,8 @@ Ext.define('Ext.form.Label', {
     /**
      * @cfg {String} forId The id of the input element to which this label will be bound via the standard HTML 'for'
      * attribute. If not specified, the attribute will not be added to the label. In most cases you will be
-     * associating the label with a {@link Ext.form.BaseField} component, so you should make sure this matches
-     * the {@link Ext.form.BaseField#inputId inputId} of that field.
+     * associating the label with a {@link Ext.form.field.Base} component, so you should make sure this matches
+     * the {@link Ext.form.field.Base#inputId inputId} of that field.
      */
     /**
      * @cfg {String} html An HTML fragment that will be used as the label's innerHTML (defaults to '').

@@ -1,6 +1,6 @@
 /**
  * @private
- * Private utility class for managing all {@link Ext.form.Checkbox} fields grouped by name.
+ * Private utility class for managing all {@link Ext.form.field.Checkbox} fields grouped by name.
  */
 Ext.define('Ext.form.CheckboxManager', {
     extend: 'Ext.util.MixedCollection',

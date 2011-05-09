@@ -7,7 +7,7 @@ Ext.define('Sample.CoolGuy', {
     },
 
     constructor: function() {
-        this.getConfig().knownSongs.push("Love Me or Die");
+        this.config.knownSongs.push("Love Me or Die");
 
         return this.callParent(arguments);
     },
@@ -15,6 +15,6 @@ Ext.define('Sample.CoolGuy', {
     sing: function() {
         alert("Ahem...");
 
-        return this.getMixin('sing').sing.apply(this, arguments);
+        return this.mixins.sing.sing.apply(this, arguments);
     }
 });

@@ -200,13 +200,13 @@ Ext.define('Ext.layout.container.boxOverflow.Scroller', {
             before.setVisibilityMode(Ext.core.Element.DISPLAY);
             after.setVisibilityMode(Ext.core.Element.DISPLAY);
 
-            this.beforeRepeater = new Ext.util.ClickRepeater(before, {
+            this.beforeRepeater = Ext.create('Ext.util.ClickRepeater', before, {
                 interval: this.scrollRepeatInterval,
                 handler : this.scrollLeft,
                 scope   : this
             });
 
-            this.afterRepeater = new Ext.util.ClickRepeater(after, {
+            this.afterRepeater = Ext.create('Ext.util.ClickRepeater', after, {
                 interval: this.scrollRepeatInterval,
                 handler : this.scrollRight,
                 scope   : this

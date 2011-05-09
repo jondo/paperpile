@@ -1,5 +1,5 @@
 describe("Ext.Class", function() {
-    var cls;
+    var cls, emptyFn = function(){};
     beforeEach(function() {
         window.My = {
             awesome: {
@@ -30,6 +30,9 @@ describe("Ext.Class", function() {
 
         beforeEach(function() {
             cls = function() {};
+            cls.ownMethod = function(name, fn) {
+                this.prototype[name] = fn;
+            };
         });
 
         describe("extend", function() {
@@ -37,7 +40,7 @@ describe("Ext.Class", function() {
             it("should extend from Base if no 'extend' property found", function() {
                 var data = {};
 
-                Ext.Class.preprocessors.extend(cls, data);
+                Ext.Class.preprocessors.extend.fn(cls, data, emptyFn);
 
                 expect((new cls) instanceof Ext.Base).toBeTruthy();
             });
@@ -47,7 +50,7 @@ describe("Ext.Class", function() {
                     extend: My.awesome.Class
                 };
 
-                Ext.Class.preprocessors.extend(cls, data);
+                Ext.Class.preprocessors.extend.fn(cls, data, emptyFn);
 
                 expect((new cls) instanceof My.awesome.Class).toBeTruthy();
             });
@@ -59,7 +62,7 @@ describe("Ext.Class", function() {
 
                 var parentPrototype = My.awesome.Class.prototype;
 
-                Ext.Class.preprocessors.extend(cls, data);
+                Ext.Class.preprocessors.extend.fn(cls, data, emptyFn);
 
                 expect(cls.superclass).toEqual(parentPrototype);
                 expect((new cls).superclass).toEqual(parentPrototype);
@@ -75,11 +78,9 @@ describe("Ext.Class", function() {
                     }
                 };
 
-                Ext.Class.preprocessors.config(cls, data);
+                Ext.Class.preprocessors.config.fn(cls, data, emptyFn);
 
-                var obj = new cls;
-
-                expect(obj.getSomeName).toBeDefined();
+                expect(data.getSomeName).toBeDefined();
             });
 
             it("should NOT create getter if already exists", function() {
@@ -94,12 +95,9 @@ describe("Ext.Class", function() {
                     called = true;
                 };
 
-                Ext.Class.preprocessors.config(cls, data);
+                Ext.Class.preprocessors.config.fn(cls, data, emptyFn);
 
-                var obj = new cls;
-                obj.getSomeName();
-
-                expect(called).toBeTruthy();
+                expect(data.getSomeName).not.toBeDefined();
             });
 
             it("should create setter if not exists", function() {
@@ -109,15 +107,9 @@ describe("Ext.Class", function() {
                     }
                 };
 
-                Ext.Class.preprocessors.config(cls, data);
+                Ext.Class.preprocessors.config.fn(cls, data, emptyFn);
 
-                var obj = new cls;
-
-                expect(obj.setSomeName).toBeDefined();
-
-                obj.setSomeName('valueHere');
-
-                expect(obj.getSomeName()).toEqual('valueHere');
+                expect(data.setSomeName).toBeDefined();
             });
 
             it("should NOT create setter if already exists", function() {
@@ -133,12 +125,9 @@ describe("Ext.Class", function() {
                     called = true;
                 };
 
-                Ext.Class.preprocessors.config(cls, data);
+                Ext.Class.preprocessors.config.fn(cls, data, emptyFn);
 
-                var obj = new cls;
-                obj.setSomeName('valueHere');
-
-                expect(called).toBeTruthy();
+                expect(data.setSomeName).not.toBeDefined();
             });
 
             it("should create apply if not exists", function() {
@@ -148,20 +137,9 @@ describe("Ext.Class", function() {
                     }
                 };
 
-                Ext.Class.preprocessors.config(cls, data);
+                Ext.Class.preprocessors.config.fn(cls, data, emptyFn);
 
-                var obj = new cls;
-                expect(obj.applySomeName).toBeDefined();
-
-                spyOn(obj, 'applySomeName').andCallThrough();
-
-                obj.setSomeName('valueHere');
-
-                expect(obj.applySomeName).toHaveBeenCalledWith('valueHere', undefined);
-
-                obj.setSomeName('newValueHere');
-
-                expect(obj.applySomeName).toHaveBeenCalledWith('newValueHere', 'valueHere');
+                expect(data.applySomeName).toBeDefined();
             });
 
             it("should NOT create apply if already exists", function() {
@@ -176,27 +154,9 @@ describe("Ext.Class", function() {
                     called = true;
                 };
 
-                Ext.Class.preprocessors.config(cls, data);
+                Ext.Class.preprocessors.config.fn(cls, data, emptyFn);
 
-                var obj = new cls;
-                obj.applySomeName('anything');
-                expect(called).toBeTruthy();
-            });
-
-            it("should create shortcuts for boolean getters", function() {
-                var data = {
-                    config: {
-                        isCool: true,
-                        hasWings: false
-                    }
-                };
-
-                Ext.Class.preprocessors.config(cls, data);
-
-                var obj = new cls;
-
-                expect(obj.isCool).toBeDefined();
-                expect(obj.hasWings).toBeDefined();
+                expect(data.applySomeName).not.toBeDefined();
             });
         });
 
@@ -209,7 +169,7 @@ describe("Ext.Class", function() {
                     }
                 };
 
-                Ext.Class.preprocessors.statics(cls, data);
+                Ext.Class.preprocessors.statics.fn(cls, data, emptyFn);
 
                 var obj = new cls;
 
@@ -217,6 +177,9 @@ describe("Ext.Class", function() {
                 expect(cls.someName).toBe('someValue');
                 expect(cls.someMethod).toBe(Ext.emptyFn);
             });
+        });
+
+        describe("inheritableStatics", function() {
 
             it("should store names of inheritable static properties", function() {
                 var data = {
@@ -226,13 +189,13 @@ describe("Ext.Class", function() {
                     }
                 };
 
-                Ext.Class.preprocessors.statics(cls, data);
+                Ext.Class.preprocessors.inheritableStatics.fn(cls, data, emptyFn);
 
                 var obj = new cls;
 
-                expect(obj.statics).not.toBeDefined();
+                expect(obj.inheritableStatics).not.toBeDefined();
                 expect(cls.someName).toBe('someValue');
-                expect(cls.$inheritableStatics).toEqual(['someName', 'someMethod']);
+                expect(cls.prototype.$inheritableStatics).toEqual(['someName', 'someMethod']);
                 expect(cls.someMethod).toBe(Ext.emptyFn);
             });
 
@@ -244,8 +207,8 @@ describe("Ext.Class", function() {
                     }
                 }, cls2 = function(){};
 
-                Ext.Class.preprocessors.statics(cls, data);
-                Ext.Class.preprocessors.extend(cls2, { extend: cls });
+                Ext.Class.preprocessors.inheritableStatics.fn(cls, data, emptyFn);
+                Ext.Class.preprocessors.extend.fn(cls2, { extend: cls }, emptyFn);
 
                 expect(cls2.someName).toEqual('someValue');
                 expect(cls2.someMethod).toBe(Ext.emptyFn);
@@ -262,8 +225,8 @@ describe("Ext.Class", function() {
                 cls2.someName = 'someOtherValue';
                 cls2.someMethod = function(){};
 
-                Ext.Class.preprocessors.statics(cls, data);
-                Ext.Class.preprocessors.extend(cls2, { extend: cls });
+                Ext.Class.preprocessors.inheritableStatics.fn(cls, data, emptyFn);
+                Ext.Class.preprocessors.extend.fn(cls2, { extend: cls }, emptyFn);
 
                 expect(cls2.someName).toEqual('someOtherValue');
                 expect(cls2.someMethod).not.toBe(Ext.emptyFn);
@@ -372,8 +335,10 @@ describe("Ext.Class", function() {
             it("single with name - value arguments", function() {
                 var called = false;
 
-                subClass.addStatics('staticMethod', function(){
-                    called = true;
+                subClass.addStatics({
+                    staticMethod: function(){
+                        called = true;
+                    }
                 });
 
                 expect(subClass.staticMethod).toBeDefined();
@@ -393,23 +358,6 @@ describe("Ext.Class", function() {
             });
         });
 
-        describe("extend", function() {
-            it("should extend", function() {
-                subClass.extend({
-                    newMethod: function(){}
-                });
-
-                expect((new subClass).newMethod).toBeDefined();
-            });
-
-            it("should extend from data", function() {
-                subClass.extend({
-                    newMethod: function(){}
-                });
-
-                expect((new subClass).newMethod).toBeDefined();
-            });
-        });
 
         describe("override", function() {
             it("should override", function() {
@@ -461,7 +409,7 @@ describe("Ext.Class", function() {
             it("should apply default config", function() {
                 var obj = new subClass;
                 expect(obj.getName()).toEqual('subClass');
-                expect(obj.isCool()).toEqual(true);
+                expect(obj.getIsCool()).toEqual(true);
                 expect(obj.getHobbies()).toEqual(['sleeping', 'eating', 'movies']);
             });
 
@@ -475,7 +423,7 @@ describe("Ext.Class", function() {
                 });
 
                 expect(obj.getName()).toEqual('newName');
-                expect(obj.isCool()).toEqual(false);
+                expect(obj.getIsCool()).toEqual(false);
                 expect(obj.getMembers().aaron).toEqual('Aaron Conran');
             });
 

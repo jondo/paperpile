@@ -1,43 +1,64 @@
 @mixin extjs-form-checkboxfield {
     .#{$prefix}form-cb-wrap {
-        line-height: 18px;
+        padding-top: 3px;
     }
 
     .#{$prefix}form-checkbox,
     .#{$prefix}form-radio {
         float: none;
-        vertical-align: bottom;
-    }
+        vertical-align: -1px;
 
-    .#{$prefix}form-cb-label {
-        margin-left: 4px;
-        position: relative;
-        top: 2px;
-    }
+        width: $form-checkbox-size;
+        height: $form-checkbox-size;
+        background: theme-image($theme-name, $form-checkbox-image) no-repeat;
 
+        overflow: hidden;
+        padding: 0;
+        border: 0;
+        &::-moz-focus-inner {
+            padding: 0;
+            border: 0;
+        }
+    }
     @if $include-ie {
-        .#{$prefix}ie {
+        /* Hack for IE; causes alignment problem in IE9 standards mode so exclude that */
+        .#{$prefix}nbr.#{$prefix}ie {
             .#{$prefix}form-checkbox,
             .#{$prefix}form-radio {
-                /* Removes extra margin around boxes to match other browsers */
-                width: 15px;
-                height: 15px;
-            }
-
-            .#{$prefix}form-cb-label {
-                top: 1px;
-            }
-        }
-
-        .#{$prefix}quirks .#{$prefix}ie {
-            .#{$prefix}form-checkbox,
-            .#{$prefix}form-radio {
-                margin-top: 3px;
-            }
-
-            .#{$prefix}form-cb-label {
-                top: 3px;
+                font-size: 0;
             }
         }
     }
+    .#{$prefix}form-cb-checked {
+        .#{$prefix}form-checkbox,
+        .#{$prefix}form-radio {
+            background-position: 0 (0 - $form-checkbox-size);
+        }
+    }
+
+    /* Focused */
+    .#{$prefix}form-cb-focus {
+        background-position: (0 - $form-checkbox-size) 0;
+    }
+    .#{$prefix}form-cb-checked {
+        .#{$prefix}form-cb-focus {
+            background-position: (0 - $form-checkbox-size) (0 - $form-checkbox-size);
+        }
+    }
+
+    /* Radios */
+    .#{$prefix}form-radio {
+        background-image: theme-image($theme-name, $form-radio-image);
+    }
+
+    /* boxLabel */
+    .#{$prefix}form-cb-label-before {
+        margin-right: 4px;
+    }
+    .#{$prefix}form-cb-label-after {
+        margin-left: 4px;
+    }
+
+    
+
 }

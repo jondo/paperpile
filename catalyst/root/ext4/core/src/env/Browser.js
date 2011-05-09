@@ -79,7 +79,7 @@ Ext.define('Ext.env.Browser', {
      * if (Ext.browser.is.IE6) { ... } // Equivalent to (Ext.browser.is.IE && Ext.browser.version.equals(6))
      * </code></pre>
      *
-     * Note that only {@link Ext.Version#getMajor major component}  and {@link Ext.Version#getSimplified simplified}
+     * Note that only {@link Ext.Version#getMajor major component}  and {@link Ext.Version#getShortVersion shortVersion}
      * value of the version are available via direct property checking.
      *
      * Supported values are: IE, Firefox, Safari, Chrome, Opera, WebKit, Gecko, Presto, Trident and Other
@@ -130,12 +130,12 @@ Ext.define('Ext.env.Browser', {
         };
 
         if (browserMatch) {
-            browserName = selfClass.browserNames[Ext.Object.keyOf(selfClass.browserPrefixes, browserMatch[1])];
+            browserName = selfClass.browserNames[Ext.Object.getKey(selfClass.browserPrefixes, browserMatch[1])];
             browserVersion = browserMatch[2];
         }
 
         if (engineMatch) {
-            engineName = selfClass.engineNames[Ext.Object.keyOf(selfClass.enginePrefixes, engineMatch[1])];
+            engineName = selfClass.engineNames[Ext.Object.getKey(selfClass.enginePrefixes, engineMatch[1])];
             engineVersion = engineMatch[2];
         }
 
@@ -148,14 +148,14 @@ Ext.define('Ext.env.Browser', {
 
         this.is[this.name] = true;
         this.is[this.name + (this.version.getMajor() || '')] = true;
-        this.is[this.name + this.version.getSimplified()] = true;
+        this.is[this.name + this.version.getShortVersion()] = true;
         Ext.Object.each(selfClass.browserNames, function(key, name) {
             this.is[name] = (this.name === name);
         }, this);
 
         this.is[this.name] = true;
         this.is[this.engineName + (this.engineVersion.getMajor() || '')] = true;
-        this.is[this.engineName + this.engineVersion.getSimplified()] = true;
+        this.is[this.engineName + this.engineVersion.getShortVersion()] = true;
         Ext.Object.each(selfClass.engineNames, function(key, name) {
             this.is[name] = (this.engineName === name);
         }, this);

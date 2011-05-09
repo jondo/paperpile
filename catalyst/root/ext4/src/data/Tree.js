@@ -1,7 +1,14 @@
 /**
  * @class Ext.data.Tree
- * Represents a tree data structure and bubbles all the events for its nodes. The nodes
- * in the tree have most standard DOM functionality.
+ * 
+ * This class is used as a container for a series of nodes. The nodes themselves maintain
+ * the relationship between parent/child. The tree itself acts as a manager. It gives functionality
+ * to retrieve a node by its identifier: {@link #getNodeById}. 
+ *
+ * The tree also relays events from any of it's child nodes, allowing them to be handled in a 
+ * centralized fashion. In general this class is not used directly, rather used internally 
+ * by other parts of the framework.
+ *
  * @constructor
  * @param {Node} root (optional) The root node
  */
@@ -19,24 +26,20 @@ Ext.define('Ext.data.Tree', {
     root: null,
         
     constructor: function(root) {
-        this.nodeHash = {};
+        var me = this;
+        
+        me.nodeHash = {};
 
-        this.mixins.observable.constructor.call(this);
+        me.mixins.observable.constructor.call(me);
                         
         if (root) {
-            this.setRootNode(root);
+            me.setRootNode(root);
         }
     },
-    
-    /**
-     * @cfg {String} pathSeparator
-     * The token used to separate paths in node ids (defaults to '/').
-     */
-    pathSeparator: "/",
 
     /**
      * Returns the root node for this tree.
-     * @return {Node}
+     * @return {Ext.data.NodeInterface}
      */
     getRootNode : function() {
         return this.root;
@@ -44,16 +47,18 @@ Ext.define('Ext.data.Tree', {
 
     /**
      * Sets the root node for this tree.
-     * @param {Node} node
-     * @return {Node}
+     * @param {Ext.data.NodeInterface} node
+     * @return {Ext.data.NodeInterface} The root node
      */
     setRootNode : function(node) {
-        this.root = node;
+        var me = this;
+        
+        me.root = node;
         node.set('root', true);
         Ext.data.NodeInterface.decorate(node);
         node.updateInfo();
                 
-        this.relayEvents(node, [
+        me.relayEvents(node, [
             /**
              * @event append
              * Fires when a new child node is appended to a node in this tree.
@@ -163,23 +168,43 @@ Ext.define('Ext.data.Tree', {
         ]);
         
         node.on({
-            insert: this.onNodeInsert,
-            append: this.onNodeAppend,
-            remove: this.onNodeRemove,
-            scope: this
+            scope: me,
+            insert: me.onNodeInsert,
+            append: me.onNodeAppend,
+            remove: me.onNodeRemove
         });
+        
+        me.registerNode(node);
         
         return node;
     },
     
+    /**
+     * Fired when a node is inserted into the root or one of it's children
+     * @private
+     * @param {Ext.data.NodeInterface} parent The parent node
+     * @param {Ext.data.NodeInterface} node The inserted node
+     */
     onNodeInsert: function(parent, node) {
         this.registerNode(node);
     },
     
+    /**
+     * Fired when a node is appended into the root or one of it's children
+     * @private
+     * @param {Ext.data.NodeInterface} parent The parent node
+     * @param {Ext.data.NodeInterface} node The appended node
+     */
     onNodeAppend: function(parent, node) {
         this.registerNode(node);
     },
     
+    /**
+     * Fired when a node is removed from the root or one of it's children
+     * @private
+     * @param {Ext.data.NodeInterface} parent The parent node
+     * @param {Ext.data.NodeInterface} node The removed node
+     */
     onNodeRemove: function(parent, node) {
         this.unregisterNode(node);
     },
@@ -187,30 +212,46 @@ Ext.define('Ext.data.Tree', {
     /**
      * Gets a node in this tree by its id.
      * @param {String} id
-     * @return {Node}
+     * @return {Ext.data.NodeInterface} The match node.
      */
     getNodeById : function(id) {
         return this.nodeHash[id];
     },
 
-    // private
+    /**
+     * Registers a node with the tree
+     * @private
+     * @param {Ext.data.NodeInterface} The node to register
+     */
     registerNode : function(node) {
-        this.nodeHash[node.get('id') || node.interalId] = node;
+        this.nodeHash[node.getId() || node.internalId] = node;
     },
 
-    // private
+    /**
+     * Unregisters a node with the tree
+     * @private
+     * @param {Ext.data.NodeInterface} The node to unregister
+     */
     unregisterNode : function(node) {
-        delete this.nodeHash[node.get('id') || node.interalId];
-    },
-
-    toString : function() {
-        return "[Tree"+(this.id?" "+this.id:"")+"]";
+        delete this.nodeHash[node.getId() || node.internalId];
     },
     
+    /**
+     * Sorts this tree
+     * @private
+     * @param {Function} sorterFn The function to use for sorting
+     * @param {Boolean} recursive True to perform recursive sorting
+     */
     sort: function(sorterFn, recursive) {
         this.getRootNode().sort(sorterFn, recursive);
     },
     
+     /**
+     * Filters this tree
+     * @private
+     * @param {Function} sorterFn The function to use for filtering
+     * @param {Boolean} recursive True to perform recursive filtering
+     */
     filter: function(filters, recursive) {
         this.getRootNode().filter(filters, recursive);
     }

@@ -7,12 +7,12 @@
 Ext.define('Ext.grid.PagingScroller', {
     extend: 'Ext.grid.Scroller',
     alias: 'widget.paginggridscroller',
-    renderTpl: null,
-    tpl: [
-        '<tpl for="pages">',
-            '<div class="' + Ext.baseCSSPrefix + 'stretcher" style="width: {width}px;height: {height}px;"></div>',
-        '</tpl>'
-    ],
+    //renderTpl: null,
+    //tpl: [
+    //    '<tpl for="pages">',
+    //        '<div class="' + Ext.baseCSSPrefix + 'stretcher" style="width: {width}px;height: {height}px;"></div>',
+    //    '</tpl>'
+    //],
     /**
      * @cfg {Number} percentageFromEdge This is a number above 0 and less than 1 which specifies
      * at what percentage to begin fetching the next page. For example if the pageSize is 100
@@ -21,22 +21,23 @@ Ext.define('Ext.grid.PagingScroller', {
      */
     percentageFromEdge: 0.35,
     
+    /**
+     * @cfg {Number} scrollToLoadBuffer This is the time in milliseconds to buffer load requests
+     * when scrolling the PagingScrollbar.
+     */
+    scrollToLoadBuffer: 200,
+    
+    activePrefetch: true,
+    
     chunkSize: 50,
     snapIncrement: 25,
     
     syncScroll: true,
     
     initComponent: function() {
-        
         var me = this,
             ds = me.store;
-        if (Ext.isWebKit) {
-            me.rowHeight = 21;
-        } else if (Ext.isIE) {
-            me.rowHeight = 20;
-        } else {
-            me.rowHeight = 22;
-        }
+
         ds.on('guaranteedrange', this.onGuaranteedRange, this);
         this.callParent(arguments);
     },
@@ -67,39 +68,27 @@ Ext.define('Ext.grid.PagingScroller', {
     },
     
     syncTo: function() {
-        var me = this,
-            pnl = me.getPanel(),
-            store = pnl.store,
+        var me            = this,
+            pnl           = me.getPanel(),
+            store         = pnl.store,
             scrollerElDom = this.el.dom,
-            rowOffset = me.visibleStart - store.guaranteedStart,
-            scrollBy = rowOffset * me.rowHeight;
+            rowOffset     = me.visibleStart - store.guaranteedStart,
+            scrollBy      = rowOffset * me.rowHeight,
+            scrollHeight  = scrollerElDom.scrollHeight,
+            clientHeight  = scrollerElDom.clientHeight,
+            scrollTop     = scrollerElDom.scrollTop,
+            useMaximum;
         
-        if (scrollerElDom.scrollHeight - scrollerElDom.clientHeight - scrollerElDom.scrollTop === 0) {
-            this.setViewScrollTop(scrollBy, true);
-        } else {
-            this.setRawViewScrollTop(scrollBy);
+        // BrowserBug: clientHeight reports 0 in IE9 StrictMode
+        // Instead we are using offsetHeight and hardcoding borders
+        if (Ext.isIE9 && Ext.isStrict) {
+            clientHeight = scrollerElDom.offsetHeight + 2;
         }
-    },
-    
-    // invalidate the scroller by creating a single stretcher for every page of data
-    // that comes back
-    invalidate: function() {
-        if (this.el && this.el.dom) {
-            var pages = [],
-                pageCount = this.getPageData().pageCount,
-                elDom = this.el.dom,
-                size = this.getSizeCalculation(),
-                i = 0;
-                
-            for (; i < pageCount; i++) {
-                pages.push(size);
-            }
-            this.tpl.overwrite(this.getTargetEl(), {pages: pages});
-            
-            // BrowserBug: IE7
-            // This makes the scroller enabled, when initially rendering.
-            elDom.scrollTop = elDom.scrollTop;
-        }
+
+        // This should always be zero or greater than zero but staying
+        // safe and less than 0 we'll scroll to the bottom.        
+        useMaximum = (scrollHeight - clientHeight - scrollTop <= 0);
+        this.setViewScrollTop(scrollBy, useMaximum);
     },
     
     getPageData : function(){
@@ -137,47 +126,83 @@ Ext.define('Ext.grid.PagingScroller', {
             lastPage = Math.ceil(totalCount / store.pageSize),
             //requestStart = visibleStart,
             requestStart = Math.floor(visibleStart / me.snapIncrement) * me.snapIncrement,
-            requestEnd = requestStart + pageSize - 1;
+            requestEnd = requestStart + pageSize - 1,
+            activePrefetch = me.activePrefetch;
 
         me.visibleStart = visibleStart;
         me.visibleEnd = visibleEnd;
         
-        this.cancelLoad();        
+        
         me.syncScroll = true;
-        if (requestEnd > totalCount - 1) {
-            if (store.rangeSatisfied(totalCount - pageSize, totalCount - 1)) {
+        if (totalCount >= pageSize) {
+            // end of request was past what the total is, grab from the end back a pageSize
+            if (requestEnd > totalCount - 1) {
+                this.cancelLoad();
+                if (store.rangeSatisfied(totalCount - pageSize, totalCount - 1)) {
+                    me.syncScroll = true;
+                }
+                store.guaranteeRange(totalCount - pageSize, totalCount - 1);
+            // Out of range, need to reset the current data set
+            } else if (visibleStart < guaranteedStart || visibleEnd > guaranteedEnd) {
+                if (store.rangeSatisfied(requestStart, requestEnd)) {
+                    this.cancelLoad();
+                    store.guaranteeRange(requestStart, requestEnd);
+                } else {
+                    store.mask();
+                    me.attemptLoad(requestStart, requestEnd);
+                }
+                // dont sync the scroll view immediately, sync after the range has been guaranteed
+                me.syncScroll = false;
+            } else if (activePrefetch && visibleStart < (guaranteedStart + numFromEdge) && prevPage > 0) {
                 me.syncScroll = true;
+                store.prefetchPage(prevPage);
+            } else if (activePrefetch && visibleEnd > (guaranteedEnd - numFromEdge) && nextPage < lastPage) {
+                me.syncScroll = true;
+                store.prefetchPage(nextPage);
             }
-            store.guaranteeRange(totalCount - pageSize, totalCount - 1);
-        // Out of range, need to reset the current data set
-        } else if (visibleStart < guaranteedStart || visibleEnd > guaranteedEnd) {
-            if (store.rangeSatisfied(requestStart, requestEnd)) {
-                store.guaranteeRange(requestStart, requestEnd);
-            } else {
-                store.mask();
-                me.attemptLoad(requestStart, requestEnd);
-            }
-            // dont sync the scroll view immediately, sync after the range has been guaranteed
-            me.syncScroll = false;
-        } else if (visibleStart < (guaranteedStart + numFromEdge) && prevPage > 0) {
-            me.syncScroll = true;
-            store.prefetchPage(prevPage);
-        } else if (visibleEnd > (guaranteedEnd - numFromEdge) && nextPage < lastPage) {
-            me.syncScroll = true;
-            store.prefetchPage(nextPage);
         }
-
-
+    
+    
         if (me.syncScroll) {
             me.syncTo();
         }
     },
     
-    attemptLoad: function(start, end) {
-        if (!this.loadTask) {
-            this.loadTask = new Ext.util.DelayedTask(this.doAttemptLoad, this, []);
+    getSizeCalculation: function() {
+        // Use the direct ownerCt here rather than the scrollerOwner
+        // because we are calculating widths/heights.
+        var owner = this.ownerCt,
+            view   = owner.getView(),
+            store  = this.store,
+            dock   = this.dock,
+            elDom  = this.el.dom,
+            width  = 1,
+            height = 1;
+        
+        if (!this.rowHeight) {
+            this.rowHeight = view.el.down(view.getItemSelector()).getHeight(false, true);
         }
-        this.loadTask.delay(100, this.doAttemptLoad, this, [start, end]);
+
+        height = store.getTotalCount() * this.rowHeight;
+
+        if (isNaN(width)) {
+            width = 1;
+        }
+        if (isNaN(height)) {
+            height = 1;
+        }
+        return {
+            width: width,
+            height: height
+        };
+    },
+    
+    attemptLoad: function(start, end) {
+        var me = this;
+        if (!me.loadTask) {
+            me.loadTask = Ext.create('Ext.util.DelayedTask', me.doAttemptLoad, me, []);
+        }
+        me.loadTask.delay(me.scrollToLoadBuffer, me.doAttemptLoad, me, [start, end]);
     },
     
     cancelLoad: function() {
@@ -191,35 +216,6 @@ Ext.define('Ext.grid.PagingScroller', {
         store.guaranteeRange(start, end);
     },
     
-
-    setRawViewScrollTop: function(scrollTop) {
-        var owner = this.getPanel(),
-            items = owner.query('tableview'),
-            i = 0,
-            len = items.length,
-            center,
-            centerEl,
-            calcScrollTop = scrollTop,
-            maxScrollTop,
-            scrollerElDom = this.el.dom;
-            
-        center = items[1] || items[0];
-        centerEl = center.el.dom;
-        
-        maxScrollTop = (centerEl.scrollHeight - centerEl.clientHeight);
-        if (maxScrollTop === 0) {
-            return;
-        }
-        if (calcScrollTop > maxScrollTop) {
-            //throw "Calculated scrollTop was larger than maxScrollTop";
-            return;
-            calcScrollTop = maxScrollTop;
-        }
-        for (; i < len; i++) {
-            items[i].el.dom.scrollTop = calcScrollTop;
-        }
-    },
-    
     setViewScrollTop: function(scrollTop, useMax) {
         var owner = this.getPanel(),
             items = owner.query('tableview'),
@@ -231,6 +227,8 @@ Ext.define('Ext.grid.PagingScroller', {
             maxScrollTop,
             scrollerElDom = this.el.dom;
             
+        owner.virtualScrollTop = scrollTop;
+            
         center = items[1] || items[0];
         centerEl = center.el.dom;
         
@@ -240,9 +238,9 @@ Ext.define('Ext.grid.PagingScroller', {
             calcScrollTop = maxScrollTop;
         }
         if (calcScrollTop > maxScrollTop) {
-            //throw "Calculated scrollTop was larger than maxScrollTop";
+            //Ext.Error.raise("Calculated scrollTop was larger than maxScrollTop");
             return;
-            calcScrollTop = maxScrollTop;
+            // calcScrollTop = maxScrollTop;
         }
         for (; i < len; i++) {
             items[i].el.dom.scrollTop = calcScrollTop;

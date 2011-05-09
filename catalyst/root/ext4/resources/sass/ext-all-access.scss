@@ -5,8 +5,10 @@ body {
 }
 
 $base-color: #3f4757;
+$orange: #ed9200;
 $color: #fff;
 $font-size: 15px;
+$css-shadow-background-color: #000000;
 
 //panel
 $panel-header-background-color: #3a4155;
@@ -45,15 +47,17 @@ $toolbar-text-color: #fff;
 
 //buttons
 $button-default-base-color: #2a3142;
-$button-default-base-color-over: #eb8a2a;
+$button-default-base-color-over: $orange;
 $button-default-base-color-pressed: #da7b19;
 $button-default-color: #fff;
 
 $button-toolbar-border-color-over: #d97e27;
 $button-toolbar-border-color-pressed: #c86e19;
-$button-toolbar-background-color-over: #ef8c2e;
+$button-toolbar-background-color-over: $orange;
 $button-toolbar-background-color-pressed: #db7b1f;
+$button-toolbar-background-gradient: null;
 $button-toolbar-background-gradient-over: null;
+$button-toolbar-background-gradient-focus: null;
 $button-toolbar-background-gradient-pressed: null;
 $button-toolbar-background-gradient-disabled: null;
 $button-toolbar-color: #fff !default;
@@ -90,32 +94,31 @@ $fieldset-header-color: #fff;
 $fieldset-border-color: #727c8c;
 
 //tabs
-$tab-base-color: #60708c;
-$tab-base-color-over: #60708c;
-$tab-base-color-active: #e27d22 !default;
+$tab-base-color: #616f8c;
+$tab-base-color-over: lighten(#616f8c, 5);
+$tab-base-color-active: $orange;
 
 $tabbar-body-height: 31px;
-$tab-height: 26px;
-
-//$tab-font-size: 14px;
+$tab-height: 27px;
 
 $tab-color: #fff;
 $tab-color-active: $tab-color;
 
 $tab-inner-border: false;
 $tab-border-color: #2e3746;
-$tab-border-color-active: #74400a;
+$tab-border-color-active: #74400e;
 
 $tab-background-gradient: null;
 $tab-background-gradient-over: null;
 $tab-background-gradient-active: null;
 $tab-background-gradient-disabled: null;
 
-$tab-closable-icon: 'tabs/tab-close.gif' !default;
-$tab-closable-background-position: top right !default;
-$tab-closable-width: 16px !default;
+$tab-closable-icon: 'tabs/tab-close.gif';
+$tab-closable-background-position: top right;
+$tab-closable-width: 16px;
 
-$tab-bar-strip-background-color: #e0821f !default;
+$tab-bar-strip-background-color: $orange;
+$tab-bar-strip-border-background-color: $orange;
 
 //grid
 $grid-header-background-color: #373c4b;
@@ -140,6 +143,47 @@ $grid-row-cell-selected-border-color: #101010;
 
 $grid-row-cell-over-background-gradient: 'flat';
 $grid-row-cell-focus-background-gradient: 'flat';
+
+//layout
+$accordion-header-background-color: #5c6b82;
+
+//progress bar
+$progress-bar-color: $orange;
+$progress-border-color: #18181a;
+$progress-text-color-back: #aaa;
+
+//datepicker
+$datepicker-background-color: #21252e;
+$datepicker-border-color: #798294;
+$datepicker-today-item-border-color: #9999aa;
+
+$datepicker-header-background-color: #5c6980;
+
+$datepicker-th-background-color: #3a4051;
+$datepicker-th-color: #fff;
+$datepicker-th-border-bottom-color: #535b5c;
+
+$datepicker-td-height: 21px;
+
+$datepicker-item-color: #fff;
+$datepicker-item-hover-background-color: #7e5530;
+$datepicker-selected-item-border-color: #864900;
+$datepicker-selected-item-background-color: #e5872c;
+
+$datepicker-monthpicker-height: 172px;
+
+$datepicker-monthpicker-item-color: #fff;
+$datepicker-monthpicker-item-border: 0 none;
+$datepicker-monthpicker-item-selected-background-color: $datepicker-selected-item-background-color;
+
+// boundlist
+$boundlist-background-color: #404551;
+$boundlist-border-color: #222732;
+$boundlist-border-width: 2px;
+
+$boundlist-item-border-width: 0;
+$boundlist-item-over-background-color: #e5872c;
+$boundlist-item-selected-background-color: #e5872c; 
 
 @import 'compass';
 @import 'ext4/default/all';

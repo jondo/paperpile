@@ -83,7 +83,7 @@ Ext.define('Ext.util.Filter', {
                 // Commented this out temporarily because it stops us using string ids in models. TODO: Remove this once
                 // Model has been updated to allow string ids
                 
-                // throw "A Filter requires either a property or a filterFn to be set";
+                // Ext.Error.raise("A Filter requires either a property or a filterFn to be set");
             } else {
                 this.filter = this.createFilterFn();
             }

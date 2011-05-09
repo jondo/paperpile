@@ -23,6 +23,7 @@
  * top to bottom.  The layout will automatically figure out, based on the column count, rowspans and colspans,
  * how to position each panel within the table.  Just like with HTML tables, your rowspans and colspans must add
  * up correctly in your overall layout or you'll end up with missing and/or extra cells!  Example usage:</p>
+ * {@img Ext.layout.container.Table/Ext.layout.container.Table.png Ext.layout.container.Table container layout}
  * <pre><code>
 // This code will generate a layout table that is 3 columns by 2 rows
 // with some spanning included.  The basic layout will be:
@@ -31,30 +32,33 @@
 // |        |--------+--------|
 // |        |   C    |   D    |
 // +--------+--------+--------+
-var table = new Ext.panel.Panel({
-    title: 'Table Layout',
-    layout: {
-        type: 'table',
-        // The total column count must be specified here
-        columns: 3
-    },
-    defaults: {
-        // applied to each contained panel
-        bodyStyle:'padding:20px'
-    },
-    items: [{
-        html: '&lt;p&gt;Cell A content&lt;/p&gt;',
-        rowspan: 2
-    },{
-        html: '&lt;p&gt;Cell B content&lt;/p&gt;',
-        colspan: 2
-    },{
-        html: '&lt;p&gt;Cell C content&lt;/p&gt;',
-        cellCls: 'highlight'
-    },{
-        html: '&lt;p&gt;Cell D content&lt;/p&gt;'
-    }]
-});
+    Ext.create('Ext.panel.Panel', {
+        title: 'Table Layout',
+        width: 300,
+        height: 150,
+        layout: {
+            type: 'table',
+            // The total column count must be specified here
+            columns: 3
+        },
+        defaults: {
+            // applied to each contained panel
+            bodyStyle:'padding:20px'
+        },
+        items: [{
+            html: '<p>Cell A content</p>',
+            rowspan: 2
+        },{
+            html: '<p>Cell B content</p>',
+            colspan: 2
+        },{
+            html: '<p>Cell C content</p>',
+            cellCls: 'highlight'
+        },{
+            html: '<p>Cell D content</p>'
+        }],
+        renderTo: Ext.getBody()
+    });
 </code></pre>
  */
 
@@ -78,6 +82,10 @@ Ext.define('Ext.layout.container.Table', {
     monitorResize:false,
 
     type: 'table',
+
+    // Table layout is a self-sizing layout. When an item of for example, a dock layout, the Panel must expand to accommodate
+    // a table layout. See in particular AbstractDock::onLayout for use of this flag.
+    autoSize: true,
 
     clearEl: true, // Base class will not create it if already truthy. Not needed in tables.
 
@@ -111,10 +119,10 @@ Ext.define('Ext.layout.container.Table', {
      */
     renderItems: function(items) {
         var tbody = this.getTable().tBodies[0],
-            rows = tbody.rows,tdEl,
+            rows = tbody.rows,
             i = 0,
             len = items.length,
-            cells, curCell, rowIdx, cellIdx, item, trEl;
+            cells, curCell, rowIdx, cellIdx, item, trEl, tdEl, itemCt;
 
         // Calculate the correct cell structure for the current items
         cells = this.calculateCells(items);
@@ -135,18 +143,18 @@ Ext.define('Ext.layout.container.Table', {
             }
 
             // If no cell present, create and insert one
-            tdEl = trEl.cells[cellIdx];
-            if (!tdEl) {
-                tdEl = trEl.insertCell(cellIdx);
+            itemCt = tdEl = Ext.get(trEl.cells[cellIdx] || trEl.insertCell(cellIdx));
+            if (this.needsDivWrap()) { //create wrapper div if needed - see docs below
+                itemCt = tdEl.first() || tdEl.createChild({tag: 'div'});
+                itemCt.setWidth(null);
             }
-            tdEl = Ext.get(tdEl);
 
             // Render or move the component into the cell
             if (!item.rendered) {
-                this.renderItem(item, tdEl, 0);
+                this.renderItem(item, itemCt, 0);
             }
-            else if (!this.isValidParent(item, tdEl, 0)) {
-                this.moveItem(item, tdEl, 0);
+            else if (!this.isValidParent(item, itemCt, 0)) {
+                this.moveItem(item, itemCt, 0);
             }
 
             // Set the cell properties
@@ -170,6 +178,17 @@ Ext.define('Ext.layout.container.Table', {
         rowIdx++;
         while (tbody.rows[rowIdx]) {
             tbody.deleteRow(rowIdx);
+        }
+    },
+
+    afterLayout: function() {
+        this.callParent();
+
+        if (this.needsDivWrap()) {
+            // set wrapper div width to match layed out item - see docs below
+            Ext.Array.forEach(this.getLayoutItems(), function(item) {
+                Ext.fly(item.el.dom.parentNode).setWidth(item.getWidth());
+            });
         }
     },
 
@@ -247,5 +266,18 @@ Ext.define('Ext.layout.container.Table', {
             );
         }
         return table;
+    },
+
+    /**
+     * @private
+     * Opera 10.5 has a bug where if a table cell's child has box-sizing:border-box and padding, it
+     * will include that padding in the size of the cell, making it always larger than the
+     * shrink-wrapped size of its contents. To get around this we have to wrap the contents in a div
+     * and then set that div's width to match the item rendered within it afterLayout. This method
+     * determines whether we need the wrapper div; it currently does a straight UA sniff as this bug
+     * seems isolated to just Opera 10.5, but feature detection could be added here if needed.
+     */
+    needsDivWrap: function() {
+        return Ext.isOpera10_5;
     }
 });

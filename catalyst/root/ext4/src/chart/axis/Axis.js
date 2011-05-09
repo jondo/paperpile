@@ -42,7 +42,6 @@
  * the store elements. The numeric axis is placed on the left of the screen, while the category axis is placed at the bottom of the chart. 
  * Both the category and numeric axes have `grid` set, which means that horizontal and vertical lines will cover the chart background. In the 
  * category axis the labels will be rotated so they can fit the space better.
- * 
  */
 Ext.define('Ext.chart.axis.Axis', {
 
@@ -50,9 +49,21 @@ Ext.define('Ext.chart.axis.Axis', {
 
     extend: 'Ext.chart.axis.Abstract',
 
+    alternateClassName: 'Ext.chart.Axis',
+
     requires: ['Ext.draw.Draw'],
 
     /* End Definitions */
+
+    /**
+     * @cfg {Number} majorTickSteps 
+     * If `minimum` and `maximum` are specified it forces the number of major ticks to the specified value.
+     */
+
+    /**
+     * @cfg {Number} minorTickSteps 
+     * The number of small ticks between two major ticks. Default is zero.
+     */
 
     /**
      * @cfg {Number} dashSize 
@@ -90,7 +101,7 @@ Ext.define('Ext.chart.axis.Axis', {
             math = Math,
             mmax = math.max,
             mmin = math.min,
-            store = me.chart.store,
+            store = me.chart.substore || me.chart.store,
             series = me.chart.series.items,
             fields = me.fields,
             ln = fields.length,
@@ -101,7 +112,7 @@ Ext.define('Ext.chart.axis.Axis', {
             aggregate = false,
             total = 0,
             excludes = [],
-            i, l, value, out;
+            i, l, values, rec, out;
 
         //if one series is stacked I have to aggregate the values
         //for the scale.
@@ -114,14 +125,15 @@ Ext.define('Ext.chart.axis.Axis', {
                 if (!isFinite(min)) {
                     min = 0;
                 }
-                for (value = 0, i = 0; i < ln; i++) {
-                   if (excludes[i]) {
-                       continue;
-                   }
-                   value += record.get(fields[i]);
-                }               
-                max = mmax(max, value);
-                min = mmin(min, value);
+                for (values = [0, 0], i = 0; i < ln; i++) {
+                    if (excludes[i]) {
+                        continue;
+                    }
+                    rec = record.get(fields[i]);
+                    values[+(rec > 0)] += math.abs(rec);
+                }
+                max = mmax(max, -values[0], values[1]);
+                min = mmin(min, -values[0], values[1]);
             }
             else {
                 for (i = 0; i < ln; i++) {
@@ -162,7 +174,7 @@ Ext.define('Ext.chart.axis.Axis', {
         if (me.adjustMinimumByMajorUnit) {
             out.from -= out.step;
         }
-        me.prevMin = min;
+        me.prevMin = min == max? 0 : min;
         me.prevMax = max;
         return out;
     },
@@ -172,14 +184,14 @@ Ext.define('Ext.chart.axis.Axis', {
      */
     drawAxis: function (init) {
         var me = this,
-            i,
+            i, j,
             x = me.x,
             y = me.y,
             gutterX = me.chart.maxGutter[0],
             gutterY = me.chart.maxGutter[1],
             dashSize = me.dashSize,
-            subDashesX = me.chart.subDashes[0],
-            subDashesY = me.chart.subDashes[1],
+            subDashesX = me.minorTickSteps || 0,
+            subDashesY = me.minorTickSteps || 0,
             length = me.length,
             position = me.position,
             inflections = [],
@@ -219,8 +231,8 @@ Ext.define('Ext.chart.axis.Axis', {
         }
         
         delta = trueLength / (steps || 1);
-        dashesX = Math.min(subDashesX, delta);
-        dashesY = Math.min(subDashesY, delta);
+        dashesX = Math.max(subDashesX +1, 0);
+        dashesY = Math.max(subDashesY +1, 0);
         if (me.type == 'Numeric') {
             calcLabels = true;
             me.labels = [stepCalcs.from];
@@ -298,7 +310,7 @@ Ext.define('Ext.chart.axis.Axis', {
             me.drawGrid();
         }
         me.axisBBox = me.axis.getBBox();
-        me.drawLabels();
+        me.drawLabel();
     },
 
     /**
@@ -509,13 +521,13 @@ Ext.define('Ext.chart.axis.Axis', {
             ubbox, bbox, point, prevX, prevLabel,
             projectedWidth = 0,
             textLabel, attr, textRight, text,
-            label, last, x, y, i, firstTextLabel;
+            label, last, x, y, i, firstLabel;
 
         last = ln - 1;
         //get a reference to the first text label dimensions
         point = inflections[0];
         firstLabel = me.getOrCreateLabel(0, me.label.renderer(labels[0]));
-        ratio = Math.abs(Math.sin(firstLabel.rotation && (firstLabel.rotation.degrees * Math.PI / 180) || 0));
+        ratio = Math.abs(Math.sin(firstLabel.attr.rotation && (firstLabel.attr.rotation.degrees * Math.PI / 180) || 0));
         
         
         for (i = 0; i < ln; i++) {
@@ -525,7 +537,7 @@ Ext.define('Ext.chart.axis.Axis', {
             bbox = textLabel._bbox;
 
             maxHeight = max(maxHeight, bbox.height + me.dashSize + me.label.padding);
-            x = floor(point[0] - (bbox.width / 2) - bbox.x * ratio);
+            x = floor(point[0] - bbox.width /2 - bbox.x * ratio);
             if (me.chart.maxGutter[0] == 0) {
                 if (i == 0 && axes.findIndex('position', 'left') == -1) {
                     x = point[0];
@@ -619,7 +631,7 @@ Ext.define('Ext.chart.axis.Axis', {
     /**
      * Renders the labels in the axes.
      */
-    drawLabels: function() {
+    drawLabel: function() {
         var me = this,
             position = me.position,
             labelGroup = me.labelGroup,
@@ -677,27 +689,40 @@ Ext.define('Ext.chart.axis.Axis', {
         return true;
     },
 
+    /**
+     * Updates the {@link #title} of this axis.
+     * @param {String} title
+     */
+    setTitle: function(title) {
+        this.title = title;
+        this.drawLabel();
+    },
+
     // @private draws the title for the axis.
     drawTitle: function(maxWidth, maxHeight) {
         var me = this,
             position = me.position,
             surface = me.chart.surface,
+            displaySprite = me.displaySprite,
+            title = me.title,
             rotate = (position == 'left' || position == 'right'),
             x = me.x,
             y = me.y,
             base, bbox, pad;
 
-        if (!me.displaySprite) {
+        if (displaySprite) {
+            displaySprite.setAttributes({text: title}, true);
+        } else {
             base = {
                 type: 'text',
                 x: 0,
                 y: 0,
-                text: me.title
+                text: title
             };
-            me.displaySprite = surface.add(Ext.apply(base, me.axisTitleStyle, me.labelTitle));
-            surface.renderItem(me.displaySprite);
+            displaySprite = me.displaySprite = surface.add(Ext.apply(base, me.axisTitleStyle, me.labelTitle));
+            surface.renderItem(displaySprite);
         }
-        bbox = me.displaySprite.getBBox();
+        bbox = displaySprite.getBBox();
         pad = me.dashSize + me.label.padding;
 
         if (rotate) {
@@ -720,7 +745,7 @@ Ext.define('Ext.chart.axis.Axis', {
             }
             me.bbox.height += bbox.height + 10;
         }
-        me.displaySprite.setAttributes({
+        displaySprite.setAttributes({
             translate: {
                 x: x,
                 y: y

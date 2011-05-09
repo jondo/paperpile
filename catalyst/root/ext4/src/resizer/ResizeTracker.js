@@ -20,7 +20,7 @@ Ext.define('Ext.resizer.ResizeTracker', {
                 me.el = config.target;
             }
         }
-        Ext.resizer.ResizeTracker.superclass.constructor.apply(me, arguments);
+        this.callParent(arguments);
 
         // Ensure that if we are preserving aspect ratio, the largest minimum is honoured
         if (me.preserveRatio && me.minWidth && me.minHeight) {

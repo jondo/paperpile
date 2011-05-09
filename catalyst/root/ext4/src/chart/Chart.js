@@ -1,12 +1,12 @@
 /**
  * @class Ext.chart.Chart
  * @extends Ext.draw.Component
- * 
+ *
  * The Ext.chart package provides the capability to visualize data.
  * Each chart binds directly to an Ext.data.Store enabling automatic updates of the chart.
- * A chart configuration object has some overall styling options as well as an array of axes 
+ * A chart configuration object has some overall styling options as well as an array of axes
  * and series. A chart instance example could look like:
- * 
+ *
   <pre><code>
     var chart = new Ext.chart.Chart({
         renderTo: Ext.getBody(),
@@ -23,13 +23,13 @@
         series: [ ...some series options... ]
     });
   </code></pre>
- * 
- * In this example we set the `width` and `height` of the chart, we decide whether our series are 
- * animated or not and we select a store to be bound to the chart. We also turn on shadows for all series, 
- * select a color theme `Category1` for coloring the series, set the legend to the right part of the chart and 
- * then tell the chart to render itself in the body element of the document. For more information about the axes and 
+ *
+ * In this example we set the `width` and `height` of the chart, we decide whether our series are
+ * animated or not and we select a store to be bound to the chart. We also turn on shadows for all series,
+ * select a color theme `Category1` for coloring the series, set the legend to the right part of the chart and
+ * then tell the chart to render itself in the body element of the document. For more information about the axes and
  * series configurations please check the documentation of each series (Line, Bar, Pie, etc).
- * 
+ *
  * @xtype chart
  */
 
@@ -40,15 +40,16 @@ Ext.define('Ext.chart.Chart', {
     alias: 'widget.chart',
 
     extend: 'Ext.draw.Component',
-
+    
     mixins: {
-        themeMgr: 'Ext.chart.theme.Theme',
-        mask: 'Ext.chart.Mask'
+        themeManager: 'Ext.chart.theme.Theme',
+        mask: 'Ext.chart.Mask',
+        navigation: 'Ext.chart.Navigation'
     },
 
     requires: [
         'Ext.util.MixedCollection',
-        'Ext.data.StoreMgr',
+        'Ext.data.StoreManager',
         'Ext.chart.Legend',
         'Ext.util.DelayedTask'
     ],
@@ -74,17 +75,107 @@ Ext.define('Ext.chart.Chart', {
     insetPadding: 10,
 
     /**
-     * @cfg {Array} implOrder
+     * @cfg {Array} enginePriority
      * Defines the priority order for which Surface implementation to use. The first
      * one supported by the current environment will be used.
      */
-    implOrder: ['SVG', 'VML'],
+    enginePriority: ['SVG', 'VML'],
 
     /**
-     * @cfg {string} background (optional) Set the chart background. This can be a gradient name, image, or color.
+     * @cfg {Object|Boolean} background (optional) Set the chart background. This can be a gradient object, image, or color.
      * Defaults to false for no background.
+     *
+     * For example, if `background` were to be a color we could set the object as
+     *
+     <pre><code>
+        background: {
+            //color string
+            fill: '#ccc'
+        }
+     </code></pre>
+
+     You can specify an image by using:
+
+     <pre><code>
+        background: {
+            image: 'http://path.to.image/'
+        }
+     </code></pre>
+
+     Also you can specify a gradient by using the gradient object syntax:
+
+     <pre><code>
+        background: {
+            gradient: {
+                id: 'gradientId',
+                angle: 45,
+                stops: {
+                    0: {
+                        color: '#555'
+                    }
+                    100: {
+                        color: '#ddd'
+                    }
+                }
+            }
+        }
+     </code></pre>
      */
     background: false,
+
+    /**
+     * @cfg {Array} gradients (optional) Define a set of gradients that can be used as `fill` property in sprites.
+     * The gradients array is an array of objects with the following properties:
+     *
+     * <ul>
+     * <li><strong>id</strong> - string - The unique name of the gradient.</li>
+     * <li><strong>angle</strong> - number, optional - The angle of the gradient in degrees.</li>
+     * <li><strong>stops</strong> - object - An object with numbers as keys (from 0 to 100) and style objects
+     * as values</li>
+     * </ul>
+     *
+
+     For example:
+
+     <pre><code>
+        gradients: [{
+            id: 'gradientId',
+            angle: 45,
+            stops: {
+                0: {
+                    color: '#555'
+                },
+                100: {
+                    color: '#ddd'
+                }
+            }
+        },  {
+            id: 'gradientId2',
+            angle: 0,
+            stops: {
+                0: {
+                    color: '#590'
+                },
+                20: {
+                    color: '#599'
+                },
+                100: {
+                    color: '#ddd'
+                }
+            }
+        }]
+     </code></pre>
+
+     Then the sprites can use `gradientId` and `gradientId2` by setting the fill attributes to those ids, for example:
+
+     <pre><code>
+        sprite.setAttributes({
+            fill: 'url(#gradientId)'
+        }, true);
+     </code></pre>
+
+     */
+
 
     constructor: function(config) {
         var me = this,
@@ -97,7 +188,7 @@ Ext.define('Ext.chart.Chart', {
             Ext.apply(config, { background: me.background });
         }
         if (config.animate) {
-            defaultAnim = {                
+            defaultAnim = {
                 easing: 'ease',
                 duration: 500
             };
@@ -109,9 +200,10 @@ Ext.define('Ext.chart.Chart', {
             }
         }
         me.mixins.mask.constructor.call(me, config);
+        me.mixins.navigation.constructor.call(me, config);
         me.callParent([config]);
     },
-    
+
     initComponent: function() {
         var me = this,
             axes,
@@ -150,20 +242,19 @@ Ext.define('Ext.chart.Chart', {
             }
         });
         me.maxGutter = [0, 0];
-        me.subDashes = [0, 0];
-        me.store = Ext.data.StoreMgr.lookup(me.store);
+        me.store = Ext.data.StoreManager.lookup(me.store);
         axes = me.axes;
-        me.axes = new Ext.util.MixedCollection(false, function(a) { return a.position; });
+        me.axes = Ext.create('Ext.util.MixedCollection', false, function(a) { return a.position; });
         if (axes) {
             me.axes.addAll(axes);
         }
         series = me.series;
-        me.series = new Ext.util.MixedCollection(false, function(a) { return a.seriesId || (a.seriesId = Ext.id(null, 'ext-chart-series-')); });
+        me.series = Ext.create('Ext.util.MixedCollection', false, function(a) { return a.seriesId || (a.seriesId = Ext.id(null, 'ext-chart-series-')); });
         if (series) {
             me.series.addAll(series);
         }
         if (me.legend !== false) {
-            me.legend = new Ext.chart.Legend(Ext.applyIf({chart:me}, me.legend));
+            me.legend = Ext.create('Ext.chart.Legend', Ext.applyIf({chart:me}, me.legend));
         }
 
         me.on({
@@ -203,6 +294,14 @@ Ext.define('Ext.chart.Chart', {
         // Instantiate Series and Axes
         me.series.each(me.initializeSeries, me);
         me.axes.each(me.initializeAxis, me);
+        //process all views (aggregated data etc) on stores
+        //before rendering.
+        me.axes.each(function(axis) {
+            axis.processView();
+        });
+        me.axes.each(function(axis) {
+            axis.drawAxis(true);
+        });
 
         // Create legend if not already created
         if (legend !== false) {
@@ -222,6 +321,7 @@ Ext.define('Ext.chart.Chart', {
 
         // Draw axes and series
         me.resizing = !!resize;
+
         me.axes.each(me.drawAxis, me);
         me.series.each(me.drawCharts, me);
         me.resizing = false;
@@ -231,7 +331,7 @@ Ext.define('Ext.chart.Chart', {
     afterRender: function() {
         var ref,
             me = this;
-        Ext.chart.Chart.superclass.afterRender.call(me);
+        this.callParent();
 
         if (me.categoryNames) {
             me.setCategoryNames(me.categoryNames);
@@ -268,7 +368,7 @@ Ext.define('Ext.chart.Chart', {
                 if (series.getItemForPoint) {
                     item = series.getItemForPoint(position[0], position[1]);
                     if (item) {
-                        me.fireEvent('itemclick', item);
+                        series.fireEvent('itemclick', item);
                     }
                 }
             }
@@ -291,7 +391,7 @@ Ext.define('Ext.chart.Chart', {
                 if (series.getItemForPoint) {
                     item = series.getItemForPoint(position[0], position[1]);
                     if (item) {
-                        me.fireEvent('itemmousedown', item);
+                        series.fireEvent('itemmousedown', item);
                     }
                 }
             }
@@ -314,7 +414,7 @@ Ext.define('Ext.chart.Chart', {
                 if (series.getItemForPoint) {
                     item = series.getItemForPoint(position[0], position[1]);
                     if (item) {
-                        me.fireEvent('itemmouseup', item);
+                        series.fireEvent('itemmouseup', item);
                     }
                 }
             }
@@ -343,18 +443,26 @@ Ext.define('Ext.chart.Chart', {
 
                     if (item !== last || item && (item.storeItem != storeItem || item.storeField != storeField)) {
                         if (last) {
-                            me.fireEvent('itemmouseout', last);
+                            series.fireEvent('itemmouseout', last);
                             delete series._lastItemForPoint;
                             delete series._lastStoreField;
                             delete series._lastStoreItem;
                         }
                         if (item) {
-                            me.fireEvent('itemmouseover', item);
+                            series.fireEvent('itemmouseover', item);
                             series._lastItemForPoint = item;
                             series._lastStoreItem = item.storeItem;
                             series._lastStoreField = item.storeField;
                         }
                     }
+                }
+            } else {
+                last = series._lastItemForPoint;
+                if (last) {
+                    series.fireEvent('itemmouseout', last);
+                    delete series._lastItemForPoint;
+                    delete series._lastStoreField;
+                    delete series._lastStoreItem;
                 }
             }
         }, me);
@@ -371,11 +479,11 @@ Ext.define('Ext.chart.Chart', {
         });
     },
 
-    // @private buffered refresh for when we update the store 
+    // @private buffered refresh for when we update the store
     delayRefresh: function() {
         var me = this;
         if (!me.refreshTask) {
-            me.refreshTask = new Ext.util.DelayedTask(me.refresh, me);
+            me.refreshTask = Ext.create('Ext.util.DelayedTask', me.refresh, me);
         }
         me.refreshTask.delay(me.refreshBuffer);
     },
@@ -410,7 +518,7 @@ Ext.define('Ext.chart.Chart', {
             }
         }
         if (store) {
-            store = Ext.data.StoreMgr.lookup(store);
+            store = Ext.data.StoreManager.lookup(store);
             store.on({
                 scope: me,
                 datachanged: me.refresh,
@@ -485,12 +593,11 @@ Ext.define('Ext.chart.Chart', {
         }
         if (!axis.chart) {
             Ext.apply(config, axis);
-            axis = me.axes.replace(Ext.create('Ext.chart.axis.' + axis.type, config));
+            axis = me.axes.replace(Ext.createByAlias('axis.' + axis.type.toLowerCase(), config));
         }
         else {
             Ext.apply(axis, config);
         }
-        axis.drawAxis(true);
     },
 
 
@@ -595,11 +702,11 @@ Ext.define('Ext.chart.Chart', {
             }
             config.seriesIdx = idx;
         }
-        if (!series.chart) {
-            Ext.applyIf(config, series);
-            series = me.series.replace(Ext.create('Ext.chart.series.' + Ext.String.capitalize(series.type), config));
-        } else {
+        if (series instanceof Ext.chart.series.Series) {
             Ext.apply(series, config);
+        } else {
+            Ext.applyIf(config, series);
+            series = me.series.replace(Ext.createByAlias('series.' + series.type.toLowerCase(), config));
         }
         if (series.initialize) {
             series.initialize();

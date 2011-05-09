@@ -148,13 +148,20 @@
          * @return {String} The formatted currency string
          */
         currency: function(v, currencySign, decimals, end) {
-            var negativeSign = '';
+            var negativeSign = '',
+                format = ",0",
+                i = 0;
             v = v - 0;
             if (v < 0) {
                 v = -v;
                 negativeSign = '-';
             }
-            v = v.toFixed(decimals || UtilFormat.currencyPrecision).replace('.', UtilFormat.decimalSeparator);
+            decimals = decimals || UtilFormat.currencyPrecision;
+            format += format + (decimals > 0 ? '.' : '');
+            for (; i < decimals; i++) {
+                format += '0';
+            }
+            v = UtilFormat.number(v, format); 
             if ((end || UtilFormat.currencyAtEnd) === true) {
                 return Ext.String.format("{0}{1}{2}", negativeSign, v, currencySign || UtilFormat.currencySign);
             } else {
@@ -289,7 +296,7 @@
             if (!formatString) {
                 return v;
             }
-            v = Ext.num(v, NaN);
+            v = Ext.Number.from(v, NaN);
             if (isNaN(v)) {
                 return '';
             }
@@ -322,7 +329,15 @@
             if (1 < psplit.length) {
                 v = v.toFixed(psplit[1].length);
             } else if(2 < psplit.length) {
-                throw ('NumberFormatException: invalid format, formats should have no more than 1 period: ' + formatString);
+                //<debug>
+                Ext.Error.raise({
+                    sourceClass: "Ext.util.Format",
+                    sourceMethod: "number",
+                    value: v,
+                    formatString: formatString,
+                    msg: "Invalid number format, should have no more than 1 decimal"
+                });
+                //</debug>
             } else {
                 v = v.toFixed(0);
             }
@@ -393,7 +408,7 @@
         },
 
         leftPad: Ext.String.leftPad,
-        
+
         format: Ext.String.format,
 
         /**

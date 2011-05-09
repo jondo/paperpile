@@ -169,7 +169,7 @@ Ext.EventManager = {
      * Options to parse for the 4th argument to addListener.
      * @private
      */
-    propRe: /^(?:scope|delay|buffer|single|stopEvent|preventDefault|stopPropagation|normalized|args|delegate)$/,
+    propRe: /^(?:scope|delay|buffer|single|stopEvent|preventDefault|stopPropagation|normalized|args|delegate|freezeEvent)$/,
 
     /**
      * Get the id of the element. If one has not been assigned, automatically assign it.
@@ -249,7 +249,7 @@ Ext.EventManager = {
                 fn = Ext.Function.createInterceptor(fn, this.contains, this);
             }
             eventName = eventName == 'mouseenter' ? 'mouseover' : 'mouseout';
-        } else if (eventName == 'mousewheel' && !Ext.supports.MouseWheel){
+        } else if (eventName == 'mousewheel' && !Ext.supports.MouseWheel && !Ext.isOpera){
             eventName = 'DOMMouseScroll';
         }
         return {
@@ -322,14 +322,26 @@ Ext.EventManager = {
             bind,
             wrap;
 
-        // if the element doesnt exist throw an error
+        //<debug>
         if (!dom){
-            throw 'Error listening for "' + eventName + '\". Element "' + element + '" doesn\'t exist.';
+            Ext.Error.raise({
+                sourceClass: 'Ext.EventManager',
+                sourceMethod: 'addListener',
+                targetElement: element,
+                eventName: eventName,
+                msg: 'Error adding "' + eventName + '\" listener for nonexistent element "' + element + '"'
+            });
         }
-
         if (!fn) {
-            throw 'Error listening for "' + eventName + '". No handler function specified';
+            Ext.Error.raise({
+                sourceClass: 'Ext.EventManager',
+                sourceMethod: 'addListener',
+                targetElement: element,
+                eventName: eventName,
+                msg: 'Error adding "' + eventName + '\" listener. The handler function is undefined.'
+            });
         }
+        //</debug>
 
         // create the wrapper function
         options = options || {};
@@ -338,10 +350,10 @@ Ext.EventManager = {
         wrap = this.createListenerWrap(dom, eventName, bind.fn, scope, options);
 
 
-        if (window.addEventListener) {
-            dom.addEventListener(bind.eventName, wrap, options.capture || false);
-        } else {
+        if (dom.attachEvent) {
             dom.attachEvent('on' + bind.eventName, wrap);
+        } else {
+            dom.addEventListener(bind.eventName, wrap, options.capture || false);
         }
 
         if (dom == document && eventName == 'mousedown') {
@@ -400,10 +412,10 @@ Ext.EventManager = {
                     delete wrap.tasks;
                 }
 
-                if (window.removeEventListener) {
-                    dom.removeEventListener(bindName, wrap, false);
-                } else {
+                if (dom.detachEvent) {
                     dom.detachEvent('on' + bindName, wrap);
+                } else {
+                    dom.removeEventListener(bindName, wrap, false);
                 }
 
                 if (wrap && dom == document && eventName == 'mousedown') {
@@ -476,8 +488,8 @@ Ext.EventManager = {
         var f = ['if(!Ext) {return;}'],
             gen;
 
-        if(options.buffer || options.delay) {
-            f.push('e = new Ext.EventObjectImpl(e);');
+        if(options.buffer || options.delay || options.freezeEvent) {
+            f.push('e = new Ext.EventObjectImpl(e, ' + (options.freezeEvent ? 'true' : 'false' ) + ');');
         } else {
             f.push('e = Ext.EventObject.setEvent(e);');
         }

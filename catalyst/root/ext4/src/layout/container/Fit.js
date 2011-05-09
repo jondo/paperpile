@@ -6,17 +6,23 @@
  * config, and should generally not need to be created directly via the new keyword.</p>
  * <p>FitLayout does not have any direct config options (other than inherited ones).  To fit a panel to a container
  * using FitLayout, simply set layout:'fit' on the container and add a single panel to it.  If the container has
- * multiple panels, only the first one will be displayed.  Example usage:</p>
+ * multiple panels, only the first one will be displayed.  
+ * {@img Ext.layout.container.Fit/Ext.layout.container.Fit.png Ext.layout.container.Fit container layout}
+ * Example usage:</p>
  * <pre><code>
-var p = new Ext.panel.Panel({
-    title: 'Fit Layout',
-    layout:'fit',
-    items: {
-        title: 'Inner Panel',
-        html: '&lt;p&gt;This is the inner panel content&lt;/p&gt;',
-        border: false
-    }
-});
+    Ext.create('Ext.panel.Panel', {
+        title: 'Fit Layout',
+        width: 300,
+        height: 150,
+        layout:'fit',
+        items: {
+            title: 'Inner Panel',
+            html: '<p>This is the inner panel content</p>',
+            bodyPadding: 20,
+            border: false
+        },
+        renderTo: Ext.getBody()
+    });  
 </code></pre>
  */
 Ext.define('Ext.layout.container.Fit', {

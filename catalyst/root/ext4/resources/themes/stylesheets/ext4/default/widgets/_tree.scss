@@ -100,20 +100,14 @@
     }
     
     .#{$prefix}tree-no-lines {
-        .#{$prefix}tree-elbow-plus {
+        .#{$prefix}tree-elbow-plus,
+        .#{$prefix}tree-elbow-end-plus {
         	background-image: theme-image($theme-name, 'tree/elbow-plus-nl.gif');
         }
-        
-        .#{$prefix}tree-elbow-minus {
-        	background-image: theme-image($theme-name, 'tree/elbow-minus-nl.gif');
-        }
 
-        .#{$prefix}tree-elbow-end-plus {
-        	background-image: theme-image($theme-name, 'tree/elbow-end-plus-nl.gif');
-        }
-
-        .#{$prefix}tree-elbow-end-minus {
-        	background-image: theme-image($theme-name, 'tree/elbow-end-minus-nl.gif');
+        .#{$prefix}grid-tree-node-expanded .#{$prefix}tree-elbow-plus,
+        .#{$prefix}grid-tree-node-expanded .#{$prefix}tree-elbow-end-plus {
+            background-image: theme-image($theme-name, 'tree/elbow-end-minus-nl.gif');
         }
     }
     
@@ -204,6 +198,10 @@
                     margin: 0;
                 }
             }
+        }
+        
+        .#{$prefix}tree-panel .#{$prefix}grid-cell-inner {
+            border-width: 0 !important;
         }
     }
     

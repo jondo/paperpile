@@ -3,13 +3,13 @@
  * @extends Ext.util.Observable
 
 Provides input field management, validation, submission, and form loading services for the collection
-of {@link Ext.form.Field Field} instances within a {@link Ext.container.Container}. It is recommended
-that you use a {@link Ext.form.FormPanel} as the form container, as that has logic to automatically
+of {@link Ext.form.field.Field Field} instances within a {@link Ext.container.Container}. It is recommended
+that you use a {@link Ext.form.Panel} as the form container, as that has logic to automatically
 hook up an instance of {@link Ext.form.Basic} (plus other conveniences related to field configuration.)
 
 #Form Actions#
 
-The Basic class delegates the handling of form loads and submits to instances of {@link Ext.form.Action}.
+The Basic class delegates the handling of form loads and submits to instances of {@link Ext.form.action.Action}.
 See the various Action implementations for specific details of each one's functionality, as well as the
 documentation for {@link #doAction} which details the configuration options that can be specified in
 each action call.
@@ -23,7 +23,7 @@ Note: File uploads are not performed using normal 'Ajax' techniques; see the des
 
 #Example usage:#
 
-    Ext.create('Ext.form.FormPanel', {
+    Ext.create('Ext.form.Panel', {
         title: 'Basic Form',
         renderTo: Ext.getBody(),
         bodyPadding: 5,
@@ -61,9 +61,9 @@ Note: File uploads are not performed using normal 'Ajax' techniques; see the des
     });
 
  * @constructor
- * @param {Ext.container.Container} owner The component that is the container for the form, usually a {@link Ext.form.FormPanel}
+ * @param {Ext.container.Container} owner The component that is the container for the form, usually a {@link Ext.form.Panel}
  * @param {Object} config Configuration options. These are normally specified in the config to the
- * {@link Ext.form.FormPanel} constructor, which passes them along to the BasicForm automatically.
+ * {@link Ext.form.Panel} constructor, which passes them along to the BasicForm automatically.
  *
  * @markdown
  * @docauthor Jason Johnston <jason@sencha.com>
@@ -75,12 +75,12 @@ Ext.define('Ext.form.Basic', {
     extend: 'Ext.util.Observable',
     alternateClassName: 'Ext.form.BasicForm',
     requires: ['Ext.util.MixedCollection', 'Ext.form.action.Load', 'Ext.form.action.Submit',
-               'Ext.window.MessageBoxWindow', 'Ext.data.Errors'],
+               'Ext.window.MessageBox', 'Ext.data.Errors'],
 
     constructor: function(owner, config) {
         var me = this,
             onItemAddOrRemove = me.onItemAddOrRemove;
-            
+
         /**
          * @property owner
          * @type Ext.container.Container
@@ -141,7 +141,7 @@ Ext.define('Ext.form.Basic', {
         );
         me.callParent();
     },
-    
+
     /**
      * Do any post constructor initialization
      * @private
@@ -156,14 +156,14 @@ Ext.define('Ext.form.Basic', {
      * The request method to use (GET or POST) for form actions if one isn't supplied in the action options.
      */
     /**
-     * @cfg {Ext.data.Reader} reader
-     * An Ext.data.DataReader (e.g. {@link Ext.data.XmlReader}) to be used to read
+     * @cfg {Ext.data.reader.Reader} reader
+     * An Ext.data.DataReader (e.g. {@link Ext.data.reader.Xml}) to be used to read
      * data when executing 'load' actions. This is optional as there is built-in
      * support for processing JSON responses.
      */
     /**
-     * @cfg {Ext.data.Reader} errorReader
-     * <p>An Ext.data.DataReader (e.g. {@link Ext.data.XmlReader}) to be used to
+     * @cfg {Ext.data.reader.Reader} errorReader
+     * <p>An Ext.data.DataReader (e.g. {@link Ext.data.reader.Xml}) to be used to
      * read field error messages returned from 'submit' actions. This is optional
      * as there is built-in support for processing JSON responses.</p>
      * <p>The Records which provide messages for the invalid Fields must use the
@@ -188,7 +188,7 @@ Ext.define('Ext.form.Basic', {
     /**
      * @cfg {Object} baseParams
      * <p>Parameters to pass with all requests. e.g. baseParams: {id: '123', foo: 'bar'}.</p>
-     * <p>Parameters are encoded as standard HTTP parameters using {@link Ext#urlEncode Ext.urlEncode}.</p>
+     * <p>Parameters are encoded as standard HTTP parameters using {@link Ext#urlEncode Ext.Object.toQueryString}.</p>
      */
 
     /**
@@ -308,7 +308,7 @@ paramOrder: 'param1|param2|param'
 
         // Flush the cached list of formBind components
         delete this._boundItems;
-        
+
         // Check form bind, but only after initial add
         if (me.initialized) {
             me.onValidityChange(!me.hasInvalidField());
@@ -316,13 +316,13 @@ paramOrder: 'param1|param2|param'
     },
 
     /**
-     * Return all the {@link Ext.form.Field} components in the owner container.
+     * Return all the {@link Ext.form.field.Field} components in the owner container.
      * @return {Ext.util.MixedCollection} Collection of the Field objects
      */
     getFields: function() {
         var fields = this._fields;
         if (!fields) {
-            fields = this._fields = new Ext.util.MixedCollection();
+            fields = this._fields = Ext.create('Ext.util.MixedCollection');
             fields.addAll(this.owner.query('[isFormField]'));
         }
         return fields;
@@ -331,7 +331,7 @@ paramOrder: 'param1|param2|param'
     getBoundItems: function() {
         var boundItems = this._boundItems;
         if (!boundItems) {
-            boundItems = this._boundItems = new Ext.util.MixedCollection();
+            boundItems = this._boundItems = Ext.create('Ext.util.MixedCollection');
             boundItems.addAll(this.owner.query('[formBind]'));
         }
         return boundItems;
@@ -471,7 +471,7 @@ paramOrder: 'param1|param2|param'
      *
      * <li><b>params</b> : String/Object<div class="sub-desc"><p>The params to pass
      * (defaults to the form's baseParams, or none if not defined)</p>
-     * <p>Parameters are encoded as standard HTTP parameters using {@link Ext#urlEncode Ext.urlEncode}.</p></div></li>
+     * <p>Parameters are encoded as standard HTTP parameters using {@link Ext#urlEncode Ext.Object.toQueryString}.</p></div></li>
      *
      * <li><b>headers</b> : Object<div class="sub-desc">Request headers to set for the action.</div></li>
      *
@@ -587,7 +587,7 @@ myFormPanel.getForm().submit({
             values = {},
             name,
             obj = {};
-        
+
         // We don't use getValues() here because the getSubmitValue() override for
         // some field types have a string format that is not parsable by Model
         // fields and their convert methods, e.g., Date fields.  We want the actual
@@ -597,18 +597,18 @@ myFormPanel.getForm().submit({
                 values[field.getName()] = field.getValue();
             }
         });
-        
+
         fields.each(function(f) {
             name = f.name;
             if (name in values) {
                 obj[name] = values[name];
             }
         });
-        
+
         record.beginEdit();
         record.set(obj);
         record.endEdit();
-        
+
         return this;
     },
 
@@ -620,7 +620,16 @@ myFormPanel.getForm().submit({
      * @return {Ext.form.Basic} this
      */
     loadRecord: function(record) {
+        this._record = record;
         return this.setValues(record.data);
+    },
+    
+    /**
+     * Returns the last Ext.data.Model instance that was loaded via {@link #loadRecord}
+     * @return {Ext.data.Model} The record
+     */
+    getRecord: function() {
+        return this._record;
     },
 
     /**
@@ -686,10 +695,10 @@ myFormPanel.getForm().submit({
 
 
     /**
-     * Find a specific {@link Ext.form.Field} in this form by id or name.
+     * Find a specific {@link Ext.form.field.Field} in this form by id or name.
      * @param {String} id The value to search for (specify either a {@link Ext.Component#id id} or
-     * {@link Ext.form.Field#getName name or hiddenName}).
-     * @return Ext.form.Field The first matching field, or <tt>null</tt> if none was found.
+     * {@link Ext.form.field.Field#getName name or hiddenName}).
+     * @return Ext.form.field.Field The first matching field, or <tt>null</tt> if none was found.
      */
     findField: function(id) {
         return this.getFields().findBy(function(f) {
@@ -771,7 +780,7 @@ myFormPanel.getForm().submit({
 
     /**
      * Retrieves the fields in the form as a set of key/value pairs, using their
-     * {@link Ext.form.Field#getSubmitData getSubmitData()} method.
+     * {@link Ext.form.field.Field#getSubmitData getSubmitData()} method.
      * If multiple fields exist with the same name they are returned as an array.
      * @param {Boolean} asString (optional) If true, will return the key/value collection as a single
      * URL-encoded param string. Defaults to false.
@@ -812,7 +821,7 @@ myFormPanel.getForm().submit({
         });
 
         if (asString) {
-            values = Ext.urlEncode(values);
+            values = Ext.Object.toQueryString(values);
         }
         return values;
     },

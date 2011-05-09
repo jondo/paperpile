@@ -7,38 +7,46 @@
             
     $border-color: null,
     $border-color-over: null,
+    $border-color-focus: null,
     $border-color-pressed: null,
     $border-color-disabled: null,
     
     $padding: null,
+    $text-padding: null,
     
     $background-color: null,
     $background-color-over: null,
+    $background-color-focus: null,
     $background-color-pressed: null,
     $background-color-disabled: null,
     
     $background-gradient: null,
     $background-gradient-over: null,
+    $background-gradient-focus: null,
     $background-gradient-pressed: null,
     $background-gradient-disabled: null,
     
     $color: null,
     $color-over: null,
+    $color-focus: null,
     $color-pressed: null,
     $color-disabled: null,
     
     $font-size: null,
     $font-size-over: null,
+    $font-size-focus: null,
     $font-size-pressed: null,
     $font-size-disabled: null,
     
     $font-weight: null,
     $font-weight-over: null,
+    $font-weight-focus: null,
     $font-weight-pressed: null,
     $font-weight-disabled: null,
     
     $font-family: null,
     $font-family-over: null,
+    $font-family-focus: null,
     $font-family-pressed: null,
     $font-family-disabled: null,
     
@@ -50,26 +58,32 @@
     
     @include x-frame('btn', $ui, $border-radius, $border-width, $padding, $background-color, $background-gradient, true);
     
-    .#{$prefix}btn-#{$ui} button {
+    .#{$prefix}btn-#{$ui} .#{$prefix}btn-inner {
         font-size: $font-size;
         font-weight: $font-weight;
         font-family: $font-family;
         color: $color;
         background-repeat: no-repeat;
+        padding: 0 $text-padding;
     }
     
-    .#{$prefix}btn-#{$ui}-disabled em {
+    .#{$prefix}btn-#{$ui}-disabled span {
         @include opacity(.4);
     }
     
-    .#{$prefix}btn-#{$ui}-icon button,
-    .#{$prefix}btn-#{$ui}-noicon button {
-        height: $icon-size;
+    .#{$prefix}btn-#{$ui}-icon,
+    .#{$prefix}btn-#{$ui}-noicon {
+        button,
+        .#{$prefix}btn-inner {
+            height: $icon-size;
+            line-height: $icon-size;
+        }
     }
 
     //icons
     .#{$prefix}btn-#{$ui}-icon {
-        button {
+        .#{$prefix}btn-inner {
+            padding: 0;
             width: $icon-size !important;
         }
     }
@@ -77,6 +91,10 @@
     .#{$prefix}btn-#{$ui}-icon-text-left {
         button {
             height: $icon-size;
+        }
+        .#{$prefix}btn-inner {
+            height: $icon-size;
+            line-height: $icon-size;
             padding-left: $icon-size + 4px;
         }
     }
@@ -84,18 +102,22 @@
     .#{$prefix}btn-#{$ui}-icon-text-right {
         button {
             height: $icon-size;
-            padding-right: $icon-size + 4px;
+        }
+        .#{$prefix}btn-inner {
+            height: $icon-size;
+            line-height: $icon-size;
+            padding-right: $icon-size + 4px !important;
         }
     }
     
     .#{$prefix}btn-#{$ui}-icon-text-top {
-        button {
+        .#{$prefix}btn-inner {
             padding-top: $icon-size + 4px;
         }
     }
     
     .#{$prefix}btn-#{$ui}-icon-text-bottom {
-        button {
+        .#{$prefix}btn-inner {
             padding-bottom: $icon-size + 4px;
         }
     }
@@ -113,7 +135,7 @@
             }
         }
 
-        button {
+        .#{$prefix}btn-inner {
             @if $color-over != $color {
                 color: $color-over;
             }
@@ -125,6 +147,35 @@
             }
             @if $font-family-over != $font-family {
                 font-family: $font-family-over;
+            } 
+        }
+    }
+    
+    .#{$prefix}btn-#{$ui}-focus {
+        @if $border-color-focus != $border-color {
+            border-color: $border-color-focus;
+        }
+        @if $background-color-focus != null {
+            @if $background-gradient-focus != $background-gradient {
+                @include background-gradient($background-color-focus, $background-gradient-focus);
+            }
+            @else if $background-color-focus != $background-color {
+                background-color: $background-color-focus;
+            }
+        }
+
+        .#{$prefix}btn-inner {
+            @if $color-focus != $color {
+                color: $color-focus;
+            }
+            @if $font-weight-focus != $font-weight {
+                font-weight: $font-weight-focus;
+            }
+            @if $font-size-focus != $font-size {
+                font-size: $font-size-focus;
+            }
+            @if $font-family-focus != $font-family {
+                font-family: $font-family-focus;
             } 
         }
     }
@@ -143,7 +194,7 @@
             }
         }
 
-        button {
+        .#{$prefix}btn-inner {
             @if $color-pressed != $color {
                 color: $color-pressed;
             }
@@ -159,95 +210,6 @@
         }
     }
     
-    @if not $supports-border-radius or $compile-all {    
-        .#{$prefix}nbr { 
-            .#{$prefix}btn-#{$ui}-over {
-                .#{$prefix}frame-tl,
-                .#{$prefix}frame-bl,
-                .#{$prefix}frame-tr,
-                .#{$prefix}frame-br,
-                .#{$prefix}frame-tc,
-                .#{$prefix}frame-bc {
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-over-corners.png');
-                }
-                .#{$prefix}frame-ml,
-                .#{$prefix}frame-mr {
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-over-sides.png');
-                }
-                .#{$prefix}frame-mc {
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-over-bg.png');
-                }
-            }
-            
-            .#{$prefix}btn-#{$ui}-menu-active,
-            .#{$prefix}btn-#{$ui}-pressed {
-                .#{$prefix}frame-tl,
-                .#{$prefix}frame-bl,
-                .#{$prefix}frame-tr,
-                .#{$prefix}frame-br,
-                .#{$prefix}frame-tc,
-                .#{$prefix}frame-bc {
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-pressed-corners.png');
-                }
-                .#{$prefix}frame-ml,
-                .#{$prefix}frame-mr {
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-pressed-sides.png');
-                }
-                .#{$prefix}frame-mc {
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-pressed-bg.png');
-                }
-            }
-            
-            .#{$prefix}btn-#{$ui}-disabled {
-                .#{$prefix}frame-tl,
-                .#{$prefix}frame-bl,
-                .#{$prefix}frame-tr,
-                .#{$prefix}frame-br,
-                .#{$prefix}frame-tc,
-                .#{$prefix}frame-bc {
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-disabled-corners.png');
-                }
-                .#{$prefix}frame-ml,
-                .#{$prefix}frame-mr {
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-disabled-sides.png');
-                }
-                .#{$prefix}frame-mc {
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-disabled-bg.png');
-                }  
-            }
-        }
-    }
-    
-    @if not $supports-gradients or $compile-all {
-        @if $background-gradient != null {
-            .#{$prefix}nlg { 
-                .#{$prefix}btn-#{$ui} {
-                    background-repeat: repeat-x;
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-bg.png');
-                }
-            }
-        }
-        
-        @if $background-gradient-over != null {
-            .#{$prefix}nlg { 
-                .#{$prefix}btn-#{$ui}-over {
-                    background-repeat: repeat-x;
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-over-bg.png');
-                }
-            }
-        }
-
-        @if $background-gradient-pressed != null {
-            .#{$prefix}nlg { 
-                .#{$prefix}btn-#{$ui}-menu-active,
-                .#{$prefix}btn-#{$ui}-pressed {
-                    background-repeat: repeat-x;
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-pressed-bg.png');
-                }
-            }
-        }
-    }
-    
     .#{$prefix}btn-#{$ui}-disabled {
         @if $border-color-disabled != $border-color {
             border-color: $border-color-disabled;
@@ -260,8 +222,8 @@
                 background-color: $background-color-disabled;
             }
         }
-        
-        button {
+
+        .#{$prefix}btn-inner {
             @if $color-disabled != $color {
                 color: $color-disabled;
             }
@@ -278,7 +240,71 @@
     }
     
     @if not $supports-border-radius or $compile-all {    
-        .#{$prefix}nbr {
+        .#{$prefix}nbr { 
+            .#{$prefix}btn-#{$ui}-over {
+                .#{$prefix}frame-tl,
+                .#{$prefix}frame-bl,
+                .#{$prefix}frame-tr,
+                .#{$prefix}frame-br,
+                .#{$prefix}frame-tc,
+                .#{$prefix}frame-bc {
+                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-over-corners.gif');
+                }
+                .#{$prefix}frame-ml,
+                .#{$prefix}frame-mr {
+                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-over-sides.gif');
+                }
+                .#{$prefix}frame-mc {
+                    background-color: $background-color-over;
+                    @if $background-gradient-over {
+                        background-image: theme-image($theme-name, 'btn/btn-#{$ui}-over-bg.gif');
+                    }
+                }
+            }
+            
+            .#{$prefix}btn-#{$ui}-focus {
+                .#{$prefix}frame-tl,
+                .#{$prefix}frame-bl,
+                .#{$prefix}frame-tr,
+                .#{$prefix}frame-br,
+                .#{$prefix}frame-tc,
+                .#{$prefix}frame-bc {
+                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-focus-corners.gif');
+                }
+                .#{$prefix}frame-ml,
+                .#{$prefix}frame-mr {
+                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-focus-sides.gif');
+                }
+                .#{$prefix}frame-mc {
+                    background-color: $background-color-focus;
+                    @if $background-gradient-focus {
+                        background-image: theme-image($theme-name, 'btn/btn-#{$ui}-focus-bg.gif');
+                    }
+                }
+            }
+            
+            .#{$prefix}btn-#{$ui}-menu-active,
+            .#{$prefix}btn-#{$ui}-pressed {
+                .#{$prefix}frame-tl,
+                .#{$prefix}frame-bl,
+                .#{$prefix}frame-tr,
+                .#{$prefix}frame-br,
+                .#{$prefix}frame-tc,
+                .#{$prefix}frame-bc {
+                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-pressed-corners.gif');
+                }
+                .#{$prefix}frame-ml,
+                .#{$prefix}frame-mr {
+                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-pressed-sides.gif');
+                }
+                .#{$prefix}frame-mc {
+                    background-color: $background-color-pressed;
+                    @if $background-gradient-pressed {
+                        background-image: theme-image($theme-name, 'btn/btn-#{$ui}-pressed-bg.gif');
+                    }
+                }
+            }
+            
             .#{$prefix}btn-#{$ui}-disabled {
                 .#{$prefix}frame-tl,
                 .#{$prefix}frame-bl,
@@ -286,25 +312,65 @@
                 .#{$prefix}frame-br,
                 .#{$prefix}frame-tc,
                 .#{$prefix}frame-bc {
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-disabled-corners.png');
+                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-disabled-corners.gif');
                 }
                 .#{$prefix}frame-ml,
                 .#{$prefix}frame-mr {
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-disabled-sides.png');
+                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-disabled-sides.gif');
                 }
                 .#{$prefix}frame-mc {
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-disabled-bg.png');
+                    background-color: $background-color-disabled;
+                    @if $background-gradient-disabled {
+                        background-image: theme-image($theme-name, 'btn/btn-#{$ui}-disabled-bg.gif');
+                    }
                 }  
             }
         }
     }
     
     @if not $supports-gradients or $compile-all {
-        @if $background-gradient-disabled != null {
+        @if $background-gradient != null {
             .#{$prefix}nlg { 
+                .#{$prefix}btn-#{$ui} {
+                    background-repeat: repeat-x;
+                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-bg.gif');
+                }
+            }
+        }
+        
+        @if $background-gradient-over != null {
+            .#{$prefix}nlg { 
+                .#{$prefix}btn-#{$ui}-over {
+                    background-repeat: repeat-x;
+                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-over-bg.gif');
+                }
+            }
+        }
+        
+        @if $background-gradient-focus != null {
+            .#{$prefix}nlg { 
+                .#{$prefix}btn-#{$ui}-focus {
+                    background-repeat: repeat-x;
+                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-focus-bg.gif');
+                }
+            }
+        }
+
+        @if $background-gradient-pressed != null {
+            .#{$prefix}nlg { 
+                .#{$prefix}btn-#{$ui}-menu-active,
+                .#{$prefix}btn-#{$ui}-pressed {
+                    background-repeat: repeat-x;
+                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-pressed-bg.gif');
+                }
+            }
+        }
+        
+        @if $background-gradient-disabled != null {
+            .#{$prefix}nlg {
                 .#{$prefix}btn-#{$ui}-disabled {
                     background-repeat: repeat-x;
-                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-disabled-bg.png');
+                    background-image: theme-image($theme-name, 'btn/btn-#{$ui}-disabled-bg.gif');
                 }
             }
         }

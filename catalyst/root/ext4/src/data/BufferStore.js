@@ -1,11 +1,21 @@
+/**
+ * @class Ext.data.BufferStore
+ * @extends Ext.data.Store
+ * @ignore
+ */
 Ext.define('Ext.data.BufferStore', {
     extend: 'Ext.data.Store',
     alias: 'store.buffer',
+    sortOnLoad: false,
+    filterOnLoad: false,
+    /**
+     * @cfg {Number} purgePageCount The number of pages to keep in the cache before purging additional records. A value of 0 indicates to never purge the prefetched data.
+     */
     purgePageCount: 5,
     
     constructor: function() {
         // key is by index rather than internalId
-        this.prefetchData = new Ext.util.MixedCollection(false, function(record) {
+        this.prefetchData = Ext.create('Ext.util.MixedCollection', false, function(record) {
             return record.index;
         });
         this.pendingRequests = [];
@@ -17,7 +27,7 @@ Ext.define('Ext.data.BufferStore', {
     /**
      * Loads the Store using its configured {@link #proxy}.
      * @param {Object} options Optional config object. This is passed into the {@link Ext.data.Operation Operation}
-     * object that is created and then sent to the proxy's {@link Ext.data.Proxy#read} function
+     * object that is created and then sent to the proxy's {@link Ext.data.proxy.Proxy#read} function
      */
     prefetch: function(options) {
         var me = this,
@@ -120,15 +130,24 @@ Ext.define('Ext.data.BufferStore', {
     cacheRecords: function(records, operation) {
         var me     = this,
             i      = 0,
-            length = records.length;
+            length = records.length,
+            start  = operation ? operation.start : 0;
+        
+        if (!Ext.isDefined(me.totalCount)) {
+            me.totalCount = records.length;
+            me.fireEvent('totalcountchange', me.totalCount);
+        }
         
         for (; i < length; i++) {
             // this is the true index, not the viewIndex
-            records[i].index = operation.start + i;
+            records[i].index = start + i;
         }
         
         me.prefetchData.addAll(records);
-        this.purgeRecords();
+        if (me.purgePageCount) {
+            me.purgeRecords();
+        }
+        
     },
     
     
@@ -150,7 +169,7 @@ Ext.define('Ext.data.BufferStore', {
     },
     
     /**
-     * Determines if the range has already been satisified in the prefetchData.
+     * Determines if the range has already been satisfied in the prefetchData.
      * @private
      */
     rangeSatisfied: function(start, end) {
@@ -161,9 +180,11 @@ Ext.define('Ext.data.BufferStore', {
         for (; i < end; i++) {
             if (!me.prefetchData.getByKey(i)) {
                 satisfied = false;
+                //<debug>
                 if (end - i > this.pageSize) {
-                    throw "BufferStore: a single page prefetch could never satisfy this request.";
+                    Ext.Error.raise("A single page prefetch could never satisfy this request.");
                 }
+                //</debug>
                 break;
             }
         }
@@ -185,19 +206,24 @@ Ext.define('Ext.data.BufferStore', {
             range = [],
             record,
             i = start;
+            
+        //<debug>
         if (start > end) {
-            return;
-            throw "Start was greater than end.";
+            Ext.Error.raise("Start (" + start + ") was greater than end (" + end + ")");
         }
+        //</debug>
+        
         if (start !== me.guaranteedStart && end !== me.guaranteedEnd) {
             me.guaranteedStart = start;
             me.guaranteedEnd = end;
             
             for (; i <= end; i++) {
                 record = me.prefetchData.getByKey(i);
+                //<debug>
                 if (!record) {
-                    throw "Record was not found and store said it was guaranteed";
+                    Ext.Error.raise("Record was not found and store said it was guaranteed");
                 }
+                //</debug>
                 range.push(record);
             }
             this.fireEvent('guaranteedrange', range, start, end);
@@ -243,11 +269,18 @@ Ext.define('Ext.data.BufferStore', {
      * be necessary.
      */
     guaranteeRange: function(start, end, cb, scope) {
+        //<debug>
         if (start && end) {
             if (end - start > this.pageSize) {
-                throw "BufferStore: requested a bigger range than the pageSize";
+                Ext.Error.raise({
+                    start: start,
+                    end: end,
+                    pageSize: this.pageSize,
+                    msg: "Requested a bigger range than the specified pageSize"
+                });
             }
         }
+        //</debug>
         
         end = (end > this.totalCount) ? this.totalCount - 1 : end;
         
@@ -289,7 +322,7 @@ Ext.define('Ext.data.BufferStore', {
                     scope: this
                 });
             }
-        // Request was already satisified via the prefetch
+        // Request was already satisfied via the prefetch
         } else {
             this.onGuaranteedRange();
         }
@@ -298,7 +331,28 @@ Ext.define('Ext.data.BufferStore', {
     // because prefetchData is stored by index
     // this invalidates all of the prefetchedData
     sort: function() {
-        this.prefetchData.clear();
-        this.callParent(arguments);
+        var me = this,
+            prefetchData = this.prefetchData;
+
+        if (me.remoteSort) {
+            prefetchData.clear();
+            me.callParent(arguments);
+        } else {
+            var sorters = this.getSorters(),
+                start = me.guaranteedStart,
+                end = me.guaranteedEnd,
+                range;
+
+            if (sorters.length) {
+                prefetchData.sort(sorters);
+                range = prefetchData.getRange();
+                prefetchData.clear();
+                me.cacheRecords(range);
+                delete me.guaranteedStart;
+                delete me.guaranteedEnd;
+                me.guaranteeRange(start, end);
+            }
+            me.callParent(arguments);
+        }
     }
 });

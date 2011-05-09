@@ -5,7 +5,7 @@
  * @private
  * @ignore
  * <p>Small helper class to make creating {@link Ext.data.Store}s from XML data easier.
- * A XmlStore will be automatically configured with a {@link Ext.data.XmlReader}.</p>
+ * A XmlStore will be automatically configured with a {@link Ext.data.reader.Xml}.</p>
  * <p>A store configuration would be something like:<pre><code>
 var store = new Ext.data.XmlStore({
     // store configs
@@ -53,23 +53,24 @@ var store = new Ext.data.XmlStore({
 &#60/ItemSearchResponse>
  * </code></pre>
  * An object literal of this form could also be used as the {@link #data} config option.</p>
- * <p><b>Note:</b> Although not listed here, this class accepts all of the configuration options of 
- * <b>{@link Ext.data.XmlReader XmlReader}</b>.</p>
+ * <p><b>Note:</b> Although not listed here, this class accepts all of the configuration options of
+ * <b>{@link Ext.data.reader.Xml XmlReader}</b>.</p>
  * @constructor
  * @param {Object} config
  * @xtype xmlstore
  */
 Ext.define('Ext.data.XmlStore', {
     extend: 'Ext.data.Store',
+    alternateClassName: 'Ext.data.XmlStore',
     alias: 'store.xml',
-    
+
     /**
      * @cfg {Ext.data.DataReader} reader @hide
      */
     constructor: function(config){
         config = config || {};
         config = config || {};
-              
+
         Ext.applyIf(config, {
             proxy: {
                 type: 'ajax',
@@ -77,7 +78,7 @@ Ext.define('Ext.data.XmlStore', {
                 writer: 'xml'
             }
         });
-        
-        Ext.data.XmlStore.superclass.constructor.call(this, config);
+
+        this.callParent([config]);
     }
 });

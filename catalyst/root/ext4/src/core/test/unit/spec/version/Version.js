@@ -37,9 +37,9 @@ describe("Ext.Version", function() {
 			});
 		});
 
-		describe("getSimplified", function() {
+		describe("getShortVersion", function() {
 			it("should return 123", function() {
-				expect(version.getSimplified()).toBe("123");
+				expect(version.getShortVersion()).toBe("123");
 			});
 		});
 
@@ -58,12 +58,12 @@ describe("Ext.Version", function() {
 			});
 		});
 
-		describe("isSmallerThan", function() {
+		describe("isLessThan", function() {
 			it("should not be smaller than 1.2.3alpha", function() {
-				expect(version.isSmallerThan("1.2.3alpha")).toBeFalsy();
+				expect(version.isLessThan("1.2.3alpha")).toBeFalsy();
 			});
 			it("should be smaller than 1.2.3RC", function() {
-				expect(version.isSmallerThan("1.2.3RC")).toBeTruthy();
+				expect(version.isLessThan("1.2.3RC")).toBeTruthy();
 			});
 		});
 

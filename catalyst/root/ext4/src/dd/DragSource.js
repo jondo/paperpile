@@ -10,7 +10,7 @@ Ext.define('Ext.dd.DragSource', {
     extend: 'Ext.dd.DDProxy',
     requires: [
         'Ext.dd.StatusProxy',
-        'Ext.dd.DragDropMgr'
+        'Ext.dd.DragDropManager'
     ],
 
     /**
@@ -37,6 +37,13 @@ Ext.define('Ext.dd.DragSource', {
      */
     animRepair: true,
 
+    /**
+     * @cfg {String} repairHighlightColor The color to use when visually highlighting the drag source in the afterRepair
+     * method after a failed drop (defaults to 'c3daf9' - light blue). The color must be a 6 digit hex value, without
+     * a preceding '#'.
+     */
+    repairHighlightColor: 'c3daf9',
+
     constructor: function(el, config) {
         this.el = Ext.get(el);
         if(!this.dragData){
@@ -46,12 +53,12 @@ Ext.define('Ext.dd.DragSource', {
         Ext.apply(this, config);
 
         if(!this.proxy){
-            this.proxy = new Ext.dd.StatusProxy({
+            this.proxy = Ext.create('Ext.dd.StatusProxy', {
                 animRepair: this.animRepair
             });
         }
-        Ext.dd.DragSource.superclass.constructor.call(this, this.el.dom, this.ddGroup || this.group, 
-              {dragElId : this.proxy.id, resizeFrame: false, isTarget: false, scroll: this.scroll === true});
+        this.callParent([this.el.dom, this.ddGroup || this.group,
+              {dragElId : this.proxy.id, resizeFrame: false, isTarget: false, scroll: this.scroll === true}]);
 
         this.dragging = false;
     },
@@ -66,7 +73,7 @@ Ext.define('Ext.dd.DragSource', {
 
     // private
     onDragEnter : function(e, id){
-        var target = Ext.dd.DragDropMgr.getDDById(id);
+        var target = Ext.dd.DragDropManager.getDDById(id);
         this.cachedTarget = target;
         if (this.beforeDragEnter(target, e, id) !== false) {
             if (target.isNotifyTarget) {
@@ -104,13 +111,13 @@ Ext.define('Ext.dd.DragSource', {
 
     // private
     alignElWithMouse: function() {
-        Ext.dd.DragSource.superclass.alignElWithMouse.apply(this, arguments);
+        this.callParent(arguments);
         this.proxy.sync();
     },
 
     // private
     onDragOver: function(e, id) {
-        var target = this.cachedTarget || Ext.dd.DragDropMgr.getDDById(id);
+        var target = this.cachedTarget || Ext.dd.DragDropManager.getDDById(id);
         if (this.beforeDragOver(target, e, id) !== false) {
             if(target.isNotifyTarget){
                 var status = target.notifyOver(this, e, this.dragData);
@@ -145,7 +152,7 @@ Ext.define('Ext.dd.DragSource', {
 
     // private
     onDragOut: function(e, id) {
-        var target = this.cachedTarget || Ext.dd.DragDropMgr.getDDById(id);
+        var target = this.cachedTarget || Ext.dd.DragDropManager.getDDById(id);
         if (this.beforeDragOut(target, e, id) !== false) {
             if (target.isNotifyTarget) {
                 target.notifyOut(this, e, this.dragData);
@@ -180,7 +187,7 @@ Ext.define('Ext.dd.DragSource', {
 
     // private
     onDragDrop: function(e, id){
-        var target = this.cachedTarget || Ext.dd.DragDropMgr.getDDById(id);
+        var target = this.cachedTarget || Ext.dd.DragDropManager.getDDById(id);
         if (this.beforeDragDrop(target, e, id) !== false) {
             if (target.isNotifyTarget) {
                 if (target.notifyDrop(this, e, this.dragData) !== false) { // valid drop?
@@ -226,7 +233,7 @@ Ext.define('Ext.dd.DragSource', {
             /**
              * An empty function by default, but provided so that you can perform a custom action
              * after a valid drop has occurred by providing an implementation.
-             * @param {Object} target The target DD 
+             * @param {Object} target The target DD
              * @param {Event} e The event object
              * @param {String} id The id of the dropped element
              * @method afterInvalidDrop
@@ -237,7 +244,7 @@ Ext.define('Ext.dd.DragSource', {
 
     // private
     getRepairXY: function(e, data){
-        return this.el.getXY();  
+        return this.el.getXY();
     },
 
     // private
@@ -265,10 +272,11 @@ Ext.define('Ext.dd.DragSource', {
 
     // private
     afterRepair: function() {
+        var me = this;
         if (Ext.enableFx) {
-            this.el.highlight(this.hlColor || "c3daf9");
+            me.el.highlight(me.repairHighlightColor);
         }
-        this.dragging = false;
+        me.dragging = false;
     },
 
     /**
@@ -292,8 +300,8 @@ Ext.define('Ext.dd.DragSource', {
         if (data && this.onBeforeDrag(data, e) !== false) {
             this.dragData = data;
             this.proxy.stop();
-            Ext.dd.DragSource.superclass.handleMouseDown.apply(this, arguments);
-        } 
+            this.callParent(arguments);
+        }
     },
 
     /**
@@ -374,7 +382,7 @@ Ext.define('Ext.dd.DragSource', {
     },
 
     destroy: function(){
-        Ext.dd.DragSource.superclass.destroy.call(this);
+        this.callParent();
         Ext.destroy(this.proxy);
     }
 });

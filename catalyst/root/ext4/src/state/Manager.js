@@ -21,7 +21,7 @@ Ext.define('Ext.state.Manager', {
     singleton: true,
     requires: ['Ext.state.Provider'],
     constructor: function() {
-        this.provider = new Ext.state.Provider();
+        this.provider = Ext.create('Ext.state.Provider');
     },
     
     

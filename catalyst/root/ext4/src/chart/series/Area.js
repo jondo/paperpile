@@ -37,6 +37,8 @@ Ext.define('Ext.chart.series.Area', {
     /* Begin Definitions */
 
     extend: 'Ext.chart.series.Cartesian',
+    
+    alias: 'series.area',
 
     requires: ['Ext.chart.axis.Axis', 'Ext.draw.Color', 'Ext.fx.Anim'],
 
@@ -560,7 +562,7 @@ Ext.define('Ext.chart.series.Area', {
                 to.opacity = Math.max(area.__prevOpacity - 0.3, 0);
             }
             if (this.chart.animate) {
-                area.__highlightAnim = new Ext.fx.Anim(Ext.apply({
+                area.__highlightAnim = Ext.create('Ext.fx.Anim', Ext.apply({
                     target: area,
                     to: to
                 }, this.chart.animate));
@@ -584,7 +586,7 @@ Ext.define('Ext.chart.series.Area', {
             }
             if (area.__highlighted) {
                 area.__highlighted = false;
-                area.__highlightAnim = new Ext.fx.Anim({
+                area.__highlightAnim = Ext.create('Ext.fx.Anim', {
                     target: area,
                     to: {
                         fill: area.__prevFill,

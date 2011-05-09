@@ -34,7 +34,9 @@ Ext.define('Ext.chart.theme.Theme', {
                     return;
                 }
             }
-            throw "No theme found named " + theme;
+            //<debug>
+            Ext.Error.raise('No theme found named "' + theme + '"');
+            //</debug>
         }
     }
 }, 

@@ -234,13 +234,13 @@ Ext.define('Ext.EventObjectImpl', {
         2: 2
     },
 
-    constructor: function(event){
+    constructor: function(event, freezeEvent){
         if (event) {
-            this.setEvent(event.browserEvent || event);
+            this.setEvent(event.browserEvent || event, freezeEvent);
         }
     },
 
-    setEvent: function(event){
+    setEvent: function(event, freezeEvent){
         var me = this, button, options;
 
         if (event == me || (event && event.browserEvent)) { // already wrapped
@@ -267,8 +267,7 @@ Ext.define('Ext.EventObjectImpl', {
                 target: Ext.EventManager.getTarget(event),
                 relatedTarget: Ext.EventManager.getRelatedTarget(event),
                 currentTarget: event.currentTarget,
-                // same for XY
-                xy: Ext.EventManager.getPageXY(event)
+                xy: (freezeEvent ? me.getXY() : null)
             };
         } else {
             options = {
@@ -347,24 +346,46 @@ Ext.define('Ext.EventObjectImpl', {
     /**
      * Gets the x coordinate of the event.
      * @return {Number}
+     * @deprecated 4.0 Replaced by {@link #getX}
      */
     getPageX: function(){
-        return this.xy[0];
+        return this.getX();
     },
 
     /**
      * Gets the y coordinate of the event.
      * @return {Number}
+     * @deprecated 4.0 Replaced by {@link #getY}
      */
     getPageY: function(){
-        return this.xy[1];
+        return this.getY();
     },
-
+    
+    /**
+     * Gets the x coordinate of the event.
+     * @return {Number}
+     */
+    getX: function() {
+        return this.getXY()[0];
+    },    
+    
+    /**
+     * Gets the y coordinate of the event.
+     * @return {Number}
+     */
+    getY: function() {
+        return this.getXY()[1];
+    },
+        
     /**
      * Gets the page coordinates of the event.
      * @return {Array} The xy values like [x, y]
      */
-    getXY: function(){
+    getXY: function() {
+        if (!this.xy) {
+            // same for XY
+            this.xy = Ext.EventManager.getPageXY(this.browserEvent);
+        }
         return this.xy;
     },
 
@@ -438,7 +459,7 @@ Ext.getBody().on('click', function(e,t){
         if(el){
             var t = related ? this.getRelatedTarget() : this.getTarget(),
                 result;
-                
+
             if (t) {
                 result = Ext.fly(el).contains(t);
                 if (!result && allowEl) {
@@ -482,7 +503,8 @@ Ext.getBody().on('click', function(e,t){
      * @return {Ext.util.Point} point
      */
     getPoint : function(){
-        return new Ext.util.Point(this.xy[0], this.xy[1]);
+        var xy = this.getXY();
+        return Ext.create('Ext.util.Point', xy[0], xy[1]);
     },
 
    /**

@@ -33,7 +33,7 @@ Ext.regModel('User', {
  * 
 <pre><code>
 //first, we load up a User with id of 1
-var user = Ext.ModelMgr.create({id: 1, name: 'Ed'}, 'User');
+var user = Ext.ModelManager.create({id: 1, name: 'Ed'}, 'User');
 
 //the user.products function was created automatically by the association and returns a {@link Ext.data.Store Store}
 //the created store is automatically scoped to the set of Products for the User with id of 1
@@ -123,20 +123,29 @@ Ext.define('Ext.data.HasManyAssociation', {
      * {@link #foreignKey}. See intro docs for more details. Defaults to undefined
      */
     
+    /**
+     * @cfg {Boolean} autoLoad True to automatically load the related store from a remote source when instantiated.
+     * Defaults to <tt>false</tt>.
+     */
+    
     constructor: function(config) {
-        Ext.data.HasManyAssociation.superclass.constructor.apply(this, arguments);
+        var me = this,
+            ownerProto,
+            name;
+            
+        me.callParent(arguments);
         
-        this.name = this.name || Ext.util.Inflector.pluralize(this.associatedName.toLowerCase());
+        me.name = me.name || Ext.util.Inflector.pluralize(me.associatedName.toLowerCase());
         
-        var ownerProto = this.ownerModel.prototype,
-            name       = this.name;
+        ownerProto = me.ownerModel.prototype;
+        name = me.name;
         
-        Ext.applyIf(this, {
+        Ext.applyIf(me, {
             storeName : name + "Store",
-            foreignKey: this.ownerName.toLowerCase() + "_id"
+            foreignKey: me.ownerName.toLowerCase() + "_id"
         });
         
-        ownerProto[name] = this.createStore();
+        ownerProto[name] = me.createStore();
     },
     
     /**
@@ -147,12 +156,14 @@ Ext.define('Ext.data.HasManyAssociation', {
      * @return {Function} The store-generating function
      */
     createStore: function() {
-        var associatedModel = this.associatedModel,
-            storeName       = this.storeName,
-            foreignKey      = this.foreignKey,
-            primaryKey      = this.primaryKey,
-            filterProperty  = this.filterProperty,
-            storeConfig     = this.storeConfig || {};
+        var that            = this,
+            associatedModel = that.associatedModel,
+            storeName       = that.storeName,
+            foreignKey      = that.foreignKey,
+            primaryKey      = that.primaryKey,
+            filterProperty  = that.filterProperty,
+            autoLoad        = that.autoLoad,
+            storeConfig     = that.storeConfig || {};
         
         return function() {
             var me = this,
@@ -184,6 +195,9 @@ Ext.define('Ext.data.HasManyAssociation', {
                 });
                 
                 me[storeName] = Ext.create('Ext.data.Store', config);
+                if (autoLoad) {
+                    me[storeName].load();
+                }
             }
             
             return me[storeName];
@@ -194,7 +208,7 @@ Ext.define('Ext.data.HasManyAssociation', {
      * Read associated data
      * @private
      * @param {Ext.data.Model} record The record we're writing to
-     * @param {Ext.data.Reader} reader The reader for the associated model
+     * @param {Ext.data.reader.Reader} reader The reader for the associated model
      * @param {Object} associationData The raw associated data
      */
     read: function(record, reader, associationData){

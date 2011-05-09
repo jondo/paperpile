@@ -154,8 +154,8 @@ new Ext.panel.Panel({
     /**
      * <p>Adds listeners to any Observable object (or Element) which are automatically removed when this Component
      * is destroyed.
-     * @param {Observable|Element} item The item to which to add a listener/listeners.
-     * @param {Object|String} ename The event name, or an object containing event name properties.
+     * @param {Observable/Element} item The item to which to add a listener/listeners.
+     * @param {Object/String} ename The event name, or an object containing event name properties.
      * @param {Function} fn Optional. If the <code>ename</code> parameter was an event name, this
      * is the handler function.
      * @param {Object} scope Optional. If the <code>ename</code> parameter was an event name, this
@@ -439,9 +439,9 @@ myGridPanel.on({
 
     /**
      * Adds the specified events to the list of events which this Observable may fire.
-     * @param {Object|String} o Either an object with event names as properties with a value of <code>true</code>
+     * @param {Object/String} o Either an object with event names as properties with a value of <code>true</code>
      * or the first event name string if multiple event names are being passed as separate parameters.
-     * @param {string} Optional. Event name if multiple event names are being passed as separate parameters.
+     * @param {String} [additional] Optional additional event names if multiple event names are being passed as separate parameters.
      * Usage:<pre><code>
 this.addEvents('storeloaded', 'storecleared');
 </code></pre>
@@ -518,7 +518,7 @@ this.addEvents('storeloaded', 'storecleared');
             oldName,
             newName;
 
-        for(; i < len; i++){
+        for (; i < len; i++) {
             oldName = events[i].substr(prefix.length);
             newName = prefix + oldName;
             me.events[newName] = me.events[newName] || true;
@@ -546,9 +546,9 @@ this.addEvents('storeloaded', 'storecleared');
      * implementation in Ext.Component returns the Component's immediate owner. But if a known target is required, this can be overridden to
      * access the required target more quickly.</p>
      * <p>Example:</p><pre><code>
-Ext.override(Ext.form.Field, {
+Ext.override(Ext.form.field.Base, {
 //  Add functionality to Field&#39;s initComponent to enable the change event to bubble
-initComponent : Ext.Function.createSequence(Ext.form.Field.prototype.initComponent, function() {
+initComponent : Ext.Function.createSequence(Ext.form.field.Base.prototype.initComponent, function() {
     this.enableBubble('change');
 }),
 

@@ -15,7 +15,7 @@ Ext.define('Ext.fx.target.CompositeElement', {
     isComposite: true,
     constructor: function(target) {
         target.id = target.id || Ext.id(null, 'ext-composite-');
-        Ext.fx.target.CompositeElement.superclass.constructor.call(this, target);
+        this.callParent([target]);
     },
 
     getAttr: function(attr, val) {

@@ -1,6 +1,6 @@
 /**
  * @class Ext.layout.container.Auto
- * @extends Ext.layout.Container
+ * @extends Ext.layout.container.Container
  *
  * <p>The AutoLayout is the default layout manager delegated by {@link Ext.container.Container} to
  * render any child Components when no <tt>{@link Ext.container.Container#layout layout}</tt> is configured into
@@ -14,7 +14,7 @@ Ext.define('Ext.layout.container.Auto', {
 
     alias: ['layout.auto', 'layout.autocontainer'],
 
-    extend: 'Ext.layout.Container',
+    extend: 'Ext.layout.container.Container',
 
     /* End Definitions */
 

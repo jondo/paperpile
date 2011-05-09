@@ -1,6 +1,6 @@
 /**
  * @class Ext.layout.container.Box
- * @extends Ext.layout.Container
+ * @extends Ext.layout.container.Container
  * <p>Base Class for HBoxLayout and VBoxLayout Classes. Generally it should not need to be used directly.</p>
  */
 
@@ -9,7 +9,7 @@ Ext.define('Ext.layout.container.Box', {
     /* Begin Definitions */
 
     alias: ['layout.box'],
-    extend: 'Ext.layout.Container',
+    extend: 'Ext.layout.container.Container',
     alternateClassName: 'Ext.layout.BoxLayout',
     
     requires: [
@@ -17,7 +17,7 @@ Ext.define('Ext.layout.container.Box', {
         'Ext.layout.container.boxOverflow.Menu',
         'Ext.layout.container.boxOverflow.Scroller',
         'Ext.util.Format',
-        'Ext.dd.DragDropMgr'
+        'Ext.dd.DragDropManager'
     ],
 
     /* End Definitions */
@@ -118,7 +118,12 @@ Ext.define('Ext.layout.container.Box', {
 
     fixedLayout: false,
     
+    // availableSpaceOffset is used to adjust the availableWidth, typically used
+    // to reserve space for a scrollbar
     availableSpaceOffset: 0,
+    
+    // whether or not to reserve the availableSpaceOffset in layout calculations
+    reserveOffset: true,
     
     /**
      * @cfg {Boolean} clearInnerCtOnLayout
@@ -235,6 +240,7 @@ Ext.define('Ext.layout.container.Box', {
             maxSize = 0,
             boxes = [],
             minSizes = [],
+            calculatedWidth,
 
             i, child, childParallel, childPerpendicular, childMargins, childSize, minParallel, tmpObj, shortfall, 
             tooNarrow, availableSpace, minSize, item, length, itemIndex, box, oldSize, newSize, reduction, diff, 
@@ -246,6 +252,14 @@ Ext.define('Ext.layout.container.Box', {
             child = visibleItems[i];
             childPerpendicular = child[perpendicularPrefix];
             me.layoutItem(child);
+            childMargins = child.margins;
+            parallelMargins = childMargins[me.parallelBefore] + childMargins[me.parallelAfter];
+
+            // Create the box description object for this child item.
+            tmpObj = {
+                component: child,
+                margins: childMargins
+            };
 
             // flex and not 'auto' width
             if (child.flex) {
@@ -261,10 +275,6 @@ Ext.define('Ext.layout.container.Box', {
                 childPerpendicular = childPerpendicular || childSize[perpendicularPrefix];
             }
 
-            childMargins = child.margins;
-
-            parallelMargins = childMargins[me.parallelBefore] + childMargins[me.parallelAfter];
-
             nonFlexSize += parallelMargins + (childParallel || 0);
             desiredSize += parallelMargins + (child.flex ? child[parallelMinString] || 0 : childParallel);
             minimumSize += parallelMargins + (child[parallelMinString] || childParallel || 0);
@@ -276,13 +286,9 @@ Ext.define('Ext.layout.container.Box', {
                 childPerpendicular = child['get' + perpendicularPrefixCap]();
             }
 
+            // Track the maximum perpendicular size for use by the stretch and stretchmax align config values.
             maxSize = mmax(maxSize, childPerpendicular + childMargins[me.perpendicularLeftTop] + childMargins[me.perpendicularRightBottom]);
 
-            //cache the size of each child component. Don't set to 0, keep undefined instead
-            tmpObj = {
-                component: child,
-                margins: childMargins
-            };
             tmpObj[parallelPrefix] = childParallel || undefinedValue;
             tmpObj[perpendicularPrefix] = childPerpendicular || undefinedValue;
             boxes.push(tmpObj);
@@ -291,13 +297,14 @@ Ext.define('Ext.layout.container.Box', {
         tooNarrow = minimumSize > parallelSize;
 
         //the space available to the flexed items
-        availableSpace = mmax(0, parallelSize - nonFlexSize - paddingParallel - me.availableSpaceOffset);
+        availableSpace = mmax(0, parallelSize - nonFlexSize - paddingParallel - (me.reserveOffset ? me.availableSpaceOffset : 0));
 
         if (tooNarrow) {
             for (i = 0; i < visibleCount; i++) {
                 box = boxes[i];
+                minSize = visibleItems[i][parallelMinString] || visibleItems[i][parallelPrefix] || box[parallelPrefix];
                 box.dirtySize = box.dirtySize || box[parallelPrefix] != minSize;
-                box[parallelPrefix] = visibleItems[i][parallelMinString] || visibleItems[i][parallelPrefix] || box[parallelPrefix];
+                box[parallelPrefix] = minSize;
             }
         }
         else {
@@ -330,7 +337,7 @@ Ext.define('Ext.layout.container.Box', {
                 }
 
                 //sort by descending amount of width remaining before minWidth is reached
-                minSizes.sort(me.minSizeSortFn);
+                Ext.Array.sort(minSizes, me.minSizeSortFn);
 
                 /*
                  * Distribute the shortfall (difference between total desired size of all items and actual size available)
@@ -372,7 +379,7 @@ Ext.define('Ext.layout.container.Box', {
                 // The flexed boxes need to be sorted in ascending order of maxSize to work properly
                 // so that unallocated space caused by maxWidth being less than flexed width
                 // can be reallocated to subsequent flexed boxes.
-                flexedBoxes.sort(me.flexSortFn);
+                Ext.Array.sort(flexedBoxes, me.flexSortFn);
 
                 // Calculate the size of each flexed item, and attempt to set it.
                 for (i = 0; i < flexedBoxes.length; i++) {
@@ -381,9 +388,12 @@ Ext.define('Ext.layout.container.Box', {
                     childMargins = calcs.margins;
 
                     flexedSize = math.ceil((child.flex / remainingFlex) * remainingSpace);
-                    // Implement maxSize check
-                    flexedSize = math.min(child['max' + parallelPrefixCap] || infiniteValue, flexedSize);
-                    remainingSpace -= (flexedSize + childMargins[me.parallelBefore]);
+
+                    // Implement maxSize and minSize check
+                    flexedSize = Math.max(child['min' + parallelPrefixCap] || 0, math.min(child['max' + parallelPrefixCap] || infiniteValue, flexedSize));
+
+                    // Remaining space has already had all parallel margins subtracted from it, so just subtract consumed size
+                    remainingSpace -= flexedSize;
                     remainingFlex -= child.flex;
 
                     calcs.dirtySize = calcs.dirtySize || calcs[parallelPrefix] != flexedSize;
@@ -397,6 +407,20 @@ Ext.define('Ext.layout.container.Box', {
         }
         else if (isEnd) {
             parallelOffset += availableSpace;
+        }
+
+        // Fix for left and right docked Components in a dock component layout. This is for docked Headers and docked Toolbars.
+        // Older Microsoft browsers do not size a position:absolute element's width to match its content.
+        // So in this case, in the updateInnerCtSize method we may need to adjust the size of the owning Container's element explicitly based upon
+        // the discovered max width. So here we put a calculatedWidth property in the metadata to facilitate this.
+        if (me.owner.dock && (Ext.isIE6 || Ext.isIE7 || Ext.isIEQuirks) && !me.owner.width && me.direction == 'vertical') {
+
+            calculatedWidth = maxSize + me.owner.el.getPadding('lr') + me.owner.el.getBorderWidth('lr');
+            if (me.owner.frameSize) {
+                calculatedWidth += me.owner.frameSize.left + me.owner.frameSize.right;
+            }
+            // If the owning element is not sized, calculate the available width to center or stretch in based upon maxSize
+            availPerpendicularSize = Math.min(availPerpendicularSize, targetSize.width = maxSize + padding.left + padding.right);
         }
 
         //finally, calculate the left and top position of each item
@@ -441,6 +465,7 @@ Ext.define('Ext.layout.container.Box', {
         return {
             boxes: boxes,
             meta : {
+                calculatedWidth: calculatedWidth,
                 maxSize: maxSize,
                 nonFlexSize: nonFlexSize,
                 desiredSize: desiredSize,
@@ -663,7 +688,7 @@ Ext.define('Ext.layout.container.Box', {
                 comp = boxAnim.target;
                 delete boxAnim.target;
                 // Stop any currently running animation
-                comp.stopFx();
+                comp.stopAnimation();
                 comp.animate(boxAnim);
             }
         }
@@ -712,6 +737,13 @@ Ext.define('Ext.layout.container.Box', {
             }
         }
         me.getRenderTarget().setSize(innerCtWidth || undefined, innerCtHeight || undefined);
+
+        // If a calculated width has been found (and this only happens for auto-width vertical docked Components in old Microsoft browsers)
+        // then, if the Component has not assumed the size of its content, set it to do so.
+        if (meta.calculatedWidth && me.owner.el.getWidth() > meta.calculatedWidth) {
+            me.owner.el.setWidth(meta.calculatedWidth);
+        }
+
         if (me.innerCt.dom.scrollTop) {
             me.innerCt.dom.scrollTop = 0;
         }
@@ -753,7 +785,7 @@ Ext.define('Ext.layout.container.Box', {
     },
 
     // Overridden method from AbstractContainer.
-    // Used in the base AnstractLayout.beforeLayout method to render all items into.
+    // Used in the base AbstractLayout.beforeLayout method to render all items into.
     getRenderTarget: function() {
         if (!this.innerCt) {
             // the innerCt prevents wrapping and shuffling while the container is resizing

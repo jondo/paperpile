@@ -6,7 +6,6 @@
  *
  * @constructor
  */
-
 Ext.define('Ext.chart.Mask', {
     constructor: function(config) {
         var me = this;
@@ -42,7 +41,7 @@ Ext.define('Ext.chart.Mask', {
                     }    
                 });
                 comp.initDraggable();
-                
+                me.maskType = me.mask;
                 me.mask = comp;
                 me.maskSprite = me.surface.add({
                     type: 'path',
@@ -108,7 +107,7 @@ Ext.define('Ext.chart.Mask', {
 
     onMouseMove: function(e) {
         var me = this,
-            mask = me.mask,
+            mask = me.maskType,
             bbox = me.bbox || me.chartBBox,
             x = bbox.x,
             y = bbox.y,
@@ -135,6 +134,7 @@ Ext.define('Ext.chart.Mask', {
             if (mask == 'horizontal') {
                 staticY = y;
                 maskMouseDown.y = height;
+                posY = me.el.getY() + bbox.height + me.insetPadding;
             }
             else if (mask == 'vertical') {
                 staticX = x;

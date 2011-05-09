@@ -284,7 +284,7 @@ Ext.define('Ext.XTemplate', {
     ifRe: /^<tpl\b[^>]*?if="(.*?)"/,
     execRe: /^<tpl\b[^>]*?exec="(.*?)"/,
     constructor: function() {
-        Ext.XTemplate.superclass.constructor.apply(this, arguments);
+        this.callParent(arguments);
 
         var me = this,
             html = me.html,
@@ -380,7 +380,7 @@ Ext.define('Ext.XTemplate', {
             // name = "." - Just use the values object.
             if (name == '.') {
                 // filter to not include arrays/objects/nulls
-                v = 'Ext.Array.indexOf(["string", "number", "boolean"], typeof values) > -1 ? values : ""';
+                v = 'Ext.Array.indexOf(["string", "number", "boolean"], typeof values) > -1 || Ext.isDate(values) ? values : ""';
             }
 
             // name = "#" - Use the xindex

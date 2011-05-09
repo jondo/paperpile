@@ -7,14 +7,15 @@
  * of being configured with a {@link Ext.container.Container#layout layout}, and containing child Components.</p>
  * <p>When either specifying child {@link Ext.Component#items items} of a Panel, or dynamically {@link Ext.container.Container#add adding} Components
  * to a Panel, remember to consider how you wish the Panel to arrange those child elements, and whether
- * those child elements need to be sized using one of Ext's built-in <code><b>{@link Ext.container.Container#layout layout}</b></code> schemes. By
+ * those child elements need to be sized using one of Ext&#39;s built-in <code><b>{@link Ext.container.Container#layout layout}</b></code> schemes. By
  * default, Panels use the {@link Ext.layout.container.Auto Auto} scheme. This simply renders
  * child components, appending them one after the other inside the Container, and <b>does not apply any sizing</b>
  * at all.</p>
+ * {@img Ext.panel.Panel/panel.png Panel components}
  * <p>A Panel may also contain {@link #bbar bottom} and {@link #tbar top} toolbars, along with separate
  * {@link #header}, {@link #footer} and {@link #body} sections (see {@link #frame} for additional
  * information).</p>
- * <p>Panel also provides built-in {@link #collapsible collapsible, expandable} and {@link #closable} behavior.  
+ * <p>Panel also provides built-in {@link #collapsible collapsible, expandable} and {@link #closable} behavior.
  * Panels can be easily dropped into any {@link Ext.container.Container Container} or layout, and the
  * layout and rendering pipeline is {@link Ext.container.Container#add completely managed by the framework}.</p>
  * <p><b>Note:</b> By default, the <code>{@link #closable close}</code> header tool <i>destroys</i> the Panel resulting in removal of the Panel
@@ -22,17 +23,17 @@
  * tool to simply <i>hide</i> a Panel for later re-use, configure the Panel with <b><code>{@link #closeAction closeAction: 'hide'}</code></b>.</p>
  * <p>Usually, Panels are used as constituents within an application, in which case, they would be used as child items of Containers,
  * and would themselves use Ext.Components as child {@link #items}. However to illustrate simply rendering a Panel into the document,
- * here's how to do it:<pre><code>
+ * here&#39;s how to do it:<pre><code>
 Ext.create('Ext.panel.Panel', {
     title: 'Hello',
     width: 200,
-    html: '<p>World!</p>',
+    html: '&lt;p&gt;World!&lt;/p&gt;',
     renderTo: document.body
 });
 </code></pre></p>
  * <p>A more realistic scenario is a Panel created to house input fields which will not be rendered, but used as a constituent part of a Container:<pre><code>
 var filterPanel = Ext.create('Ext.panel.Panel', {
-    bodyPadding: 5,  // Don't want content to crunch against the borders
+    bodyPadding: 5,  // Don&#39;t want content to crunch against the borders
     title: 'Filters',
     items: [{
         xtype: 'datefield',
@@ -48,34 +49,41 @@ var filterPanel = Ext.create('Ext.panel.Panel', {
  * <p>Panels will often use specific {@link #layout}s to provide an application with shape and structure by containing and arranging child
  * Components: <pre><code>
 var resultsPanel = Ext.create('Ext.panel.Panel', {
+    title: 'Results',
+    width: 600,
+    height: 400,
+    renderTo: document.body,
     layout: {
         type: 'vbox',       // Arrange child items vertically
-        align: 'stretch'    // Each takes up full width
+        align: 'stretch',    // Each takes up full width
+        padding: 5
     },
     items: [{               // Results grid specified as a config object with an xtype of 'grid'
         xtype: 'grid',
-        border: false,
-        headers: [{header: 'World'}]                  // One header just for show. There's no data,
+        columns: [{header: 'Column One'}],            // One header just for show. There&#39;s no data,
         store: Ext.create('Ext.data.ArrayStore', {}), // A dummy empty data store
-        flex: 1                                       // Use 1/3 of Container's height (hint to Box layout)
+        flex: 1                                       // Use 1/3 of Container&#39;s height (hint to Box layout)
     }, {
-        xtype: 'splitter',       // A splitter between the two child items
-        collapseTarget: 'prev'   // It has a mini-collapse tool: collapse the grid
+        xtype: 'splitter'   // A splitter between the two child items
     }, {                    // Details Panel specified as a config object (no xtype defaults to 'panel').
+        title: 'Details',
         bodyPadding: 5,
-        items: fieldsArray, // An array of form fields
-        flex: 2             // Use 2/3 of Container's height (hint to Box layout)
+        items: [{
+            fieldLabel: 'Data item',
+            xtype: 'textfield'
+        }], // An array of form fields
+        flex: 2             // Use 2/3 of Container&#39;s height (hint to Box layout)
     }]
 });
 </code></pre>
  * The example illustrates one possible method of displaying search results. The Panel contains a grid with the resulting data arranged
- * in rows. Each selected row may be displayed in detail in the Panel below. The {@link Ext.layout.container.Vbox vbox} layout is used
- * to arrange the two vertically. It is configured to stretch child items horizontally to full width. Child items may either be configured 
+ * in rows. Each selected row may be displayed in detail in the Panel below. The {@link Ext.layout.container.VBox vbox} layout is used
+ * to arrange the two vertically. It is configured to stretch child items horizontally to full width. Child items may either be configured
  * with a numeric height, or with a <code>flex</code> value to distribute available space proportionately.</p>
  * <p>This Panel itself may be a child item of, for exaple, a {@link Ext.tab.TabPanel} which will size its child items to fit within its
  * content area.</p>
  * <p>Using these techniques, as long as the <b>layout</b> is chosen and configured correctly, an application may have any level of
- * nested containment, all dynamically sized according to configuration, the user's preference and available browser size.</p>
+ * nested containment, all dynamically sized according to configuration, the user&#39;s preference and available browser size.</p>
  * @constructor
  * @param {Object} config The config object
  * @xtype panel
@@ -95,7 +103,7 @@ Ext.define('Ext.panel.Panel', {
 
     /**
      * @cfg {String} collapsedCls
-     * A CSS class to add to the panel's element after it has been collapsed (defaults to
+     * A CSS class to add to the panel&#39;s element after it has been collapsed (defaults to
      * <code>'x-panel-collapsed'</code>).
      */
 
@@ -106,15 +114,16 @@ Ext.define('Ext.panel.Panel', {
      * May also be specified as the animation duration in milliseconds.
      */
     animCollapse: Ext.enableFx,
-    
+
     /**
      * @cfg {Number} minButtonWidth
-     * Minimum width of all footer toolbar buttons in pixels (defaults to <tt>undefined</tt>). If set, this will
+     * Minimum width of all footer toolbar buttons in pixels (defaults to <tt>75</tt>). If set, this will
      * be used as the default value for the <tt>{@link Ext.button.Button#minWidth}</tt> config of
-     * each Button added to the <b>footer toolbar</b>. Will be ignored for buttons that have this value configured some
-     * other way, e.g. in their own config object or via the {@link Ext.Container#config-defaults defaults} of
-     * their parent container.
+     * each Button added to the <b>footer toolbar</b> via the {@link #fbar} or {@link #buttons} configurations.
+     * It will be ignored for buttons that have a minWidth configured some other way, e.g. in their own config
+     * object or via the {@link Ext.container.Container#config-defaults defaults} of their parent container.
      */
+    minButtonWidth: 75,
 
     /**
      * @cfg {Boolean} collapsed
@@ -126,7 +135,7 @@ Ext.define('Ext.panel.Panel', {
     /**
      * @cfg {Boolean} collapseFirst
      * <code>true</code> to make sure the collapse/expand toggle button always renders first (to the left of)
-     * any other tools in the panel's title bar, <code>false</code> to render it last (defaults to <code>true</code>).
+     * any other tools in the panel&#39;s title bar, <code>false</code> to render it last (defaults to <code>true</code>).
      */
     collapseFirst: true,
 
@@ -148,21 +157,21 @@ Ext.define('Ext.panel.Panel', {
     /**
      * @cfg {String} collapseMode
      * <p><b>Important: this config is only effective for {@link #collapsible} Panels which are direct child items of a {@link Ext.layout.container.Border border layout}.</b></p>
-     * <p>When <i>not</i> a direct child item of a {@link Ext.layout.container.Border border layout}, then the Panel's header remains visible, and the body is collapsed to zero dimensions.
+     * <p>When <i>not</i> a direct child item of a {@link Ext.layout.container.Border border layout}, then the Panel&#39;s header remains visible, and the body is collapsed to zero dimensions.
      * If the Panel has no header, then a new header (orientated correctly depending on the {@link #collapseDirection}) will be inserted to show a the title and a re-expand tool.</p>
      * <p>When a child item of a {@link Ext.layout.container.Border border layout}, this config has two options:
      * <div class="mdetail-params"><ul>
-     * <li><b><code>alt</code></b> : <b>Default.</b><div class="sub-desc">When collapsed, a placeholder Container is injected into the layout to represent the Panel
+     * <li><b><code>undefined/omitted</code></b><div class="sub-desc">When collapsed, a placeholder {@link Ext.panel.Header Header} is injected into the layout to represent the Panel
      * and to provide a UI with a Tool to allow the user to re-expand the Panel.</div></li>
-     * <li><b><code>header</code></b> : <div class="sub-desc">The Panel collapses to leave a header visible as when not inside a {@link Ext.layout.container.Border border layout}.</div></li>
+     * <li><b><code>header</code></b> : <div class="sub-desc">The Panel collapses to leave its header visible as when not inside a {@link Ext.layout.container.Border border layout}.</div></li>
      * </ul></div></p>
      */
 
     /**
-     * @cfg {Mixed} placeHolder
+     * @cfg {Mixed} placeholder
      * <p><b>Important: This config is only effective for {@link #collapsible} Panels which are direct child items of a {@link Ext.layout.container.Border border layout}
-     * when using the default <code>'alt'</code> {@link #collapseMode}.</b></p>
-     * <p>b>Optional.</b> A Component (or config object for a Component) to show in place of this Panel when this Panel is collapsed by a
+     * when not using the <code>'header'</code> {@link #collapseMode}.</b></p>
+     * <p><b>Optional.</b> A Component (or config object for a Component) to show in place of this Panel when this Panel is collapsed by a
      * {@link Ext.layout.container.Border border layout}. Defaults to a generated {@link Ext.panel.Header Header}
      * containing a {@link Ext.panel.Tool Tool} to re-expand the Panel.</p>
      */
@@ -170,7 +179,7 @@ Ext.define('Ext.panel.Panel', {
     /**
      * @cfg {Boolean} floatable
      * <p><b>Important: This config is only effective for {@link #collapsible} Panels which are direct child items of a {@link Ext.layout.container.Border border layout}.</b></p>
-     * <tt>true</tt> to allow clicking a collapsed Panel's {@link #placeHolder} to display the Panel floated
+     * <tt>true</tt> to allow clicking a collapsed Panel&#39;s {@link #placeholder} to display the Panel floated
      * above the layout, <tt>false</tt> to force the user to fully expand a collapsed region by
      * clicking the expand button to see it again (defaults to <tt>true</tt>).
      */
@@ -208,8 +217,8 @@ Ext.define('Ext.panel.Panel', {
      * @cfg {String} closeAction
      * <p>The action to take when the close header tool is clicked:
      * <div class="mdetail-params"><ul>
-     * <li><b><code>'{@link #close}'</code></b> : <b>Default</b><div class="sub-desc">
-     * {@link #close remove} the window from the DOM and {@link Ext.Component#destroy destroy}
+     * <li><b><code>'{@link #destroy}'</code></b> : <b>Default</b><div class="sub-desc">
+     * {@link #destroy remove} the window from the DOM and {@link Ext.Component#destroy destroy}
      * it and all descendant Components. The window will <b>not</b> be available to be
      * redisplayed via the {@link #show} method.
      * </div></li>
@@ -244,7 +253,7 @@ var panel = new Ext.panel.Panel({
       * @cfg {Boolean} preventHeader Prevent a Header from being created and shown. Defaults to false.
       */
     preventHeader: false,
-         
+
      /**
       * @cfg {String} headerPosition Specify as <code>'top'</code>, <code>'bottom'</code>, <code>'left'</code> or <code>'right'</code>. Defaults to <code>'top'</code>.
       */
@@ -261,24 +270,104 @@ var panel = new Ext.panel.Panel({
      * True to apply a frame to the panel panels header (if 'frame' is true).
      */
     frameHeader: true,
+    
+    /**
+     * @cfg {Array} tools
+     * An array of {@link Ext.tool.Tool} configs to be added to the header tool area. The tools are stored as child
+     * components of the header container. They can be accessed using {@link #down} and {#query}, as well as the other
+     * component methods.
+     * <p>Each tool config may contain the following properties:
+     * <div class="mdetail-params"><ul>
+     * <li><b>id</b> : String<div class="sub-desc"><b>Required.</b> The type
+     * of tool to create. By default, this assigns a CSS class of the form <code>x-tool-<i>&lt;tool-type&gt;</i></code> to the
+     * resulting tool Element. Ext provides CSS rules, and an icon sprite containing images for the tool types listed below.
+     * The developer may implement custom tools by supplying alternate CSS rules and background images:
+     * <ul>
+     * <div class="x-tool x-tool-toggle" style="float:left; margin-right:5;"> </div><div><code> toggle</code> (Created by default when {@link #collapsible} is <code>true</code>)</div>
+     * <div class="x-tool x-tool-close" style="float:left; margin-right:5;"> </div><div><code> close</code></div>
+     * <div class="x-tool x-tool-minimize" style="float:left; margin-right:5;"> </div><div><code> minimize</code></div>
+     * <div class="x-tool x-tool-maximize" style="float:left; margin-right:5;"> </div><div><code> maximize</code></div>
+     * <div class="x-tool x-tool-restore" style="float:left; margin-right:5;"> </div><div><code> restore</code></div>
+     * <div class="x-tool x-tool-gear" style="float:left; margin-right:5;"> </div><div><code> gear</code></div>
+     * <div class="x-tool x-tool-pin" style="float:left; margin-right:5;"> </div><div><code> pin</code></div>
+     * <div class="x-tool x-tool-unpin" style="float:left; margin-right:5;"> </div><div><code> unpin</code></div>
+     * <div class="x-tool x-tool-right" style="float:left; margin-right:5;"> </div><div><code> right</code></div>
+     * <div class="x-tool x-tool-left" style="float:left; margin-right:5;"> </div><div><code> left</code></div>
+     * <div class="x-tool x-tool-up" style="float:left; margin-right:5;"> </div><div><code> up</code></div>
+     * <div class="x-tool x-tool-down" style="float:left; margin-right:5;"> </div><div><code> down</code></div>
+     * <div class="x-tool x-tool-refresh" style="float:left; margin-right:5;"> </div><div><code> refresh</code></div>
+     * <div class="x-tool x-tool-minus" style="float:left; margin-right:5;"> </div><div><code> minus</code></div>
+     * <div class="x-tool x-tool-plus" style="float:left; margin-right:5;"> </div><div><code> plus</code></div>
+     * <div class="x-tool x-tool-help" style="float:left; margin-right:5;"> </div><div><code> help</code></div>
+     * <div class="x-tool x-tool-search" style="float:left; margin-right:5;"> </div><div><code> search</code></div>
+     * <div class="x-tool x-tool-save" style="float:left; margin-right:5;"> </div><div><code> save</code></div>
+     * <div class="x-tool x-tool-print" style="float:left; margin-right:5;"> </div><div><code> print</code></div>
+     * </ul></div></li>
+     * <li><b>handler</b> : Function<div class="sub-desc"><b>Required.</b> The function to
+     * call when clicked. Arguments passed are:<ul>
+     * <li><b>event</b> : Ext.EventObject<div class="sub-desc">The click event.</div></li>
+     * <li><b>toolEl</b> : Ext.core.Element<div class="sub-desc">The tool Element.</div></li>
+     * <li><b>panel</b> : Ext.panel.Panel<div class="sub-desc">The host Panel</div></li>
+     * <li><b>tool</b> : Ext.tool.Tool<div class="sub-desc">The tool object</div></li>
+     * </ul></div></li>
+     * <li><b>stopEvent</b> : Boolean<div class="sub-desc">Defaults to true. Specify as false to allow click event to propagate.</div></li>
+     * <li><b>scope</b> : Object<div class="sub-desc">The scope in which to call the handler.</div></li>
+     * <li><b>qtip</b> : String/Object<div class="sub-desc">A tip string, or
+     * a config argument to {@link Ext.QuickTip#register}</div></li>
+     * <li><b>hidden</b> : Boolean<div class="sub-desc">True to initially render hidden.</div></li>
+     * <li><b>on</b> : Object<div class="sub-desc">A listener config object specifiying
+     * event listeners in the format of an argument to {@link #addListener}</div></li>
+     * </ul></div>
+     * <p>Note that, apart from the toggle tool which is provided when a panel is collapsible, these
+     * tools only provide the visual button. Any required functionality must be provided by adding
+     * handlers that implement the necessary behavior.</p>
+     * <p>Example usage:</p>
+     * <pre><code>
+tools:[{
+    id:'refresh',
+    qtip: 'Refresh form Data',
+    // hidden:true,
+    handler: function(event, toolEl, panel){
+        // refresh logic
+    }
+},
+{
+    id:'help',
+    qtip: 'Get Help',
+    handler: function(event, toolEl, panel){
+        // whatever
+    }
+}]
+</code></pre>
+     */
 
     renderTpl: [
-        '<div class="{baseCls}-body<tpl if="bodyCls"> {bodyCls}</tpl><tpl if="frame"> {baseCls}-body-framed</tpl><tpl if="ui"> {baseCls}-body-{ui}</tpl>"<tpl if="bodyStyle"> style="{bodyStyle}"</tpl>></div>'
+        '<div class="{baseCls}-body<tpl if="bodyCls"> {bodyCls}</tpl><tpl if="frame"> {baseCls}-body-framed</tpl><tpl if="ui"><tpl for="ui"> {parent.baseCls}-body-{.}</tpl></tpl>"<tpl if="bodyStyle"> style="{bodyStyle}"</tpl>></div>'
     ],
 
     initComponent: function() {
         var me = this,
             cls;
-
-        me.callParent();
+        
         if (me.unstyled) {
-            me.baseCls = me.baseCSSPrefix + 'plain';
+            me.ui = 'plain';
         }
+        
+        /**
+         * @event titlechange
+         * Fires after the Panel title has been set or changed.
+         * @param {Ext.panel.Panel} p the Panel which has been resized.
+         * @param {String} newTitle The new title.
+         * @param {String} oldTitle The previous panel title.
+         */
+        me.addEvents('titlechange');
+        
+        me.callParent();
 
         if (me.frame) {
-            me.ui = 'framed';
+            me.ui = [me.ui, me.ui + '-framed'];
         }
-
+        
         me.collapsedCls = me.collapsedCls || me.baseCls + '-collapsed';
         me.collapseDirection = me.collapseDirection || me.headerPosition || Ext.Component.DIRECTION_TOP;
 
@@ -317,13 +406,14 @@ var panel = new Ext.panel.Panel({
 
     beforeDestroy: function() {
         Ext.destroy(
-            this.ghostPanel
+            this.ghostPanel,
+            this.dd
         );
         this.callParent();
     },
 
     initAria: function() {
-        Ext.panel.Panel.superclass.initAria.call(this);
+        this.callParent();
         this.initHeaderAria();
     },
 
@@ -335,50 +425,41 @@ var panel = new Ext.panel.Panel({
             el.dom.setAttribute('aria-labelledby', header.titleCmp.id);
         }
     },
+    
+    getHeader: function() {
+        return this.header;
+    },
 
     /**
-     * Set a title for the panel's header. See {@link Ext.panel.Header#title}.
-     * @param {String} title
+     * Set a title for the panel&#39;s header. See {@link Ext.panel.Header#title}.
+     * @param {String} newTitle
      */
-    setTitle: function(title) {
-        var me = this;
-        me.title = title;
+    setTitle: function(newTitle) {
+        var me = this,
+        oldTitle = this.title;
+        
+        me.title = newTitle;
         if (me.header) {
-            me.header.setTitle(title);
+            me.header.setTitle(newTitle);
         } else {
             me.updateHeader();
         }
-        
+
         if (me.reExpander) {
-            me.reExpander.setTitle(title);
+            me.reExpander.setTitle(newTitle);
         }
+        me.fireEvent('titlechange', me, newTitle, oldTitle);
     },
 
     /**
-     * Set the iconCls for the panel's header. See {@link Ext.panel.Header#iconCls}.
+     * Set the iconCls for the panel&#39;s header. See {@link Ext.panel.Header#iconCls}.
      * @param cls
      */
-    setIconClass: function(cls) {
+    setIconCls: function(cls) {
         this.iconCls = cls;
         var header = this.header;
         if (header) {
-            header.setIconClass(cls);
-        }
-    },
-
-    initItems: function() {
-        // Catch addition of descendant fields
-        this.on('add', this.onSubCmpAdded, this);
-        this.callParent(arguments);
-    },
-
-    onSubCmpAdded: function(parent, cmp) {
-        var minButtonWidth = this.minButtonWidth;
-
-        if (minButtonWidth && cmp.isButton/* && parent && parent.ui == 'footer'*/) {
-            if (!cmp.hasOwnProperty('minWidth')) {
-                cmp.minWidth = minButtonWidth;
-            }
+            header.setIconCls(cls);
         }
     },
 
@@ -400,18 +481,9 @@ var panel = new Ext.panel.Panel({
                 toolbar.dock = pos;
             return toolbar;
         };
-        
-        // Apply the minButtonWidth config to the items in the 'buttons' toolbar config
-        if (buttons && minButtonWidth) {
-            Ext.each(buttons, function(button) {
-                if (Ext.isObject(button) && !('minWidth' in button)) {
-                    button.minWidth = minButtonWidth;
-                }
-            });
-        }
 
         // Backwards compatibility
-        
+
         /**
          * @cfg {Object/Array} tbar
 
@@ -420,9 +492,9 @@ Convenience method. Short for 'Top Bar'.
     tbar: [
       { xtype: 'button', text: 'Button 1' }
     ]
-    
-is equivalent to 
-    
+
+is equivalent to
+
     dockedItems: [{
         xtype: 'toolbar',
         dock: 'top',
@@ -446,9 +518,9 @@ Convenience method. Short for 'Bottom Bar'.
     bbar: [
       { xtype: 'button', text: 'Button 1' }
     ]
-    
-is equivalent to 
-    
+
+is equivalent to
+
     dockedItems: [{
         xtype: 'toolbar',
         dock: 'bottom',
@@ -467,22 +539,27 @@ is equivalent to
         /**
          * @cfg {Object/Array} buttons
 
-Convenience method used for adding buttons docked to the bottom right of the panel.
+Convenience method used for adding buttons docked to the bottom right of the panel. This is a
+synonym for the {@link #fbar} config.
 
     buttons: [
       { text: 'Button 1' }
     ]
-    
-is equivalent to 
-    
+
+is equivalent to
+
     dockedItems: [{
         xtype: 'toolbar',
         dock: 'bottom',
+        defaults: {minWidth: {@link #minButtonWidth}},
         items: [
             { xtype: 'component', flex: 1 },
             { xtype: 'button', text: 'Button 1' }
         ]
     }]
+
+The {@link #minButtonWidth} is used as the default {@link Ext.button.Button#minWidth minWidth} for
+each of the buttons in the buttons toolbar.
 
          * @markdown
          */
@@ -499,17 +576,21 @@ Convenience method used for adding items to the bottom right of the panel. Short
     fbar: [
       { type: 'button', text: 'Button 1' }
     ]
-    
-is equivalent to 
-    
+
+is equivalent to
+
     dockedItems: [{
         xtype: 'toolbar',
         dock: 'bottom',
+        defaults: {minWidth: {@link #minButtonWidth}},
         items: [
             { xtype: 'component', flex: 1 },
             { xtype: 'button', text: 'Button 1' }
         ]
     }]
+
+The {@link #minButtonWidth} is used as the default {@link Ext.button.Button#minWidth minWidth} for
+each of the buttons in the fbar.
 
          * @markdown
          */
@@ -517,10 +598,16 @@ is equivalent to
             fbar = initToolbar(me.fbar, 'bottom');
             fbar.ui = 'footer';
 
+            // Add the minButtonWidth config to the toolbar's defaults
+            if (minButtonWidth) {
+                fbar.defaults = Ext.applyIf(fbar.defaults || {}, {minWidth: minButtonWidth});
+            }
+
             fbar = me.addDocked(fbar)[0];
             fbar.insert(0, {
                 flex: 1,
-                xtype: 'component'
+                xtype: 'component',
+                focusable: false
             });
             me.fbar = null;
         }
@@ -614,9 +701,6 @@ is equivalent to
         // Dock the header/title
         me.updateHeader();
 
-        // Call to super after adding the header, to prevent an unnecessary re-layout
-        me.callParent(arguments);
-
         // If initially collapsed, collapsed flag must indicate true current state at this point.
         // Do collapse after the first time the Panel's structure has been laid out.
         if (me.collapsed) {
@@ -630,13 +714,16 @@ is equivalent to
                     single: true
                 });
             } else {
-                me.getComponentLayout().afterLayout = function() {
-                    delete me.componentLayout.afterLayout;
-                    this.constructor.prototype.afterLayout.apply(this, arguments);
+                me.afterComponentLayout = function() {
+                    delete me.afterComponentLayout;
+                    Ext.getClass(me).prototype.afterComponentLayout.apply(me, arguments);
                     me.collapse(null, false, true);
                 };
             }
         }
+
+        // Call to super after adding the header, to prevent an unnecessary re-layout
+        me.callParent(arguments);
     },
 
     /**
@@ -649,10 +736,10 @@ is equivalent to
             header = me.header,
             title = me.title,
             tools = me.tools;
-
+        
         if (!me.preventHeader && (force || title || (tools && tools.length))) {
             if (!header) {
-                header = me.header = new Ext.panel.Header({
+                header = me.header = Ext.create('Ext.panel.Header', {
                     title       : title,
                     orientation : (me.headerPosition == 'left' || me.headerPosition == 'right') ? 'vertical' : 'horizontal',
                     dock        : me.headerPosition || 'top',
@@ -751,7 +838,7 @@ is equivalent to
                     afteranimate: me.afterCollapse,
                     scope: me
                 },
-                duration: Ext.num(animate, Ext.fx.Anim.prototype.duration)
+                duration: Ext.Number.from(animate, Ext.fx.Anim.prototype.duration)
             },
             reExpander,
             reExpanderOrientation,
@@ -869,9 +956,11 @@ is equivalent to
                 iconCls: me.iconCls,
                 baseCls: me.baseCls + '-header',
                 ui: me.ui,
+                frame: me.frame && me.frameHeader,
+                ignoreParentFrame: me.frame || me.overlapHeader,
                 indicateDrag: me.draggable,
-                cls: me.baseCls + '-collapsed-placeholder ' + me.collapsedHeaderCls,
-                renderTo: me.getTargetEl()
+                cls: me.baseCls + '-collapsed-placeholder ' + me.collapsedHeaderCls + ' ' + Ext.baseCSSPrefix + 'docked',
+                renderTo: me.el
             };
             reExpander[(reExpander.orientation == 'horizontal') ? 'tools' : 'items'] = [{
                 xtype: 'tool',
@@ -880,19 +969,10 @@ is equivalent to
                 scope: me
             }];
 
+            // Capture the size of the re-expander.
+            // For vertical headers in IE6 and IE7, this will be sized by a CSS rule in _panel.scss
             reExpander = me.reExpander = Ext.create('Ext.panel.Header', reExpander);
-
-            // Hack for IE6/7's inability to display an inline-block
-            // No, seriously, this has to be here. Check examples/panel/panel.html, and collapse the second Panel.
-            // Without this, it's broken.
-            if ((Ext.isIE6 || Ext.isIE7) && (reExpanderOrientation == 'vertical')) {
-                newSize = 25;
-                reExpander.el.dom.style.display = 'block';
-                reExpander[setDimension](newSize);
-                reExpander.el.dom.style.display = '';
-            } else {
-                newSize = reExpander[getDimension]();
-            }
+            newSize = reExpander[getDimension]();
             reExpander.hide();
 
             // Insert the new docked item
@@ -920,7 +1000,7 @@ is equivalent to
         delete me.flex;
 
         if (animate) {
-            this.animate(anim);
+            me.animate(anim);
         } else {
             me.setSize(anim.to.width, anim.to.height);
             if (Ext.isDefined(anim.to.left) || Ext.isDefined(anim.to.top)) {
@@ -949,11 +1029,11 @@ is equivalent to
         me.collapsed = true;
 
         if (!internal) {
-            if (me.ownerCt) {
-                me.ownerCt.doLayout();
-            } else {
-                me.doComponentLayout();
-            }
+            me.doComponentLayout();
+        }
+        
+        if (me.resizer) {
+            me.resizer.disable();
         }
 
         // If me Panel was configured with a collapse tool in its header, flip it's type
@@ -997,7 +1077,8 @@ is equivalent to
         // Show any docked items that we hid on collapse
         // And hide the injected reExpander Header
         for (; i < l; i++) {
-            me.hiddenDocked[i].show();
+            me.hiddenDocked[i].hidden = false;
+            me.hiddenDocked[i].el.show();
         }
         if (me.reExpander) {
             if (me.reExpander.temporary) {
@@ -1126,6 +1207,10 @@ is equivalent to
         if (animated && me.ownerCt) {
             me.ownerCt.doLayout();
         }
+        
+        if (me.resizer) {
+            me.resizer.enable();
+        }
 
         me.fireEvent('expand', me);
 
@@ -1151,7 +1236,7 @@ is equivalent to
     // private
     getKeyMap : function(){
         if(!this.keyMap){
-            this.keyMap = new Ext.util.KeyMap(this.el, this.keys);
+            this.keyMap = Ext.create('Ext.util.KeyMap', this.el, this.keys);
         }
         return this.keyMap;
     },
@@ -1166,7 +1251,7 @@ is equivalent to
          * @type Ext.dd.DragSource.
          * @property dd
          */
-        this.dd = new Ext.panel.DD(this, Ext.isBoolean(this.draggable) ? null : this.draggable);
+        this.dd = Ext.create('Ext.panel.DD', this, Ext.isBoolean(this.draggable) ? null : this.draggable);
     },
 
     // private - used for dragging
@@ -1175,24 +1260,27 @@ is equivalent to
             box = me.getBox();
 
         if (!me.ghostPanel) {
-            me.ghostPanel = new Ext.panel.Panel({
+            me.ghostPanel = Ext.create('Ext.panel.Panel', {
                 renderTo: document.body,
-                floating: true,
-                frame: me.frame,
+                floating: {
+                    shadow: false
+                },
+                frame: Ext.supports.CSS3BorderRadius ? me.frame : false,
                 title: me.title,
                 overlapHeader: me.overlapHeader,
                 headerPosition: me.headerPosition,
                 width: me.getWidth(),
                 height: me.getHeight(),
+                iconCls: me.iconCls,
                 baseCls: me.baseCls,
-                tools: [{
+                tools: me.initialConfig.tools || [{
                     type: 'placeholder'
                 }],
                 cls: me.baseCls + '-ghost ' + (cls ||'')
             });
         }
         me.ghostPanel.floatParent = me.floatParent;
-        me.ghostPanel.setZIndex(Ext.num(me.el.getStyle('zIndex'), 0));
+        me.ghostPanel.setZIndex(Ext.Number.from(me.el.getStyle('zIndex'), 0));
         me.ghostPanel.el.show();
         me.ghostPanel.setPosition(box.x, box.y);
         me.ghostPanel.setSize(box.width, box.height);
@@ -1221,9 +1309,11 @@ is equivalent to
         }
         me.ghostPanel.el.hide();
     },
-
-    // should update body's el.
-    doAutoLoad: function() {
-
+    
+    initResizable: function(resizable) {
+        if (this.collapsed) {
+            resizable.disabled = true;
+        }
+        this.callParent([resizable]);
     }
 });

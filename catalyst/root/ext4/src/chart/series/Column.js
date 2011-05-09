@@ -29,22 +29,26 @@ Ext.define('Ext.chart.series.Column', {
 
     /* Begin Definitions */
 
+    alternateClassName: ['Ext.chart.ColumnSeries', 'Ext.chart.ColumnChart', 'Ext.chart.StackedColumnChart'],
+
     extend: 'Ext.chart.series.Bar',
 
     /* End Definitions */
 
     type: 'column',
+    alias: 'series.column',
+
     column: true,
 
     /**
-     * @cfg {Number} xpadding
+     * @cfg {Number} xPadding
      * Padding between the left/right axes and the bars
      */
-    xpadding: 10,
+    xPadding: 10,
 
     /**
-     * @cfg {Number} ypadding
+     * @cfg {Number} yPadding
      * Padding between the top/bottom axes and the bars
      */
-    ypadding: 0
+    yPadding: 0
 });

@@ -10,7 +10,7 @@
   <pre><code>
         series: [{
             type: 'scatter',
-            markerCfg: {
+            markerConfig: {
                 radius: 5,
                 size: 5
             },
@@ -19,7 +19,7 @@
             yField: 'data1'
         }, {
             type: 'scatter',
-            markerCfg: {
+            markerConfig: {
                 radius: 5,
                 size: 5
             },
@@ -28,7 +28,7 @@
             yField: 'data2'
         }, {
             type: 'scatter',
-            markerCfg: {
+            markerConfig: {
                 radius: 5,
                 size: 5
             },
@@ -41,7 +41,7 @@
  * 
  * In this configuration we add three different categories of scatter series. Each of them is bound to a different field of the same data store, 
  * `data1`, `data2` and `data3` respectively. All x-fields for the series must be the same field, in this case `name`. 
- * Each scatter series has a different styling configuration for markers, specified by the `markerCfg` object. Finally we set the left axis as 
+ * Each scatter series has a different styling configuration for markers, specified by the `markerConfig` object. Finally we set the left axis as 
  * axis to show the current values of the elements.
  * 
  * @xtype scatter
@@ -53,14 +53,15 @@ Ext.define('Ext.chart.series.Scatter', {
 
     extend: 'Ext.chart.series.Cartesian',
 
-    requires: ['Ext.chart.axis.Axis', 'Ext.chart.Shapes', 'Ext.fx.Anim'],
+    requires: ['Ext.chart.axis.Axis', 'Ext.chart.Shape', 'Ext.fx.Anim'],
 
     /* End Definitions */
 
     type: 'scatter',
+    alias: 'series.scatter',
 
     /**
-     * @cfg {Object} markerCfg
+     * @cfg {Object} markerConfig
      * The display style for the scatter series markers.
      */
     
@@ -76,7 +77,7 @@ Ext.define('Ext.chart.series.Scatter', {
             surface = me.chart.surface, i, l;
         Ext.apply(me, config, {
             style: {},
-            markerCfg: {},
+            markerConfig: {},
             shadowAttributes: [{
                 "stroke-width": 6,
                 "stroke-opacity": 0.05,
@@ -126,7 +127,7 @@ Ext.define('Ext.chart.series.Scatter', {
         }
         // If a field was specified without a corresponding axis, create one to get bounds
         if (me.xField && !Ext.isNumber(minX)) {
-            axis = new Ext.chart.axis.Axis({
+            axis = Ext.create('Ext.chart.axis.Axis', {
                 chart: chart,
                 fields: [].concat(me.xField)
             }).calcEnds();
@@ -134,7 +135,7 @@ Ext.define('Ext.chart.series.Scatter', {
             maxX = axis.to;
         }
         if (me.yField && !Ext.isNumber(minY)) {
-            axis = new Ext.chart.axis.Axis({
+            axis = Ext.create('Ext.chart.axis.Axis', {
                 chart: chart,
                 fields: [].concat(me.yField)
             }).calcEnds();
@@ -277,7 +278,7 @@ Ext.define('Ext.chart.series.Scatter', {
             group = me.group,
             bbox = me.bbox;
 
-        return Ext.chart.Shapes[type](chart.surface, Ext.apply({}, {
+        return Ext.chart.Shape[type](chart.surface, Ext.apply({}, {
             x: 0,
             y: 0,
             group: group,
@@ -315,7 +316,7 @@ Ext.define('Ext.chart.series.Scatter', {
                 });
             }
             Ext.apply(attr, endMarkerStyle);
-            shadow = Ext.chart.Shapes[type](chart.surface, Ext.apply({}, {
+            shadow = Ext.chart.Shape[type](chart.surface, Ext.apply({}, {
                 x: 0,
                 y: 0,
                 group: shadowGroups[i]
@@ -339,7 +340,7 @@ Ext.define('Ext.chart.series.Scatter', {
             sprite, attrs, attr, ln, i, endMarkerStyle, shindex, type, shadows,
             rendererAttributes, shadowAttribute;
 
-        endMarkerStyle = Ext.apply(me.markerStyle, me.markerCfg);
+        endMarkerStyle = Ext.apply(me.markerStyle, me.markerConfig);
         type = endMarkerStyle.type;
         delete endMarkerStyle.type;
 
@@ -487,7 +488,7 @@ Ext.define('Ext.chart.series.Scatter', {
         }
         else {
             if (resizing) {
-                anim = item.sprite.hasActiveFx();
+                anim = item.sprite.getActiveAnimation();
                 if (anim) {
                     anim.on('afteranimate', function() {
                         label.setAttributes({

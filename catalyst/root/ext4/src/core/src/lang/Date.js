@@ -3,10 +3,7 @@
  * A set of useful static methods to deal with date
  * Note that if Ext.Date is required and loaded, it will copy all methods / properties to
  * this object for convenience
- * @singleton
- */
-
-/**
+ *
  * The date parsing and formatting syntax contains a subset of
  * <a href="http://www.php.net/date">PHP's date() function</a>, and the formats that are
  * supported will provide results equivalent to their PHP versions.
@@ -107,6 +104,7 @@ console.log(Ext.Date.format(dt, Ext.Date.patterns.ShortDate));
 </code></pre>
  * <p>Developer-written, custom formats may be used by supplying both a formatting and a parsing function
  * which perform to specialized requirements. The functions are stored in {@link #parseFunctions} and {@link #formatFunctions}.</p>
+ * @singleton
  */
 
 /*
@@ -139,6 +137,21 @@ Ext.Date = {
     },
 
     /**
+     * @private
+     * Private for now
+     */
+    toString: function(date) {
+        var pad = Ext.String.leftPad;
+
+        return date.getFullYear() + "-"
+            + pad(date.getMonth() + 1, 2, '0') + "-"
+            + pad(date.getDate(), 2, '0') + "T"
+            + pad(date.getHours(), 2, '0') + ":"
+            + pad(date.getMinutes(), 2, '0') + ":"
+            + pad(date.getSeconds(), 2, '0');
+    },
+
+    /**
      * Returns the number of milliseconds between two dates
      * @param {Date} dateA
      * @param {Date} dateB (optional) Defaults to now
@@ -147,7 +160,7 @@ Ext.Date = {
     getElapsed: function(dateA, dateB) {
         return Math.abs(dateA - (dateB || new Date()));
     },
-    
+
     /**
      * Global flag which determines if strict date parsing should be used.
      * Strict date parsing will not roll-over invalid dates, which is the
@@ -454,7 +467,7 @@ Ext.Date.monthNumbers = {
             return hourInfoRe.test(format.replace(stripEscapeRe, ''));
         };
     })(),
-    
+
     /**
      * Checks if the specified format contains information about
      * anything other than the time.
@@ -466,7 +479,7 @@ Ext.Date.monthNumbers = {
     formatContainsDateInfo : (function(){
         var stripEscapeRe = /(\\.)/g,
             dateInfoRe = /([djzmnYycU]|MS)/;
-            
+
         return function(format){
             return dateInfoRe.test(format.replace(stripEscapeRe, ''));
         };
@@ -614,7 +627,7 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
         }
         return p[format](input, Ext.isDefined(strict) ? strict : utilDate.useStrict);
     },
-    
+
     // Backwards compat
     parseDate: function(input, format, strict){
         return utilDate.parse(input, format, strict);
@@ -672,16 +685,16 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
                     // (note: clearTime() handles Daylight Saving Time automatically)
                     "dt = Ext.Date.clearTime(new Date);",
 
-                    // date calculations (note: these calculations create a dependency on Ext.num())
-                    "y = Ext.num(y, Ext.num(def.y, dt.getFullYear()));",
-                    "m = Ext.num(m, Ext.num(def.m - 1, dt.getMonth()));",
-                    "d = Ext.num(d, Ext.num(def.d, dt.getDate()));",
+                    // date calculations (note: these calculations create a dependency on Ext.Number.from())
+                    "y = Ext.Number.from(y, Ext.Number.from(def.y, dt.getFullYear()));",
+                    "m = Ext.Number.from(m, Ext.Number.from(def.m - 1, dt.getMonth()));",
+                    "d = Ext.Number.from(d, Ext.Number.from(def.d, dt.getDate()));",
 
-                    // time calculations (note: these calculations create a dependency on Ext.num())
-                    "h  = Ext.num(h, Ext.num(def.h, dt.getHours()));",
-                    "i  = Ext.num(i, Ext.num(def.i, dt.getMinutes()));",
-                    "s  = Ext.num(s, Ext.num(def.s, dt.getSeconds()));",
-                    "ms = Ext.num(ms, Ext.num(def.ms, dt.getMilliseconds()));",
+                    // time calculations (note: these calculations create a dependency on Ext.Number.from())
+                    "h  = Ext.Number.from(h, Ext.Number.from(def.h, dt.getHours()));",
+                    "i  = Ext.Number.from(i, Ext.Number.from(def.i, dt.getMinutes()));",
+                    "s  = Ext.Number.from(s, Ext.Number.from(def.s, dt.getSeconds()));",
+                    "ms = Ext.Number.from(ms, Ext.Number.from(def.ms, dt.getMilliseconds()));",
 
                     "if(z >= 0 && y >= 0){",
                         // both the year and zero-based day of year are defined and >= 0.

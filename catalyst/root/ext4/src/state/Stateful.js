@@ -184,7 +184,7 @@ Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
         
         if (delay > 0) {
             if (!me.stateTask) {
-                me.stateTask = new Ext.util.DelayedTask(me.saveState, me);
+                me.stateTask = Ext.create('Ext.util.DelayedTask', me.saveState, me);
             }
             me.stateTask.delay(me.saveDelay);
         } else {

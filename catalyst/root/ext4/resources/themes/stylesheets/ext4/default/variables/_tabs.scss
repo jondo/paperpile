@@ -52,9 +52,9 @@ $tab-bottom-border-width: 0 1px 1px 1px !default;
 $tab-bottom-inner-border-width: 0 1px 1px 1px !default;
 
 $tab-border-color: adjust-color($tab-base-color, $hue: 1.283deg, $saturation: -28.008%, $lightness: -20.98%) !default;
-$tab-border-color-over: $tab-border-color;
-$tab-border-color-active: $tab-border-color;
-$tab-border-color-disabled: adjust-color($base-color, $hue: 1.282deg, $saturation: 6.349%, $lightness: -0.588%);
+$tab-border-color-over: $tab-border-color !default;
+$tab-border-color-active: $tab-border-color !default;
+$tab-border-color-disabled: adjust-color($base-color, $hue: 1.282deg, $saturation: 6.349%, $lightness: -0.588%) !default;
 
 $tab-inner-border-color: adjust-color($tab-base-color, $hue: 0.847deg, $saturation: -8.571%, $lightness: 8.941%) !default;
 
@@ -62,7 +62,7 @@ $tabbar-border-color: $panel-header-border-color !default;
 
 //size
 $tabbar-body-height: 29px !default;
-$tab-height: 24px !default;
+$tab-height: 25px !default;
 
 //closable tab
 $tab-closable-icon: 'tab/tab-default-close.gif' !default;
@@ -74,4 +74,6 @@ $tab-closable-icon-right: 3px !default;
 //tab bar strip
 $tab-bar-strip-border-color: $panel-header-border-color !default;
 $tab-bar-strip-background-color: $tab-base-color !default;
+
+$tab-bar-strip-border-background-color: $tab-base-color !default;
 

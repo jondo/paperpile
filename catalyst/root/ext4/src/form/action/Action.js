@@ -15,6 +15,7 @@
  * @param {Object} config The configuration for this instance.
  */
 Ext.define('Ext.form.action.Action', {
+    alternateClassName: 'Ext.form.Action',
 
     /**
      * @cfg {Ext.form.Basic} form The {@link Ext.form.Basic BasicForm} instance that
@@ -42,7 +43,7 @@ Ext.define('Ext.form.action.Action', {
      * @cfg {Object/String} params <p>Extra parameter values to pass. These are added to the Form's
      * {@link Ext.form.Basic#baseParams} and passed to the specified URL along with the Form's
      * input fields.</p>
-     * <p>Parameters are encoded as standard HTTP parameters using {@link Ext#urlEncode Ext.urlEncode}.</p>
+     * <p>Parameters are encoded as standard HTTP parameters using {@link Ext#urlEncode Ext.Object.toQueryString}.</p>
      */
 
     /**
@@ -83,12 +84,12 @@ Ext.define('Ext.form.action.Action', {
      */
 
     /**
-     * @cfg {String} waitMsg The message to be displayed by a call to {@link Ext.window.MessageBoxWindow#wait}
+     * @cfg {String} waitMsg The message to be displayed by a call to {@link Ext.window.MessageBox#wait}
      * during the time the action is being processed.
      */
 
     /**
-     * @cfg {String} waitTitle The title to be displayed by a call to {@link Ext.window.MessageBoxWindow#wait}
+     * @cfg {String} waitTitle The title to be displayed by a call to {@link Ext.window.MessageBox#wait}
      * during the time the action is being processed.
      */
 
@@ -109,7 +110,7 @@ Ext.define('Ext.form.action.Action', {
      * {@link Ext.form.action.Action#SERVER_INVALID}, {@link Ext.form.action.Action#CONNECT_FAILURE}, or
      * {@link Ext.form.action.Action#LOAD_FAILURE}.  Usage:
      * <pre><code>
-var fp = new Ext.form.FormPanel({
+var fp = new Ext.form.Panel({
 ...
 buttons: [{
     text: 'Save',
@@ -171,7 +172,7 @@ buttons: [{
         // Normalize the params option to an Object
         var params = config.params;
         if (Ext.isString(params)) {
-            this.params = Ext.urlDecode(params);
+            this.params = Ext.Object.fromQueryString(params);
         }
     },
 

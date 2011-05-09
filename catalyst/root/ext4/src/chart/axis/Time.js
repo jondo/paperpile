@@ -41,6 +41,10 @@ Ext.define('Ext.chart.axis.Time', {
 
     extend: 'Ext.chart.axis.Category',
 
+    alternateClassName: 'Ext.chart.TimeAxis',
+
+    alias: 'axis.time',
+
     requires: ['Ext.data.Store', 'Ext.data.JsonStore'],
 
     /* End Definitions */
@@ -190,7 +194,7 @@ Ext.define('Ext.chart.axis.Time', {
             field = this.fields,
             store = this.chart.store,
             record, recObj, fieldNames = [],
-            newStore = new Ext.data.Store({
+            newStore = Ext.create('Ext.data.Store', {
                 model: store.model
             });
         
@@ -298,7 +302,7 @@ Ext.define('Ext.chart.axis.Time', {
             }
             json.push(obj);
         }
-        this.chart.substore = new Ext.data.JsonStore({
+        this.chart.substore = Ext.create('Ext.data.JsonStore', {
             fields: recFields,
             data: json
         });
@@ -323,8 +327,7 @@ Ext.define('Ext.chart.axis.Time', {
          }, this);
      },
 
-     // @private modifies the store and creates the labels for the axes.
-     applyData: function() {
+    processView: function() {
          //TODO(nico): fix this eventually...
          if (this.constrain) {
              this.constrainDates();
@@ -333,7 +336,11 @@ Ext.define('Ext.chart.axis.Time', {
          } else {
              this.aggregate();
          }
-         this.setLabels();
+    },
+
+     // @private modifies the store and creates the labels for the axes.
+     applyData: function() {
+        this.setLabels();
         var count = this.chart.substore.getCount();
          return {
              from: 0,

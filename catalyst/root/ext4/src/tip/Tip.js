@@ -12,7 +12,6 @@
 Ext.define('Ext.tip.Tip', {
     extend: 'Ext.panel.Panel',
     requires: [ 'Ext.layout.component.Tip' ],
-    alias: 'widget.tip',
     alternateClassName: 'Ext.Tip',
     /**
      * @cfg {Boolean} closable True to render a close tool button into the tooltip header (defaults to false).
@@ -35,7 +34,7 @@ Ext.define('Ext.tip.Tip', {
      * for bottom-right shadow (defaults to "sides").
      */
     shadow : "sides",
-    
+
     /**
      * @cfg {String} defaultAlign <b>Experimental</b>. The default {@link Ext.core.Element#alignTo} anchor position value
      * for this tip relative to its element of origin (defaults to "tl-bl?").
@@ -46,6 +45,11 @@ Ext.define('Ext.tip.Tip', {
      * the browser viewport. Defaults to false.
      */
     constrainPosition : true,
+
+    /**
+     * @inherited
+     */
+    frame: false,
 
     // private panel overrides
     autoRender: true,
@@ -80,7 +84,7 @@ tip.showAt([50,100]);
      */
     showAt : function(xy){
         var me = this;
-        Ext.tip.Tip.superclass.show.call(me);
+        this.callParent();
         // Show may have been vetoed.
         if (me.isVisible()) {
             me.setPagePosition(xy[0], xy[1]);
@@ -108,7 +112,7 @@ tip.showBy('my-el', 'tl-tr');
     showBy : function(el, pos) {
         this.showAt(this.el.getAlignToXY(el, pos || this.defaultAlign));
     },
-    
+
     /**
      * @private
      * @override

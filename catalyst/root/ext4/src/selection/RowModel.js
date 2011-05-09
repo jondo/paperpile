@@ -350,7 +350,7 @@ Ext.define('Ext.selection.RowModel', {
 
     // Provide indication of what row was last focused via
     // the gridview.
-    onLastFocusChanged: function(oldFocused, newFocused) {
+    onLastFocusChanged: function(oldFocused, newFocused, supressFocus) {
         var views   = this.views,
             viewsLn = views.length,
             store   = this.store,
@@ -370,7 +370,7 @@ Ext.define('Ext.selection.RowModel', {
             rowIdx = store.indexOf(newFocused);
             if (rowIdx != -1) {
                 for (i = 0; i < viewsLn; i++) {
-                    views[i].onRowFocus(rowIdx, true);
+                    views[i].onRowFocus(rowIdx, true, supressFocus);
                 }
             }
         }

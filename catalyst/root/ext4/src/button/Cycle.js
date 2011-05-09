@@ -105,14 +105,14 @@ Ext.define('Ext.button.Cycle', {
                 me.iconCls = item.iconCls;
             } else {
                 me.setText(me.getButtonText(item));
-                me.setIconClass(item.iconCls);
+                me.setIconCls(item.iconCls);
             }
             me.activeItem = item;
             if (!item.checked) {
                 item.setChecked(true, false);
             }
             if (me.forceIcon) {
-                me.setIconClass(me.forceIcon);
+                me.setIconCls(me.forceIcon);
             }
             if (!suppressEvent) {
                 me.fireEvent('change', me, item);

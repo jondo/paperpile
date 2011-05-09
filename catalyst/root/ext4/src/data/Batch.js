@@ -6,7 +6,7 @@
  * after the completion of each Operation, and the 'complete' event when all Operations have been successfully executed. Fires an 'exception'
  * event if any of the Operations encounter an exception.</p>
  * 
- * <p>Usually these are only used internally by {@link Ext.data.Proxy} classes</p>
+ * <p>Usually these are only used internally by {@link Ext.data.proxy.Proxy} classes</p>
  * 
  * @constructor
  * @param {Object} config Optional config object

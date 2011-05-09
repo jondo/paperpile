@@ -64,7 +64,8 @@ Ext.define('Ext.view.DropZone', {
                 html: me.indicatorHtml,
                 cls: me.indicatorCls,
                 ownerCt: me.view,
-                floating: true
+                floating: true,
+                shadow: false
             });
         }
         return me.indicator;

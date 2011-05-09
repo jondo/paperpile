@@ -1,46 +1,52 @@
 /**
  * @class Ext.slider.Multi
- * @extends Ext.Component
+ * @extends Ext.form.field.Base
  * <p>Slider which supports vertical or horizontal orientation, keyboard adjustments, configurable snapping, axis
  * clicking and animation. Can be added as an item to any container. In addition,  
+ * {@img Ext.slider.Multi/Ext.slider.Multi.png Ext.slider.Multi component}
  * <p>Example usage:</p>
-<pre>
-new Ext.slider.Multi({
-    renderTo: Ext.getBody(),
-    width: 200,
-    value: 50,
-    increment: 10,
-    minValue: 0,
-    maxValue: 100
-});
-</pre>
  * Sliders can be created with more than one thumb handle by passing an array of values instead of a single one:
 <pre>
-new Ext.slider.Multi({
-    renderTo: Ext.getBody(),
-    width: 200,
-    values: [25, 50, 75],
-    minValue: 0,
-    maxValue: 100,
+    Ext.create('Ext.slider.Multi', {
+        width: 200,
+        values: [25, 50, 75],
+        increment: 5,
+        minValue: 0,
+        maxValue: 100,
 
-    //this defaults to true, setting to false allows the thumbs to pass each other
-    {@link #constrainThumbs}: false
-});
+        //this defaults to true, setting to false allows the thumbs to pass each other
+        {@link #constrainThumbs}: false,
+        renderTo: Ext.getBody()
+    });  
 </pre>
  * @xtype multislider
  */
 Ext.define('Ext.slider.Multi', {
-    extend: 'Ext.form.BaseField',
+    extend: 'Ext.form.field.Base',
     alias: 'widget.multislider',
     alternateClassName: 'Ext.slider.MultiSlider',
-    
+
     requires: [
-        'Ext.slider.Thumb', 
-        'Ext.slider.Tip', 
-        'Ext.Number', 
-        'Ext.util.Format', 
-        'Ext.Template', 
-        'Ext.layout.component.SliderField'
+        'Ext.slider.Thumb',
+        'Ext.slider.Tip',
+        'Ext.Number',
+        'Ext.util.Format',
+        'Ext.Template',
+        'Ext.layout.component.field.Slider'
+    ],
+
+    fieldSubTpl: [
+        '<div class="' + Ext.baseCSSPrefix + 'slider {fieldCls} {vertical}" aria-valuemin="{minValue}" aria-valuemax="{maxValue}" aria-valuenow="{value}" aria-valuetext="{value}">',
+            '<div class="' + Ext.baseCSSPrefix + 'slider-end" role="presentation">',
+                '<div class="' + Ext.baseCSSPrefix + 'slider-inner" role="presentation">',
+                    '<a class="' + Ext.baseCSSPrefix + 'slider-focus" href="#" tabIndex="-1" hidefocus="on" role="presentation"></a>',
+                '</div>',
+            '</div>',
+        '</div>',
+        {
+            disableFormats: true,
+            compiled: true
+        }
     ],
 
     /**
@@ -222,7 +228,7 @@ Ext.define('Ext.slider.Multi', {
         if (this.useTips) {
             var plug = this.tipText ? {getText: this.tipText} : {};
             this.plugins = this.plugins || [];
-            this.plugins.push(new Ext.slider.Tip(plug));
+            this.plugins.push(Ext.create('Ext.slider.Tip', plug));
         }
     },
 
@@ -232,7 +238,7 @@ Ext.define('Ext.slider.Multi', {
      * @return {Ext.slider.Thumb} The thumb
      */
     addThumb: function(value) {
-        var thumb = new Ext.slider.Thumb({
+        var thumb = Ext.create('Ext.slider.Thumb', {
             value    : value,
             slider   : this,
             index    : this.thumbs.length,
@@ -708,9 +714,10 @@ Ext.define('Ext.slider.Multi', {
             me.setValue(i, val);
         });
         me.clearInvalid();
-        me.wasValid = true;
+        // delete here so we reset back to the original state
+        delete me.wasValid;
     },
-    
+
     // private
     beforeDestroy : function() {
         Ext.destroyMembers(this.innerEl, this.endEl, this.focusEl);
@@ -738,25 +745,11 @@ Ext.define('Ext.slider.Multi', {
                     if (!thumb.disabled) {
                         index = thumb.index;
                         bottom =  this.reverseValue(this.innerEl.getHeight() - local.top);
-                        
+
                         this.setValue(index, Ext.util.Format.round(this.minValue + bottom, this.decimalPrecision), undefined, true);
                     }
                 }
             }
         }
     }
-}, function() {
-    this.prototype.fieldSubTpl = new Ext.Template(
-        '<div class="' + Ext.baseCSSPrefix + 'slider {fieldCls} {vertical}" aria-valuemin="{minValue}" aria-valuemax="{maxValue}" aria-valuenow="{value}" aria-valuetext="{value}">',
-            '<div class="' + Ext.baseCSSPrefix + 'slider-end" role="presentation">',
-                '<div class="' + Ext.baseCSSPrefix + 'slider-inner" role="presentation">',
-                    '<a class="' + Ext.baseCSSPrefix + 'slider-focus" href="#" tabIndex="-1" hidefocus="on" role="presentation"></a>',
-                '</div>',
-            '</div>',
-        '</div>',
-        {
-            disableFormats: true,
-            compiled: true
-        }
-    );
 });
