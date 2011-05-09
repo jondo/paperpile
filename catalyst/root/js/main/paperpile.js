@@ -16,11 +16,11 @@
 
 Ext.define('Paperpile.main.Viewport', {
   extend: 'Ext.container.Viewport',
-	    alias: 'widget.pp-viewport',
+  alias: 'widget.pp-viewport',
   initComponent: function() {
     this.createStores();
 
-    this.status = Ext.createByAlias('widget.status');
+    //    this.status = Ext.createByAlias('widget.status');
     this.hoverButtons = Ext.createByAlias('pp-hover-copylink');
 
     Ext.apply(this, {
@@ -28,8 +28,8 @@ Ext.define('Paperpile.main.Viewport', {
         type: 'border'
       },
       enableKeyEvents: true,
-      autoScroll: false,
-      items: [this.createTabs()],
+      //      autoScroll: false,
+      items: [this.createTabs(), this.createTree()],
     });
 
     this.callParent(arguments);
@@ -78,9 +78,8 @@ Ext.define('Paperpile.main.Viewport', {
   },
 
   createTree: function() {
-    this.tree = Ext.create('Ext.panel.Panel', {
-      region: 'west',
-      split: true,
+    this.tree = Ext.createByAlias('widget.pp-tree', {
+      region: 'north',
       flex: 1
     });
     return this.tree;
@@ -242,12 +241,14 @@ Ext.define('Paperpile.main.Viewport', {
   },
 
   loadKeys: function() {
-
     // Borrowed from Window.js
     this.focusEl = this.el.createChild({
       tag: 'a',
       href: '#',
       cls: 'pp-focus',
+      style: {
+	display: 'none',
+      },
       tabIndex: '1',
       html: '&#160;'
     });
@@ -385,7 +386,7 @@ Ext.define('Paperpile.main.Viewport', {
   },
 
   getSetting: function(key) {
-	    return Paperpile.Settings.get(key);
+    return Paperpile.Settings.get(key);
   },
 
   onPDFtabToggle: function(button, pressed) {
@@ -406,7 +407,7 @@ Ext.define('Paperpile.main.Viewport', {
     // folder, otherwise it is stored under the paper_root folder and
     // we need to append the paper_root
     if (!Paperpile.utils.isAbsolute(path)) {
-	path = Paperpile.utils.catPath(Paperpile.Settings.get('paper_root'), path);
+      path = Paperpile.utils.catPath(Paperpile.Settings.get('paper_root'), path);
     }
 
     Paperpile.utils.openFile(path);
@@ -1286,7 +1287,7 @@ Ext.define('Paperpile.main.Viewport', {
 
   checkForUpdates: function(silent) {
 
-	    if ((Paperpile.Settings.get('check_updates') == 0) && silent) {
+    if ((Paperpile.Settings.get('check_updates') == 0) && silent) {
       return;
     }
 

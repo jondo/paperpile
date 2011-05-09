@@ -15,7 +15,18 @@
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
 Ext.define('Paperpile.Tree', {
-  extend: 'Ext.tree.TreePanel',
+  extend: 'Ext.tree.Panel',
+  alias: 'widget.pp-tree',
+
+  initComponent: function() {
+    Ext.apply(this, {});
+    this.callParent(arguments);
+  }
+});
+
+/*
+Ext.define('Paperpile.OldTree', {
+  extend: 'Ext.tree.Panel',
   initComponent: function() {
     Ext.apply(this, {
       enableDD: true,
@@ -192,12 +203,6 @@ Ext.define('Paperpile.Tree', {
       startedit: {
         scope: this,
         fn: function() {
-          /*
-	     * TreeEditor takes the node.text by default, but we 
-	     * want to edit the full node name which is stored
-	     * in node.name (b/c we may shorten node.text if the
-	     * node.name is too long)
-	     */
           var fullName = this.treeEditor.editNode.name;
           if (!fullName && this.treeEditor.editNode.text) {
             fullName = this.treeEditor.editNode.text;
@@ -259,23 +264,11 @@ Ext.define('Paperpile.Tree', {
       return true;
     }
 
-    /*
-    if (node.type == 'IMPORT_PLUGIN' && node.id != 'IMPORT_PLUGIN_ROOT') return false;
-    if (node.parentNode) {
-      var parent = node.parentNode;
-      if (parent.id == 'ROOT') return true;
-      if (parent.parentNode) {
-        var grandparent = parent.parentNode;
-        if (grandparent.id == 'ROOT') return true;
-      }
-    }
-    return false;
-*/
   },
 
   initEvents: function() {
-	    Ext.define('Paperpile.Tree.TreeDropZone', {
-		    extend: 'Ext.tree.TreeDropZone',
+    Ext.define('Paperpile.Tree.TreeDropZone', {
+      extend: 'Ext.tree.TreeDropZone',
       ddGroup: this.ddGroup,
       appendOnly: false,
       getDropPoint: function(e, n, dd) {
@@ -291,7 +284,7 @@ Ext.define('Paperpile.Tree', {
     this.dropZone = new Paperpile.Tree.TreeDropZone(this, {});
 
     Ext.define('Paperpile.Tree.TreeDragZone', {
-	    extend: 'Ext.tree.TreeDragZone',
+      extend: 'Ext.tree.TreeDragZone',
       containerScroll: true,
       ddGroup: this.ddGroup,
       proxy: new Paperpile.StatusTipProxy(),
@@ -1110,7 +1103,7 @@ Ext.define('Paperpile.Tree', {
         node_id: node.id
       },
       success: function(response) {
-	// Close the window of this RSS feed if it's open.
+        // Close the window of this RSS feed if it's open.
         Paperpile.main.tabs.closeTabById.defer(100, Paperpile.main.tabs, [node.id]);
       }
     });
@@ -1226,7 +1219,6 @@ Ext.define('Paperpile.Tree', {
     node.remove();
   },
 
-  /* Debugging only */
   reloadFolder: function() {
     var node = this.lastSelectedNode;
     node.reload();
@@ -1795,7 +1787,7 @@ Paperpile.Tree.EXPORT_MENU_STRING = "Export...";
 Paperpile.Tree.AUTO_EXPORT_MENU_STRING = "BibTeX Sync...";
 
 Ext.define('Paperpile.Tree.ContextMenu', {
-	extend: 'Ext.menu.Menu',
+  extend: 'Ext.menu.Menu',
   node: null,
   tree: null,
   constructor: function(config) {
@@ -1852,7 +1844,7 @@ Ext.define('Paperpile.Tree.ContextMenu', {
 });
 
 Ext.define('Paperpile.Tree.FolderMenu', {
-	extend: 'Paperpile.Tree.ContextMenu',
+  extend: 'Paperpile.Tree.ContextMenu',
   initComponent: function() {
     var tree = this.tree;
     Ext.apply(this, {
@@ -1936,7 +1928,7 @@ Ext.define('Paperpile.Tree.FolderMenu', {
 });
 
 Ext.define('Paperpile.Tree.ActiveMenu', {
-	extend: 'Paperpile.Tree.ContextMenu',
+  extend: 'Paperpile.Tree.ContextMenu',
   initComponent: function() {
     var tree = this.tree;
     Ext.apply(this, {
@@ -1991,7 +1983,7 @@ Ext.define('Paperpile.Tree.ActiveMenu', {
 });
 
 Ext.define('Paperpile.Tree.ImportMenu', {
-	extend: 'Paperpile.Tree.ContextMenu',
+  extend: 'Paperpile.Tree.ContextMenu',
   initComponent: function() {
     var tree = this.tree;
 
@@ -2011,7 +2003,7 @@ Ext.define('Paperpile.Tree.ImportMenu', {
 });
 
 Ext.define('Paperpile.Tree.LabelsMenu', {
-	extend: 'Paperpile.Tree.ContextMenu',
+  extend: 'Paperpile.Tree.ContextMenu',
   initComponent: function() {
     var tree = this.tree;
 
@@ -2137,7 +2129,7 @@ Ext.define('Paperpile.Tree.LabelsMenu', {
 });
 
 Ext.define('Paperpile.Tree.TrashMenu', {
-	extend: 'Paperpile.Tree.ContextMenu',
+  extend: 'Paperpile.Tree.ContextMenu',
   initComponent: function() {
     var tree = this.tree;
 
@@ -2160,7 +2152,7 @@ Ext.define('Paperpile.Tree.TrashMenu', {
 });
 
 Ext.define('Paperpile.TreeLoader', {
-	extend: 'Ext.tree.TreeLoader',
+  extend: 'Ext.tree.TreeLoader',
   createNode: function(attr) {
     var node = Paperpile.TreeLoader.superclass.createNode.call(this, attr);
 
@@ -2169,5 +2161,6 @@ Ext.define('Paperpile.TreeLoader', {
     Ext.apply(node, attr);
     return node;
   }
-
 });
+
+*/
