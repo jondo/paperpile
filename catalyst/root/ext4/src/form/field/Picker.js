@@ -166,7 +166,8 @@ Ext.define('Ext.form.field.Picker', {
         if (this.isExpanded) {
             picker = me.getPicker();
             if (me.matchFieldWidth) {
-                picker.setSize(me.bodyEl.getWidth(), null);
+                // Auto the height (it will be constrained by min and max width) unless there are no records to display.
+                picker.setSize(me.bodyEl.getWidth(), picker.store && picker.store.getCount() ? null : 0);
             }
             if (picker.isFloating()) {
                 picker.alignTo(me.inputEl, me.pickerAlign, me.pickerOffset);

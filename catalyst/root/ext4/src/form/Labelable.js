@@ -254,7 +254,11 @@ Ext.define("Ext.form.Labelable", {
         if (labelAlign === 'top') {
             labelStyle = 'margin-bottom:' + labelPad + 'px;';
         } else {
-            labelStyle = 'width:' + me.labelWidth + 'px;margin-right:' + labelPad + 'px;';
+            labelStyle = 'margin-right:' + labelPad + 'px;';
+            // Add the width for border-box browsers; will be set by the Field layout for content-box
+            if (Ext.isBorderBox) {
+                labelStyle += 'width:' + me.labelWidth + 'px;';
+            }
         }
 
         return Ext.copyTo(

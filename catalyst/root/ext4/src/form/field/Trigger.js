@@ -4,10 +4,31 @@
  * <p>Provides a convenient wrapper for TextFields that adds a clickable trigger button (looks like a combobox by default).
  * The trigger has no default action, so you must assign a function to implement the trigger click handler by
  * overriding {@link #onTriggerClick}. You can create a Trigger field directly, as it renders exactly like a combobox
- * for which you can provide a custom implementation. For example:</p>
+ * for which you can provide a custom implementation. 
+ * {@img Ext.form.field.Trigger/Ext.form.field.Trigger.png Ext.form.field.Trigger component}
+ * For example:</p>
  * <pre><code>
-var trigger = new Ext.form.field.Trigger();
-trigger.onTriggerClick = myTriggerFn;
+    Ext.define('Ext.ux.CustomTrigger', {
+        extend: 'Ext.form.field.Trigger',
+        alias: 'widget.customtrigger',
+        
+        // override onTriggerClick
+        onTriggerClick: function() {
+            Ext.Msg.alert('Status', 'You clicked my trigger!');
+        }
+    });
+    
+    Ext.create('Ext.form.FormPanel', {
+        title: 'Form with TriggerField',
+        bodyPadding: 5,
+        width: 350,
+        renderTo: Ext.getBody(),
+        items:[{
+            xtype: 'customtrigger',
+            fieldLabel: 'Sample Trigger',
+            emptyText: 'click the trigger',
+        }]
+    });
 </code></pre>
  *
  * <p>However, in general you will most likely want to use Trigger as the base class for a reusable component.
@@ -164,6 +185,16 @@ Ext.define('Ext.form.field.Trigger', {
         me.initTrigger();
     },
 
+    onEnable: function() {
+        this.callParent();
+        this.triggerWrap.unmask();
+    },
+    
+    onDisable: function() {
+        this.callParent();
+        this.triggerWrap.mask();
+    },
+    
     afterRender: function() {
         this.callParent();
         this.updateEditState();

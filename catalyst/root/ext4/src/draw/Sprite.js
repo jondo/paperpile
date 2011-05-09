@@ -23,7 +23,8 @@
  * Additionally there are three transform objects that can be set with `setAttributes` which are `translate`, `rotate` and
  * `scale`.
  * 
- * For translate, the configuration object contains x and y attributes for the translation. For example:
+ * For translate, the configuration object contains x and y attributes that indicate where to
+ * translate the object. For example:
  * 
  *     sprite.setAttributes({
  *       translate: {
@@ -32,8 +33,8 @@
  *       }
  *     }, true);
  * 
- * For rotate, the configuration object contains x and y attributes for the center of the rotation (which are optional),
- * and a degrees attribute that specifies the rotation in degrees. For example:
+ * For rotation, the configuration object contains x and y attributes for the center of the rotation (which are optional),
+ * and a `degrees` attribute that specifies the rotation in degrees. For example:
  * 
  *     sprite.setAttributes({
  *       rotate: {
@@ -41,7 +42,7 @@
  *       }
  *     }, true);
  * 
- * For scale, the configuration object contains x and y attributes for the x-axis and y-axis scaling. For example:
+ * For scaling, the configuration object contains x and y attributes for the x-axis and y-axis scaling. For example:
  * 
  *     sprite.setAttributes({
  *       scale: {
@@ -49,6 +50,41 @@
  *        y: 3
  *       }
  *     }, true);
+ *
+ * Sprites can be created with a reference to a {@link Ext.draw.Surface}
+ *
+ *      var drawComponent = Ext.create('Ext.draw.Component', options here...);
+ *
+ *      var sprite = Ext.create('Ext.draw.Sprite', {
+ *          type: 'circle',
+ *          fill: '#ff0',
+ *          surface: drawComponent.surface,
+ *          radius: 5
+ *      });
+ *
+ * Sprites can also be added to the surface as a configuration object:
+ *
+ *      var sprite = drawComponent.surface.add({
+ *          type: 'circle',
+ *          fill: '#ff0',
+ *          radius: 5
+ *      });
+ *
+ * In order to properly apply properties and render the sprite we have to
+ * `show` the sprite setting the option `redraw` to `true`:
+ *
+ *      sprite.show(true);
+ *
+ * The constructor configuration object of the Sprite can also be used and passed into the {@link Ext.draw.Surface}
+ * add method to append a new sprite to the canvas. For example:
+ *
+ *     drawComponent.surface.add({
+ *         type: 'circle',
+ *         fill: '#ffc',
+ *         radius: 100,
+ *         x: 100,
+ *         y: 100
+ *     });
  */
 Ext.define('Ext.draw.Sprite', {
     /* Begin Definitions */
@@ -57,7 +93,7 @@ Ext.define('Ext.draw.Sprite', {
         observable: 'Ext.util.Observable',
         animate: 'Ext.util.Animate'
     },
-    
+
     requires: ['Ext.draw.SpriteDD'],
 
     /* End Definitions */
@@ -126,6 +162,8 @@ Ext.define('Ext.draw.Sprite', {
         delete config.draggable;
         me.setAttributes(config);
         me.addEvents(
+            'beforedestroy',
+            'destroy',
             'render',
             'mousedown',
             'mouseup',
@@ -136,22 +174,24 @@ Ext.define('Ext.draw.Sprite', {
         );
         me.mixins.observable.constructor.apply(this, arguments);
     },
-    
+
+    /**
+     * <p>If this Sprite is configured {@link #draggable}, this property will contain
+     * an instance of {@link Ext.dd.DragSource} which handles dragging the Sprite.</p>
+     * The developer must provide implementations of the abstract methods of {@link Ext.dd.DragSource}
+     * in order to supply behaviour for each stage of the drag/drop process. See {@link #draggable}.
+     * @type Ext.dd.DragSource.
+     * @property dd
+     */
     initDraggable: function() {
-        /**
-         * <p>If this Sprite is configured {@link #draggable}, this property will contain
-         * an instance of {@link Ext.dd.DragSource} which handles dragging the Sprite.</p>
-         * The developer must provide implementations of the abstract methods of {@link Ext.dd.DragSource}
-         * in order to supply behaviour for each stage of the drag/drop process. See {@link #draggable}.
-         * @type Ext.dd.DragSource.
-         * @property dd
-         */
-        this.draggable = true;
+        var me = this;
+        me.draggable = true;
         //create element if it doesn't exist.
-        if (!this.el) {
-            this.surface.createSprite(this);
+        if (!me.el) {
+            me.surface.createSprite(me);
         }
-        this.dd = Ext.create('Ext.draw.SpriteDD', this, Ext.isBoolean(this.draggable) ? null : this.draggable);
+        me.dd = Ext.create('Ext.draw.SpriteDD', me, Ext.isBoolean(me.draggable) ? null : me.draggable);
+        me.on('beforedestroy', me.dd.destroy, me.dd);
     },
 
     /**
@@ -296,13 +336,22 @@ Ext.define('Ext.draw.Sprite', {
         }
         return false;
     },
-    
+
+    onRemove: function() {
+        this.surface.onRemove(this);
+    },
+
     /**
      * Removes the sprite and clears all listeners.
      */
     destroy: function() {
-        this.remove();
-        this.clearListeners();
+        var me = this;
+        if (me.fireEvent('beforedestroy', me) !== false) {
+            me.remove();
+            me.surface.onDestroy(me);
+            me.clearListeners();
+            me.fireEvent('destroy');
+        }
     },
 
     /**

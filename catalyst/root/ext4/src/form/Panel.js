@@ -62,7 +62,7 @@ __Form Submission__
 
 By default, Ext Forms are submitted through Ajax, using {@link Ext.form.action.Action}. See the documentation for
 {@link Ext.form.Basic} for details.
-{@img Ext.form.Panel/Ext.form.Panel.png Ext.form.Panel FormPanel component}
+{@img Ext.form.FormPanel/Ext.form.FormPanel.png Ext.form.FormPanel FormPanel component}
 __Example usage:__
 
     Ext.create('Ext.form.Panel', {
@@ -159,7 +159,11 @@ Ext.define('Ext.form.Panel', {
 
     initComponent: function() {
         var me = this;
-
+        
+        if (me.frame) {
+            me.border = false;
+        }
+        
         me.initFieldAncestor();
         me.callParent();
 

@@ -172,34 +172,43 @@
         }
     }
     
-    .#{$prefix}tree-checkbox {
-        float: left;
-        margin: 3px 3px 0 0;
-        display: block;
+    .#{$prefix}ie {
+        .#{$prefix}tree-panel .#{$prefix}grid-row .#{$prefix}grid-cell-inner {
+            white-space: normal;
+        }
     }
     
-    //various positions issues across IE
-    @if $include-ie {
-        .#{$prefix}ie .#{$prefix}tree-checkbox {
-            position: relative;
-            top: -2px;
-            margin: 0;
-        }
-       
-        .#{$prefix}ie8 .#{$prefix}tree-checkbox {
-            top: 2px;
-            margin-right: 3px;
-        }
+    
+    .#{$prefix}tree-checkbox {
+        float: left;
+        margin: 2px 3px 0 0;
+        display: block;
 
-        .#{$prefix}quirks {
-            .#{$prefix}ie8 {
-                .#{$prefix}tree-checkbox {
-                    top: -2px;
-                    margin: 0;
-                }
+        width: $form-checkbox-size;
+        height: $form-checkbox-size;
+        background: theme-image($theme-name, $form-checkbox-image) no-repeat;
+
+        overflow: hidden;
+        padding: 0;
+        border: 0;
+        &::-moz-focus-inner {
+            padding: 0;
+            border: 0;
+        }
+    }
+    @if $include-ie {
+        /* Hack for IE; causes alignment problem in IE9 standards mode so exclude that */
+        .#{$prefix}nbr.#{$prefix}ie {
+            .#{$prefix}tree-checkbox {
+                font-size: 0;
             }
         }
-        
+    }
+    .#{$prefix}tree-checkbox-checked {
+        background-position: 0 (0 - $form-checkbox-size);
+    }
+
+    @if $include-ie {
         .#{$prefix}tree-panel .#{$prefix}grid-cell-inner {
             border-width: 0 !important;
         }

@@ -20,6 +20,15 @@
     .#{$prefix}border-box .#{$prefix}form-trigger {
         height: $form-trigger-height;
     }
+
+    .#{$prefix}field-default-toolbar .#{$prefix}form-trigger {
+        height: $form-toolbar-trigger-height - $form-trigger-border-bottom-width;
+    }
+
+    .#{$prefix}border-box .#{$prefix}field-default-toolbar .#{$prefix}form-trigger {
+        height: $form-toolbar-trigger-height;
+    }
+
     
     .#{$prefix}form-trigger-over {
 		background-position: -$form-trigger-width 0;
@@ -79,41 +88,75 @@
     .#{$prefix}form-date-trigger {
         background-image: theme-image($theme-name, 'form/date-trigger.gif');
     }
+
+    $spinner-btn-height: $form-trigger-height / 2;
     .#{$prefix}form-trigger-wrap {
         .#{$prefix}form-spinner-up,
         .#{$prefix}form-spinner-down {
             background-image: theme-image($theme-name, 'form/spinner.gif');
 
             width: $form-trigger-width;
-            height: 11px;
+            height: $spinner-btn-height;
 
             font-size: 0; /*for IE*/
 
             border-bottom: 0;
         }
         .#{$prefix}form-spinner-down {
-            background-position: 0 -11px;
-            height: 10px;
+            background-position: 0 (-$spinner-btn-height);
         }
     }
     .#{$prefix}form-trigger-wrap-focus .#{$prefix}form-spinner-down {
-        background-position: -($form-trigger-width * 3) -11px;
+        background-position: -($form-trigger-width * 3) (-$spinner-btn-height);
     }
-    .#{$prefix}form-spinner-down-over {
-        background-position: -$form-trigger-width -11px;
+    .#{$prefix}form-trigger-wrap .#{$prefix}form-spinner-down-over {
+        background-position: (-$form-trigger-width) (-$spinner-btn-height);
     }
     .#{$prefix}form-trigger-wrap-focus .#{$prefix}form-spinner-down-over {
-        background-position: -($form-trigger-width * 4) -11px;
+        background-position: -($form-trigger-width * 4) (-$spinner-btn-height);
+    }
+    .#{$prefix}form-trigger-wrap .#{$prefix}form-spinner-down-click {
+        background-position: -($form-trigger-width * 2) (-$spinner-btn-height);
     }
 
-    .#{$prefix}form-spinner-down-click,
-    .#{$prefix}form-trigger-wrap-focus .#{$prefix}form-spinner-down-click {
-        background-position: -($form-trigger-width * 2) -11px;
+
+    .#{$prefix}field-default-toolbar {
+        $spinner-btn-height: $form-toolbar-trigger-height / 2;
+        .#{$prefix}form-trigger-wrap {
+            .#{$prefix}form-spinner-up,
+            .#{$prefix}form-spinner-down {
+                   background-image: theme-image($theme-name, 'form/spinner-small.gif');
+                height: $spinner-btn-height;
+            }
+            .#{$prefix}form-spinner-down {
+                background-position: 0 (-$spinner-btn-height);
+            }
+        }
+        .#{$prefix}form-trigger-wrap-focus .#{$prefix}form-spinner-down {
+            background-position: -($form-trigger-width * 3) (-$spinner-btn-height);
+        }
+        .#{$prefix}form-trigger-wrap .#{$prefix}form-spinner-down-over {
+            background-position: (-$form-trigger-width) (-$spinner-btn-height);
+        }
+        .#{$prefix}form-trigger-wrap-focus .#{$prefix}form-spinner-down-over {
+            background-position: -($form-trigger-width * 4) (-$spinner-btn-height);
+        }
+        .#{$prefix}form-trigger-wrap .#{$prefix}form-spinner-down-click {
+            background-position: -($form-trigger-width * 2) (-$spinner-btn-height);
+        }
     }
 
 
     .#{$prefix}trigger-noedit {
         cursor: pointer;
         cursor: hand;
+    }
+
+
+    .#{$prefix}form-clear-trigger {
+        background-image: theme-image($theme-name, 'form/clear-trigger.gif');
+    }
+    .#{$prefix}form-search-trigger {
+        background-image: theme-image($theme-name, 'form/search-trigger.gif');
     }
 }

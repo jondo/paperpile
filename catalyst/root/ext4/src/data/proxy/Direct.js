@@ -1,38 +1,35 @@
 /**
  * @class Ext.data.proxy.Direct
  * @extends Ext.data.proxy.Server
-
-This class is used to send requests to the server using {@link Ext.direct}. When a request is made,
-the transport mechanism is handed off to the appropriate {@link Ext.direct.RemotingProvider Provider}
-to complete the call.
-
-__Specifying the function__
-This proxy expects a Direct remoting method to be passed in order to be able to complete requests.
-This can be done by specifying the {@link #directFn} configuration. This will use the same direct
-method for all requests. Alternatively, you can provide an {@link #api} configuration. This
-allows you to specify a different remoting method for each CRUD action.
-
-__Paramaters__
-This proxy provides options to help configure which parameters will be sent to the server.
-By specifying the {@link #paramsAsHash} option, it will send an object literal containing each
-of the passed parameters. The {@link #paramOrder} option can be used to specify the order in which
-the remoting method parameters are passed.
-
-
-__Example Usage__
-    Ext.define('User', {
-        extend: 'Ext.data.Model',
-        fields: ['firstName', 'lastName'],
-        proxy: {
-            type: 'direct',
-            directFn: MyApp.getUsers,
-            paramOrder: 'id' // Tells the proxy to pass the id as the first parameter to the remoting method.
-        }
-    });
-    User.load(1);
-
-
- * @markdown
+ * 
+ * This class is used to send requests to the server using {@link Ext.direct}. When a request is made,
+ * the transport mechanism is handed off to the appropriate {@link Ext.direct.RemotingProvider Provider}
+ * to complete the call.
+ * 
+ * ## Specifying the function
+ * This proxy expects a Direct remoting method to be passed in order to be able to complete requests.
+ * This can be done by specifying the {@link #directFn} configuration. This will use the same direct
+ * method for all requests. Alternatively, you can provide an {@link #api} configuration. This
+ * allows you to specify a different remoting method for each CRUD action.
+ * 
+ * ## Paramaters
+ * This proxy provides options to help configure which parameters will be sent to the server.
+ * By specifying the {@link #paramsAsHash} option, it will send an object literal containing each
+ * of the passed parameters. The {@link #paramOrder} option can be used to specify the order in which
+ * the remoting method parameters are passed.
+ * 
+ * ## Example Usage
+ * 
+ *     Ext.define('User', {
+ *         extend: 'Ext.data.Model',
+ *         fields: ['firstName', 'lastName'],
+ *         proxy: {
+ *             type: 'direct',
+ *             directFn: MyApp.getUsers,
+ *             paramOrder: 'id' // Tells the proxy to pass the id as the first parameter to the remoting method.
+ *         }
+ *     });
+ *     User.load(1);
  */
 Ext.define('Ext.data.proxy.Direct', {
     /* Begin Definitions */
@@ -84,12 +81,15 @@ paramOrder: 'param1|param2|param'
      * of the same name will override these params when they are in conflict.
      */
     
+    // private
+    paramOrderRe: /[\s,|]/,
+    
     constructor: function(config){
         var me = this;
         
         Ext.apply(me, config);
         if (Ext.isString(me.paramOrder)) {
-            me.paramOrder = me.paramOrder.split(/[\s,|]/);
+            me.paramOrder = me.paramOrder.split(me.paramOrderRe);
         }
         me.callParent(arguments);
     },

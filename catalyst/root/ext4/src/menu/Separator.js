@@ -1,10 +1,31 @@
 /**
  * @class Ext.menu.Separator
  * @extends Ext.menu.Item
-
-Adds a separator bar to a menu, used to divide logical groups of menu items. Generally you will
-add one of these by using "-" in your call to add() or in your items config rather than creating one directly.
-
+ *
+ * Adds a separator bar to a menu, used to divide logical groups of menu items. Generally you will
+ * add one of these by using "-" in your call to add() or in your items config rather than creating one directly.
+ *
+ * {@img Ext.menu.Separator/Ext.menu.Separator.png Ext.menu.Separator component}
+ *
+ * ## Code 
+ *
+ *     Ext.create('Ext.menu.Menu', {
+ *         width: 100,
+ *         height: 100,
+ *         floating: false,  // usually you want this set to True (default)
+ *         renderTo: Ext.getBody(),  // usually rendered by it's containing component
+ *         items: [{
+ *             text: 'icon item',
+ *             iconCls: 'add16'
+ *         },{
+ *             xtype: 'menuseparator'
+ *         },{
+ *            text: 'seperator above',
+ *         },{
+ *            text: 'regular item',
+ *         }]
+ *     }); 
+ *
  * @xtype menuseparator
  * @markdown
  * @constructor

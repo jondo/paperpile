@@ -2,9 +2,47 @@
  * @author Ed Spencer
  * @class Ext.ModelManager
  * @extends Ext.AbstractManager
+
+The ModelManager keeps track of all {@link Ext.data.Model} types defined in your application.
+
+__Creating Model Instances__
+Model instances can be created by using the {@link #create} function. It is also possible to do
+this by using the Model type directly. The following snippets are equivalent:
+
+    Ext.define('User', {
+        extend: 'Ext.data.Model',
+        fields: ['first', 'last']
+    });
+    
+    // method 1, create through the manager
+    Ext.ModelManager.create({
+        first: 'Ed',
+        last: 'Spencer'
+    }, 'User');
+    
+    // method 2, create on the type directly
+    new User({
+        first: 'Ed',
+        last: 'Spencer'
+    });
+    
+__Accessing Model Types__
+A reference to a Model type can be obtained by using the {@link #getModel} function. Since models types
+are normal classes, you can access the type directly. The following snippets are equivalent:
+
+    Ext.define('User', {
+        extend: 'Ext.data.Model',
+        fields: ['first', 'last']
+    });
+    
+    // method 1, access model type through the manager
+    var UserType = Ext.ModelManager.getModel('User');
+    
+    // method 2, reference the type directly
+    var UserType = User;
+
+ * @markdown
  * @singleton
- * 
- * <p>Creates and manages the current set of models</p>
  */
 Ext.define('Ext.ModelManager', {
     extend: 'Ext.AbstractManager',
@@ -25,6 +63,7 @@ Ext.define('Ext.ModelManager', {
     /**
      * Registers a model definition. All model plugins marked with isDefault: true are bootstrapped
      * immediately, as are any addition plugins defined in the model config.
+     * @private
      */
     registerType: function(name, config) {
         var proto = config.prototype,
@@ -107,7 +146,6 @@ Ext.define('Ext.ModelManager', {
 }, function() {
     
     /**
-     * Shorthand for {@link Ext.ModelManager#registerType}
      * Creates a new Model class from the specified config object. See {@link Ext.data.Model} for full examples.
      * 
      * @param {Object} config A configuration object for the Model you wish to create.
@@ -116,6 +154,11 @@ Ext.define('Ext.ModelManager', {
      * @method regModel
      */
     Ext.regModel = function() {
+        //<debug>
+        if (Ext.isDefined(Ext.global.console)) {
+            Ext.global.console.warn('Ext.regModel has been deprecated. Models can now be created by extending Ext.data.Model: Ext.define("MyModel", {extend: "Ext.data.Model", fields: []});.');
+        }
+        //</debug>
         return this.ModelManager.registerType.apply(this.ModelManager, arguments);
     };
 });

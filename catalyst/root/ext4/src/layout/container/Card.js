@@ -126,10 +126,10 @@ Ext.define('Ext.layout.container.Card', {
             }
 
             if (oldCard) {
-                oldCard.fireEvent('deactivate', oldCard, newCard);
                 if (me.hideInactive) {
                     oldCard.hide();
                 }
+                oldCard.fireEvent('deactivate', oldCard, newCard);
             }
 
             // Make sure the new card is shown

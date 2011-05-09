@@ -3,7 +3,55 @@
         position: absolute;
         z-index: 1;
     }
+    
+    /**
+      * Dock Layouts
+      * @todo move this somewhere else?
+      */
+    .#{$prefix}docked-top {
+        border-bottom-width: 0 !important;
+    }
 
+    .#{$prefix}docked-bottom {
+        border-top-width: 0 !important;
+    }
+
+    .#{$prefix}docked-left {
+        border-right-width: 0 !important;
+    }
+
+    .#{$prefix}docked-right {
+        border-left-width: 0 !important;
+    }
+    
+    .#{$prefix}docked-noborder-top {
+        border-top-width: 0 !important;
+    }
+
+    .#{$prefix}docked-noborder-right {
+        border-right-width: 0 !important;
+    }
+    
+    .#{$prefix}docked-noborder-bottom {
+        border-bottom-width: 0 !important;
+    }
+    
+    .#{$prefix}docked-noborder-left {
+        border-left-width: 0 !important;
+    }
+        
+/*    
+    // Needs important to win over the .#{$prefix}docked-left/right/top/bottom rules above.
+    .\#{$prefix}panel-collapsed-placeholder {
+        border-width: 1px !important;
+    } 
+    
+    .\#{$prefix}region-collapsed-placeholder {
+        border-width: 1px;
+    }
+    */
+    
+    
     .#{$prefix}box-inner {
         overflow:hidden;
 
@@ -25,19 +73,19 @@
         overflow: hidden;
         zoom: 1;
     }
-    
+
     .#{$prefix}overflow-hidden {
         overflow:hidden !important;
-    }    
-    
+    }
+
     .#{$prefix}inline-children > * {
         display: inline-block !important;
     }
-    
+
     .#{$prefix}abs-layout-item {
         position: absolute;
     }
-    
+
     .#{$prefix}border-layout-ct {
         background-color: $border-layout-ct-background;
     }
@@ -51,7 +99,7 @@
     }
 
     .#{$prefix}accordion-hd .#{$prefix}panel-header-text {
-        color: $panel-header-color;
+        color: $accordion-header-color;
         font-weight: normal;
     }
 
@@ -87,13 +135,28 @@
                 background-position: -15px -240px;
             }
         }
-        
-        background-image: none;
-        @if $accordion-header-background-gradient {
-            @include background-gradient($accordion-header-background-color, $accordion-header-background-gradient);
-        } else {
-            background: $accordion-header-background-color;
-        }
+
+        background: $accordion-header-background-color !important;
+        @include single-box-shadow($accordion-header-background-color, 0, 0, 0, 0, true);
+    }
+
+    .#{$prefix}accordion-hd {
+        border-width: 1px 0 1px 0 !important;
+        padding: 4px 5px 5px 5px;
+        border-top-color: $panel-header-inner-border-color !important;
+    }
+    
+    .#{$prefix}accordion-body {
+        border-width: 0 !important;
+    }
+    
+    .#{$prefix}accordion-hd-sibling-expanded {
+        border-top-color: $panel-border-color !important;
+        @include single-box-shadow($panel-header-inner-border-color, 0, 1px, 0, 0, true);
+    }
+
+    .#{$prefix}accordion-hd-last-collapsed {
+        border-bottom-color: $accordion-header-background-color !important;
     }
 
     .#{$prefix}frame-tl,
@@ -105,12 +168,12 @@
         overflow: hidden;
         background-repeat: no-repeat;
     }
-    
+
     .#{$prefix}frame-tc,
     .#{$prefix}frame-bc {
         background-repeat: repeat-x;
     }
-    
+
     .#{$prefix}frame-mc {
         position: relative;
         background-repeat: repeat-x;
@@ -123,24 +186,42 @@
     .#{$prefix}box-scroller-left {
         float: left;
         height: 100%;
-        
+
         z-index: 5;
 
+        .#{$prefix}toolbar-scroll-left,
         .#{$prefix}tabbar-scroll-left {
             width: 18px;
             position: relative;
-            top: 1px;
             cursor: pointer;
-            height: 26px;
+            height: $tab-height;
             background: theme-image($theme-name, 'tab-bar/scroll-left.gif') transparent no-repeat -18px 0;
-            border-bottom: 1px solid $tab-border-color;
         }
-        .#{$prefix}tabbar-scroll-left-hover {
+        .#{$prefix}toolbar-scroll-left-hover {
             background-position: 0 0;
         }
+        .#{$prefix}toolbar-scroll-left-disabled,
         .#{$prefix}tabbar-scroll-left-disabled {
             background-position: -18px 0;
             @include opacity(.5);
+        }
+
+        .#{$prefix}toolbar-scroll-left {
+            background-image: theme-image($theme-name, 'toolbar/scroll-left.gif');
+            background-position: -14px 0;
+        }
+        .#{$prefix}toolbar-scroll-left-hover {
+            background-position: 0 0;
+        }
+        .#{$prefix}toolbar-scroll-left-disabled {
+            background-position: -14px 0;
+        }
+
+        .#{$prefix}toolbar-scroll-left {
+            width: 14px;
+            height: 22px;
+
+            border-bottom: 1px solid #8db2e3;
         }
     }
 
@@ -150,41 +231,71 @@
     .#{$prefix}box-scroller-right {
         float: right;
         height: 100%;
-        
+
         z-index: 5;
 
+        .#{$prefix}toolbar-scroll-right,
         .#{$prefix}tabbar-scroll-right {
             width: 18px;
             position: relative;
-            top: 1px;
             cursor: pointer;
-            height: 26px;
+            height: $tab-height;
             background: theme-image($theme-name, 'tab-bar/scroll-right.gif') transparent no-repeat 0 0;
-            border-bottom: 1px solid $tab-border-color;
         }
-        .#{$prefix}tabbar-scroll-right-hover {
+        .#{$prefix}toolbar-scroll-right-hover {
             background-position: -18px 0;
         }
+        .#{$prefix}toolbar-scroll-right-disabled,
         .#{$prefix}tabbar-scroll-right-disabled {
             background-position: 0 0;
             @include opacity(.5);
         }
+
+        .#{$prefix}toolbar-scroll-right {
+            background-image: theme-image($theme-name, 'toolbar/scroll-right.gif');
+        }
+        .#{$prefix}toolbar-scroll-right-hover {
+            background-position: -14px 0;
+        }
+        .#{$prefix}toolbar-scroll-right-disabled {
+            background-position: 0 0;
+        }
+
+        .#{$prefix}toolbar-scroll-right {
+            width: 14px;
+            height: 22px;
+
+            border-bottom: 1px solid #8db2e3;
+        }
     }
 
-    // Classes for vertical Box layout scroller
-    .#{$prefix}box-scroller-top .#{$prefix}menu-scroll-top {
-        background: theme-image($theme-name, 'layout/mini-top.gif') transparent no-repeat center center;
-        height: 8px;
-        cursor: pointer;
+// Classes for vertical Box layout scroller
+    .#{$prefix}box-scroller-top {
+        .#{$prefix}box-scroller {
+            line-height: 0;
+            font-size: 0;
+        }
+        .#{$prefix}menu-scroll-top {
+            background: theme-image($theme-name, 'layout/mini-top.gif') transparent no-repeat center center;
+            height: 8px;
+            cursor: pointer;
+        }
     }
-    .#{$prefix}box-scroller-bottom .#{$prefix}menu-scroll-bottom {
-        background: theme-image($theme-name, 'layout/mini-bottom.gif') transparent no-repeat center center;
-        height: 8px;
-        cursor: pointer;
+    .#{$prefix}box-scroller-bottom {
+        .#{$prefix}box-scroller {
+            line-height: 0;
+            font-size: 0;
+        }
+        .#{$prefix}menu-scroll-bottom {
+            background: theme-image($theme-name, 'layout/mini-bottom.gif') transparent no-repeat center center;
+            height: 8px;
+            cursor: pointer;
+        }
     }
 
     .#{$prefix}box-menu-right {
         float: right;
+        padding-right: $toolbar-horizontal-spacing;
     }
 
     .#{$prefix}column {

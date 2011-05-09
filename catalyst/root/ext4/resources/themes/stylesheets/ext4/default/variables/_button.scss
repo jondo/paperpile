@@ -1,5 +1,5 @@
-$button-arrow-size: 15px !default;
-$button-split-size: 15px !default;
+$button-arrow-size: 12px !default;
+$button-split-size: 14px !default;
 $button-icon-spacing: 4px !default;
 
 $button-small-border-radius: 3px !default;
@@ -100,11 +100,14 @@ $button-default-color: #333 !default;
 $button-default-color-over: $button-default-color !default;
 $button-default-color-focus: $button-default-color-over;
 $button-default-color-pressed: $button-default-color !default;
-$button-default-color-disabled: $button-default-color !default;
+$button-default-color-disabled: lighten($button-default-color, 35) !default;
 
 /**
  * Toolbar buttons
  */
+$button-toolbar-arrow-size: 12px !default;
+$button-toolbar-split-size: 12px !default;
+
 $button-toolbar-base-color: adjust-color($base-color, $hue: -213.333deg, $saturation: -55.556%, $lightness: 3.333%) !default;
 
 $button-toolbar-border-color: transparent !default;
@@ -135,4 +138,4 @@ $button-toolbar-color: #333 !default;
 $button-toolbar-color-over: $button-toolbar-color !default;
 $button-toolbar-color-focus: $button-toolbar-color-over;
 $button-toolbar-color-pressed: $button-toolbar-color !default;
-$button-toolbar-color-disabled: $button-toolbar-color !default;
+$button-toolbar-color-disabled: lighten($button-toolbar-color, 35) !default;

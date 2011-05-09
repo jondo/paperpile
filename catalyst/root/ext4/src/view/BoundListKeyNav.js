@@ -17,9 +17,8 @@ Ext.define('Ext.view.BoundListKeyNav', {
 
     constructor: function(el, config) {
         var me = this;
-        Ext.copyTo(me, config, 'boundList');
-        config = Ext.apply({}, config, me.defaultHandlers);
-        me.callParent([el, config]);
+        me.boundList = config.boundList;
+        me.callParent([el, Ext.apply({}, config, me.defaultHandlers)]);
     },
 
     defaultHandlers: {

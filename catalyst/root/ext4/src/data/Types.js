@@ -35,7 +35,8 @@ Ext.data.Types.VELATLONG = {
 </code></pre>
  * <p>Then, when declaring a Model, use <pre><code>
 var types = Ext.data.Types; // allow shorthand type access
-UnitModel = Ext.regModel('Unit', 
+Ext.define('Unit',
+    extend: 'Ext.data.Model', 
     fields: [
         { name: 'unitName', mapping: 'UnitName' },
         { name: 'curSpeed', mapping: 'CurSpeed', type: types.INT },

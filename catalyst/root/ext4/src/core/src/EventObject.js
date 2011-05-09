@@ -512,8 +512,257 @@ Ext.getBody().on('click', function(e,t){
     * @return {Boolean}
     */
     hasModifier : function(){
-        return ((this.ctrlKey || this.altKey) || this.shiftKey);
-    }
+        return this.ctrlKey || this.altKey || this.shiftKey || this.metaKey;
+    },
+
+    /**
+     * Injects a DOM event using the data in this object and (optionally) a new target.
+     * This is a low-level technique and not likely to be used by application code. The
+     * currently supported event types are:
+     * <p><b>HTMLEvents</b></p>
+     * <ul>
+     * <li>load</li>
+     * <li>unload</li>
+     * <li>select</li>
+     * <li>change</li>
+     * <li>submit</li>
+     * <li>reset</li>
+     * <li>resize</li>
+     * <li>scroll</li>
+     * </ul>
+     * <p><b>MouseEvents</b></p>
+     * <ul>
+     * <li>click</li>
+     * <li>dblclick</li>
+     * <li>mousedown</li>
+     * <li>mouseup</li>
+     * <li>mouseover</li>
+     * <li>mousemove</li>
+     * <li>mouseout</li>
+     * </ul>
+     * <p><b>UIEvents</b></p>
+     * <ul>
+     * <li>focusin</li>
+     * <li>focusout</li>
+     * <li>activate</li>
+     * <li>focus</li>
+     * <li>blur</li>
+     * </ul>
+     * @param {Element/HTMLElement} target If specified, the target for the event. This
+     * is likely to be used when relaying a DOM event. If not specified, {@link #getTarget}
+     * is used to determine the target.
+     */
+    injectEvent: function () {
+        var API,
+            dispatchers = {}; // keyed by event type (e.g., 'mousedown')
+
+        // Good reference: http://developer.yahoo.com/yui/docs/UserAction.js.html
+
+        // IE9 has createEvent, but this code causes major problems with htmleditor (it
+        // blocks all mouse events and maybe more). TODO
+
+        if (!Ext.isIE && document.createEvent) { // if (DOM compliant)
+            API = {
+                createHtmlEvent: function (doc, type, bubbles, cancelable) {
+                    var event = doc.createEvent('HTMLEvents');
+
+                    event.initEvent(type, bubbles, cancelable);
+                    return event;
+                },
+
+                createMouseEvent: function (doc, type, bubbles, cancelable, detail,
+                                            clientX, clientY, ctrlKey, altKey, shiftKey, metaKey,
+                                            button, relatedTarget) {
+                    var event = doc.createEvent('MouseEvents'),
+                        view = doc.defaultView || window;
+
+                    if (event.initMouseEvent) {
+                        event.initMouseEvent(type, bubbles, cancelable, view, detail,
+                                    clientX, clientY, clientX, clientY, ctrlKey, altKey,
+                                    shiftKey, metaKey, button, relatedTarget);
+                    } else { // old Safari
+                        event = doc.createEvent('UIEvents');
+                        event.initEvent(type, bubbles, cancelable);
+                        event.view = view;
+                        event.detail = detail;
+                        event.screenX = clientX;
+                        event.screenY = clientY;
+                        event.clientX = clientX;
+                        event.clientY = clientY;
+                        event.ctrlKey = ctrlKey;
+                        event.altKey = altKey;
+                        event.metaKey = metaKey;
+                        event.shiftKey = shiftKey;
+                        event.button = button;
+                        event.relatedTarget = relatedTarget;
+                    }
+
+                    return event;
+                },
+
+                createUIEvent: function (doc, type, bubbles, cancelable, detail) {
+                    var event = doc.createEvent('UIEvents'),
+                        view = doc.defaultView || window;
+
+                    event.initUIEvent(type, bubbles, cancelable, view, detail);
+                    return event;
+                },
+
+                fireEvent: function (target, type, event) {
+                    target.dispatchEvent(event);
+                },
+
+                fixTarget: function (target) {
+                    // Safari3 doesn't have window.dispatchEvent()
+                    if (target == window && !target.dispatchEvent) {
+                        return document;
+                    }
+
+                    return target;
+                }
+            }
+        } else if (document.createEventObject) { // else if (IE)
+            var crazyIEButtons = { 0: 1, 1: 4, 2: 2 };
+
+            API = {
+                createHtmlEvent: function (doc, type, bubbles, cancelable) {
+                    var event = doc.createEventObject();
+                    event.bubbles = bubbles;
+                    event.cancelable = cancelable;
+                    return event;
+                },
+
+                createMouseEvent: function (doc, type, bubbles, cancelable, detail,
+                                            clientX, clientY, ctrlKey, altKey, shiftKey, metaKey,
+                                            button, relatedTarget) {
+                    var event = doc.createEventObject();
+                    event.bubbles = bubbles;
+                    event.cancelable = cancelable;
+                    event.detail = detail;
+                    event.screenX = clientX;
+                    event.screenY = clientY;
+                    event.clientX = clientX;
+                    event.clientY = clientY;
+                    event.ctrlKey = ctrlKey;
+                    event.altKey = altKey;
+                    event.shiftKey = shiftKey;
+                    event.metaKey = metaKey;
+                    event.button = crazyIEButtons[button] || button;
+                    event.relatedTarget = relatedTarget; // cannot assign to/fromElement
+                    return event;
+                },
+
+                createUIEvent: function (doc, type, bubbles, cancelable, detail) {
+                    var event = doc.createEventObject();
+                    event.bubbles = bubbles;
+                    event.cancelable = cancelable;
+                    return event;
+                },
+
+                fireEvent: function (target, type, event) {
+                    target.fireEvent('on' + type, event);
+                },
+
+                fixTarget: function (target) {
+                    if (target == document) {
+                        // IE6,IE7 thinks window==document and doesn't have window.fireEvent()
+                        // IE6,IE7 cannot properly call document.fireEvent()
+                        return document.documentElement;
+                    }
+
+                    return target;
+                }
+            };
+        }
+
+        //----------------
+        // HTMLEvents
+
+        Ext.Object.each({
+                load:   [false, false],
+                unload: [false, false],
+                select: [true, false],
+                change: [true, false],
+                submit: [true, true],
+                reset:  [true, false],
+                resize: [true, false],
+                scroll: [true, false]
+            },
+            function (name, value) {
+                var bubbles = value[0], cancelable = value[1];
+                dispatchers[name] = function (targetEl, srcEvent) {
+                    var e = API.createHtmlEvent(name, bubbles, cancelable);
+                    API.fireEvent(targetEl, name, e);
+                };
+            });
+
+        //----------------
+        // MouseEvents
+
+        function createMouseEventDispatcher (type, detail) {
+            var cancelable = (type != 'mousemove');
+            return function (targetEl, srcEvent) {
+                var xy = srcEvent.getXY(),
+                    e = API.createMouseEvent(targetEl.ownerDocument, type, true, cancelable,
+                                detail, xy[0], xy[1], srcEvent.ctrlKey, srcEvent.altKey,
+                                srcEvent.shiftKey, srcEvent.metaKey, srcEvent.button,
+                                srcEvent.relatedTarget);
+                API.fireEvent(targetEl, type, e);
+            };
+        }
+
+        Ext.each(['click', 'dblclick', 'mousedown', 'mouseup', 'mouseover', 'mousemove', 'mouseout'],
+            function (eventName) {
+                dispatchers[eventName] = createMouseEventDispatcher(eventName, 1);
+            });
+
+        //----------------
+        // UIEvents
+
+        Ext.Object.each({
+                focusin:  [true, false],
+                focusout: [true, false],
+                activate: [true, true],
+                focus:    [false, false],
+                blur:     [false, false]
+            },
+            function (name, value) {
+                var bubbles = value[0], cancelable = value[1];
+                dispatchers[name] = function (targetEl, srcEvent) {
+                    var e = API.createUIEvent(targetEl.ownerDocument, name, bubbles, cancelable, 1);
+                    API.fireEvent(targetEl, name, e);
+                };
+            });
+
+        //---------
+        if (!API) {
+            // not even sure what ancient browsers fall into this category...
+
+            dispatchers = {}; // never mind all those we just built :P
+
+            API = {
+                fixTarget: function (t) {
+                    return t;
+                }
+            };
+        }
+
+        function cannotInject (target, srcEvent) {
+            //<debug>
+            // TODO log something
+            //</debug>
+        }
+
+        return function (target) {
+            var me = this,
+                dispatcher = dispatchers[me.type] || cannotInject,
+                t = target ? (target.dom || target) : me.getTarget();
+
+            t = API.fixTarget(t);
+            dispatcher(t, me);
+        };
+    }() // call to produce method
+
 }, function() {
 
 Ext.EventObject = new Ext.EventObjectImpl();

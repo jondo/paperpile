@@ -18,9 +18,9 @@
  * <p>The Server proxies save their data by sending requests to some remote server. These proxies include:</p>
  * 
  * <ul style="list-style-type: disc; padding-left: 25px">
- * <li>{@link Ext.data.proxy.Ajax AjaxProxy} - sends requests to a server on the same domain</li>
- * <li>{@link Ext.data.proxy.JsonP JsonPProxy} - uses JSON-P to send requests to a server on a different domain</li>
- * <li>{@link Ext.data.proxy.Direct DirectProxt} - uses {@link Ext.direct} to send requests</li>
+ * <li>{@link Ext.data.proxy.Ajax Ajax} - sends requests to a server on the same domain</li>
+ * <li>{@link Ext.data.proxy.JsonP JsonP} - uses JSON-P to send requests to a server on a different domain</li>
+ * <li>{@link Ext.data.proxy.Direct Direct} - uses {@link Ext.direct} to send requests</li>
  * </ul>
  * 
  * <p>Proxies operate on the principle that all operations performed are either Create, Read, Update or Delete. These four operations 
@@ -41,11 +41,13 @@
 Ext.define('Ext.data.proxy.Proxy', {
     alias: 'proxy.proxy',
     alternateClassName: ['Ext.data.DataProxy', 'Ext.data.Proxy'],
+    requires: [
+        'Ext.data.reader.Json',
+        'Ext.data.writer.Json'
+    ],
     uses: [
         'Ext.data.Batch', 
         'Ext.data.Operation', 
-        'Ext.data.reader.Json', 
-        'Ext.data.writer.Json',
         'Ext.data.Model'
     ],
     mixins: {

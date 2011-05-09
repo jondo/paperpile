@@ -12,6 +12,8 @@ Ext.define('Ext.grid.plugin.HeaderResizer', {
     extend: 'Ext.util.Observable',
     requires: ['Ext.dd.DragTracker', 'Ext.util.Region'],
     alias: 'plugin.gridheaderresizer',
+    
+    disabled: false,
 
     /**
      * @cfg {Boolean} dynamic
@@ -54,6 +56,7 @@ Ext.define('Ext.grid.plugin.HeaderResizer', {
         headerCt.mon(el, 'mousemove', this.onHeaderCtMouseMove, this);
 
         this.tracker = Ext.create('Ext.dd.DragTracker', {
+            disabled: this.disabled,
             onBeforeStart: Ext.Function.bind(this.onBeforeStart, this),
             onStart: Ext.Function.bind(this.onStart, this),
             onDrag: Ext.Function.bind(this.onDrag, this),
@@ -171,11 +174,13 @@ Ext.define('Ext.grid.plugin.HeaderResizer', {
                 rhsMarker    = gridSection.getRhsMarker(),
                 el           = rhsMarker.parent(),
                 offsetLeft   = el.getLeft(true),
+                offsetTop    = el.getTop(true),
                 topLeft      = el.translatePoints(xy),
-                markerHeight = firstSection.body.getHeight() + headerCt.getHeight();
+                markerHeight = firstSection.body.getHeight() + headerCt.getHeight(),
+                top = topLeft.top - offsetTop;
 
-            lhsMarker.setTop(topLeft.top);
-            rhsMarker.setTop(topLeft.top);
+            lhsMarker.setTop(top);
+            rhsMarker.setTop(top);
             lhsMarker.setHeight(markerHeight);
             rhsMarker.setHeight(markerHeight);
             lhsMarker.setLeft(topLeft.left - offsetLeft);
@@ -253,6 +258,20 @@ Ext.define('Ext.grid.plugin.HeaderResizer', {
                 this.headerCt.componentLayout.layoutBusy = false;
                 this.headerCt.doComponentLayout();
             }
+        }
+    },
+    
+    disable: function() {
+        this.disabled = true;
+        if (this.tracker) {
+            this.tracker.disable();
+        }
+    },
+    
+    enable: function() {
+        this.disabled = false;
+        if (this.tracker) {
+            this.tracker.enable();
         }
     }
 });

@@ -8,13 +8,15 @@
  * express like this:</p>
  *
 <pre><code>
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: ['id', 'name', 'email'],
 
     hasMany: {model: 'Order', name: 'orders'}
 });
 
-Ext.regModel('Order', {
+Ext.define('Order', {
+    extend: 'Ext.data.Model',
     fields: ['id', 'user_id', 'status', 'price'],
 
     belongsTo: 'User'
@@ -33,6 +35,83 @@ Ext.regModel('Order', {
  *   <li>{@link Ext.data.BelongsToAssociation belongsTo associations}
  *   <li>{@link Ext.data.Model using Models}
  * </ul>
+ * 
+ * <b>Self association models</b>
+ * <p>We can also have models that create parent/child associations between the same type. Below is an example, where
+ * groups can be nested inside other groups:</p>
+ * <pre><code>
+
+// Server Data
+{
+    "groups": {
+        "id": 10,
+        "parent_id": 100,
+        "name": "Main Group",
+        "parent_group": {
+            "id": 100,
+            "parent_id": null,
+            "name": "Parent Group"
+        },
+        "child_groups": [{
+            "id": 2,
+            "parent_id": 10,
+            "name": "Child Group 1"
+        },{
+            "id": 3,
+            "parent_id": 10,
+            "name": "Child Group 2"
+        },{
+            "id": 4,
+            "parent_id": 10,
+            "name": "Child Group 3"
+        }]
+    }
+}
+
+// Client code
+Ext.define('Group', {
+    extend: 'Ext.data.Model',
+    fields: ['id', 'parent_id', 'name'],
+    proxy: {
+        type: 'ajax',
+        url: 'data.json',
+        reader: {
+            type: 'json',
+            root: 'groups'
+        }
+    },
+    associations: [{
+        type: 'hasMany',
+        model: 'Group',
+        primaryKey: 'id',
+        foreignKey: 'parent_id',
+        autoLoad: true,
+        associationKey: 'child_groups' // read child data from child_groups
+    }, {
+        type: 'belongsTo',
+        model: 'Group',
+        primaryKey: 'id',
+        foreignKey: 'parent_id',
+        autoLoad: true,
+        associationKey: 'parent_group' // read parent data from parent_group
+    }]
+});
+
+
+Ext.onReady(function(){
+    
+    Group.load(10, {
+        success: function(group){
+            console.log(group.getGroup().get('name'));
+            
+            group.groups().each(function(rec){
+                console.log(rec.get('name'));
+            });
+        }
+    });
+    
+});
+ * </code></pre>
  *
  * @constructor
  * @param {Object} config Optional config object
@@ -47,12 +126,18 @@ Ext.define('Ext.data.Association', {
      */
 
     /**
-     * @cfg {String} primaryKey The name of the primary key on the associated model. Defaults to 'id'
+     * @cfg {String} primaryKey The name of the primary key on the associated model. Defaults to 'id'.
+     * In general this will be the {@link Ext.data.Model#idProperty} of the Model.
      */
     primaryKey: 'id',
 
     /**
      * @cfg {Ext.data.reader.Reader} reader A special reader to read associated data
+     */
+    
+    /**
+     * @cfg {String} associationKey The name of the property in the data to read the association from.
+     * Defaults to the name of the associated model.
      */
 
     defaultReaderType: 'json',

@@ -1,21 +1,23 @@
 /**
  * @class Ext.toolbar.TextItem
  * @extends Ext.toolbar.Item
+ *
  * A simple class that renders text directly into a toolbar.
- * Example usage:
+ *
+ * ## Example usage
+ *
  * {@img Ext.toolbar.TextItem/Ext.toolbar.TextItem.png TextItem component}
- * <pre><code>
-    Ext.create('Ext.panel.Panel', {
-        title: 'Panel with TextItem',
-        width: 300,
-        height: 200,
-        tbar: [
-            {xtype: 'tbtext', text: 'Sample TextItem'}
-        ],
-        renderTo: Ext.getBody()
-    });
-});
-</code></pre>
+ *
+ *     Ext.create('Ext.panel.Panel', {
+ *         title: 'Panel with TextItem',
+ *         width: 300,
+ *         height: 200,
+ *         tbar: [
+ *             {xtype: 'tbtext', text: 'Sample TextItem'}
+ *         ],
+ *         renderTo: Ext.getBody()
+ *     });
+ *
  * @constructor
  * Creates a new TextItem
  * @param {Object} text A text string, or a config object containing a <tt>text</tt> property

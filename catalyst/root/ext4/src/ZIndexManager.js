@@ -91,8 +91,9 @@ Ext.define('Ext.ZIndexManager', {
     // private
     _setActiveChild: function(comp) {
         if (comp != this.front) {
+
             if (this.front) {
-                this.front.setActive(false);
+                this.front.setActive(false, comp);
             }
             this.front = comp;
             if (comp) {
@@ -200,12 +201,14 @@ MyDesktop.getDesktop().getManager().register(Ext.MessageBox);
      */
     unregister : function(comp) {
         delete comp.zIndexManager;
-        delete this.list[comp.id];
-        comp.un('hide', this._activateLast);
-        Ext.Array.remove(this.zIndexStack, comp);
+        if (this.list && this.list[comp.id]) {
+            delete this.list[comp.id];
+            comp.un('hide', this._activateLast);
+            Ext.Array.remove(this.zIndexStack, comp);
 
-        // Destruction requires that the topmost visible floater be activated. Same as hiding.
-        this._activateLast(comp);
+            // Destruction requires that the topmost visible floater be activated. Same as hiding.
+            this._activateLast(comp);
+        }
     },
 
     /**
@@ -347,6 +350,48 @@ MyDesktop.getDesktop().getManager().register(Ext.MessageBox);
         var comp;
         for (var id in this.list) {
             comp = this.list[id];
+            if (comp.isComponent && fn.call(scope || comp, comp) === false) {
+                return;
+            }
+        }
+    },
+
+    /**
+     * Executes the specified function once for every Component in this ZIndexManager, passing each
+     * Component as the only parameter. Returning false from the function will stop the iteration.
+     * The components are passed to the function starting at the bottom and proceeding to the top.
+     * @param {Function} fn The function to execute for each item
+     * @param {Object} scope (optional) The scope (<code>this</code> reference) in which the function
+     * is executed. Defaults to the current Component in the iteration.
+     */
+    eachBottomUp: function (fn, scope) {
+        var comp,
+            stack = this.zIndexStack,
+            i, n;
+
+        for (i = 0, n = stack.length ; i < n; i++) {
+            comp = stack[i];
+            if (comp.isComponent && fn.call(scope || comp, comp) === false) {
+                return;
+            }
+        }
+    },
+
+    /**
+     * Executes the specified function once for every Component in this ZIndexManager, passing each
+     * Component as the only parameter. Returning false from the function will stop the iteration.
+     * The components are passed to the function starting at the top and proceeding to the bottom.
+     * @param {Function} fn The function to execute for each item
+     * @param {Object} scope (optional) The scope (<code>this</code> reference) in which the function
+     * is executed. Defaults to the current Component in the iteration.
+     */
+    eachTopDown: function (fn, scope) {
+        var comp,
+            stack = this.zIndexStack,
+            i;
+
+        for (i = stack.length ; i-- > 0; ) {
+            comp = stack[i];
             if (comp.isComponent && fn.call(scope || comp, comp) === false) {
                 return;
             }

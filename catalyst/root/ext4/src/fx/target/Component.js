@@ -1,24 +1,20 @@
 /**
  * @class Ext.fx.target.Component
- * @private
- * @extends Object
+ * @extends Ext.fx.target.Target
+ * 
+ * This class represents a animation target for a {@link Ext.Component}. In general this class will not be
+ * created directly, the {@link Ext.Component} will be passed to the animation and
+ * and the appropriate target will be created.
  */
-
 Ext.define('Ext.fx.target.Component', {
 
     /* Begin Definitions */
-
+   
+    extend: 'Ext.fx.target.Target',
+    
     /* End Definitions */
 
-    isAnimTarget: true,
-
     type: 'component',
-
-    constructor: function(target) {
-        this.target = target;
-        this.id = this.getId();
-        this.callParent([target]);
-    },
 
     // Methods to call to retrieve unspecified "from" values from a target Component
     getPropMethod: {
@@ -55,20 +51,16 @@ Ext.define('Ext.fx.target.Component', {
         opacity: 'setOpacity'
     },
 
-    getId: function() {
-        return this.target.id;
-    },
-
     // Read the named attribute from the target Component. Use the defined getter for the attribute
     getAttr: function(attr, val) {
-        return [[this.target, val != undefined ? val : this.getPropMethod[attr].call(this.target)]];
+        return [[this.target, val !== undefined ? val : this.getPropMethod[attr].call(this.target)]];
     },
 
     setAttr: function(targetData, isFirstFrame, isLastFrame) {
         var me = this,
             target = me.target,
             ln = targetData.length,
-            attrs, attr, o, i, j, meth, targets;
+            attrs, attr, o, i, j, meth, targets, left, top, w, h;
         for (i = 0; i < ln; i++) {
             attrs = targetData[i].attrs;
             for (attr in attrs) {
@@ -86,11 +78,13 @@ Ext.define('Ext.fx.target.Component', {
                     // meth.setPagePosition['x'] = 100
                     // meth.setPagePosition['y'] = 100
                     meth[me.compMethod[attr]].target = o[0];
-                    meth[me.compMethod[attr]][attr] = parseInt(o[1], 10);
+                    meth[me.compMethod[attr]][attr] = o[1];
                 }
                 if (meth.setPosition.target) {
                     o = meth.setPosition;
-                    o.target.setPosition(o.left, o.top);
+                    left = (o.left === undefined) ? undefined : parseInt(o.left, 10);
+                    top = (o.top === undefined) ? undefined : parseInt(o.top, 10);
+                    o.target.setPosition(left, top);
                 }
                 if (meth.setPagePosition.target) {
                     o = meth.setPagePosition;
@@ -98,16 +92,9 @@ Ext.define('Ext.fx.target.Component', {
                 }
                 if (meth.setSize.target) {
                     o = meth.setSize;
-                    var w = o.width,
-                        h = o.height;
-
                     // Dimensions not being animated MUST NOT be autosized. They must remain at current value.
-                    if (w === undefined) {
-                        w = o.target.getWidth();
-                    }
-                    if (h === undefined) {
-                        h = o.target.getHeight();
-                    }
+                    w = (o.width === undefined) ? o.target.getWidth() : parseInt(o.width, 10);
+                    h = (o.height === undefined) ? o.target.getHeight() : parseInt(o.height, 10);
 
                     // Only set the size of the Component on the last frame, or if the animation was
                     // configured with dynamic: true.

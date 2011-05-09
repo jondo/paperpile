@@ -12,36 +12,55 @@
  * and provides automatic paging control. This Component {@link Ext.data.Store#load load}s blocks
  * of data into the <tt>{@link #store}</tt> by passing {@link Ext.data.Store#paramNames paramNames} used for
  * paging criteria.</p>
+ *
+ * {@img Ext.toolbar.Paging/Ext.toolbar.Paging.png Ext.toolbar.Paging component}
+ *
  * <p>PagingToolbar is typically used as one of the Grid's toolbars:</p>
  * <pre><code>
-Ext.tip.QuickTipManager.init(); // to display button quicktips
-
-var myStore = new Ext.data.Store({
-    reader: new Ext.data.reader.Json({
-        {@link Ext.data.reader.Json#totalProperty totalProperty}: 'results', 
-        ...
-    }),
-    ...
-});
-
-var myPageSize = 25;  // server script should only send back 25 items at a time
-
-var grid = new Ext.grid.Panel({
-    ...
-    store: myStore,
-    dockedItems: [
-        new Ext.toolbar.Paging({
-            {@link Ext.panel.Panel#dock dock: 'bottom',
-            {@link #store}: myStore,       // grid and PagingToolbar using same store
-            {@link #displayInfo}: true,
-            {@link #pageSize}: myPageSize,
-            {@link #prependButtons}: true,
-            items: [
-                'text 1'
-            ]
-        });
-    ]
-});
+ *    var itemsPerPage = 2;   // set the number of items you want per page
+ *    
+ *    var store = Ext.create('Ext.data.Store', {
+ *        id:'simpsonsStore',
+ *        autoLoad: false,
+ *        fields:['name', 'email', 'phone'],
+ *        pageSize: itemsPerPage, // items per page
+ *        proxy: {
+ *            type: 'ajax',
+ *            url: 'pagingstore.js',  // url that will load data with respect to start and limit params
+ *            reader: {
+ *                type: 'json',
+ *                root: 'items',
+ *                totalProperty: 'total'
+ *            }
+ *        }
+ *    });
+ *    
+ *    // specify segment of data you want to load using params
+ *    store.load({
+ *        params:{
+ *            start:0,    
+ *            limit: itemsPerPage
+ *        }
+ *    });
+ *    
+ *    Ext.create('Ext.grid.Panel', {
+ *        title: 'Simpsons',
+ *        store: store,
+ *        columns: [
+ *            {header: 'Name',  dataIndex: 'name'},
+ *            {header: 'Email', dataIndex: 'email', flex:1},
+ *            {header: 'Phone', dataIndex: 'phone'}
+ *        ],
+ *        width: 400,
+ *        height: 125,
+ *        dockedItems: [{
+ *            xtype: 'pagingtoolbar',
+ *            store: store,   // same store GridPanel is using
+ *            dock: 'bottom',
+ *            displayInfo: true
+ *        }],
+ *        renderTo: Ext.getBody()
+ *    });
  * </code></pre>
  *
  * <p>To use paging, pass the paging requirements to the server when the store is first loaded.</p>
@@ -207,7 +226,6 @@ Ext.define('Ext.toolbar.Paging', {
             enableKeyEvents: true,
             selectOnFocus: true,
             submitValue: false,
-            height: 19,
             width: me.inputItemWidth,
             margins: '-1 2 3 2',
             listeners: {
@@ -293,18 +311,10 @@ Ext.define('Ext.toolbar.Paging', {
              */
             'beforechange'
         );
-        me.on('afterlayout', me.onFirstLayout, me, {single: true});
+        me.on('afterlayout', me.onLoad, me, {single: true});
 
         me.bindStore(me.store, true);
     },
-
-    // private
-    onFirstLayout : function(){
-        if (this.dsLoaded) {
-            this.onLoad.apply(this, this.dsLoaded);
-        }
-    },
-
     // private
     updateInfo : function(){
         var me = this,
@@ -331,7 +341,7 @@ Ext.define('Ext.toolbar.Paging', {
     },
 
     // private
-    onLoad : function(store, r, o){
+    onLoad : function(){
         var me = this,
             pageData,
             currPage,
@@ -339,7 +349,6 @@ Ext.define('Ext.toolbar.Paging', {
             afterText;
             
         if (!me.rendered) {
-            me.dsLoaded = [store, r, o];
             return;
         }
 

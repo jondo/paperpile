@@ -8,7 +8,7 @@
  * and series. A chart instance example could look like:
  *
   <pre><code>
-    var chart = new Ext.chart.Chart({
+    Ext.create('Ext.chart.Chart', {
         renderTo: Ext.getBody(),
         width: 800,
         height: 600,
@@ -55,8 +55,16 @@ Ext.define('Ext.chart.Chart', {
     ],
 
     /* End Definitions */
+
     // @private
     viewBox: false,
+
+    /**
+     * @cfg {String} theme (optional) The name of the theme to be used. A theme defines the colors and
+     * other visual displays of tick marks on axis, text, title text, line colors, marker colors and styles, etc.
+     * Possible theme values are 'Base', 'Green', 'Sky', 'Red', 'Purple', 'Blue', 'Yellow' and also six category themes
+     * 'Category1' to 'Category6'. Default value is 'Base'.
+     */
 
     /**
      * @cfg {Boolean/Object} animate (optional) true for the default animation (easing: 'ease' and duration: 500)
@@ -79,7 +87,7 @@ Ext.define('Ext.chart.Chart', {
      * Defines the priority order for which Surface implementation to use. The first
      * one supported by the current environment will be used.
      */
-    enginePriority: ['SVG', 'VML'],
+    enginePriority: ['Svg', 'Vml'],
 
     /**
      * @cfg {Object|Boolean} background (optional) Set the chart background. This can be a gradient object, image, or color.
@@ -732,7 +740,11 @@ Ext.define('Ext.chart.Chart', {
 
     // @private draw series.
     drawCharts: function(series) {
+        series.triggerafterrender = false;
         series.drawSeries();
+        if (!this.animate) {
+            series.fireEvent('afterrender');
+        }
     },
 
     // @private remove gently.

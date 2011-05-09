@@ -7,7 +7,8 @@
  * happens as a result of loading a Store - for example we might create something like this:</p>
  * 
 <pre><code>
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: ['id', 'name', 'email']
 });
 

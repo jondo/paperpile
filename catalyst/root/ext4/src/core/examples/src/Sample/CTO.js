@@ -21,11 +21,5 @@ Ext.define('Sample.CTO', {
 
         alert(Ext.getClassName(this.callParent()));
         return cloned;
-    },
-
-    getAverageIQ: function() {
-        alert(this.statics().averageIQ);
-        
-        return this.callParent();
     }
 });

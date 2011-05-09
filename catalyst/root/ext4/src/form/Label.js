@@ -73,6 +73,7 @@ Ext.define('Ext.form.Label', {
      * Note that if {@link #text} is specified it will take precedence and this value will be ignored.
      */
     
+    maskOnDisable: false,
     getElConfig: function(){
         var me = this;
         return {

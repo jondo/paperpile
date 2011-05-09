@@ -35,11 +35,33 @@ module ExtJS4
           Sass::Script::Number.new(value.to_i)
         end
         
-        def theme_image(theme, path, without_url = false)
+        # Returns a background-image property for a specified images for the theme
+        def theme_image(theme, path, without_url = false, relative = false)
           path = path.value
+          theme = theme.value
+          without_url = (without_url.class == FalseClass) ? without_url : without_url.value
           
-          images_path = File.join($ext_path, 'resources', 'themes', 'images', theme.value)
-          image_path = File.join(images_path, path)
+          relative_path = "../images/"
+          
+          if relative
+            if relative.class == Sass::Script::String
+              relative_path = relative.value
+              relative = true
+            elsif relative.class == FalseClass || relative.class == TrueClass
+              relative = relative
+            else
+              relative = relative.value
+            end
+          else
+            relative = false
+          end
+          
+          if relative
+            image_path = File.join(relative_path, theme, path)
+          else
+            images_path = File.join($ext_path, 'resources', 'themes', 'images', theme)
+            image_path = File.join(images_path, path)
+          end
           
           if !without_url
             url = "url('#{image_path}')"

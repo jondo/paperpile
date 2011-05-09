@@ -2,7 +2,7 @@
  * @class Ext.grid.Scroller
  * @extends Ext.Component
  *
- * Docked in Ext.grid.Section's, controls virtualized scrolling and synchronization
+ * Docked in an Ext.grid.Panel, controls virtualized scrolling and synchronization
  * across different sections.
  *
  * @private
@@ -21,7 +21,12 @@ Ext.define('Ext.grid.Scroller', {
             dock     = me.dock,
             cls      = Ext.baseCSSPrefix + 'scroller-vertical',
             sizeProp = 'width',
-            scrollbarWidth = Ext.getScrollBarWidth();
+            // Subtracting 2px would give us a perfect fit of the scroller
+            // however, some browsers wont allow us to scroll content thats not
+            // visible, therefore we use 1px.
+            // Note: This 1px offset matches code in Ext.grid.ColumnLayout when
+            // reserving room for the scrollbar
+            scrollbarWidth = Ext.getScrollBarWidth() + (Ext.isIE ? 1 : -1);
 
         me.offsets = {bottom: 0};
 
@@ -44,7 +49,8 @@ Ext.define('Ext.grid.Scroller', {
         var me = this;
         me.callParent();
         me.ownerCt.on('afterlayout', me.onOwnerAfterLayout, me);
-        me.el.on('scroll', me.onElScroll, me);
+        me.mon(me.el, 'scroll', me.onElScroll, me);
+        Ext.cache[me.el.id].skipGarbageCollection = true;
     },
     
     getSizeCalculation: function() {
@@ -52,7 +58,8 @@ Ext.define('Ext.grid.Scroller', {
             dock   = this.dock,
             elDom  = this.el.dom,
             width  = 1,
-            height = 1;
+            height = 1,
+            view, tbl;
             
         if (dock === 'top' || dock === 'bottom') {
             // TODO: Must gravitate to a single region..
@@ -67,8 +74,18 @@ Ext.define('Ext.grid.Scroller', {
             // are zero rows in the grid/tree. We read the width from the
             // headerCt instead.
             width = center.headerCt.getFullWidth();
-        } else {
-            var tbl = owner.el.down('.' + Ext.baseCSSPrefix + 'grid-view');
+            
+            if (Ext.isIEQuirks) {
+                width--;
+            }
+            // Account for the 1px removed in Scroller.
+            width--;
+        } else {            
+            view = owner.down('tableview:not([lockableInjected])');
+            if (!view) {
+                return false;
+            }
+            tbl = view.el;
             if (!tbl) {
                 return false;
             }

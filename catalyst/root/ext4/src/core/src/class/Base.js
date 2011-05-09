@@ -450,7 +450,9 @@ My.cool.Class.create({
         implement: function(members) {
             var prototype = this.prototype,
                 name, i, member, previous;
-
+            //<debug>
+            var className = Ext.getClassName(this);
+            //</debug>
             for (name in members) {
                 if (members.hasOwnProperty(name)) {
                     member = members[name];
@@ -458,6 +460,11 @@ My.cool.Class.create({
                     if (typeof member === 'function') {
                         member.$owner = this;
                         member.$name = name;
+                        //<debug>
+                        if (className) {
+                            member.displayName = className + '#' + name;
+                        }
+                        //</debug>
                     }
 
                     prototype[name] = member;
@@ -627,7 +634,7 @@ steve.printMoney(); // alerts '$$$$$$$'
                             my[i] = mixin[i];
                         }
                     }
-                    else if (i === 'config' && my.config !== undefined && mixin.config !== undefined) {
+                    else if (i === 'config' && my.config && mixin.config) {
                         Ext.Object.merge(my.config, mixin.config);
                     }
                 }

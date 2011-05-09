@@ -1,12 +1,29 @@
 /**
  * @class Ext.grid.feature.Feature
  * @extends Ext.util.Observable
- * @private
+ * 
+ * A feature is a type of plugin that is specific to the {@link Ext.grid.Panel}. It provides several
+ * hooks that allows the developer to inject additional functionality at certain points throughout the 
+ * grid creation cycle. This class provides the base template methods that are available to the developer,
+ * it should be extended.
+ * 
+ * There are several built in features that extend this class, for example:
  *
- * Features allow you to manipulate the functionality available within a grid
- * view such as grouping, treegrid, rowbody, rowwrap, etc.
+ *  - {@link Ext.grid.feature.Grouping} - Shows grid rows in groups as specified by the {@link Ext.data.Store}
+ *  - {@link Ext.grid.feature.RowBody} - Adds a body section for each grid row that can contain markup.
+ *  - {@link Ext.grid.feature.Summary} - Adds a summary row at the bottom of the grid with aggregate totals for a column.
+ * 
+ * ## Using Features
+ * A feature is added to the grid by specifying it an array of features in the configuration:
+ * 
+ *     var groupingFeature = Ext.create('Ext.grid.feature.Grouping');
+ *     Ext.create('Ext.grid.Panel', {
+ *         // other options
+ *         features: [groupingFeature]
+ *     });
+ * 
+ * @abstract
  */
-
 Ext.define('Ext.grid.feature.Feature', {
     extend: 'Ext.util.Observable',
     alias: 'feature.feature',
@@ -46,7 +63,6 @@ Ext.define('Ext.grid.feature.Feature', {
      */
     grid: null,
     
-    
     /**
      * Most features will not modify the data returned to the view.
      * This is limited to one feature that manipulates the data per grid view.
@@ -55,6 +71,19 @@ Ext.define('Ext.grid.feature.Feature', {
         
     getFeatureTpl: function() {
         return '';
+    },
+    
+    /**
+     * Abstract method to be overriden when a feature should add additional
+     * arguments to its event signature. By default the event will fire:
+     * - view - The underlying Ext.view.Table
+     * - featureTarget - The matched element by the defined {@link eventSelector}
+     *
+     * The method must also return the eventName as the first index of the array
+     * to be passed to fireEvent.
+     */
+    getFireEventArgs: function(eventName, view, featureTarget) {
+        return [eventName, view, featureTarget];
     },
     
     /**
@@ -114,4 +143,5 @@ Ext.define('Ext.grid.feature.Feature', {
     disable: function() {
         this.disabled = true;
     }
+    
 });

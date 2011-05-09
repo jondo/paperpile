@@ -90,7 +90,7 @@ Ext.define('Ext.fx.Manager', {
                 targetObj = Ext.create('Ext.fx.target.Sprite', target);
             }
             // Draw Sprite Composite
-            else if (target.isSpriteGroup) {
+            else if (target.isCompositeSprite) {
                 targetObj = Ext.create('Ext.fx.target.CompositeSprite', target);
             }
             // Component

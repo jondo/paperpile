@@ -50,21 +50,18 @@ Ext.define('Ext.chart.Tip', {
             spriteTip = me.spriteTip,
             tipConfig = me.tipConfig,
             trackMouse = tooltip.trackMouse,
-            sprite,
-            surface,
-            surfaceExt,
-            pos,
-            x,
-            y;
+            sprite, surface, surfaceExt, pos, x, y;
         if (!trackMouse) {
             tooltip.trackMouse = true;
             sprite = item.sprite;
             surface = sprite.surface;
             surfaceExt = Ext.get(surface.getId());
-            pos = surfaceExt.getXY();
-            x = pos[0] + (sprite.attr.x || 0) + (sprite.attr.translation && sprite.attr.translation.x || 0);
-            y = pos[1] + (sprite.attr.y || 0) + (sprite.attr.translation && sprite.attr.translation.y || 0);
-            tooltip.targetXY = [x, y];
+            if (surfaceExt) {
+                pos = surfaceExt.getXY();
+                x = pos[0] + (sprite.attr.x || 0) + (sprite.attr.translation && sprite.attr.translation.x || 0);
+                y = pos[1] + (sprite.attr.y || 0) + (sprite.attr.translation && sprite.attr.translation.y || 0);
+                tooltip.targetXY = [x, y];
+            }
         }
         if (spriteTip) {
             tipConfig.renderer.call(tooltip, item.storeItem, item, spriteTip.surface);

@@ -1,6 +1,59 @@
 /**
  * @class Ext.fx.Animator
  * Animation instance
+
+This class is used to run keyframe based animations, which follows the CSS3 based animation structure. 
+Keyframe animations differ from typical from/to animations in that they offer the ability to specify values 
+at various points throughout the animation.
+
+__Using Keyframes__
+The {@link #keyframes} option is the most important part of specifying an animation when using this 
+class. A key frame is a point in a particular animation. We represent this as a percentage of the
+total animation duration. At each key frame, we can specify the target values at that time. Note that
+you *must* specify the values at 0% and 100%, the start and ending values. There is also a {@link keyframe}
+event that fires after each key frame is reached.
+
+__Example Usage__
+In the example below, we modify the values of the element at each fifth throughout the animation.
+
+    Ext.create('Ext.fx.Animator', {
+        target: Ext.getBody().createChild({
+            style: {
+                width: '100px',
+                height: '100px',
+                'background-color': 'red'
+            }
+        }),
+        duration: 10000, // 10 seconds
+        keyframes: {
+            0: {
+                opacity: 1,
+                backgroundColor: 'FF0000'
+            },
+            20: {
+                x: 30,
+                opacity: 0.5    
+            },
+            40: {
+                x: 130,
+                backgroundColor: '0000FF'    
+            },
+            60: {
+                y: 80,
+                opacity: 0.3    
+            },
+            80: {
+                width: 200,
+                y: 200    
+            },
+            100: {
+                opacity: 1,
+                backgroundColor: '00FF00'
+            }
+        }
+    });
+
+ * @markdown
  */
 Ext.define('Ext.fx.Animator', {
 

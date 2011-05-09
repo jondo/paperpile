@@ -91,6 +91,8 @@ Ext.define('Ext.chart.axis.Axis', {
      * Offset axis width. Default's 0.
      */
     width: 0,
+    
+    majorTickSteps: false,
 
     // @private
     applyData: Ext.emptyFn,
@@ -112,6 +114,7 @@ Ext.define('Ext.chart.axis.Axis', {
             aggregate = false,
             total = 0,
             excludes = [],
+            outfrom, outto,
             i, l, values, rec, out;
 
         //if one series is stacked I have to aggregate the values
@@ -156,8 +159,9 @@ Ext.define('Ext.chart.axis.Axis', {
         if (min != max && (max != (max >> 0))) {
             max = (max >> 0) + 1;
         }
-        
-        out = Ext.draw.Draw.snapEnds(min, max, isNaN(me.majorTickSteps)? me.steps : (me.majorTickSteps +1));
+        out = Ext.draw.Draw.snapEnds(min, max, me.majorTickSteps !== false ?  (me.majorTickSteps +1) : me.steps);
+        outfrom = out.from;
+        outto = out.to;
         if (!isNaN(me.maximum)) {
             //TODO(nico) users are responsible for their own minimum/maximum values set.
             //Clipping should be added to remove lines in the chart which are below the axis.
@@ -168,6 +172,10 @@ Ext.define('Ext.chart.axis.Axis', {
             //Clipping should be added to remove lines in the chart which are below the axis.
             out.from = me.minimum;
         }
+        
+        //Adjust after adjusting minimum and maximum
+        out.step = (out.to - out.from) / (outto - outfrom) * out.step;
+        
         if (me.adjustMaximumByMajorUnit) {
             out.to += out.step;
         }
@@ -507,6 +515,7 @@ Ext.define('Ext.chart.axis.Axis', {
     
     drawHorizontalLabels: function() {
        var  me = this,
+            labelConf = me.label,
             floor = Math.floor,
             max = Math.max,
             axes = me.chart.axes,
@@ -527,17 +536,15 @@ Ext.define('Ext.chart.axis.Axis', {
         //get a reference to the first text label dimensions
         point = inflections[0];
         firstLabel = me.getOrCreateLabel(0, me.label.renderer(labels[0]));
-        ratio = Math.abs(Math.sin(firstLabel.attr.rotation && (firstLabel.attr.rotation.degrees * Math.PI / 180) || 0));
-        
+        ratio = Math.abs(Math.sin(labelConf.rotate && (labelConf.rotate.degrees * Math.PI / 180) || 0)) >> 0;
         
         for (i = 0; i < ln; i++) {
             point = inflections[i];
             text = me.label.renderer(labels[i]);
             textLabel = me.getOrCreateLabel(i, text);
             bbox = textLabel._bbox;
-
             maxHeight = max(maxHeight, bbox.height + me.dashSize + me.label.padding);
-            x = floor(point[0] - bbox.width /2 - bbox.x * ratio);
+            x = floor(point[0] - (ratio? bbox.height : bbox.width) / 2);
             if (me.chart.maxGutter[0] == 0) {
                 if (i == 0 && axes.findIndex('position', 'left') == -1) {
                     x = point[0];

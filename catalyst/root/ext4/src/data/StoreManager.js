@@ -22,7 +22,7 @@ Ext.create('Ext.data.Store', {
     storeId: 'myStore'
 });
 
-Ext.create('Ext.DataView', {
+Ext.create('Ext.view.View', {
     store: 'myStore',
     // other configuration here
 });

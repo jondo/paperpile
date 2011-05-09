@@ -38,9 +38,21 @@
         padding-top: 1px;
     }
 
-    .#{$prefix}ie .#{$prefix}fieldset-header {
-        padding: 0;
-        margin-bottom: 10px;
+    @if $include-ie {
+        .#{$prefix}quirks .#{$prefix}ie .#{$prefix}fieldset-header,
+        .#{$prefix}ie6 .#{$prefix}fieldset-header,
+        .#{$prefix}ie7 .#{$prefix}fieldset-header,
+        .#{$prefix}ie8 .#{$prefix}fieldset-header {
+            padding: 0;
+        }
+
+        .#{$prefix}ie .#{$prefix}fieldset-header {
+            margin-bottom: 10px;
+        }
+
+        .#{$prefix}ie9 .#{$prefix}fieldset-header {
+            padding-top: 1px;
+        }
     }
     
     .#{$prefix}fieldset-collapsed {
@@ -57,36 +69,32 @@
         border-right-color: transparent !important;
     }
 
-    .#{$prefix}ie6 .#{$prefix}fieldset-collapsed {
-        border-width: 1px 0 0 0 !important;
-        
-        padding-bottom: 0 !important;
-        margin-left: 1px;
-        margin-right: 1px;
-    }
-    
-    .#{$prefix}ie .#{$prefix}fieldset-bwrap {
-        zoom: 1;
+    @if $include-ie {
+        .#{$prefix}ie6 .#{$prefix}fieldset-collapsed {
+            border-width: 1px 0 0 0 !important;
+
+            padding-bottom: 0 !important;
+            margin-left: 1px;
+            margin-right: 1px;
+        }
+
+        .#{$prefix}ie .#{$prefix}fieldset-bwrap {
+            zoom: 1;
+        }
     }
 
-    .#{$prefix}fieldset-noborder {
-        border: 0px none transparent;
-    }
+    @if $include-ie {
+        /* IE legend positioning bug */
+        .#{$prefix}ie .#{$prefix}fieldset-noborder legend {
+            position: relative;
 
-    .#{$prefix}fieldset-noborder legend {
-        margin-left: -3px;
-    }
+            margin-bottom: 23px;
+        }
 
-    /* IE legend positioning bug */
-    .#{$prefix}ie .#{$prefix}fieldset-noborder legend {
-        position: relative;
-        
-        margin-bottom: 23px;
-    }
-    
-    .#{$prefix}ie .#{$prefix}fieldset-noborder legend span {
-        position: absolute;
-        left: 16px;
+        .#{$prefix}ie .#{$prefix}fieldset-noborder legend span {
+            position: absolute;
+            left: 16px;
+        }
     }
     
     .#{$prefix}fieldset {

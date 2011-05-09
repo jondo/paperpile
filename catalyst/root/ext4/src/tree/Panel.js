@@ -1,36 +1,52 @@
 /**
  * @class Ext.tree.Panel
  * @extends Ext.panel.Table
-
-The TreePanel provides tree-structured UI representation of tree-structured data.
-A TreePanel must be bound to a {@link Ext.data.TreeStore}. TreePanel's support
-multiple columns through the {@link columns} configuration. 
-
-An example of a tree rendered to the body of the document:
-
-    var tree = new Ext.tree.Panel({
-        renderTo: Ext.getBody(),
-        width: 400,
-        height: 400,
-        store: treeStore,
-        hideHeaders: true,
-        columns: [{
-            // specify you want indenting on this header
-            xtype: 'treecolumn',
-            flex: 1,
-            sortable: false,
-            // links back to field name in store
-            dataIndex: 'fileName'
-        }]
-    });
+ * 
+ * The TreePanel provides tree-structured UI representation of tree-structured data.
+ * A TreePanel must be bound to a {@link Ext.data.TreeStore}. TreePanel's support
+ * multiple columns through the {@link columns} configuration. 
+ * 
+ * Simple TreePanel using inline data.
+ *
+ * {@img Ext.tree.Panel/Ext.tree.Panel1.png Ext.tree.Panel component}
+ * 
+ * ## Simple Tree Panel (no columns)
+ *
+ *     var store = Ext.create('Ext.data.TreeStore', {
+ *         root: {
+ *             expanded: true, 
+ *             text:"",
+ *             user:"",
+ *             status:"", 
+ *             children: [
+ *                 { text:"detention", leaf: true },
+ *                 { text:"homework", expanded: true, 
+ *                     children: [
+ *                         { text:"book report", leaf: true },
+ *                         { text:"alegrbra", leaf: true}
+ *                     ]
+ *                 },
+ *                 { text: "buy lottery tickets", leaf:true }
+ *             ]
+ *         }
+ *     });     
+ *             
+ *     Ext.create('Ext.tree.Panel', {
+ *         title: 'Simple Tree',
+ *         width: 200,
+ *         height: 150,
+ *         store: store,
+ *         rootVisible: false,        
+ *         renderTo: Ext.getBody()
+ *     });
+ *
  * @xtype treepanel
- * @markdown
  */
 Ext.define('Ext.tree.Panel', {
     extend: 'Ext.panel.Table',
     alias: 'widget.treepanel',
     alternateClassName: ['Ext.tree.TreePanel', 'Ext.TreePanel'],
-    
+    requires: ['Ext.tree.View', 'Ext.selection.TreeModel', 'Ext.tree.Column'],
     viewType: 'treeview',
     selType: 'treemodel',
     
@@ -82,6 +98,15 @@ Ext.define('Ext.tree.Panel', {
     normalCfgCopy: ['displayField', 'root', 'singleExpand', 'useArrows', 'lines', 'rootVisible', 'scroll'],
     lockedCfgCopy: ['displayField', 'root', 'singleExpand', 'useArrows', 'lines', 'rootVisible'],
 
+    /**
+     * @cfg {Boolean} hideHeaders
+     * Specify as <code>true</code> to hide the headers.
+     */
+    
+    /**
+     * @cfg {Boolean} folderSort Set to true to automatically prepend a leaf sorter to the store (defaults to <tt>undefined</tt>)
+     */ 
+    
     constructor: function(config) {
         config = config || {};
         if (config.animate === undefined) {
@@ -108,33 +133,40 @@ Ext.define('Ext.tree.Panel', {
             cls.push(Ext.baseCSSPrefix + 'tree-no-lines');
         }
 
-        if (!me.store) {
-            me.store = Ext.create('Ext.data.TreeStore', {
+        if (!me.store || Ext.isObject(me.store) && !me.store.isStore) {
+            me.store = Ext.create('Ext.data.TreeStore', Ext.apply({}, me.store || {}, {
                 root: me.root,
                 fields: me.fields,
-                model: me.model
-            });
+                model: me.model,
+                folderSort: me.folderSort
+            }));
         }
         else if (me.root) {
             me.store = Ext.data.StoreManager.lookup(me.store);
             me.store.setRootNode(me.root);
+            if (me.folderSort !== undefined) {
+                me.store.folderSort = me.folderSort;
+                me.store.sort();
+            }            
         }
         
         // I'm not sure if we want to this. It might be confusing
         // if (me.initialConfig.rootVisible === undefined && !me.getRootNode()) {
         //     me.rootVisible = false;
         // }
-                
+        
         me.viewConfig = Ext.applyIf(me.viewConfig || {}, {
             rootVisible: me.rootVisible,
             animate: me.enableAnimations,
             singleExpand: me.singleExpand,
-            node: me.store.getRootNode()
+            node: me.store.getRootNode(),
+            hideHeaders: me.hideHeaders
         });
         
         me.mon(me.store, {
+            scope: me,
             rootchange: me.onRootChange,
-            scope: me
+            clear: me.onClear
         });
     
         me.relayEvents(me.store, [
@@ -284,12 +316,26 @@ Ext.define('Ext.tree.Panel', {
         me.cls = cls.join(' ');
         me.callParent();
         
+        me.relayEvents(me.getView(), [
+            /**
+             * @event checkchange
+             * Fires when a node with a checkbox's checked property changes
+             * @param {Ext.data.Model} node The node who's checked property was changed
+             * @param {Boolean} checked The node's new checked state
+             */
+            'checkchange'
+        ]);
+            
         // If the root is not visible and there is no rootnode defined, then just lets load the store
         if (!me.getView().rootVisible && !me.getRootNode()) {
             me.setRootNode({
                 expanded: true
             });
         }
+    },
+    
+    onClear: function(){
+        this.view.onClear();
     },
     
     setRootNode: function() {
@@ -300,22 +346,49 @@ Ext.define('Ext.tree.Panel', {
         return this.store.getRootNode();
     },
     
-    onRootChange: function(store, root) {
+    onRootChange: function(root) {
         this.view.setRootNode(root);
     },
+
+    /**
+     * Retrieve an array of checked records.
+     * @return {Array} An array containing the checked records
+     */
+    getChecked: function() {
+        return this.getView().getChecked();
+    },
     
+    isItemChecked: function(rec) {
+        return rec.get('checked');
+    },
+        
     /**
      * Expand all nodes
+     * @param {Function} callback (optional) A function to execute when the expand finishes.
+     * @param {Object} scope (optional) The scope of the callback function
      */
-    expandAll : function() {
-        this.getView().expand(this.getRootNode(), true);
+    expandAll : function(callback, scope) {
+        var root = this.getRootNode();
+        if (root) {
+            root.expand(true, callback, scope);
+        }
     },
 
     /**
      * Collapse all nodes
+     * @param {Function} callback (optional) A function to execute when the collapse finishes.
+     * @param {Object} scope (optional) The scope of the callback function
      */
-    collapseAll : function() {
-        this.getView().collapse(this.getRootNode(), true);
+    collapseAll : function(callback, scope) {
+        var root = this.getRootNode();
+        if (root) {
+            if (this.getView().rootVisible) {
+                root.collapse(true, callback, scope);
+            }
+            else {
+                root.collapseChildren(true, callback, scope);
+            }
+        }
     },
 
     /**
@@ -324,7 +397,7 @@ Ext.define('Ext.tree.Panel', {
      * @param {String} field (optional) The field to get the data from. Defaults to the model idProperty.
      * @param {String} separator (optional) A separator to use. Defaults to <tt>'/'</tt>.
      * @param {Function} callback (optional) A function to execute when the expand finishes. The callback will be called with
-     * (bSuccess, oLastNode) where bSuccess is if the expand was successful and oLastNode is the last node that was expanded.
+     * (success, lastNode) where success is if the expand was successful and lastNode is the last node that was expanded.
      * @param {Object} scope (optional) The scope of the callback function
      */
     expandPath: function(path, field, separator, callback, scope) {
@@ -361,11 +434,9 @@ Ext.define('Ext.tree.Panel', {
                 return;
             }
             current = node;
-            view.expand(current, false, expander);
+            current.expand(false, expander);
         };
-        view.expand(current, false, expander);
-        
-        
+        current.expand(false, expander);
     },
     
     /**
@@ -388,7 +459,7 @@ Ext.define('Ext.tree.Panel', {
         keys = path.split(separator);
         last = keys.pop();
         
-        me.expandPath(path, field, separator, function(success, node){
+        me.expandPath(keys.join('/'), field, separator, function(success, node){
             var doSuccess = false;
             if (success && node) {
                 node = node.findChild(field, last);

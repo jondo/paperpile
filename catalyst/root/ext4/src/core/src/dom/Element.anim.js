@@ -118,6 +118,13 @@ el.slideIn('t', {
             }
 
             box = me.getBox();
+            if ((anchor == 't' || anchor == 'b') && box.height == 0) {
+                box.height = me.dom.scrollHeight;
+            }
+            else if ((anchor == 'l' || anchor == 'r') && box.width == 0) {
+                box.width = me.dom.scrollWidth;
+            }
+            
             position = me.getPositioning();
             me.setSize(box.width, box.height);
 
@@ -309,7 +316,7 @@ el.slideIn('t', {
                 },
                 afteranimate: {
                     fn: function() {
-                        if (wrapAnim.running) {
+                        if (wrapAnim && wrapAnim.running) {
                             wrapAnim.end();
                         }
                     }

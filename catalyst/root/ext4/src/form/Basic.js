@@ -359,8 +359,12 @@ paramOrder: 'param1|param2|param'
      * @return Boolean
      */
     isValid: function() {
-        var invalid = this.getFields().filterBy(function(field) {
-            return !field.validate();
+        var me = this,
+            invalid;
+        me.batchLayouts(function() {
+            invalid = me.getFields().filterBy(function(field) {
+                return !field.validate();
+            });
         });
         return invalid.length < 1;
     },
@@ -584,19 +588,9 @@ myFormPanel.getForm().submit({
      */
     updateRecord: function(record) {
         var fields = record.fields,
-            values = {},
+            values = this.getFieldValues(),
             name,
             obj = {};
-
-        // We don't use getValues() here because the getSubmitValue() override for
-        // some field types have a string format that is not parsable by Model
-        // fields and their convert methods, e.g., Date fields.  We want the actual
-        // value for updating records, not the string submit-friendly equivalent.
-        this.getFields().each(function(field) {
-            if (!field.disabled && field.submitValue && !field.isFileUpload()) {
-                values[field.getName()] = field.getValue();
-            }
-        });
 
         fields.each(function(f) {
             name = f.name;
@@ -780,8 +774,10 @@ myFormPanel.getForm().submit({
 
     /**
      * Retrieves the fields in the form as a set of key/value pairs, using their
-     * {@link Ext.form.field.Field#getSubmitData getSubmitData()} method.
-     * If multiple fields exist with the same name they are returned as an array.
+     * {@link Ext.form.field.Field#getSubmitData getSubmitData()} method to collect the values.
+     * If multiple fields return values under the same name those values will be combined into an Array.
+     * This is similar to {@link #getFieldValues} except that this method collects only String values for
+     * submission, while getFieldValues collects type-specific data values (e.g. Date objects for date fields.)
      * @param {Boolean} asString (optional) If true, will return the key/value collection as a single
      * URL-encoded param string. Defaults to false.
      * @param {Boolean} dirtyOnly (optional) If true, only fields that are dirty will be included in the result.
@@ -790,12 +786,12 @@ myFormPanel.getForm().submit({
      * Defaults to false.
      * @return {String/Object}
      */
-    getValues: function(asString, dirtyOnly, includeEmptyText) {
+    getValues: function(asString, dirtyOnly, includeEmptyText, useDataValues) {
         var values = {};
 
         this.getFields().each(function(field) {
             if (!dirtyOnly || field.isDirty()) {
-                var data = field.getSubmitData(includeEmptyText);
+                var data = field[useDataValues ? 'getModelData' : 'getSubmitData'](includeEmptyText);
                 if (Ext.isObject(data)) {
                     Ext.iterate(data, function(name, val) {
                         if (includeEmptyText && val === '') {
@@ -827,14 +823,31 @@ myFormPanel.getForm().submit({
     },
 
     /**
+     * Retrieves the fields in the form as a set of key/value pairs, using their
+     * {@link Ext.form.field.Field#getModelData getModelData()} method to collect the values.
+     * If multiple fields return values under the same name those values will be combined into an Array.
+     * This is similar to {@link #getValues} except that this method collects type-specific data values
+     * (e.g. Date objects for date fields) while getValues returns only String values for submission.
+     * @param {Boolean} dirtyOnly (optional) If true, only fields that are dirty will be included in the result.
+     * Defaults to false.
+     * @return {Object}
+     */
+    getFieldValues: function(dirtyOnly) {
+        return this.getValues(false, dirtyOnly, false, true);
+    },
+
+    /**
      * Clears all invalid field messages in this form.
      * @return {Ext.form.Basic} this
      */
     clearInvalid: function() {
-        this.getFields().each(function(f) {
-            f.clearInvalid();
+        var me = this;
+        me.batchLayouts(function() {
+            me.getFields().each(function(f) {
+                f.clearInvalid();
+            });
         });
-        return this;
+        return me;
     },
 
     /**
@@ -842,10 +855,13 @@ myFormPanel.getForm().submit({
      * @return {Ext.form.Basic} this
      */
     reset: function() {
-        this.getFields().each(function(f) {
-            f.reset();
+        var me = this;
+        me.batchLayouts(function() {
+            me.getFields().each(function(f) {
+                f.reset();
+            });
         });
-        return this;
+        return me;
     },
 
     /**
@@ -870,5 +886,38 @@ myFormPanel.getForm().submit({
             Ext.applyIf(f, obj);
         });
         return this;
+    },
+
+    /**
+     * @private
+     * Utility wrapper that suspends layouts of all field parent containers for the duration of a given
+     * function. Used during full-form validation and resets to prevent huge numbers of layouts.
+     * @param {Function} fn
+     */
+    batchLayouts: function(fn) {
+        var me = this,
+            suspended = new Ext.util.HashMap();
+
+        // Temporarily suspend layout on each field's immediate owner so we don't get a huge layout cascade
+        me.getFields().each(function(field) {
+            var ownerCt = field.ownerCt;
+            if (!suspended.contains(ownerCt)) {
+                suspended.add(ownerCt);
+                ownerCt.oldSuspendLayout = ownerCt.suspendLayout;
+                ownerCt.suspendLayout = true;
+            }
+        });
+
+        // Invoke the function
+        fn();
+
+        // Un-suspend the container layouts
+        suspended.each(function(id, ct) {
+            ct.suspendLayout = ct.oldSuspendLayout;
+            delete ct.oldSuspendLayout;
+        });
+
+        // Trigger a single layout
+        me.owner.doComponentLayout();
     }
 });

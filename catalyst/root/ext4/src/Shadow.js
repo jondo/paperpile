@@ -154,8 +154,8 @@ Ext.define('Ext.Shadow', {
 
         targetStyle.left = (l + adjusts.l) + "px";
         targetStyle.top = (t + adjusts.t) + "px";
-        shadowWidth = (targetWidth + adjusts.w);
-        shadowHeight = (targetHeight + adjusts.h);
+        shadowWidth = Math.max(targetWidth + adjusts.w, 0);
+        shadowHeight = Math.max(targetHeight + adjusts.h, 0);
         sws = shadowWidth + "px";
         shs = shadowHeight + "px";
         if (targetStyle.width != sws || targetStyle.height != shs) {

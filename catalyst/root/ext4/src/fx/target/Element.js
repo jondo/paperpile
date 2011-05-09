@@ -1,26 +1,20 @@
 /**
  * @class Ext.fx.target.Element
- * @private
+ * @extends Ext.fx.target.Target
+ * 
+ * This class represents a animation target for an {@link Ext.core.Element}. In general this class will not be
+ * created directly, the {@link Ext.core.Element} will be passed to the animation and
+ * and the appropriate target will be created.
  */
 Ext.define('Ext.fx.target.Element', {
 
     /* Begin Definitions */
-
+    
+    extend: 'Ext.fx.target.Target',
+    
     /* End Definitions */
 
-    isAnimTarget: true,
-
-    constructor: function(target) {
-        this.target = target;
-        this.id = this.getId();
-        this.callParent([target]);
-    },
-
     type: 'element',
-
-    getId: function() {
-        return this.target.id;
-    },
 
     getElVal: function(el, attr, val) {
         if (val == undefined) {

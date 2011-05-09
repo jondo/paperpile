@@ -5,6 +5,7 @@ Ext.define('Paperpile.Collectionpicker', {
   // Configurable options start here.	    
   addCheckBoxes: true,
   filterBar: true,
+	    alignString: 'tr-br',
   width: 175,
   height: 200,
   maxViewHeight: 200,
@@ -51,7 +52,7 @@ Ext.define('Paperpile.Collectionpicker', {
     if (this.addCheckBoxes) {
       viewWidth -= 10;
     }
-    this.view = new Ext.DataView({
+    this.view = new Ext.view.View({
       border: false,
       frame: true,
       store: this.store,
@@ -452,7 +453,7 @@ Ext.define('Paperpile.Collectionpicker', {
 
   // Aligns this labelpanel to show up below an element.
   alignTo: function(el) {
-    this.getEl().alignTo(el, 'tl-bl', [-1, 0]);
+    this.getEl().alignTo(el, this.alignString, [-1, 0]);
   },
 
   updateFilterAndView: function() {

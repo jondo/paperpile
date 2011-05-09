@@ -101,11 +101,11 @@
 
         /**
          * Iterates either an array or an object. This method delegates to
-         * {@link Ext.Array.each} if the given value is iterable, and {@link Ext.Object.each} otherwise.
+         * {@link Ext.Array#each Ext.Array.each} if the given value is iterable, and {@link Ext.Object#each Ext.Object.each} otherwise.
          *
          * @param {Object/Array} object The object or array to be iterated.
-         * @param {Function} fn The function to be called for each iteration. See and {@link Ext.Array.each} and
-         * {@link Ext.Object.each} for detailed lists of arguments passed to this function depending on the given object
+         * @param {Function} fn The function to be called for each iteration. See and {@link Ext.Array#each Ext.Array.each} and
+         * {@link Ext.Object#each Ext.Object.each} for detailed lists of arguments passed to this function depending on the given object
          * type that is being iterated.
          * @param {Object} scope (Optional) The scope (`this` reference) in which the specified function is executed.
          * Defaults to the object being iterated itself.
@@ -394,7 +394,12 @@
          * @param {Mixed} value The value to test
          * @return {Boolean}
          */
-        isFunction: function(value) {
+        isFunction:
+        // Safari 3.x and 4.x returns 'function' for typeof <NodeList>, hence we need to fall back to using
+        // Object.prorotype.toString (slower)
+        (typeof document !== 'undefined' && typeof document.getElementsByTagName('body') === 'function') ? function(value) {
+            return toString.call(value) === '[object Function]';
+        } : function(value) {
             return typeof value === 'function';
         },
 

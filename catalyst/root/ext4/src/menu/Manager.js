@@ -134,14 +134,16 @@ Ext.define('Ext.menu.Manager', {
      * @return {Ext.menu.Menu} The specified menu, or null if none are found
      */
     get: function(menu) {
+        var menus = this.menus;
+        
         if (typeof menu == 'string') { // menu id
             if (!menus) {  // not initialized, no menus to return
                 return null;
             }
             return menus[menu];
-        } else if (menu.events) {  // menu instance
+        } else if (menu.isMenu) {  // menu instance
             return menu;
-        } else if (typeof menu.length == 'number') { // array of menu items?
+        } else if (Ext.isArray(menu)) { // array of menu items
             return Ext.create('Ext.menu.Menu', {items:menu});
         } else { // otherwise, must be a config
             return Ext.ComponentManager.create(menu, 'menu');
@@ -156,10 +158,13 @@ Ext.define('Ext.menu.Manager', {
 
         delete menus[menu.id];
         active.remove(menu);
-        menu.un('beforehide', me.onBeforeHide, me);
-        menu.un('hide', me.onHide, me);
-        menu.un('beforeshow', this.onBeforeShow, me);
-        menu.un('show', me.onShow, me);
+        menu.un({
+            beforehide: me.onBeforeHide,
+            hide: me.onHide,
+            beforeshow: me.onBeforeShow,
+            show: me.onShow,
+            scope: me
+        });
     },
 
     // private

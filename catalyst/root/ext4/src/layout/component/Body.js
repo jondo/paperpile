@@ -46,20 +46,20 @@ Ext.define('Ext.layout.component.Body', {
     /**
      * @private
      * <p>Sizes the Component's body element to fit exactly within the content box of the Component's encapsulating element.<p>
-     * <p>Uses Container layout's getLayoutTargetSize method to ascertain the content box</p>
      */
     setBodySize: function(width, height) {
         var me = this,
-            isNumber = Ext.isNumber,
-            isDefined = Ext.isDefined,
-            bodySize, bodyWidth, bodyHeight;
+            owner = me.owner,
+            frameSize = owner.frameSize,
+            isNumber = Ext.isNumber;
 
-        if (isDefined(width) || isDefined(height)) {
-            bodySize = Ext.layout.container.Container.prototype.getLayoutTargetSize.call(me);
-            bodyWidth = isNumber(width) ? bodySize.width : width;
-            bodyHeight = isNumber(height) ? bodySize.height : height;
+        if (isNumber(width)) {
+            width -= owner.el.getFrameWidth('lr') - frameSize.left - frameSize.right;
+        }
+        if (isNumber(height)) {
+            height -= owner.el.getFrameWidth('tb') - frameSize.top - frameSize.bottom;
         }
 
-        me.setElementSize(me.owner.body, bodyWidth, bodyHeight);
+        me.setElementSize(owner.body, width, height);
     }
 });

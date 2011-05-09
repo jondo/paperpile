@@ -2,6 +2,9 @@
  * @class Ext.direct.Event
  * A base class for all Ext.direct events. An event is
  * created after some kind of interaction with the server.
+ * The event class is essentially just a data structure
+ * to hold a direct response.
+ * 
  * @constructor
  * @param {Object} config The config object
  */

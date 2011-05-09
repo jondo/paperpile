@@ -1,9 +1,13 @@
 /**
  * @class Ext.fx.target.CompositeElementCSS
- * @private
  * @extends Ext.fx.target.CompositeElement
+ * 
+ * This class represents a animation target for a {@link Ext.CompositeElement}, where the
+ * constituent elements support CSS based animation. It allows each {@link Ext.core.Element} in 
+ * the group to be animated as a whole. In general this class will not be created directly, 
+ * the {@link Ext.CompositeElement} will be passed to the animation and the appropriate target 
+ * will be created.
  */
-
 Ext.define('Ext.fx.target.CompositeElementCSS', {
 
     /* Begin Definitions */

@@ -7,23 +7,23 @@
  * a foreign key which references the primary key of the associated model:</p>
  *
 <pre><code>
-var Category = Ext.regModel('Category', {
+Ext.define('Category', {
+    extend: 'Ext.data.Model',
     fields: [
         {name: 'id',   type: 'int'},
         {name: 'name', type: 'string'}
     ]
 });
 
-var Product = Ext.regModel('Product', {
+Ext.define('Product', {
+    extend: 'Ext.data.Model',
     fields: [
         {name: 'id',          type: 'int'},
         {name: 'category_id', type: 'int'},
         {name: 'name',        type: 'string'}
     ],
-
-    associations: [
-        {type: 'belongsTo', model: 'Category'}
-    ]
+    // we can use the belongsTo shortcut on the model to create a belongsTo association
+    belongsTo: {type: 'belongsTo', model: 'Category'}
 });
 </code></pre>
  * <p>In the example above we have created models for Products and Categories, and linked them together
@@ -103,7 +103,7 @@ product.setCategory(10, {
  * {@link #primaryKey} and {@link #foreignKey}. These can alternatively be specified:</p>
  *
 <pre><code>
-var Product = Ext.regModel('Product', {
+Ext.define('Product', {
     fields: [...],
 
     associations: [
@@ -118,10 +118,32 @@ var Product = Ext.regModel('Product', {
 Ext.define('Ext.data.BelongsToAssociation', {
     extend: 'Ext.data.Association',
 
+    alias: 'association.belongsto',
+
     /**
      * @cfg {String} foreignKey The name of the foreign key on the owner model that links it to the associated
      * model. Defaults to the lowercased name of the associated model plus "_id", e.g. an association with a
      * model called Product would set up a product_id foreign key.
+     * <pre><code>
+Ext.define('Order', {
+    extend: 'Ext.data.Model',
+    fields: ['id', 'date'],
+    hasMany: 'Product'
+});
+
+Ext.define('Product', {
+    extend: 'Ext.data.Model',
+    fields: ['id', 'name', 'order_id'], // refers to the id of the order that this product belongs to
+    belongsTo: 'Group'
+});
+var product = new Product({
+    id: 1,
+    name: 'Product 1',
+    order_id: 22
+}, 1);
+product.getOrder(); // Will make a call to the server asking for order_id 22
+
+     * </code></pre>
      */
 
     /**
@@ -132,6 +154,17 @@ Ext.define('Ext.data.BelongsToAssociation', {
     /**
      * @cfg {String} setterName The name of the setter function that will be added to the local model's prototype.
      * Defaults to 'set' + the name of the foreign model, e.g. setCategory
+     */
+    
+    /**
+     * @cfg {String} type The type configuration can be used when creating associations using a configuration object.
+     * Use 'belongsTo' to create a HasManyAssocation
+     * <pre><code>
+associations: [{
+    type: 'belongsTo',
+    model: 'User'
+}]
+     * </code></pre>
      */
 
     constructor: function(config) {

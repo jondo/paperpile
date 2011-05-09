@@ -105,8 +105,8 @@ Usage:
     * {@link #addListener} example for attaching multiple handlers at once.</p>
     * <br><p><b><u>DOM events from ExtJs {@link Ext.Component Components}</u></b></p>
     * <br><p>While <i>some</i> ExtJs Component classes export selected DOM events (e.g. "click", "mouseover" etc), this
-    * is usually only done when extra value can be added. For example the {@link Ext.DataView DataView}'s
-    * <b><code>{@link Ext.DataView#click click}</code></b> event passing the node clicked on. To access DOM
+    * is usually only done when extra value can be added. For example the {@link Ext.view.View DataView}'s
+    * <b><code>{@link Ext.view.View#click click}</code></b> event passing the node clicked on. To access DOM
     * events directly from a child element of a Component, we need to specify the <code>element</code> option to
     * identify the Component property to add a DOM listener to:
     * <pre><code>
@@ -255,7 +255,6 @@ new Ext.panel.Panel({
             if (queue) {
                 queue.push(args);
             }
-            return false;
         } else if (event && Ext.isObject(event) && event.bubble) {
             if (event.fire.apply(event, args.slice(1)) === false) {
                 return false;

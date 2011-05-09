@@ -74,7 +74,7 @@ Ext.define('Ext.fx.Queue', {
             // GarbageCollector will need to clean up Elements since they aren't currently observable
             if (target.type != 'element') {
                 target.target.on('destroy', function() {
-                    me.stopAnimation(targetId);
+                    me.fxQueue[targetId] = [];
                 });
             }
         }

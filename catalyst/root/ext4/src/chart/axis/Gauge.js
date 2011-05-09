@@ -1,7 +1,23 @@
 /**
  * @class Ext.chart.axis.Gauge
  * @extends Ext.chart.axis.Abstract
- * @ignore
+ *
+ * Gauge Axis is the axis to be used with a Gauge series. The Gauge axis
+ * displays numeric data from an interval defined by the `minimum`, `maximum` and
+ * `step` configuration properties. The placement of the numeric data can be changed
+ * by altering the `margin` option that is set to `10` by default.
+ *
+ * A possible configuration for this axis would look like:
+ *
+            axes: [{
+                type: 'gauge',
+                position: 'gauge',
+                minimum: 0,
+                maximum: 100,
+                steps: 10,
+                margin: 7
+            }],
+ * 
  */
 Ext.define('Ext.chart.axis.Gauge', {
 
@@ -10,6 +26,22 @@ Ext.define('Ext.chart.axis.Gauge', {
     extend: 'Ext.chart.axis.Abstract',
 
     /* End Definitions */
+    
+    /**
+     * @cfg {Number} minimum (required) the minimum value of the interval to be displayed in the axis.
+     */
+
+    /**
+     * @cfg {Number} maximum (required) the maximum value of the interval to be displayed in the axis.
+     */
+
+    /**
+     * @cfg {Number} steps (required) the number of steps and tick marks to add to the interval.
+     */
+
+    /**
+     * @cfg {Number} margin (optional) the offset positioning of the tick marks and labels in pixels. Default's 10.
+     */
 
     position: 'gauge',
 

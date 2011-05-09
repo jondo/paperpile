@@ -25,7 +25,7 @@ Ext.define('Ext.grid.header.Container', {
 
     alias: 'widget.headercontainer',
 
-    cls: Ext.baseCSSPrefix + 'grid-header-ct',
+    baseCls: Ext.baseCSSPrefix + 'grid-header-ct',
     dock: 'top',
 
     /**
@@ -40,22 +40,22 @@ Ext.define('Ext.grid.header.Container', {
      * Width of the header if no width or flex is specified. Defaults to 100.
      */
     defaultWidth: 100,
-    
-    
+
+
     sortAscText: 'Sort Ascending',
     sortDescText: 'Sort Descending',
     sortClearText: 'Clear Sort',
     columnsText: 'Columns',
-    
+
     lastHeaderCls: Ext.baseCSSPrefix + 'column-header-last',
     firstHeaderCls: Ext.baseCSSPrefix + 'column-header-first',
     headerOpenCls: Ext.baseCSSPrefix + 'column-header-open',
-    
+
     // private; will probably be removed by 4.0
     triStateSort: false,
-    
+
     ddLock: false,
-    
+
     dragging: false,
 
     /**
@@ -72,12 +72,10 @@ Ext.define('Ext.grid.header.Container', {
      * items for every header.
      */
     sortable: true,
-
+    
     initComponent: function() {
         var me = this;
-        if (!me.border) {
-            me.cls += (' ' + Ext.baseCSSPrefix + 'header-ct-no-border');
-        }
+        
         me.headerCounter = 0;
         me.plugins = me.plugins || [];
 
@@ -89,6 +87,12 @@ Ext.define('Ext.grid.header.Container', {
         if (!me.isHeader) {
             me.resizer   = Ext.create('Ext.grid.plugin.HeaderResizer');
             me.reorderer = Ext.create('Ext.grid.plugin.HeaderReorderer');
+            if (!me.enableColumnResize) {
+                me.resizer.disable();
+            } 
+            if (!me.enableColumnMove) {
+                me.reorderer.disable();
+            }
             me.plugins.push(me.reorderer, me.resizer);
         }
 
@@ -114,58 +118,65 @@ Ext.define('Ext.grid.header.Container', {
         me.callParent();
         me.addEvents(
             /**
-             * @event headerresize
-             * @param {Ext.grid.header.Container} ct
-             * @param {Ext.grid.column.Column} header
+             * @event columnresize
+             * @param {Ext.grid.header.Container} ct The grid's header Container which encapsulates all column headers.
+             * @param {Ext.grid.column.Column} column The Column header Component which provides the column definition
              * @param {Number} width
              */
-            'headerresize',
-            
+            'columnresize',
+
             /**
              * @event headerclick
-             * @param {Ext.grid.header.Container} ct
-             * @param {Ext.grid.column.Column} header
+             * @param {Ext.grid.header.Container} ct The grid's header Container which encapsulates all column headers.
+             * @param {Ext.grid.column.Column} column The Column header Component which provides the column definition
              * @param {Ext.EventObject} e
              * @param {HTMLElement} t
              */
             'headerclick',
-            
+
             /**
-             * @event headerclick
-             * @param {Ext.grid.header.Container} ct
-             * @param {Ext.grid.column.Column} header
+             * @event headertriggerclick
+             * @param {Ext.grid.header.Container} ct The grid's header Container which encapsulates all column headers.
+             * @param {Ext.grid.column.Column} column The Column header Component which provides the column definition
              * @param {Ext.EventObject} e
              * @param {HTMLElement} t
              */
             'headertriggerclick',
-            
+
             /**
-             * @event headermove
-             * @param {Ext.grid.header.Container} ct
-             * @param {Ext.grid.column.Column} header
+             * @event columnmove
+             * @param {Ext.grid.header.Container} ct The grid's header Container which encapsulates all column headers.
+             * @param {Ext.grid.column.Column} column The Column header Component which provides the column definition
              * @param {Number} fromIdx
              * @param {Number} toIdx
              */
-            'headermove',
+            'columnmove',
             /**
-             * @event headerhide
-             * @param {Ext.grid.header.Container} ct
-             * @param {Ext.grid.column.Column} header
+             * @event columnhide
+             * @param {Ext.grid.header.Container} ct The grid's header Container which encapsulates all column headers.
+             * @param {Ext.grid.column.Column} column The Column header Component which provides the column definition
              */
-            'headerhide',
+            'columnhide',
             /**
-             * @event headershow
-             * @param {Ext.grid.header.Container} ct
-             * @param {Ext.grid.column.Column} header
+             * @event columnshow
+             * @param {Ext.grid.header.Container} ct The grid's header Container which encapsulates all column headers.
+             * @param {Ext.grid.column.Column} column The Column header Component which provides the column definition
              */
-            'headershow',
+            'columnshow',
             /**
              * @event sortchange
-             * @param {Ext.grid.header.Container} ct
-             * @param {Ext.grid.column.Column} header
+             * @param {Ext.grid.header.Container} ct The grid's header Container which encapsulates all column headers.
+             * @param {Ext.grid.column.Column} column The Column header Component which provides the column definition
              * @param {String} direction
              */
-            'sortchange'
+            'sortchange',
+            /**
+             * @event menucreate
+             * Fired immediately after the column header menu is created.
+             * @param {Ext.grid.header.Container} ct This instance
+             * @param {Ext.menu.Menu} menu The Menu that was created
+             */
+            'menucreate'
         );
     },
 
@@ -251,7 +262,9 @@ Ext.define('Ext.grid.header.Container', {
                 }
                 for (i = 0, len = me.disabledMenuItems.length; i < len; i++) {
                     itemToEnable = me.disabledMenuItems[i];
-                    itemToEnable[itemToEnable.menu ? 'enableCheckChange' : 'enable']();
+                    if (!itemToEnable.isDestroyed) {
+                        itemToEnable[itemToEnable.menu ? 'enableCheckChange' : 'enable']();
+                    }
                 }
                 if (topItemsVisible == 1) {
                     me.disabledMenuItems = topItems;
@@ -271,7 +284,7 @@ Ext.define('Ext.grid.header.Container', {
                 gridSection.onHeaderShow(me, header);
             }
         }
-        me.fireEvent('headershow', me, header);
+        me.fireEvent('columnshow', me, header);
 
         // The header's own hide suppresses cascading layouts, so lay the headers out now
         me.doLayout();
@@ -308,9 +321,9 @@ Ext.define('Ext.grid.header.Container', {
                 me.doLayout();
             }
         }
-        me.fireEvent('headerhide', me, header);
+        me.fireEvent('columnhide', me, header);
     },
-    
+
     setDisabledItems: function(){
         var me = this,
             menu = me.getMenu(),
@@ -318,7 +331,7 @@ Ext.define('Ext.grid.header.Container', {
             len,
             itemsToDisable,
             itemToDisable;
-            
+
         // Find what to disable. If only one top level item remaining checked, we have to disable stuff.
         itemsToDisable = menu.query('#columnItem>menucheckitem[checked]');
         if ((itemsToDisable.length === 1)) {
@@ -362,7 +375,7 @@ Ext.define('Ext.grid.header.Container', {
         if (this.view && this.view.rendered) {
             this.view.onHeaderResize(header, w, suppressFocus);
         }
-        this.fireEvent('headerresize', this, header, w);
+        this.fireEvent('columnresize', this, header, w);
     },
 
     onHeaderClick: function(header, e, t) {
@@ -383,6 +396,7 @@ Ext.define('Ext.grid.header.Container', {
             sortableMth;
 
         menu.activeHeader = menu.ownerCt = header;
+        menu.setFloatParent(header);
         // TODO: remove coupling to Header's titleContainer el
         header.titleContainer.addCls(this.headerOpenCls);
 
@@ -426,11 +440,11 @@ Ext.define('Ext.grid.header.Container', {
     onHeaderMoved: function(header, fromIdx, toIdx) {
         var me = this,
             gridSection = me.ownerCt;
-            
+
         if (gridSection) {
             gridSection.onHeaderMove(me, header, fromIdx, toIdx);
         }
-        me.fireEvent("headermove", me, header, fromIdx, toIdx);
+        me.fireEvent("columnmove", me, header, fromIdx, toIdx);
     },
 
     /**
@@ -439,7 +453,7 @@ Ext.define('Ext.grid.header.Container', {
      */
     getMenu: function() {
         var me = this;
-        
+
         if (!me.menu) {
             me.menu = Ext.create('Ext.menu.Menu', {
                 items: me.getMenuItems(),
@@ -449,6 +463,7 @@ Ext.define('Ext.grid.header.Container', {
                 }
             });
             me.setDisabledItems();
+            me.fireEvent('menucreate', me, me.menu);
         }
         return me.menu;
     },
@@ -549,6 +564,8 @@ Ext.define('Ext.grid.header.Container', {
      *  - align
      *  - width
      *  - id
+     *  - columnId - used to create an identifying CSS class
+     *  - cls The tdCls configuration from the Column object
      *  @private
      */
     getColumnsForTpl: function(flushCache) {
@@ -564,7 +581,9 @@ Ext.define('Ext.grid.header.Container', {
                 dataIndex: header.dataIndex,
                 align: header.align,
                 width: header.hidden ? 0 : header.getDesiredWidth(),
-                id: header.id
+                id: header.id,
+                cls: header.tdCls,
+                columnId: header.getItemId()
             });
         }
         return cols;
@@ -652,7 +671,7 @@ Ext.define('Ext.grid.header.Container', {
 
         return result;
     },
-    
+
     /**
      * Get the index of a leaf level header regardless of what the nesting
      * structure is.
@@ -661,7 +680,7 @@ Ext.define('Ext.grid.header.Container', {
         var columns = this.getGridColumns();
         return Ext.Array.indexOf(columns, header);
     },
-    
+
     /**
      * Get a leaf level header by index regardless of what the nesting
      * structure is.

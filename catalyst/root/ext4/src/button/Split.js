@@ -3,30 +3,32 @@
  * @extends Ext.button.Button
  * A split button that provides a built-in dropdown arrow that can fire an event separately from the default
  * click event of the button.  Typically this would be used to display a dropdown menu that provides additional
- * options to the primary button action, but any custom handler can provide the arrowclick implementation.  Example usage:
+ * options to the primary button action, but any custom handler can provide the arrowclick implementation.  
+ * {@img Ext.button.Split/Ext.button.Split.png Ext.button.Split component}
+ * Example usage:
  * <pre><code>
 // display a dropdown menu:
-new Ext.button.Split({
-    renderTo: 'button-ct', // the container id
-    text: 'Options',
-    handler: optionsHandler, // handle a click on the button itself
-    menu: new Ext.menu.Menu({
-    items: [
-            // these items will render as dropdown menu items when the arrow is clicked:
-            {text: 'Item 1', handler: item1Handler},
-            {text: 'Item 2', handler: item2Handler}
-    ]
-    })
-});
+    Ext.create('Ext.button.Split', {
+        renderTo: 'button-ct', // the container id
+        text: 'Options',
+        handler: optionsHandler, // handle a click on the button itself
+        menu: new Ext.menu.Menu({
+        items: [
+                // these items will render as dropdown menu items when the arrow is clicked:
+                {text: 'Item 1', handler: item1Handler},
+                {text: 'Item 2', handler: item2Handler}
+        ]
+        })
+    });
 
 // Instead of showing a menu, you provide any type of custom
 // functionality you want when the dropdown arrow is clicked:
-new Ext.button.Split({
-    renderTo: 'button-ct',
-    text: 'Options',
-    handler: optionsHandler,
-    arrowHandler: myCustomHandler
-});
+    Ext.create('Ext.button.Split', {
+        renderTo: 'button-ct',
+        text: 'Options',
+        handler: optionsHandler,
+        arrowHandler: myCustomHandler
+    });
 </code></pre>
  * @cfg {Function} arrowHandler A function called when the arrow button is clicked (can be used instead of click event)
  * @cfg {String} arrowTooltip The title attribute of the arrow
@@ -93,6 +95,7 @@ Ext.define('Ext.button.Split', {
                 if (me.handler) {
                     me.handler.call(me.scope || me, me, e);
                 }
+                me.onBlur();
             }
         }
     }

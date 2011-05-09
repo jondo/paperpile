@@ -9,6 +9,24 @@
  * once the operation is complete.  You can optionally have the progress bar wait for a specific amount of time
  * and then clear itself.  Automatic mode is most appropriate for timed operations or asynchronous operations in
  * which you have no need for indicating intermediate progress.</p>
+ * {@img Ext.ProgressBar/Ext.ProgressBar.png Ext.ProgressBar component}
+ * Example Usage:
+     var p = Ext.create('Ext.ProgressBar', {
+       renderTo: Ext.getBody(),
+       width: 300
+    });
+
+    //Wait for 5 seconds, then update the status el (progress bar will auto-reset)
+    p.wait({
+       interval: 500, //bar will move fast!
+       duration: 50000,
+       increment: 15,
+       text: 'Updating...',
+       scope: this,
+       fn: function(){
+          p.updateText('Done!');
+       }
+    });
  * @cfg {Float} value A floating point value between 0 and 1 (e.g., .5, defaults to 0)
  * @cfg {String} text The progress bar text (defaults to '')
  * @cfg {Mixed} textEl The element to render the progress text to (defaults to the progress
@@ -191,14 +209,20 @@ Ext.define('Ext.ProgressBar', {
     });
 
     //Wait for 5 seconds, then update the status el (progress bar will auto-reset)
+    var p = Ext.create('Ext.ProgressBar', {
+       renderTo: Ext.getBody(),
+       width: 300
+    });
+
+    //Wait for 5 seconds, then update the status el (progress bar will auto-reset)
     p.wait({
-       interval: 100, //bar will move fast!
-       duration: 5000,
+       interval: 500, //bar will move fast!
+       duration: 50000,
        increment: 15,
        text: 'Updating...',
        scope: this,
        fn: function(){
-          Ext.fly('status').update('Done!');
+          p.updateText('Done!');
        }
     });
 
@@ -206,7 +230,7 @@ Ext.define('Ext.ProgressBar', {
     p.wait();
     myAction.on('complete', function(){
         p.reset();
-        Ext.fly('status').update('Done!');
+        p.updateText('Done!');
     });
     </code></pre>
          * @param {Object} config (optional) Configuration options

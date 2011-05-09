@@ -6,6 +6,26 @@
  * render any child Components when no <tt>{@link Ext.container.Container#layout layout}</tt> is configured into
  * a <tt>{@link Ext.container.Container Container}.</tt>.  AutoLayout provides only a passthrough of any layout calls
  * to any child containers.</p>
+ * {@img Ext.layout.container.Auto/Ext.layout.container.Auto.png Ext.layout.container.Auto container layout}
+ * Example usage:
+ 	Ext.create('Ext.Panel', {
+		width: 500,
+		height: 280,
+		title: "AutoLayout Panel",
+		layout: 'auto',
+		renderTo: document.body,
+		items: [{
+			xtype: 'panel',
+			title: 'Top Inner Panel',
+			width: '75%',
+			height: 90
+		},{
+			xtype: 'panel',
+			title: 'Bottom Inner Panel',
+			width: '75%',
+			height: 90
+		}]
+	});
  */
 
 Ext.define('Ext.layout.container.Auto', {

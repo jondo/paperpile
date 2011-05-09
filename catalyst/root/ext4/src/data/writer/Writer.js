@@ -24,7 +24,8 @@ Ext.define('Ext.data.writer.Writer', {
     
     /**
      * @cfg {Boolean} writeAllFields True to write all fields from the record to the server. If set to false it
-     * will only send the fields that were modified. Defaults to <tt>true</tt>.
+     * will only send the fields that were modified. Defaults to <tt>true</tt>. Note that any fields that have
+     * {@link Ext.data.Field#persist} set to false will still be ignored.
      */
     writeAllFields: true,
     
@@ -32,7 +33,8 @@ Ext.define('Ext.data.writer.Writer', {
      * @cfg {String} nameProperty This property is used to read the key for each value that will be sent to the server.
      * For example:
      * <pre><code>
-Ext.regModel('Person', {
+Ext.define('Person', {
+    extend: 'Ext.data.Model',
     fields: [{
         name: 'first',
         mapping: 'firstName'
@@ -102,8 +104,10 @@ new Ext.data.writer.Writer({
         
         if (writeAll) {
             fields.each(function(field){
-                name = field[nameProperty] || field.name;
-                data[name] = record.get(field.name);
+                if (field.persist) {
+                    name = field[nameProperty] || field.name;
+                    data[name] = record.get(field.name);
+                }
             });
         } else {
             // Only write the changes

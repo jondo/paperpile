@@ -67,10 +67,6 @@
         padding: 0 $text-padding;
     }
     
-    .#{$prefix}btn-#{$ui}-disabled span {
-        @include opacity(.4);
-    }
-    
     .#{$prefix}btn-#{$ui}-icon,
     .#{$prefix}btn-#{$ui}-noicon {
         button,
@@ -225,7 +221,7 @@
 
         .#{$prefix}btn-inner {
             @if $color-disabled != $color {
-                color: $color-disabled;
+                color: $color !important;
             }
             @if $font-weight-disabled != $font-weight {
                 font-weight: $font-weight-disabled;
@@ -236,6 +232,18 @@
             @if $font-family-disabled != $font-family {
                 font-family: $font-family-disabled;
             } 
+        }
+    }
+    
+    .#{$prefix}ie .#{$prefix}btn-#{$ui}-disabled {
+        .#{$prefix}btn-inner {
+            color: darken($color-disabled, 20) !important;
+        }
+    }
+    
+    .#{$prefix}ie6 .#{$prefix}btn-#{$ui}-disabled {
+        .#{$prefix}btn-inner {
+            color: $color-disabled !important;
         }
     }
     

@@ -9,7 +9,8 @@
  * {@link Ext.data.Model Model}:</p>
  * 
 <pre><code>
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: ['id', 'name', 'email']
 });
 

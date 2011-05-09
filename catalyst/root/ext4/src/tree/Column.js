@@ -23,7 +23,7 @@ Ext.define('Ext.tree.Column', {
                 elbowPrefix = treePrefix + 'elbow-',
                 expanderCls = treePrefix + 'expander',
                 imgText     = '<img src="{1}" class="{0}" />',
-                checkboxText= '<input type="checkbox" class="{0}" {1} />',
+                checkboxText= '<input type="button" role="checkbox" class="{0}" {1} />',
                 formattedValue = origRenderer.apply(origScope, arguments),
                 href = record.get('href'),
                 target = record.get('hrefTarget');
@@ -38,20 +38,24 @@ Ext.define('Ext.tree.Column', {
                             record.get('icon') || Ext.BLANK_IMAGE_URL
                         ));
                         if (record.get('checked') !== null) {
-                            buf.unshift(format(checkboxText, (treePrefix + 'checkbox'), record.get('checked') ? 'checked="checked"' : ''));
+                            buf.unshift(format(
+                                checkboxText,
+                                (treePrefix + 'checkbox') + (record.get('checked') ? ' ' + treePrefix + 'checkbox-checked' : ''),
+                                record.get('checked') ? 'aria-checked="true"' : ''
+                            ));
                             if (record.get('checked')) {
                                 metaData.tdCls += (' ' + Ext.baseCSSPrefix + 'tree-checked');
                             }
                         }
                         if (record.isLast()) {
-                            if (record.isLeaf()) {
+                            if (record.isLeaf() || (record.isLoaded() && !record.hasChildNodes())) {
                                 buf.unshift(format(imgText, (elbowPrefix + 'end'), Ext.BLANK_IMAGE_URL));
                             } else {
                                 buf.unshift(format(imgText, (elbowPrefix + 'end-plus ' + expanderCls), Ext.BLANK_IMAGE_URL));
                             }
                             
                         } else {
-                            if (record.isLeaf()) {
+                            if (record.isLeaf() || (record.isLoaded() && !record.hasChildNodes())) {
                                 buf.unshift(format(imgText, (treePrefix + 'elbow'), Ext.BLANK_IMAGE_URL));
                             } else {
                                 buf.unshift(format(imgText, (elbowPrefix + 'plus ' + expanderCls), Ext.BLANK_IMAGE_URL));

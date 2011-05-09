@@ -93,7 +93,7 @@ Ext.define('Ext.window.Window', {
 
     /**
      * @cfg {Mixed} resizable
-     * <p>Specify as <code>true</code> to allow user resizing at each edge and corner of the window, false to disable 
+     * <p>Specify as <code>true</code> to allow user resizing at each edge and corner of the window, false to disable
      * resizing (defaults to true).</p>
      * <p>This may also be specified as a config object to </p>
      */
@@ -196,8 +196,12 @@ Ext.define('Ext.window.Window', {
     floating: true,
 
     ariaRole: 'alertdialog',
+    
+    itemCls: 'x-window-item',
 
     overlapHeader: true,
+    
+    ignoreHeaderBorderManagement: true,
 
     // private
     initComponent: function() {
@@ -241,11 +245,11 @@ Ext.define('Ext.window.Window', {
              */
             'restore'
         );
-        
+
         if (me.plain) {
-            me.ui = [me.ui, 'plain'];
+            me.addClsWithUI('plain');
         }
-        
+
         if (me.modal) {
             me.ariaRole = 'dialog';
         }
@@ -253,7 +257,7 @@ Ext.define('Ext.window.Window', {
 
     // State Management
     // private
-    
+
     initStateEvents: function(){
         var events = this.stateEvents;
         // push on stateEvents if they don't exist
@@ -280,7 +284,7 @@ Ext.define('Ext.window.Window', {
 
     applyState: function(state){
         var me = this;
-        
+
         if (state) {
             me.maximized = state.maximized;
             if (me.maximized) {
@@ -299,6 +303,13 @@ Ext.define('Ext.window.Window', {
     },
 
     // private
+    onMouseDown: function () {
+        if (this.floating) {
+            this.toFront();
+        }
+    },
+
+    // private
     onRender: function(ct, position) {
         var me = this;
         me.callParent(arguments);
@@ -306,7 +317,13 @@ Ext.define('Ext.window.Window', {
 
         // Double clicking a header will toggleMaximize
         if (me.maximizable) {
-            me.mon(me.header, 'domdblclick', me.toggleMaximize, me);
+            me.header.on({
+                dblclick: {
+                    fn: me.toggleMaximize,
+                    element: 'el',
+                    scope: me
+                }
+            });
         }
     },
 
@@ -315,7 +332,7 @@ Ext.define('Ext.window.Window', {
         var me = this,
             hidden = me.hidden,
             keyMap;
-          
+
         me.hidden = false;
         // Component's afterRender sizes and positions the Component
         me.callParent();
@@ -325,9 +342,9 @@ Ext.define('Ext.window.Window', {
         me.proxy = me.getProxy();
 
         // clickToRaise
-        me.mon(me.el, 'mousedown', me.toFront, me);
+        me.mon(me.el, 'mousedown', me.onMouseDown, me);
 
-        // Initialize	
+        // Initialize
         if (me.maximized) {
             me.maximized = false;
             me.maximize();
@@ -349,11 +366,11 @@ Ext.define('Ext.window.Window', {
     initDraggable: function() {
         var me = this,
             ddConfig;
-            
+
         if (!me.header) {
             me.updateHeader(true);
         }
-            
+
         ddConfig = Ext.applyIf({
             el: me.el,
             delegate: '#' + me.header.id
@@ -391,12 +408,10 @@ Ext.define('Ext.window.Window', {
     // private
     beforeDestroy: function() {
         var me = this;
-
         if (me.rendered) {
             delete this.animateTarget;
             me.hide();
             Ext.destroy(
-                me.focusEl,
                 me.keyMap
             );
         }
@@ -411,7 +426,7 @@ Ext.define('Ext.window.Window', {
      */
     addTools: function() {
         var me = this;
-        
+
         // Call Panel's initTools
         me.callParent();
 
@@ -575,7 +590,7 @@ Ext.define('Ext.window.Window', {
      */
     maximize: function() {
         var me = this;
-        
+
         if (!me.maximized) {
             me.expand(false);
             if (!me.hasSavedRestore) {
@@ -615,7 +630,7 @@ Ext.define('Ext.window.Window', {
     restore: function() {
         var me = this,
             tools = me.tools;
-            
+
         if (me.maximized) {
             delete me.hasSavedRestore;
             me.removeCls(Ext.baseCSSPrefix + 'window-maximized');

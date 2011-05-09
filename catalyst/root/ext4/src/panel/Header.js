@@ -12,8 +12,9 @@ Ext.define('Ext.panel.Header', {
     isHeader       : true,
     defaultType    : 'tool',
     indicateDrag   : false,
+    weight         : -1,
 
-    renderTpl: ['<div class="{baseCls}-body<tpl if="ui"><tpl for="ui"> {parent.baseCls}-body-{.}</tpl></tpl>"<tpl if="bodyStyle"> style="{bodyStyle}"</tpl>></div>'],
+    renderTpl: ['<div class="{baseCls}-body<tpl if="bodyCls"> {bodyCls}</tpl><tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-body-{parent.ui}-{.}</tpl></tpl>"<tpl if="bodyStyle"> style="{bodyStyle}"</tpl>></div>'],
 
     initComponent: function() {
         var me = this,
@@ -21,23 +22,18 @@ Ext.define('Ext.panel.Header', {
             style,
             titleTextEl,
             ui;
-        
+
         me.indicateDragCls = me.baseCls + '-draggable';
         me.title = me.title || '&#160;';
         me.tools = me.tools || [];
         me.items = me.items || [];
         me.orientation = me.orientation || 'horizontal';
         me.dock = (me.dock) ? me.dock : (me.orientation == 'horizontal') ? 'top' : 'left';
-        me.addCls(me.getClsWithUIs(me.orientation));
-        me.addCls(me.getClsWithUIs(me.dock));
-        
+
         //add the dock as a ui
         //this is so we support top/right/left/bottom headers
-        if (Ext.isArray(me.ui)) {
-            me.ui.push(me.ui[me.ui.length - 1] + '-' + me.dock);
-        } else {
-            me.ui = [me.ui, me.ui + '-' + me.dock];
-        }
+        me.addClsWithUI(me.orientation);
+        me.addClsWithUI(me.dock);
 
         Ext.applyIf(me.renderSelectors, {
             body: '.' + me.baseCls + '-body'
@@ -52,9 +48,12 @@ Ext.define('Ext.panel.Header', {
         // Add Title
         if (me.orientation == 'vertical') {
             // Hack for IE6/7's inability to display an inline-block
-            // if (Ext.isIE6||Ext.isIE7) {
-            //     me.width = me.width||22;
-            // }
+            if (Ext.isIE6 || Ext.isIE7) {
+                me.width = this.width || 24;
+            } else if (Ext.isIEQuirks) {
+                me.width = this.width || 25;
+            }
+
             me.layout = {
                 type : 'vbox',
                 align: 'center',
@@ -107,7 +106,7 @@ Ext.define('Ext.panel.Header', {
                 xtype     : 'component',
                 ariaRole  : 'heading',
                 focusable: false,
-                renderTpl : ['<span class="{cls}-text<tpl if="ui"><tpl for="ui"> {parent.cls}-text-{.}</tpl></tpl>">{title}</span>'],
+                renderTpl : ['<span class="{cls}-text {cls}-text-{ui}">{title}</span>'],
                 renderData: {
                     title: me.title,
                     cls  : me.baseCls,
@@ -162,6 +161,70 @@ Ext.define('Ext.panel.Header', {
             scope: me
         });
         me.callParent();
+    },
+
+    afterLayout: function() {
+        var me = this;
+        me.callParent(arguments);
+
+        // IE7 needs a forced repaint to make the top framing div expand to full width
+        if (Ext.isIE7) {
+            me.el.repaint();
+        }
+    },
+
+    // inherit docs
+    addUIClsToElement: function(cls, force) {
+        var me = this;
+
+        me.callParent(arguments);
+
+        if (!force && me.rendered) {
+            me.body.addCls(me.baseCls + '-body-' + cls);
+            me.body.addCls(me.baseCls + '-body-' + me.ui + '-' + cls);
+        }
+    },
+
+    // inherit docs
+    removeUIClsFromElement: function(cls, force) {
+        var me = this;
+
+        me.callParent(arguments);
+
+        if (!force && me.rendered) {
+            me.body.removeCls(me.baseCls + '-body-' + cls);
+            me.body.removeCls(me.baseCls + '-body-' + me.ui + '-' + cls);
+        }
+    },
+
+    // inherit docs
+    addUIToElement: function(force) {
+        var me = this;
+
+        me.callParent(arguments);
+
+        if (!force && me.rendered) {
+            me.body.addCls(me.baseCls + '-body-' + me.ui);
+        }
+
+        if (!force && me.titleCmp && me.titleCmp.rendered && me.titleCmp.textEl) {
+            me.titleCmp.textEl.addCls(me.baseCls + '-text-' + me.ui);
+        }
+    },
+
+    // inherit docs
+    removeUIFromElement: function() {
+        var me = this;
+
+        me.callParent(arguments);
+
+        if (me.rendered) {
+            me.body.removeCls(me.baseCls + '-body-' + me.ui);
+        }
+
+        if (me.titleCmp && me.titleCmp.rendered && me.titleCmp.textEl) {
+            me.titleCmp.textEl.removeCls(me.baseCls + '-text-' + me.ui);
+        }
     },
 
     onClick: function(e) {

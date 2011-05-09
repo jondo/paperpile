@@ -20,11 +20,11 @@ Ext.core.Element.addMethods(
             isVisible : function(deep) {
                 var vis = !this.isStyle(VISIBILITY, HIDDEN) && !this.isStyle(DISPLAY, NONE),
                     p   = this.dom.parentNode;
-                
+
                 if (deep !== true || !vis) {
                     return vis;
                 }
-                
+
                 while (p && !(/^body/i.test(p.tagName))) {
                     if (!Ext.fly(p, '_isVisible').isVisible()) {
                         return false;
@@ -49,11 +49,11 @@ Ext.core.Element.addMethods(
              */
             enableDisplayMode : function(display) {
                 this.setVisibilityMode(Ext.core.Element.DISPLAY);
-                
+
                 if (!Ext.isEmpty(display)) {
                     data(this.dom, 'originalDisplay', display);
                 }
-                
+
                 return this;
             },
 
@@ -67,6 +67,7 @@ Ext.core.Element.addMethods(
             mask : function(msg, msgCls) {
                 var me  = this,
                     dom = me.dom,
+                    setExpression = dom.style.setExpression,
                     dh  = Ext.core.DomHelper,
                     EXTELMASKMSG = Ext.baseCSSPrefix + "mask-msg",
                     el,
@@ -75,10 +76,12 @@ Ext.core.Element.addMethods(
                 if (!(/^body/i.test(dom.tagName) && me.getStyle('position') == 'static')) {
                     me.addCls(XMASKEDRELATIVE);
                 }
-                if (el = data(dom, 'maskMsg')) {
+                el = data(dom, 'maskMsg');
+                if (el) {
                     el.remove();
                 }
-                if (el = data(dom, 'mask')) {
+                el = data(dom, 'mask');
+                if (el) {
                     el.remove();
                 }
 
@@ -87,7 +90,7 @@ Ext.core.Element.addMethods(
 
                 me.addCls(XMASKED);
                 mask.setDisplayed(true);
-                
+
                 if (typeof msg == 'string') {
                     var mm = dh.append(dom, {cls : EXTELMASKMSG, cn:{tag:'div'}}, true);
                     data(dom, 'maskMsg', mm);
@@ -96,16 +99,24 @@ Ext.core.Element.addMethods(
                     mm.setDisplayed(true);
                     mm.center(me);
                 }
-                
-                if (!Ext.supports.IncludePaddingInWidthCalculation) {
-                    mask.setSize(me.getWidth(), me.getHeight());
+                // NOTE: CSS expressions are resource intensive and to be used only as a last resort
+                // These expressions are removed as soon as they are no longer necessary - in the unmask method.
+                // In normal use cases an element will be masked for a limited period of time.
+                // Fix for https://sencha.jira.com/browse/EXTJSIV-19.
+                // IE6 strict mode and IE6-9 quirks mode takes off left+right padding when calculating width!
+                if (!Ext.supports.IncludePaddingInWidthCalculation && setExpression) {
+                    mask.dom.style.setExpression('width', 'this.parentNode.offsetWidth + "px"');
                 }
-                
+
+                // Some versions and modes of IE subtract top+bottom padding when calculating height.
+                // Different versions from those which make the same error for width!
+                if (!Ext.supports.IncludePaddingInHeightCalculation && setExpression) {
+                    mask.dom.style.setExpression('height', 'this.parentNode.offsetHeight + "px"');
+                }
                 // ie will not expand full height automatically
-                if (Ext.isIE && !(Ext.isIE7 && Ext.isStrict) && me.getStyle('height') == 'auto') {
+                else if (Ext.isIE && !(Ext.isIE7 && Ext.isStrict) && me.getStyle('height') == 'auto') {
                     mask.setSize(undefined, me.getHeight());
                 }
-                
                 return mask;
             },
 
@@ -119,11 +130,16 @@ Ext.core.Element.addMethods(
                     maskMsg = data(dom, 'maskMsg');
 
                 if (mask) {
+                    // Remove resource-intensive CSS expressions as soon as they are not required.
+                    if (mask.dom.style.clearExpression) {
+                        mask.dom.style.clearExpression('width');
+                        mask.dom.style.clearExpression('height');
+                    }
                     if (maskMsg) {
                         maskMsg.remove();
                         data(dom, 'maskMsg', undefined);
                     }
-                    
+
                     mask.remove();
                     data(dom, 'mask', undefined);
                     me.removeCls([XMASKED, XMASKEDRELATIVE]);
@@ -155,9 +171,9 @@ Ext.core.Element.addMethods(
             createShim : function() {
                 var el = document.createElement('iframe'),
                     shim;
-                
+
                 el.frameBorder = '0';
-                el.className = 'ext-shim';
+                el.className = Ext.baseCSSPrefix + 'shim';
                 el.src = Ext.SSL_SECURE_URL;
                 shim = Ext.get(this.dom.parentNode.insertBefore(el, this.dom));
                 shim.autoBoxAdjust = false;

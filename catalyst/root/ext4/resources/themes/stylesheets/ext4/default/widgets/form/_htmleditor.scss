@@ -2,12 +2,14 @@
     .#{$prefix}html-editor-wrap {
         border: 1px solid $html-editor-border-color;
         
-        background-color: #fff;
-        
         .#{$prefix}toolbar {
             border-top-width: 0;
             border-left-width: 0;
             border-right-width: 0;
+        }
+        
+        textarea {
+            background-color: $html-editor-background-color;
         }
     }
 

@@ -26,14 +26,100 @@ Ext.define('Ext.layout.component.AbstractDock', {
      */
     autoSizing: true,
 
-    /**
-     * @property itemCls
-     * @type String
-     * This class is automatically added to each docked item within this layout.
-     * We also use this as a prefix for the position class e.g. x-docked-bottom
-     */
-    itemCls: Ext.baseCSSPrefix + 'docked',
+    beforeLayout: function() {
+        var returnValue = this.callParent(arguments);
+        if (returnValue !== false && (!this.initializedBorders || this.childrenChanged) && (!this.owner.border || this.owner.manageBodyBorders)) {
+            this.handleItemBorders();
+            this.initializedBorders = true;
+        }
+        return returnValue;
+    },
+    
+    handleItemBorders: function() {
+        var owner = this.owner,
+            body = owner.body,
+            docked = this.getLayoutItems(),
+            borders = {
+                top: [],
+                right: [],
+                bottom: [],
+                left: []
+            },
+            oldBorders = this.borders,
+            opposites = {
+                top: 'bottom',
+                right: 'left',
+                bottom: 'top',
+                left: 'right'
+            },
+            i, ln, item, dock, side;
 
+        for (i = 0, ln = docked.length; i < ln; i++) {
+            item = docked[i];
+            dock = item.dock;
+            
+            if (item.ignoreBorderManagement) {
+                continue;
+            }
+            
+            if (!borders[dock].satisfied) {
+                borders[dock].push(item);
+                borders[dock].satisfied = true;
+            }
+            
+            if (!borders.top.satisfied && opposites[dock] !== 'top') {
+                borders.top.push(item);
+            }
+            if (!borders.right.satisfied && opposites[dock] !== 'right') {
+                borders.right.push(item);
+            }            
+            if (!borders.bottom.satisfied && opposites[dock] !== 'bottom') {
+                borders.bottom.push(item);
+            }            
+            if (!borders.left.satisfied && opposites[dock] !== 'left') {
+                borders.left.push(item);
+            }
+        }
+
+        if (oldBorders) {
+            for (side in oldBorders) {
+                if (oldBorders.hasOwnProperty(side)) {
+                    ln = oldBorders[side].length;
+                    if (!owner.manageBodyBorders) {
+                        for (i = 0; i < ln; i++) {
+                            oldBorders[side][i].removeCls(Ext.baseCSSPrefix + 'docked-noborder-' + side);
+                        }
+                        if (!oldBorders[side].satisfied && !owner.bodyBorder) {
+                            body.removeCls(Ext.baseCSSPrefix + 'docked-noborder-' + side);                   
+                        }                    
+                    }
+                    else if (oldBorders[side].satisfied) {
+                        body.setStyle('border-' + side + '-width', '');
+                    }
+                }
+            }
+        }
+                
+        for (side in borders) {
+            if (borders.hasOwnProperty(side)) {
+                ln = borders[side].length;
+                if (!owner.manageBodyBorders) {
+                    for (i = 0; i < ln; i++) {
+                        borders[side][i].addCls(Ext.baseCSSPrefix + 'docked-noborder-' + side);
+                    }
+                    if ((!borders[side].satisfied && !owner.bodyBorder) || owner.bodyBorder === false) {
+                        body.addCls(Ext.baseCSSPrefix + 'docked-noborder-' + side);                   
+                    }                    
+                }
+                else if (borders[side].satisfied) {
+                    body.setStyle('border-' + side + '-width', '1px');
+                }
+            }
+        }
+        
+        this.borders = borders;
+    },
+    
     /**
      * @protected
      * @param {Ext.Component} owner The Panel that owns this DockLayout
@@ -59,7 +145,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
             },
             bodyBox: {}
         };
-        
+
         Ext.applyIf(info, me.getTargetInfo());
 
         // We need to bind to the ownerCt whenever we do not have a user set height or width.
@@ -105,7 +191,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
                 // Auto-Sized so have the container layout notify the component layout.
                 layout.bindToOwnerCtComponent = true;
                 layout.layout();
-                
+
                 // If this is an autosized container layout, then we must compensate for a
                 // body that is being autosized.  We do not want to adjust the body's size
                 // to accommodate the dock items, but rather we will want to adjust the
@@ -177,7 +263,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
                 info.bodyBox.height = null;
             }
         }
-        
+
         // If the bodyBox has been adjusted because of the docked items
         // we will update the dimensions and position of the panel's body.
         this.setBodyBox(info.bodyBox);
@@ -206,7 +292,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
             border = info.border,
             frameSize = me.frameSize,
             item, i, box, rect;
-        
+
         // If this Panel is inside an AutoContainerLayout, we will base all the calculations
         // around the height of the body and the width of the panel.
         if (autoHeight) {
@@ -267,7 +353,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
             padding = info.padding,
             pos = box.type,
             border = info.border;
-            
+
         switch (pos) {
             case 'top':
                 box.y = bodyBox.y;
@@ -285,7 +371,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
                 box.x = (bodyBox.x + bodyBox.width) - box.width;
                 break;
         }
-        
+
         if (box.ignoreFrame) {
             if (pos == 'bottom') {
                 box.y += (frameSize.bottom + padding.bottom + border.bottom);
@@ -300,7 +386,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
                 box.x -= (frameSize.left + padding.left + border.left);
             }
         }
-        
+
         // If this is not an overlaying docked item, we have to adjust the body box
         if (!box.overlay) {
             switch (pos) {
@@ -361,7 +447,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
                 }
             }
         }
-        
+
         switch (pos) {
             case 'top':
                 box.y = bodyBox.y;
@@ -486,7 +572,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
         if (box.height == undefined) {
             box.height = item.getHeight() + item.el.getMargin('tb');
         }
-        
+
         return box;
     },
 
@@ -507,7 +593,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
         }
         return result;
     },
-    
+
     /**
      * @protected
      * Render the top and left docked items before any existing DOM nodes in our render target,
@@ -521,7 +607,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
             ln = items.length,
             domLn = 0,
             i, j, cn, item;
-        
+
         // Calculate the number of DOM nodes in our target that are not our docked items
         for (i = 0; i < cnsLn; i++) {
             cn = Ext.get(cns[i]);
@@ -531,7 +617,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
                     break;
                 }
             }
-            
+
             if (j === ln) {
                 domLn++;
             }
@@ -540,7 +626,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
         // Now we go through our docked items and render/move them
         for (i = 0, j = 0; i < ln; i++, j++) {
             item = items[i];
-            
+
             // If we're now at the right/bottom docked item, we jump ahead in our
             // DOM position, just past the existing DOM nodes.
             //
@@ -552,7 +638,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
             if (i === j && (item.dock === 'right' || item.dock === 'bottom')) {
                 j += domLn;
             }
-            
+
             // Same logic as Layout.renderItems()
             if (item && !item.rendered) {
                 this.renderItem(item, target, j);
@@ -580,19 +666,20 @@ Ext.define('Ext.layout.component.AbstractDock', {
             padding = info.padding,
             border = info.border,
             frameSize = me.frameSize;
-
+        
         // Panel collapse effectively hides the Panel's body, so this is a no-op.
         if (owner.collapsed) {
             return;
         }
-
+        
         if (Ext.isNumber(box.width)) {
             box.width -= bodyMargin.left + bodyMargin.right;
         }
+        
         if (Ext.isNumber(box.height)) {
             box.height -= bodyMargin.top + bodyMargin.bottom;
         }
-
+        
         me.setElementSize(body, box.width, box.height);
         if (Ext.isNumber(box.x)) {
             body.setLeft(box.x - padding.left - frameSize.left);
@@ -611,10 +698,9 @@ Ext.define('Ext.layout.component.AbstractDock', {
      */
     configureItem : function(item, pos) {
         this.callParent(arguments);
-        var el = item.el || Ext.get(item);
-        if (this.itemCls) {
-            el.addCls(this.itemCls + '-' + item.dock);
-        }
+        
+        item.addCls(Ext.baseCSSPrefix + 'docked');
+        item.addClsWithUI('docked-' + item.dock);
     },
 
     afterRemove : function(item) {
@@ -624,7 +710,7 @@ Ext.define('Ext.layout.component.AbstractDock', {
         }
         var dom = item.el.dom;
 
-        if (dom) {
+        if (!item.destroying && dom) {
             dom.parentNode.removeChild(dom);
         }
         this.childrenChanged = true;

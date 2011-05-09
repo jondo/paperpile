@@ -30,6 +30,12 @@
 @function left($box) {
     @return parsebox($box, 4);
 }
+@function vertical($box) {
+    @return top($box) + bottom($box);
+}
+@function horizontal($box) {
+    @return left($box) + right($box);
+}
 @function boxmax($box) {
     @return max(max(top($box), right($box)), max(bottom($box), left($box)));
 }

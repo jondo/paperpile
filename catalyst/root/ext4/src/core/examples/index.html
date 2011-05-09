@@ -19,6 +19,7 @@
         <script type="text/javascript" src="../src/class/Class.js"></script>
         <script type="text/javascript" src="../src/class/ClassManager.js"></script>
         <script type="text/javascript" src="../src/class/Loader.js"></script>
+        <script type="text/javascript" src="../src/lang/Error.js"></script>
         <script>
             Ext.Loader.setConfig({
                 enabled: true,
@@ -64,15 +65,11 @@ Ext.require('Sample.Person', function() {
     alert(aaron.getName()); // 'Aaron Conran'
     alert(aaron.getGender()); // 'male'
     alert(aaron.getIsCool()); // true
-    alert(aaron.isCool()); // true
 
     aaron.eat("Salad"); // alerts "I'm eating: Salad"
 
     aaron.setGender('weird');
     alert(aaron.getGender()); // 'unknown'
-
-    aaron.resetGender();
-    alert(aaron.getGender()); // 'male'
 });
         </pre>
         <p>
@@ -135,13 +132,13 @@ Ext.require(['Sample.Developer', 'Sample.HumanResource'], function() {
             name: 'Jacky Nguyen',
             languages: ['PHP', 'JavaScript', 'HTML', 'CSS']
         }),
-        davidMark = new Sample.Developer({
-            name: 'David Mark',
-            languages: ['LameScript', 'ObjectiveCrap']
+        noobie = new Sample.Developer({
+            name: 'Noobie Dumb',
+            languages: ['LameScript']
         }),
         hr = Sample.HumanResource;
 
-    hr.recruit(davidMark); // alerts "David Mark doesn't know JavaScript, no point recruiting!"
+    hr.recruit(noobie); // alerts "Noobie Dumb doesn't know JavaScript, no point recruiting!"
     hr.recruit(jacky);
 
     alert(hr.getDevelopersCount()); // alerts 1
@@ -175,9 +172,6 @@ Ext.require(['Sample.CTO', 'Sample.Developer'], function() {
     alert(abe.isGeek); // alerts true
     alert(abe.isSuperGeek); // alerts true
     alert(abe.getAverageIQ()); // alerts 140
-                               // alerts 100
-                               // Note that this is the correct behaviour since this.statics().averageIQ when calling this.callParent()
-                               // in this case references the static value of the parent class (Sample.Person)
                                // not the current class
 
     var ape = abe.clone();
@@ -213,7 +207,6 @@ Ext.define('My.own.A', {
         return cloned;
     }
 });
-
 
 Ext.define('My.own.B', {
     extend: 'My.own.A',
@@ -302,6 +295,27 @@ alert(My.Cat.totalCreated);             // alerts 3
         </pre>
         <p>
             <button onclick="run('sample10')">Run Code</button>
+        </p>
+
+        <pre id="sample11">
+Ext.define('Bank', {
+    money: '$$$',
+    printMoney: function() {
+        alert('$$$$$$$');
+    }
+});
+
+Ext.define('Thief', {});
+
+Thief.borrow(Bank, ['money', 'printMoney']);
+
+var jacky = new Thief();
+
+alert(jacky.money); // alerts '$$$'
+jacky.printMoney(); // alerts '$$$$$$$'
+        </pre>
+        <p>
+            <button onclick="run('sample11')">Run Code</button>
         </p>
     </body>
 </html>

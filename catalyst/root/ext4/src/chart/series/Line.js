@@ -8,40 +8,74 @@
   As with all other series, the Line Series must be appended in the *series* Chart array configuration. See the Chart 
   documentation for more information. A typical configuration object for the line series could be:
  </p>
-  
+{@img Ext.chart.series.Line/Ext.chart.series.Line.png Ext.chart.series.Line chart series}
   <pre><code>
-    series: [{
-        type: 'line',
-        highlight: {
-            size: 7,
-            radius: 7
-        },
-        axis: 'left',
-        xField: 'name',
-        yField: 'data1',
-        markerConfig: {
-            type: 'cross',
-            size: 4,
-            radius: 4,
-            'stroke-width': 0
-        }
-    }, {
-        type: 'line',
-        highlight: {
-            size: 7,
-            radius: 7
-        },
-        axis: 'left',
-        fill: true,
-        xField: 'name',
-        yField: 'data3',
-        markerConfig: {
-            type: 'circle',
-            size: 4,
-            radius: 4,
-            'stroke-width': 0
-        }
-    }]
+    var store = Ext.create('Ext.data.JsonStore', {
+        fields: ['name', 'data1', 'data2', 'data3', 'data4', 'data5'],
+        data: [
+            {'name':'metric one', 'data1':10, 'data2':12, 'data3':14, 'data4':8, 'data5':13},
+            {'name':'metric two', 'data1':7, 'data2':8, 'data3':16, 'data4':10, 'data5':3},
+            {'name':'metric three', 'data1':5, 'data2':2, 'data3':14, 'data4':12, 'data5':7},
+            {'name':'metric four', 'data1':2, 'data2':14, 'data3':6, 'data4':1, 'data5':23},
+            {'name':'metric five', 'data1':27, 'data2':38, 'data3':36, 'data4':13, 'data5':33}                                                
+        ]
+    });
+    
+    Ext.create('Ext.chart.Chart', {
+        renderTo: Ext.getBody(),
+        width: 500,
+        height: 300,
+        animate: true,
+        store: store,
+        axes: [{
+            type: 'Numeric',
+            position: 'bottom',
+            fields: ['data1'],
+            label: {
+                renderer: Ext.util.Format.numberRenderer('0,0')
+            },
+            title: 'Sample Values',
+            grid: true,
+            minimum: 0
+        }, {
+            type: 'Category',
+            position: 'left',
+            fields: ['name'],
+            title: 'Sample Metrics'
+        }],
+        series: [{
+            type: 'line',
+            highlight: {
+                size: 7,
+                radius: 7
+            },
+            axis: 'left',
+            xField: 'name',
+            yField: 'data1',
+            markerCfg: {
+                type: 'cross',
+                size: 4,
+                radius: 4,
+                'stroke-width': 0
+            }
+        }, {
+            type: 'line',
+            highlight: {
+                size: 7,
+                radius: 7
+            },
+            axis: 'left',
+            fill: true,
+            xField: 'name',
+            yField: 'data3',
+            markerCfg: {
+                type: 'circle',
+                size: 4,
+                radius: 4,
+                'stroke-width': 0
+            }
+        }]
+    });
    </code></pre>
  
  <p> 
@@ -277,19 +311,22 @@ Ext.define('Ext.chart.series.Line', {
         for (i = 0, ln = axes.length; i < ln; i++) { 
             axis = chart.axes.get(axes[i]);
             if (axis) {
-                axis = axis.calcEnds();
+                ends = axis.calcEnds();
                 if (axis.position == 'top' || axis.position == 'bottom') {
-                    minX = axis.from;
-                    maxX = axis.to;
+                    minX = ends.from;
+                    maxX = ends.to;
                 }
                 else {
-                    minY = axis.from;
-                    maxY = axis.to;
+                    minY = ends.from;
+                    maxY = ends.to;
                 }
             }
         }
         // If a field was specified without a corresponding axis, create one to get bounds
-        if (me.xField && !Ext.isNumber(minX)) {
+        //only do this for the axis where real values are bound (that's why we check for
+        //me.axis)
+        if (me.xField && !Ext.isNumber(minX)
+            && (me.axis == 'bottom' || me.axis == 'top')) {
             axis = Ext.create('Ext.chart.axis.Axis', {
                 chart: chart,
                 fields: [].concat(me.xField)
@@ -297,7 +334,8 @@ Ext.define('Ext.chart.series.Line', {
             minX = axis.from;
             maxX = axis.to;
         }
-        if (me.yField && !Ext.isNumber(minY)) {
+        if (me.yField && !Ext.isNumber(minY)
+            && (me.axis == 'right' || me.axis == 'left')) {
             axis = Ext.create('Ext.chart.axis.Axis', {
                 chart: chart,
                 fields: [].concat(me.yField)
@@ -325,21 +363,25 @@ Ext.define('Ext.chart.series.Line', {
         store.each(function(record, i) {
             xValue = record.get(me.xField);
             yValue = record.get(me.yField);
-            // Ensure a value
-            if (typeof xValue == 'string' || typeof xValue == 'object') {
-                xValue = i;
-            }
-            if (typeof yValue == 'string') {
-                yValue = i;
-            }
             //skip undefined values
-            if (typeof yValue == 'undefined') {
+            if (typeof yValue == 'undefined' || (typeof yValue == 'string' && !yValue)) {
                 //<debug warn>
                 if (Ext.isDefined(Ext.global.console)) {
                     Ext.global.console.warn("[Ext.chart.series.Line]  Skipping a store element with an undefined value at ", record, xValue, yValue);
                 }
                 //</debug>
                 return;
+            }
+            // Ensure a value
+            if (typeof xValue == 'string' || typeof xValue == 'object'
+                //set as uniform distribution if the axis is a category axis.
+                || (me.axis != 'top' && me.axis != 'bottom')) {
+                xValue = i;
+            }
+            if (typeof yValue == 'string' || typeof yValue == 'object'
+                //set as uniform distribution if the axis is a category axis.
+                || (me.axis != 'left' && me.axis != 'right')) {
+                yValue = i;
             }
             xValues.push(xValue);
             yValues.push(yValue);

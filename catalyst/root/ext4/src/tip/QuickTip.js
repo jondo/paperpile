@@ -115,15 +115,11 @@ Ext.define('Ext.tip.QuickTip', {
             t.removeAttribute("title");
             e.preventDefault();
         } 
-        else {
+        else {            
             cfg = this.tagConfig;
             t = e.getTarget('[' + cfg.namespace + cfg.attribute + ']');
-            ttp = t && t[cfg.attribute];
-            if (!ttp) {
-                t = e.getTarget('[' + cfg.namespace + cfg.attribute + ']');
-                if (t) {
-                    ttp = t.getAttribute(cfg.namespace + cfg.attribute);
-                }
+            if (t) {
+                ttp = t.getAttribute(cfg.namespace + cfg.attribute);
             }
         }
         return ttp;
@@ -142,8 +138,12 @@ Ext.define('Ext.tip.QuickTip', {
         if (me.disabled) {
             return;
         }
-        
+
+        // TODO - this causes "e" to be recycled in IE6/7 (EXTJSIV-1608) so ToolTip#setTarget
+        // was changed to include freezeEvent. The issue seems to be a nested 'resize' event
+        // that smashed Ext.EventObject.
         me.targetXY = e.getXY();
+
         if(!target || target.nodeType !== 1 || target == document || target == document.body){
             return;
         }
@@ -153,18 +153,28 @@ Ext.define('Ext.tip.QuickTip', {
             me.show();
             return;
         }
-
-        if (target && me.targets[target.id]) {
-            me.activeTarget = me.targets[target.id];
-            me.activeTarget.el = target;
-            me.anchor = me.activeTarget.anchor;
-            if (me.anchor) {
-                me.anchorTarget = target;
+        
+        if (target) {
+            Ext.Object.each(me.targets, function(key, value) {
+                var targetEl = Ext.fly(value.target);
+                if (targetEl && (targetEl.dom === target || targetEl.contains(target))) {
+                    elTarget = targetEl.dom;
+                    return false;
+                }
+            });
+            if (elTarget) {
+                me.activeTarget = me.targets[elTarget.id];
+                me.activeTarget.el = target;
+                me.anchor = me.activeTarget.anchor;
+                if (me.anchor) {
+                    me.anchorTarget = target;
+                }
+                me.delayShow();
+                return;
             }
-            me.delayShow();
-            return;
         }
-        elTarget = Ext.fly(target); 
+
+        elTarget = Ext.get(target);
         cfg = me.tagConfig;
         ns = cfg.namespace; 
         ttp = me.getTipCfg(e);

@@ -1,5 +1,3 @@
-$tabbar-plain-size: 4px !default;
-
 //color
 $tabbar-base-color: adjust-color($panel-base-color, $hue: -1.522deg, $saturation: -3.156%, $lightness: -5.294%) !default;
 $tabbar-background-gradient: 'tabbar' !default;
@@ -18,7 +16,7 @@ $tab-background-disabled: $tab-base-color-disabled !default;
 $tab-color: adjust-color($tab-base-color, $hue: 1.995deg, $saturation: -45.589%, $lightness: -48.431%) !default;
 $tab-color-over: $tab-color !default;
 $tab-color-active: adjust-color($tab-color, $hue: 2.221deg, $saturation: 30.768%, $lightness: -13.333%) !default;
-$tab-color-disabled: adjust-color($base-color, $hue: -3.333deg, $saturation: -54.085%, $lightness: -10.784%) !default;
+$tab-color-disabled: #c3b3b3 !default;
 
 $tab-font-size: ceil($font-size * .9) !default; //11px
 $tab-font-size-over: $tab-font-size !default;
@@ -61,8 +59,18 @@ $tab-inner-border-color: adjust-color($tab-base-color, $hue: 0.847deg, $saturati
 $tabbar-border-color: $panel-header-border-color !default;
 
 //size
-$tabbar-body-height: 29px !default;
-$tab-height: 25px !default;
+$tab-height: 20px !default;
+$tab-spacing: 2px;
+
+//tab bar body border and padding
+$tabbar-top-body-border-width: 1px 1px 0 !default;
+$tabbar-top-body-padding: 1px 0 3px !default;
+$tabbar-top-plain-body-border-width: 0 !default;
+$tabbar-top-plain-body-padding: 0 0 3px !default;
+$tabbar-bottom-body-border-width: 0 1px 1px !default;
+$tabbar-bottom-body-padding: 3px 0 1px !default;
+$tabbar-bottom-plain-body-border-width: 0 !default;
+$tabbar-bottom-plain-body-padding: 3px 0 0 !default;
 
 //closable tab
 $tab-closable-icon: 'tab/tab-default-close.gif' !default;
@@ -72,8 +80,8 @@ $tab-closable-icon-top: 3px !default;
 $tab-closable-icon-right: 3px !default;
 
 //tab bar strip
-$tab-bar-strip-border-color: $panel-header-border-color !default;
-$tab-bar-strip-background-color: $tab-base-color !default;
-
-$tab-bar-strip-border-background-color: $tab-base-color !default;
-
+$tabbar-strip-height: 3px !default;
+$tabbar-strip-border-color: $panel-header-border-color !default;
+$tabbar-strip-background-color: $tab-base-color !default;
+$tabbar-top-strip-border-width: 1px 1px 0 !default;
+$tabbar-bottom-strip-border-width: 0 1px 1px !default;

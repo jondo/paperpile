@@ -2,7 +2,7 @@ describe("Ext.ClassManager", function() {
     var manager = Ext.ClassManager,
         cls, emptyFn = function(){};
 
-    
+
 
     beforeEach(function() {
         manager.enableNamespaceParseCache = false;
@@ -95,7 +95,7 @@ describe("Ext.ClassManager", function() {
                 fn();
             });
 
-            Ext.Class.getPreprocessor('loader').fn(cls, data, emptyFn);
+            Ext.Class.getPreprocessor('loader').fn(cls, data, emptyFn, emptyFn);
 
             expect(Ext.Loader.require).toHaveBeenCalled();
             expect(classNames).toEqual(['My.awesome.Class', 'My.cool.AnotherClass1']);

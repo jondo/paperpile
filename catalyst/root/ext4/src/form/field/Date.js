@@ -465,35 +465,35 @@ dateField.setValue('2006-05-04');
 
     createPicker: function() {
         var me = this,
-            format = Ext.String.format,
-            picker = Ext.create('Ext.picker.Date', {
-                ownerCt: this.ownerCt,
-                renderTo: document.body,
-                floating: true,
-                hidden: true,
-                focusOnShow: true,
-                minDate: me.minValue,
-                maxDate: me.maxValue,
-                disabledDatesRE: me.disabledDatesRE,
-                disabledDatesText: me.disabledDatesText,
-                disabledDays: me.disabledDays,
-                disabledDaysText: me.disabledDaysText,
-                format: me.format,
-                showToday: me.showToday,
-                startDay: me.startDay,
-                minText: format(me.minText, me.formatDate(me.minValue)),
-                maxText: format(me.maxText, me.formatDate(me.maxValue)),
-                listeners: {
-                    scope: me,
-                    select: me.onSelect
-                }
-            });
+            format = Ext.String.format;
 
-        // Add handler for Escape key to close the picker
-        picker.keyNav.esc = function() {
-            me.collapse();
-        };
-        return picker;
+        return Ext.create('Ext.picker.Date', {
+            ownerCt: this.ownerCt,
+            renderTo: document.body,
+            floating: true,
+            hidden: true,
+            focusOnShow: true,
+            minDate: me.minValue,
+            maxDate: me.maxValue,
+            disabledDatesRE: me.disabledDatesRE,
+            disabledDatesText: me.disabledDatesText,
+            disabledDays: me.disabledDays,
+            disabledDaysText: me.disabledDaysText,
+            format: me.format,
+            showToday: me.showToday,
+            startDay: me.startDay,
+            minText: format(me.minText, me.formatDate(me.minValue)),
+            maxText: format(me.maxText, me.formatDate(me.maxValue)),
+            listeners: {
+                scope: me,
+                select: me.onSelect
+            },
+            keyNavConfig: {
+                esc: function() {
+                    me.collapse();
+                }
+            }
+        });
     },
 
     onSelect: function(m, d) {
@@ -507,7 +507,9 @@ dateField.setValue('2006-05-04');
      * Sets the Date picker's value to match the current field value when expanding.
      */
     onExpand: function() {
-        this.picker.setValue(this.getValue() || new Date());
+        var me = this,
+            value = me.getValue();
+        me.picker.setValue(value instanceof Date ? value : new Date());
     },
 
     /**

@@ -19,6 +19,8 @@ $panel-body-color: #fff;
 $panel-border-color: #18181a;
 $panel-header-inner-border: false;
 
+$border-layout-ct-background: #3f4757;
+
 //framed panel
 $panel-frame-border-radius: 3px;
 $frame-base-color: #232d38;
@@ -45,6 +47,9 @@ $toolbar-border-color: $window-body-border-color;
 $toolbar-background-color: #3a3e4f;
 $toolbar-text-color: #fff;
 
+$toolbar-separator-color: #1b1b29 !default;
+$toolbar-separator-highlight-color: #5d5d6e !default;
+
 //buttons
 $button-default-base-color: #2a3142;
 $button-default-base-color-over: $orange;
@@ -66,11 +71,13 @@ $button-toolbar-color-pressed: #fff !default;
 
 //forms
 $form-field-height: 26px;
+$form-toolbar-field-height: 24px;
 //$form-field-font-size: 15px;
 $form-field-border-width: 2px;
 $form-field-border-color: #737b8c;
 $form-field-background-color: #34383f;
 $form-field-color: #fff;
+$form-checkbox-size: 19px;
 
 $form-field-focus-border-color: #ff9c33;
 
@@ -78,7 +85,6 @@ $form-field-invalid-background-color: #15171A;
 $form-field-invalid-border-color: #C30;
 
 $form-trigger-width: 20px;
-$form-trigger-height: 26px;
 $form-trigger-border-bottom-width: 2px;
 $form-trigger-border-bottom-color: $form-field-border-color;
 $form-trigger-border-bottom-color-over: $form-field-focus-border-color;
@@ -98,7 +104,6 @@ $tab-base-color: #616f8c;
 $tab-base-color-over: lighten(#616f8c, 5);
 $tab-base-color-active: $orange;
 
-$tabbar-body-height: 31px;
 $tab-height: 27px;
 
 $tab-color: #fff;
@@ -117,8 +122,7 @@ $tab-closable-icon: 'tabs/tab-close.gif';
 $tab-closable-background-position: top right;
 $tab-closable-width: 16px;
 
-$tab-bar-strip-background-color: $orange;
-$tab-bar-strip-border-background-color: $orange;
+$tabbar-strip-background-color: $orange;
 
 //grid
 $grid-header-background-color: #373c4b;
@@ -145,12 +149,14 @@ $grid-row-cell-over-background-gradient: 'flat';
 $grid-row-cell-focus-background-gradient: 'flat';
 
 //layout
+$accordion-header-color: #fff;
 $accordion-header-background-color: #5c6b82;
 
 //progress bar
-$progress-bar-color: $orange;
 $progress-border-color: #18181a;
+$progress-background-color: #232d38;
 $progress-text-color-back: #aaa;
+$progress-bar-background-color: $orange;
 
 //datepicker
 $datepicker-background-color: #21252e;
@@ -184,6 +190,11 @@ $boundlist-border-width: 2px;
 $boundlist-item-border-width: 0;
 $boundlist-item-over-background-color: #e5872c;
 $boundlist-item-selected-background-color: #e5872c; 
+
+//tips
+$tip-base-color: #5e6986;
+$tip-border-color: #122d5e;
+$tip-body-color: #000;
 
 @import 'compass';
 @import 'ext4/default/all';

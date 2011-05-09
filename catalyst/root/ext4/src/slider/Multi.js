@@ -140,31 +140,36 @@ Ext.define('Ext.slider.Multi', {
     initValue: function() {
         var me = this,
             extValue = Ext.value,
-            i, len,
             // Fallback for initial values: values config -> value config -> minValue config -> 0
-            values = extValue(me.values, [extValue(me.value, extValue(me.minValue, 0))]);
+            values = extValue(me.values, [extValue(me.value, extValue(me.minValue, 0))]),
+            i = 0,
+            len = values.length;
 
         // Store for use in dirty check
         me.originalValue = values;
 
         // Add a thumb for each value
-        for (i = 0, len = values.length; i < len; i++) {
-            this.addThumb(values[i]);
+        for (; i < len; i++) {
+            me.addThumb(values[i]);
         }
     },
 
     // private override
     initComponent : function() {
+        var me = this,
+            tipPlug,
+            hasTip;
+        
         /**
          * @property thumbs
          * @type Array
          * Array containing references to each thumb
          */
-        this.thumbs = [];
+        me.thumbs = [];
 
-        this.keyIncrement = Math.max(this.increment, this.keyIncrement);
+        me.keyIncrement = Math.max(me.increment, me.keyIncrement);
 
-        this.addEvents(
+        me.addEvents(
             /**
              * @event beforechange
              * Fires before the slider value is changed. By returning false from an event handler,
@@ -218,17 +223,25 @@ Ext.define('Ext.slider.Multi', {
             'dragend'
         );
 
-        if (this.vertical) {
-            Ext.apply(this, Ext.slider.Multi.Vertical);
+        if (me.vertical) {
+            Ext.apply(me, Ext.slider.Multi.Vertical);
         }
 
-        this.callParent();
+        me.callParent();
 
         // only can use it if it exists.
-        if (this.useTips) {
-            var plug = this.tipText ? {getText: this.tipText} : {};
-            this.plugins = this.plugins || [];
-            this.plugins.push(Ext.create('Ext.slider.Tip', plug));
+        if (me.useTips) {
+            tipPlug = me.tipText ? {getText: me.tipText} : {};
+            me.plugins = me.plugins || [];
+            Ext.each(me.plugins, function(plug){
+                if (plug.isSliderTip) {
+                    hasTip = true;
+                    return false;
+                }
+            });
+            if (!hasTip) {
+                me.plugins.push(Ext.create('Ext.slider.Tip', tipPlug));
+            }
         }
     },
 
@@ -238,16 +251,17 @@ Ext.define('Ext.slider.Multi', {
      * @return {Ext.slider.Thumb} The thumb
      */
     addThumb: function(value) {
-        var thumb = Ext.create('Ext.slider.Thumb', {
+        var me = this,
+            thumb = Ext.create('Ext.slider.Thumb', {
             value    : value,
-            slider   : this,
-            index    : this.thumbs.length,
-            constrain: this.constrainThumbs
+            slider   : me,
+            index    : me.thumbs.length,
+            constrain: me.constrainThumbs
         });
-        this.thumbs.push(thumb);
+        me.thumbs.push(thumb);
 
         //render the thumb now if needed
-        if (this.rendered) {
+        if (me.rendered) {
             thumb.render();
         }
 
@@ -266,6 +280,7 @@ Ext.define('Ext.slider.Multi', {
         var thumbs = this.thumbs,
             ln = thumbs.length,
             zIndex, thumb, i;
+            
         for (i = 0; i < ln; i++) {
             thumb = thumbs[i];
 
@@ -279,34 +294,35 @@ Ext.define('Ext.slider.Multi', {
 
     // private override
     onRender : function() {
-        var i,
-            thumbs = this.thumbs,
-            ln = thumbs.length,
+        var me = this,
+            i = 0,
+            thumbs = me.thumbs,
+            len = thumbs.length,
             thumb;
 
-        Ext.applyIf(this.subTplData, {
-            vertical: this.vertical ? Ext.baseCSSPrefix + 'slider-vert' : Ext.baseCSSPrefix + 'slider-horz',
-            minValue: this.minValue,
-            maxValue: this.maxValue,
-            value: this.value
+        Ext.applyIf(me.subTplData, {
+            vertical: me.vertical ? Ext.baseCSSPrefix + 'slider-vert' : Ext.baseCSSPrefix + 'slider-horz',
+            minValue: me.minValue,
+            maxValue: me.maxValue,
+            value: me.value
         });
 
-        Ext.applyIf(this.renderSelectors, {
+        Ext.applyIf(me.renderSelectors, {
             endEl: '.' + Ext.baseCSSPrefix + 'slider-end',
             innerEl: '.' + Ext.baseCSSPrefix + 'slider-inner',
             focusEl: '.' + Ext.baseCSSPrefix + 'slider-focus'
         });
 
-        this.callParent(arguments);
+        me.callParent(arguments);
 
         //render each thumb
-        for (i = 0; i < ln; i++) {
+        for (; i < len; i++) {
             thumbs[i].render();
         }
 
         //calculate the size of half a thumb
-        thumb = this.innerEl.down('.' + Ext.baseCSSPrefix + 'slider-thumb');
-        this.halfThumb = (this.vertical ? thumb.getHeight() : thumb.getWidth()) / 2;
+        thumb = me.innerEl.down('.' + Ext.baseCSSPrefix + 'slider-thumb');
+        me.halfThumb = (me.vertical ? thumb.getHeight() : thumb.getWidth()) / 2;
 
     },
 
@@ -325,14 +341,16 @@ Ext.define('Ext.slider.Multi', {
      * Adds keyboard and mouse listeners on this.el. Ignores click events on the internal focus element.
      */
     initEvents : function() {
-        this.mon(this.el, {
-            scope    : this,
-            mousedown: this.onMouseDown,
-            keydown  : this.onKeyDown,
-            change : this.onChange
+        var me = this;
+        
+        me.mon(me.el, {
+            scope    : me,
+            mousedown: me.onMouseDown,
+            keydown  : me.onKeyDown,
+            change : me.onChange
         });
 
-        this.focusEl.swallowEvent("click", true);
+        me.focusEl.swallowEvent("click", true);
     },
 
     /**
@@ -342,21 +360,27 @@ Ext.define('Ext.slider.Multi', {
      * @param {Ext.EventObject} e The click event
      */
     onMouseDown : function(e) {
-        if(this.disabled) {
+        var me = this,
+            thumbClicked = false,
+            i = 0,
+            thumbs = me.thumbs,
+            len = thumbs.length,
+            local;
+            
+        if (me.disabled) {
             return;
         }
 
         //see if the click was on any of the thumbs
-        var thumbClicked = false;
-        for (var i=0; i < this.thumbs.length; i++) {
-            thumbClicked = thumbClicked || e.target == this.thumbs[i].el.dom;
+        for (; i < len; i++) {
+            thumbClicked = thumbClicked || e.target == thumbs[i].el.dom;
         }
 
-        if (this.clickToChange && !thumbClicked) {
-            var local = this.innerEl.translatePoints(e.getXY());
-            this.onClickChange(local);
+        if (me.clickToChange && !thumbClicked) {
+            local = me.innerEl.translatePoints(e.getXY());
+            me.onClickChange(local);
         }
-        this.focus();
+        me.focus();
     },
 
     /**
@@ -366,13 +390,15 @@ Ext.define('Ext.slider.Multi', {
      * @param {Object} local Object containing top and left values for the click event.
      */
     onClickChange : function(local) {
-        var thumb, index;
-        if (local.top > this.clickRange[0] && local.top < this.clickRange[1]) {
+        var me = this,
+            thumb, index;
+            
+        if (local.top > me.clickRange[0] && local.top < me.clickRange[1]) {
             //find the nearest thumb to the click event
-            thumb = this.getNearest(local, 'left');
+            thumb = me.getNearest(local, 'left');
             if (!thumb.disabled) {
                 index = thumb.index;
-                this.setValue(index, Ext.util.Format.round(this.reverseValue(local.left), this.decimalPrecision), undefined, true);
+                me.setValue(index, Ext.util.Format.round(me.reverseValue(local.left), me.decimalPrecision), undefined, true);
             }
         }
     },
@@ -385,16 +411,23 @@ Ext.define('Ext.slider.Multi', {
      * @return {Object} The closest thumb object and its distance from the click event
      */
     getNearest: function(local, prop) {
-        var localValue = prop == 'top' ? this.innerEl.getHeight() - local[prop] : local[prop],
-            clickValue = this.reverseValue(localValue),
-            nearestDistance = (this.maxValue - this.minValue) + 5, //add a small fudge for the end of the slider
+        var me = this,
+            localValue = prop == 'top' ? me.innerEl.getHeight() - local[prop] : local[prop],
+            clickValue = me.reverseValue(localValue),
+            nearestDistance = (me.maxValue - me.minValue) + 5, //add a small fudge for the end of the slider
             index = 0,
-            nearest = null;
+            nearest = null,
+            thumbs = me.thumbs,
+            i = 0,
+            len = thumbs.length,
+            thumb,
+            value,
+            dist;
 
-        for (var i=0; i < this.thumbs.length; i++) {
-            var thumb = this.thumbs[i],
-                value = thumb.value,
-                dist  = Math.abs(value - clickValue);
+        for (; i < len; i++) {
+            thumb = me.thumbs[i];
+            value = thumb.value;
+            dist  = Math.abs(value - clickValue);
 
             if (Math.abs(dist <= nearestDistance)) {
                 nearest = thumb;
@@ -417,24 +450,28 @@ Ext.define('Ext.slider.Multi', {
          * There's no real sane default for it, so leave it like this until we come up
          * with a better way of doing it.
          */
-        if(this.disabled || this.thumbs.length !== 1) {
+        var me = this,
+            k,
+            val;
+        
+        if(me.disabled || me.thumbs.length !== 1) {
             e.preventDefault();
             return;
         }
-        var k = e.getKey(),
-            val;
+        k = e.getKey();
+        
         switch(k) {
             case e.UP:
             case e.RIGHT:
                 e.stopEvent();
-                val = e.ctrlKey ? this.maxValue : this.getValue(0) + this.keyIncrement;
-                this.setValue(0, val, undefined, true);
+                val = e.ctrlKey ? me.maxValue : me.getValue(0) + me.keyIncrement;
+                me.setValue(0, val, undefined, true);
             break;
             case e.DOWN:
             case e.LEFT:
                 e.stopEvent();
-                val = e.ctrlKey ? this.minValue : this.getValue(0) - this.keyIncrement;
-                this.setValue(0, val, undefined, true);
+                val = e.ctrlKey ? me.minValue : me.getValue(0) - me.keyIncrement;
+                me.setValue(0, val, undefined, true);
             break;
             default:
                 e.preventDefault();
@@ -449,12 +486,14 @@ Ext.define('Ext.slider.Multi', {
      * @return {Number} The value of the nearest snap target
      */
     doSnap : function(value) {
-        if (!(this.increment && value)) {
-            return value;
-        }
         var newValue = value,
             inc = this.increment,
-            m = value % inc;
+            m;
+            
+        if (!(inc && value)) {
+            return value;
+        }
+        m = value % inc;
         if (m !== 0) {
             newValue -= m;
             if (m * 2 >= inc) {
@@ -468,18 +507,25 @@ Ext.define('Ext.slider.Multi', {
 
     // private
     afterRender : function() {
-        this.callParent(arguments);
+        var me = this,
+            i = 0,
+            thumbs = me.thumbs,
+            len = thumbs.length,
+            thumb,
+            v;
+            
+        me.callParent(arguments);
 
-        for (var i=0; i < this.thumbs.length; i++) {
-            var thumb = this.thumbs[i];
+        for (; i < len; i++) {
+            thumb = thumbs[i];
 
             if (thumb.value !== undefined) {
-                var v = this.normalizeValue(thumb.value);
+                v = me.normalizeValue(thumb.value);
                 if (v !== thumb.value) {
                     // delete this.value;
-                    this.setValue(i, v, false);
+                    me.setValue(i, v, false);
                 } else {
-                    thumb.move(this.translateValue(v), false);
+                    thumb.move(me.translateValue(v), false);
                 }
             }
         }
@@ -504,9 +550,11 @@ Ext.define('Ext.slider.Multi', {
      * @return {Number} The raw value rounded to the correct d.p. and constrained within the set max and min values
      */
     normalizeValue : function(v) {
-        v = this.doSnap(v);
-        v = Ext.util.Format.round(v, this.decimalPrecision);
-        v = Ext.Number.constrain(v, this.minValue, this.maxValue);
+        var me = this;
+        
+        v = me.doSnap(v);
+        v = Ext.util.Format.round(v, me.decimalPrecision);
+        v = Ext.Number.constrain(v, me.minValue, me.maxValue);
         return v;
     },
 
@@ -516,18 +564,20 @@ Ext.define('Ext.slider.Multi', {
      * @param {Number} val The new minimum value
      */
     setMinValue : function(val) {
-        this.minValue = val;
-        this.inputEl.dom.setAttribute('aria-valuemin', val);
-        var i = 0,
-            thumbs = this.thumbs,
+        var me = this,
+            i = 0,
+            thumbs = me.thumbs,
             len = thumbs.length,
             t;
+            
+        me.minValue = val;
+        me.inputEl.dom.setAttribute('aria-valuemin', val);
 
-        for(; i < len; ++i) {
+        for (; i < len; ++i) {
             t = thumbs[i];
             t.value = t.value < val ? val : t.value;
         }
-        this.syncThumbs();
+        me.syncThumbs();
     },
 
     /**
@@ -536,18 +586,20 @@ Ext.define('Ext.slider.Multi', {
      * @param {Number} val The new maximum value
      */
     setMaxValue : function(val) {
-        this.maxValue = val;
-        this.inputEl.dom.setAttribute('aria-valuemax', val);
-        var i = 0,
-            thumbs = this.thumbs,
+        var me = this,
+            i = 0,
+            thumbs = me.thumbs,
             len = thumbs.length,
             t;
+            
+        me.maxValue = val;
+        me.inputEl.dom.setAttribute('aria-valuemax', val);
 
-        for(; i < len; ++i) {
+        for (; i < len; ++i) {
             t = thumbs[i];
             t.value = t.value > val ? val : t.value;
         }
-        this.syncThumbs();
+        me.syncThumbs();
     },
 
     /**
@@ -612,50 +664,65 @@ Ext.define('Ext.slider.Multi', {
 
     //private
     onDisable: function() {
-        this.callParent();
+        var me = this,
+            i = 0,
+            thumbs = me.thumbs,
+            len = thumbs.length,
+            thumb,
+            el,
+            xy;
+            
+        me.callParent();
 
-        for (var i=0; i < this.thumbs.length; i++) {
-            var thumb = this.thumbs[i],
-                el    = thumb.el;
+        for (; i < len; i++) {
+            thumb = thumbs[i];
+            el = thumb.el;
 
             thumb.disable();
 
             if(Ext.isIE) {
                 //IE breaks when using overflow visible and opacity other than 1.
                 //Create a place holder for the thumb and display it.
-                var xy = el.getXY();
+                xy = el.getXY();
                 el.hide();
 
-                this.innerEl.addCls(this.disabledCls).dom.disabled = true;
+                me.innerEl.addCls(me.disabledCls).dom.disabled = true;
 
-                if (!this.thumbHolder) {
-                    this.thumbHolder = this.endEl.createChild({cls: Ext.baseCSSPrefix + 'slider-thumb ' + this.disabledCls});
+                if (!me.thumbHolder) {
+                    me.thumbHolder = me.endEl.createChild({cls: Ext.baseCSSPrefix + 'slider-thumb ' + me.disabledCls});
                 }
 
-                this.thumbHolder.show().setXY(xy);
+                me.thumbHolder.show().setXY(xy);
             }
         }
     },
 
     //private
     onEnable: function() {
+        var me = this,
+            i = 0,
+            thumbs = me.thumbs,
+            len = thumbs.length,
+            thumb,
+            el;
+            
         this.callParent();
 
-        for (var i=0; i < this.thumbs.length; i++) {
-            var thumb = this.thumbs[i],
-                el    = thumb.el;
+        for (; i < len; i++) {
+            thumb = thumbs[i];
+            el = thumb.el;
 
             thumb.enable();
 
             if (Ext.isIE) {
-                this.innerEl.removeCls(this.disabledCls).dom.disabled = false;
+                me.innerEl.removeCls(me.disabledCls).dom.disabled = false;
 
-                if (this.thumbHolder) {
-                    this.thumbHolder.hide();
+                if (me.thumbHolder) {
+                    me.thumbHolder.hide();
                 }
 
                 el.show();
-                this.syncThumbs();
+                me.syncThumbs();
             }
         }
     },
@@ -670,9 +737,9 @@ Ext.define('Ext.slider.Multi', {
         if (this.rendered) {
             var thumbs = this.thumbs,
                 length = thumbs.length,
-                i;
+                i = 0;
 
-            for (i = 0; i < length; i++) {
+            for (; i < length; i++) {
                 thumbs[i].move(this.translateValue(thumbs[i].value));
             }
         }
@@ -693,10 +760,13 @@ Ext.define('Ext.slider.Multi', {
      * @return {Array} The set of thumb values
      */
     getValues: function() {
-        var values = [];
+        var values = [],
+            i = 0,
+            thumbs = this.thumbs,
+            len = thumbs.length;
 
-        for (var i=0; i < this.thumbs.length; i++) {
-            values.push(this.thumbs[i].value);
+        for (; i < len; i++) {
+            values.push(thumbs[i].value);
         }
 
         return values;
@@ -720,12 +790,14 @@ Ext.define('Ext.slider.Multi', {
 
     // private
     beforeDestroy : function() {
-        Ext.destroyMembers(this.innerEl, this.endEl, this.focusEl);
-        Ext.each(this.thumbs, function(thumb) {
+        var me = this;
+        
+        Ext.destroyMembers(me.innerEl, me.endEl, me.focusEl);
+        Ext.each(me.thumbs, function(thumb) {
             Ext.destroy(thumb);
-        }, this);
+        }, me);
 
-        this.callParent();
+        me.callParent();
     },
 
     statics: {
@@ -738,15 +810,16 @@ Ext.define('Ext.slider.Multi', {
             },
 
             onClickChange : function(local) {
-                var thumb, index, bottom;
+                var me = this,
+                    thumb, index, bottom;
 
-                if (local.left > this.clickRange[0] && local.left < this.clickRange[1]) {
-                    thumb = this.getNearest(local, 'top');
+                if (local.left > me.clickRange[0] && local.left < me.clickRange[1]) {
+                    thumb = me.getNearest(local, 'top');
                     if (!thumb.disabled) {
                         index = thumb.index;
-                        bottom =  this.reverseValue(this.innerEl.getHeight() - local.top);
+                        bottom =  me.reverseValue(me.innerEl.getHeight() - local.top);
 
-                        this.setValue(index, Ext.util.Format.round(this.minValue + bottom, this.decimalPrecision), undefined, true);
+                        me.setValue(index, Ext.util.Format.round(me.minValue + bottom, me.decimalPrecision), undefined, true);
                     }
                 }
             }

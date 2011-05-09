@@ -1,7 +1,6 @@
 /**
  * @author Ed Spencer
  * @class Ext.data.Model
- * @extends Ext.util.Stateful
  *
  * <p>A Model represents some object that your application manages. For example, one might define a Model for Users, Products,
  * Cars, or any other real-world object that we want to model in the system. Models are registered via the {@link Ext.ModelManager model manager},
@@ -10,7 +9,8 @@
  * <p>Models are defined as a set of fields and any arbitrary methods and properties relevant to the model. For example:</p>
  *
 <pre><code>
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: [
         {name: 'name',  type: 'string'},
         {name: 'age',   type: 'int'},
@@ -49,7 +49,8 @@ user.get('name'); //returns "Conan The Barbarian"
  * {@link Ext.data.validations} ({@link Ext.data.validations see all validation functions}). Validations are easy to add to models:</p>
  *
 <pre><code>
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: [
         {name: 'name',     type: 'string'},
         {name: 'age',      type: 'int'},
@@ -89,20 +90,23 @@ var errors = instance.validate();
  * application which deals with Users, Posts and Comments. We can express the relationships between these models like this:</p>
  *
 <pre><code>
-Ext.regModel('Post', {
+Ext.define('Post', {
+    extend: 'Ext.data.Model',
     fields: ['id', 'user_id'],
 
     belongsTo: 'User',
     hasMany  : {model: 'Comment', name: 'comments'}
 });
 
-Ext.regModel('Comment', {
+Ext.define('Comment', {
+    extend: 'Ext.data.Model',
     fields: ['id', 'user_id', 'post_id'],
 
     belongsTo: 'Post'
 });
 
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: ['id'],
 
     hasMany: [
@@ -116,7 +120,8 @@ Ext.regModel('User', {
  * and configuration of associations. Note that associations can also be specified like this:</p>
  *
 <pre><code>
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: ['id'],
 
     associations: [
@@ -133,7 +138,8 @@ Ext.regModel('User', {
  * which can be set directly on the Model:</p>
  *
 <pre><code>
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: ['id', 'name', 'email'],
 
     proxy: {
@@ -216,8 +222,11 @@ store.load();
  * @param {Number} id Optional unique ID to assign to this model instance
  */
 Ext.define('Ext.data.Model', {
-    extend: 'Ext.util.Stateful',
     alternateClassName: 'Ext.data.Record',
+    
+    mixins: {
+        observable: 'Ext.util.Observable'
+    },
 
     requires: [
         'Ext.ModelManager',
@@ -225,110 +234,142 @@ Ext.define('Ext.data.Model', {
         'Ext.data.Errors',
         'Ext.data.Operation',
         'Ext.data.validations',
-        'Ext.data.proxy.Ajax'
+        'Ext.data.proxy.Ajax',
+        'Ext.util.MixedCollection'
     ],
 
     onClassExtended: function(cls, data) {
-        var name = cls.$className,
-            prototype = cls.prototype,
-            superCls = cls.prototype.superclass,
+        var onBeforeClassCreated = data.onBeforeClassCreated;
 
-            validations = data.validations || [],
-            fields = data.fields || [],
-            associations = data.associations || [],
-            belongsTo = data.belongsTo,
-            hasMany = data.hasMany,
+        data.onBeforeClassCreated = function(cls, data) {
+            var me = this,
+                name = Ext.getClassName(cls),
+                prototype = cls.prototype,
+                superCls = cls.prototype.superclass,
 
-            fieldsMixedCollection = Ext.create('Ext.util.MixedCollection', false, function(field) {
-                return field.name;
-            }),
+                validations = data.validations || [],
+                fields = data.fields || [],
+                associations = data.associations || [],
+                belongsTo = data.belongsTo,
+                hasMany = data.hasMany,
 
-            associationsMixedCollection = Ext.create('Ext.util.MixedCollection', false, function(association) {
-                return association.name;
-            }),
+                fieldsMixedCollection = new Ext.util.MixedCollection(false, function(field) {
+                    return field.name;
+                }),
 
-            superValidations = superCls.validations,
-            superFields = superCls.fields,
-            superAssociations = cls.prototype.superclass.associations,
+                associationsMixedCollection = new Ext.util.MixedCollection(false, function(association) {
+                    return association.name;
+                }),
 
-            association, i, ln;
+                superValidations = superCls.validations,
+                superFields = superCls.fields,
+                superAssociations = superCls.associations,
 
-        // Save modelName on class and its prototype
-        cls.modelName = name;
-        prototype.modelName = name;
+                association, i, ln,
+                dependencies = [];
 
-        // Merge the validations of the superclass and the new subclass
-        if (superValidations) {
-            validations = superValidations.concat(validations);
-        }
-        data.validations = validations;
+            // Save modelName on class and its prototype
+            cls.modelName = name;
+            prototype.modelName = name;
 
-        // Merge the fields of the superclass and the new subclass
-        if (superFields) {
-            fields = superFields.items.concat(fields);
-        }
-        for (i = 0, ln = fields.length; i < ln; ++i) {
-            fieldsMixedCollection.add(Ext.create('Ext.data.Field', fields[i]));
-        }
-
-        data.fields = fieldsMixedCollection;
-
-        //associations can be specified in the more convenient format (e.g. not inside an 'associations' array).
-        //we support that here
-        if (belongsTo) {
-            belongsTo = Ext.Array.from(belongsTo);
-
-            for (i = 0, ln = belongsTo.length; i < ln; ++i) {
-                association = belongsTo[i];
-                if (!Ext.isObject(association)) {
-                    association = {model: association};
-                }
-                Ext.apply(association, {type: 'belongsTo'});
-                associations.push(association);
+            // Merge the validations of the superclass and the new subclass
+            if (superValidations) {
+                validations = superValidations.concat(validations);
             }
-            delete data.belongsTo;
-        }
 
-        if (hasMany) {
-            hasMany = Ext.Array.from(hasMany);
-            for (i = 0, ln = hasMany.length; i < ln; ++i) {
-                association = hasMany[i];
-                if (!Ext.isObject(association)) {
-                    association = {model: association};
-                }
-                Ext.apply(association, {type: 'hasMany'});
-                associations.push(association);
+            data.validations = validations;
+
+            // Merge the fields of the superclass and the new subclass
+            if (superFields) {
+                fields = superFields.items.concat(fields);
             }
-            delete data.hasMany;
-        }
 
-        if (superAssociations) {
-            associations = superAssociations.items.concat(associations);
-        }
+            for (i = 0, ln = fields.length; i < ln; ++i) {
+                fieldsMixedCollection.add(new Ext.data.Field(fields[i]));
+            }
 
-        Ext.ModelManager.registerType(name, cls);
+            data.fields = fieldsMixedCollection;
 
-        for (i = 0, ln = associations.length; i < ln; ++i) {
-            association = associations[i];
-            Ext.apply(association, {
-                ownerModel: name,
-                associatedModel: association.model
+            //associations can be specified in the more convenient format (e.g. not inside an 'associations' array).
+            //we support that here
+            if (belongsTo) {
+                belongsTo = Ext.Array.from(belongsTo);
+
+                for (i = 0, ln = belongsTo.length; i < ln; ++i) {
+                    association = belongsTo[i];
+
+                    if (!Ext.isObject(association)) {
+                        association = {model: association};
+                    }
+
+                    association.type = 'belongsTo';
+                    associations.push(association);
+                }
+
+                delete data.belongsTo;
+            }
+
+            if (hasMany) {
+                hasMany = Ext.Array.from(hasMany);
+                for (i = 0, ln = hasMany.length; i < ln; ++i) {
+                    association = hasMany[i];
+
+                    if (!Ext.isObject(association)) {
+                        association = {model: association};
+                    }
+
+                    association.type = 'hasMany';
+                    associations.push(association);
+                }
+
+                delete data.hasMany;
+            }
+
+            if (superAssociations) {
+                associations = superAssociations.items.concat(associations);
+            }
+
+            for (i = 0, ln = associations.length; i < ln; ++i) {
+                dependencies.push('association.' + associations[i].type.toLowerCase());
+            }
+
+            if (data.proxy) {
+                if (typeof data.proxy === 'string') {
+                    dependencies.push('proxy.' + data.proxy);
+                }
+                else if (typeof data.proxy.type === 'string') {
+                    dependencies.push('proxy.' + data.proxy.type);
+                }
+            }
+
+            Ext.require(dependencies, function() {
+                Ext.ModelManager.registerType(name, cls);
+
+                for (i = 0, ln = associations.length; i < ln; ++i) {
+                    association = associations[i];
+
+                    Ext.apply(association, {
+                        ownerModel: name,
+                        associatedModel: association.model
+                    });
+
+                    if (Ext.ModelManager.getModel(association.model) === undefined) {
+                        Ext.ModelManager.registerDeferredAssociation(association);
+                    } else {
+                        associationsMixedCollection.add(Ext.data.Association.create(association));
+                    }
+                }
+
+                data.associations = associationsMixedCollection;
+
+                onBeforeClassCreated.call(me, cls, data);
+
+                cls.setProxy(cls.prototype.proxy || cls.prototype.defaultProxyType);
+
+                // Fire the onModelDefined template method on ModelManager
+                Ext.ModelManager.onModelDefined(cls);
             });
-
-            if (Ext.ModelManager.getModel(association.model) === undefined) {
-                Ext.ModelManager.registerDeferredAssociation(association);
-            } else {
-                associationsMixedCollection.add(Ext.data.Association.create(association));
-            }
         }
-        data.associations = associationsMixedCollection;
-    },
-
-    onAfterClassExtended: function(cls, data) {
-        cls.setProxy(cls.prototype.proxy || cls.prototype.defaultProxyType);
-
-        // Fire the onModelDefined template method on ModelManager
-        Ext.ModelManager.onModelDefined(cls);
     },
 
     inheritableStatics: {
@@ -364,7 +405,8 @@ Ext.define('Ext.data.Model', {
         /**
          * <b>Static</b>. Asynchronously loads a model instance by id. Sample usage:
     <pre><code>
-    MyApp.User = Ext.regModel('User', {
+    MyApp.User = Ext.define('User', {
+        extend: 'Ext.data.Model',
         fields: [
             {name: 'id', type: 'int'},
             {name: 'name', type: 'string'}
@@ -438,12 +480,31 @@ Ext.define('Ext.data.Model', {
          * @static
          */
         id: function(rec) {
-            var id = [Ext.data.Model.PREFIX, '-', Ext.data.Model.AUTO_ID++].join('');
+            var id = [this.PREFIX, '-', this.AUTO_ID++].join('');
             rec.phantom = true;
             rec.internalId = id;
             return id;
         }
     },
+    
+    /**
+     * Internal flag used to track whether or not the model instance is currently being edited. Read-only
+     * @property editing
+     * @type Boolean
+     */
+    editing : false,
+
+    /**
+     * Readonly flag - true if this Record has been modified.
+     * @type Boolean
+     */
+    dirty : false,
+
+    /**
+     * @cfg {String} persistanceProperty The property on this Persistable object that its data is saved to.
+     * Defaults to 'data' (e.g. all persistable data resides in this.data.)
+     */
+    persistanceProperty: 'data',
 
     evented: false,
     isModel: true,
@@ -477,6 +538,15 @@ Ext.define('Ext.data.Model', {
 
     constructor: function(data, id) {
         data = data || {};
+        
+        var me = this,
+            fields,
+            length,
+            field,
+            name,
+            i,
+            isArray = Ext.isArray(data),
+            newData = isArray ? {} : null; // to hold mapped array data if needed
 
         /**
          * An internal unique ID for each Model instance, used to identify Models that don't have an ID yet
@@ -484,40 +554,318 @@ Ext.define('Ext.data.Model', {
          * @type String
          * @private
          */
-        this.internalId = (id || id === 0) ? id : Ext.data.Model.id(this);
+        me.internalId = (id || id === 0) ? id : Ext.data.Model.id(me);
 
-        this.callParent();
+        Ext.applyIf(me, {
+            data: {}    
+        });
+        
+        /**
+         * Key: value pairs of all fields whose values have changed
+         * @property modified
+         * @type Object
+         */
+        me.modified = {};
+
+        me[me.persistanceProperty] = {};
+
+        me.mixins.observable.constructor.call(me);
 
         //add default field values if present
-        var fields = this.fields.items,
-            length = fields.length,
-            field, name, i;
+        fields = me.fields.items;
+        length = fields.length;
 
         for (i = 0; i < length; i++) {
             field = fields[i];
             name  = field.name;
-            
-            if (data[name] === undefined) {
+
+            if (isArray){ 
+                // Have to map array data so the values get assigned to the named fields
+                // rather than getting set as the field names with undefined values.
+                newData[name] = data[i];
+            }
+            else if (data[name] === undefined) {
                 data[name] = field.defaultValue;
             }
         }
 
-        this.set(data);
+        me.set(newData || data);
         // clear any dirty/modified since we're initializing
-        this.dirty = false;
-        this.modified = {};
+        me.dirty = false;
+        me.modified = {};
 
-        if (this.getId()) {
-            this.phantom = false;
+        if (me.getId()) {
+            me.phantom = false;
         }
 
-        if (typeof this.init == 'function') {
-            this.init();
+        if (typeof me.init == 'function') {
+            me.init();
         }
 
-        this.id = this.modelName + '-' + this.internalId;
+        me.id = me.modelName + '-' + me.internalId;
 
-        Ext.ModelManager.register(this);
+        Ext.ModelManager.register(me);
+    },
+    
+    /**
+     * Returns the value of the given field
+     * @param {String} fieldName The field to fetch the value for
+     * @return {Mixed} The value
+     */
+    get: function(field) {
+        return this[this.persistanceProperty][field];
+    },
+    
+    /**
+     * Sets the given field to the given value, marks the instance as dirty
+     * @param {String|Object} fieldName The field to set, or an object containing key/value pairs
+     * @param {Mixed} value The value to set
+     */
+    set: function(fieldName, value) {
+        var me = this,
+            fields = me.fields,
+            modified = me.modified,
+            convertFields = [],
+            field, key, i, currentValue;
+
+        /*
+         * If we're passed an object, iterate over that object. NOTE: we pull out fields with a convert function and
+         * set those last so that all other possible data is set before the convert function is called
+         */
+        if (arguments.length == 1 && Ext.isObject(fieldName)) {
+            for (key in fieldName) {
+                if (fieldName.hasOwnProperty(key)) {
+                
+                    //here we check for the custom convert function. Note that if a field doesn't have a convert function,
+                    //we default it to its type's convert function, so we have to check that here. This feels rather dirty.
+                    field = fields.get(key);
+                    if (field && field.convert !== field.type.convert) {
+                        convertFields.push(key);
+                        continue;
+                    }
+                    
+                    me.set(key, fieldName[key]);
+                }
+            }
+
+            for (i = 0; i < convertFields.length; i++) {
+                field = convertFields[i];
+                me.set(field, fieldName[field]);
+            }
+
+        } else {
+            if (fields) {
+                field = fields.get(fieldName);
+
+                if (field && field.convert) {
+                    value = field.convert(value, me);
+                }
+            }
+            currentValue = me.get(fieldName);
+            me[me.persistanceProperty][fieldName] = value;
+            
+            if (field && field.persist && !me.isEqual(currentValue, value)) {
+                me.dirty = true;
+                me.modified[fieldName] = currentValue;
+            }
+
+            if (!me.editing) {
+                me.afterEdit();
+            }
+        }
+    },
+    
+    /**
+     * Checks if two values are equal, taking into account certain
+     * special factors, for example dates.
+     * @private
+     * @param {Object} a The first value
+     * @param {Object} b The second value
+     * @return {Boolean} True if the values are equal
+     */
+    isEqual: function(a, b){
+        if (Ext.isDate(a) && Ext.isDate(b)) {
+            return a.getTime() === b.getTime();
+        }
+        return a === b;
+    },
+    
+    /**
+     * Begin an edit. While in edit mode, no events (e.g.. the <code>update</code> event)
+     * are relayed to the containing store. When an edit has begun, it must be followed
+     * by either {@link #endEdit} or {@link #cancelEdit}.
+     */
+    beginEdit : function(){
+        var me = this;
+        if (!me.editing) {
+            me.editing = true;
+            me.dirtySave = me.dirty;
+            me.dataSave = Ext.apply({}, me[me.persistanceProperty]);
+            me.modifiedSave = Ext.apply({}, me.modified);
+        }
+    },
+    
+    /**
+     * Cancels all changes made in the current edit operation.
+     */
+    cancelEdit : function(){
+        var me = this;
+        if (me.editing) {
+            me.editing = false;
+            // reset the modified state, nothing changed since the edit began
+            me.modified = me.modifiedSave;
+            me[me.persistanceProperty] = me.dataSave;
+            me.dirty = me.dirtySave;
+            delete me.modifiedSave;
+            delete me.dataSave;
+            delete me.dirtySave;
+        }
+    },
+    
+    /**
+     * End an edit. If any data was modified, the containing store is notified
+     * (ie, the store's <code>update</code> event will fire).
+     * @param {Boolean} silent True to not notify the store of the change
+     */
+    endEdit : function(silent){
+        var me = this;
+        if (me.editing) {
+            me.editing = false;
+            delete me.modifiedSave;
+            delete me.dataSave;
+            delete me.dirtySave;
+            if (silent !== true && me.dirty) {
+                me.afterEdit();
+            }
+        }
+    },
+    
+    /**
+     * Gets a hash of only the fields that have been modified since this Model was created or commited.
+     * @return Object
+     */
+    getChanges : function(){
+        var modified = this.modified,
+            changes  = {},
+            field;
+
+        for (field in modified) {
+            if (modified.hasOwnProperty(field)){
+                changes[field] = this.get(field);
+            }
+        }
+
+        return changes;
+    },
+    
+    /**
+     * Returns <tt>true</tt> if the passed field name has been <code>{@link #modified}</code>
+     * since the load or last commit.
+     * @param {String} fieldName {@link Ext.data.Field#name}
+     * @return {Boolean}
+     */
+    isModified : function(fieldName) {
+        return this.modified.hasOwnProperty(fieldName);
+    },
+    
+    /**
+     * <p>Marks this <b>Record</b> as <code>{@link #dirty}</code>.  This method
+     * is used interally when adding <code>{@link #phantom}</code> records to a
+     * {@link Ext.data.Store#writer writer enabled store}.</p>
+     * <br><p>Marking a record <code>{@link #dirty}</code> causes the phantom to
+     * be returned by {@link Ext.data.Store#getModifiedRecords} where it will
+     * have a create action composed for it during {@link Ext.data.Store#save store save}
+     * operations.</p>
+     */
+    setDirty : function() {
+        var me = this,
+            name;
+        
+        me.dirty = true;
+
+        me.fields.each(function(field) {
+            if (field.persist) {
+                name = field.name;
+                me.modified[name] = me.get(name);
+            }
+        }, me);
+    },
+
+    //<debug>
+    markDirty : function() {
+        if (Ext.isDefined(Ext.global.console)) {
+            Ext.global.console.warn('Ext.data.Model: markDirty has been deprecated. Use setDirty instead.');
+        }
+        return this.setDirty.apply(this, arguments);
+    },
+    //</debug>
+    
+    /**
+     * Usually called by the {@link Ext.data.Store} to which this model instance has been {@link #join joined}.
+     * Rejects all changes made to the model instance since either creation, or the last commit operation.
+     * Modified fields are reverted to their original values.
+     * <p>Developers should subscribe to the {@link Ext.data.Store#update} event
+     * to have their code notified of reject operations.</p>
+     * @param {Boolean} silent (optional) True to skip notification of the owning
+     * store of the change (defaults to false)
+     */
+    reject : function(silent) {
+        var me = this,
+            modified = me.modified,
+            field;
+
+        for (field in modified) {
+            if (modified.hasOwnProperty(field)) {
+                if (typeof modified[field] != "function") {
+                    me[me.persistanceProperty][field] = modified[field];
+                }
+            }
+        }
+
+        me.dirty = false;
+        me.editing = false;
+        me.modified = {};
+
+        if (silent !== true) {
+            me.afterReject();
+        }
+    },
+
+    /**
+     * Usually called by the {@link Ext.data.Store} which owns the model instance.
+     * Commits all changes made to the instance since either creation or the last commit operation.
+     * <p>Developers should subscribe to the {@link Ext.data.Store#update} event
+     * to have their code notified of commit operations.</p>
+     * @param {Boolean} silent (optional) True to skip notification of the owning
+     * store of the change (defaults to false)
+     */
+    commit : function(silent) {
+        var me = this;
+        
+        me.dirty = false;
+        me.editing = false;
+
+        me.modified = {};
+
+        if (silent !== true) {
+            me.afterCommit();
+        }
+    },
+
+    /**
+     * Creates a copy (clone) of this Model instance.
+     * @param {String} id (optional) A new id, defaults to the id
+     * of the instance being copied. See <code>{@link #id}</code>.
+     * To generate a phantom instance with a new id use:<pre><code>
+var rec = record.copy(); // clone the record
+Ext.data.Model.id(rec); // automatically generate a unique sequential id
+     * </code></pre>
+     * @return {Record}
+     */
+    copy : function(newId) {
+        var me = this;
+        
+        return new me.self(Ext.apply({}, me[me.persistanceProperty]), newId || me.internalId);
     },
 
     /**
@@ -528,7 +876,7 @@ Ext.define('Ext.data.Model', {
     setProxy: function(proxy) {
         //make sure we have an Ext.data.proxy.Proxy object
         if (!proxy.isProxy) {
-            if (typeof proxy == "string") {
+            if (typeof proxy === "string") {
                 proxy = {
                     type: proxy
                 };

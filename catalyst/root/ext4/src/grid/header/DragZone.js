@@ -38,7 +38,7 @@ Ext.define('Ext.grid.header.DragZone', {
     },
 
     onBeforeDrag: function() {
-        return !this.headerCt.dragging;
+        return !(this.headerCt.dragging || this.disabled);
     },
 
     onInitDrag: function() {
@@ -58,5 +58,13 @@ Ext.define('Ext.grid.header.DragZone', {
 
     getRepairXY: function() {
         return this.dragData.header.el.getXY();
+    },
+    
+    disable: function() {
+        this.disabled = true;
+    },
+    
+    enable: function() {
+        this.disabled = false;
     }
 });

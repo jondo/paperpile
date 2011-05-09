@@ -1,198 +1,196 @@
 /**
  * @author Jacky Nguyen <jacky@sencha.com>
  * @docauthor Jacky Nguyen <jacky@sencha.com>
- * @markdown
  * @class Ext.Class
-
-Handles class creation throughout the whole framework. Note that most of the time {@link Ext#define Ext.define} should
-be used instead, since it's a higher level wrapper that aliases to {@link Ext.ClassManager#create}
-to enable namespacing and dynamic dependency resolution.
-
-# Basic syntax: #
-
-    Ext.define(className, properties);
-
-in which `properties` is an object represent a collection of properties that apply to the class. See
-{@link Ext.ClassManager#create} for more detailed instructions.
-
-    Ext.define('Person', {
-         name: 'Unknown',
-
-         constructor: function(name) {
-             if (name) {
-                 this.name = name;
-             }
-
-             return this;
-         },
-
-         eat: function(foodType) {
-             alert("I'm eating: " + foodType);
-
-             return this;
-         }
-    });
-
-    var aaron = new Person("Aaron");
-    aaron.eat("Sandwich"); // alert("I'm eating: Sandwich");
-
-Ext.Class has a powerful set of extensible {@link Ext.Class#registerPreprocessor pre-processors} which takes care of
-everything related to class creation, including but not limited to inheritance, mixins, configuration, statics, etc.
-
-# Inheritance: #
-
-    Ext.define('Developer', {
-         extend: 'Person',
-
-         constructor: function(name, isGeek) {
-             this.isGeek = isGeek;
-
-             // Apply a method from the parent class' prototype
-             this.callParent([name]);
-
-             return this;
-
-         },
-
-         code: function(language) {
-             alert("I'm coding in: " + language);
-
-             this.eat("Bugs");
-
-             return this;
-         }
-    });
-
-    var jacky = new Developer("Jacky", true);
-    jacky.code("JavaScript"); // alert("I'm coding in: JavaScript");
-                              // alert("I'm eating: Bugs");
-
-See {@link Ext.Base#callParent} for more details on calling superclass' methods
-
-# Mixins: #
-
-    Ext.define('CanPlayGuitar', {
-         playGuitar: function() {
-            alert("F#...G...D...A");
-         }
-    });
-
-    Ext.define('CanComposeSongs', {
-         composeSongs: function() { ... }
-    });
-
-    Ext.define('CanSing', {
-         sing: function() {
-             alert("I'm on the highway to hell...")
-         }
-    });
-
-    Ext.define('Musician', {
-         extend: 'Person',
-
-         mixins: {
-             canPlayGuitar: 'CanPlayGuitar',
-             canComposeSongs: 'CanComposeSongs',
-             canSing: 'CanSing'
-         }
-    })
-
-    Ext.define('CoolPerson', {
-         extend: 'Person',
-
-         mixins: {
-             canPlayGuitar: 'CanPlayGuitar',
-             canSing: 'CanSing'
-         },
-
-         sing: function() {
-             alert("Ahem....");
-
-             this.mixins.canSing.sing.call(this);
-
-             alert("[Playing guitar at the same time...]");
-
-             this.playGuitar();
-         }
-    });
-
-    var me = new CoolPerson("Jacky");
-
-    me.sing(); // alert("Ahem...");
-               // alert("I'm on the highway to hell...");
-               // alert("[Playing guitar at the same time...]");
-               // alert("F#...G...D...A");
-
-# Config: #
-
-    Ext.define('SmartPhone', {
-         config: {
-             hasTouchScreen: false,
-             operatingSystem: 'Other',
-             price: 500
-         },
-
-         isExpensive: false,
-
-         constructor: function(config) {
-             this.initConfig(config);
-
-             return this;
-         },
-
-         applyPrice: function(price) {
-             this.isExpensive = (price > 500);
-
-             return price;
-         },
-
-         applyOperatingSystem: function(operatingSystem) {
-             if (!(/^(iOS|Android|BlackBerry)$/i).test(operatingSystem)) {
-                 return 'Other';
-             }
-
-             return operatingSystem;
-         }
-    });
-
-    var iPhone = new SmartPhone({
-         hasTouchScreen: true,
-         operatingSystem: 'iOS'
-    });
-
-    iPhone.getPrice(); // 500;
-    iPhone.getOperatingSystem(); // 'iOS'
-    iPhone.getHasTouchScreen(); // true;
-    iPhone.hasTouchScreen(); // true
-
-    iPhone.isExpensive; // false;
-    iPhone.setPrice(600);
-    iPhone.getPrice(); // 600
-    iPhone.isExpensive; // true;
-
-    iPhone.setOperatingSystem('AlienOS');
-    iPhone.getOperatingSystem(); // 'Other'
-
-# Statics: #
-
-    Ext.define('Computer', {
-         statics: {
-             factory: function(brand) {
-                // 'this' in static methods refer to the class itself
-                 return new this(brand);
-             }
-         },
-
-         constructor: function() { ... }
-    });
-
-    var dellComputer = Computer.factory('Dell');
-
+ * 
+ * Handles class creation throughout the whole framework. Note that most of the time {@link Ext#define Ext.define} should
+ * be used instead, since it's a higher level wrapper that aliases to {@link Ext.ClassManager#create}
+ * to enable namespacing and dynamic dependency resolution.
+ * 
+ * # Basic syntax: #
+ * 
+ *     Ext.define(className, properties);
+ * 
+ * in which `properties` is an object represent a collection of properties that apply to the class. See
+ * {@link Ext.ClassManager#create} for more detailed instructions.
+ * 
+ *     Ext.define('Person', {
+ *          name: 'Unknown',
+ * 
+ *          constructor: function(name) {
+ *              if (name) {
+ *                  this.name = name;
+ *              }
+ * 
+ *              return this;
+ *          },
+ * 
+ *          eat: function(foodType) {
+ *              alert("I'm eating: " + foodType);
+ * 
+ *              return this;
+ *          }
+ *     });
+ * 
+ *     var aaron = new Person("Aaron");
+ *     aaron.eat("Sandwich"); // alert("I'm eating: Sandwich");
+ * 
+ * Ext.Class has a powerful set of extensible {@link Ext.Class#registerPreprocessor pre-processors} which takes care of
+ * everything related to class creation, including but not limited to inheritance, mixins, configuration, statics, etc.
+ * 
+ * # Inheritance: #
+ * 
+ *     Ext.define('Developer', {
+ *          extend: 'Person',
+ * 
+ *          constructor: function(name, isGeek) {
+ *              this.isGeek = isGeek;
+ * 
+ *              // Apply a method from the parent class' prototype
+ *              this.callParent([name]);
+ * 
+ *              return this;
+ * 
+ *          },
+ * 
+ *          code: function(language) {
+ *              alert("I'm coding in: " + language);
+ * 
+ *              this.eat("Bugs");
+ * 
+ *              return this;
+ *          }
+ *     });
+ * 
+ *     var jacky = new Developer("Jacky", true);
+ *     jacky.code("JavaScript"); // alert("I'm coding in: JavaScript");
+ *                               // alert("I'm eating: Bugs");
+ * 
+ * See {@link Ext.Base#callParent} for more details on calling superclass' methods
+ * 
+ * # Mixins: #
+ * 
+ *     Ext.define('CanPlayGuitar', {
+ *          playGuitar: function() {
+ *             alert("F#...G...D...A");
+ *          }
+ *     });
+ * 
+ *     Ext.define('CanComposeSongs', {
+ *          composeSongs: function() { ... }
+ *     });
+ * 
+ *     Ext.define('CanSing', {
+ *          sing: function() {
+ *              alert("I'm on the highway to hell...")
+ *          }
+ *     });
+ * 
+ *     Ext.define('Musician', {
+ *          extend: 'Person',
+ * 
+ *          mixins: {
+ *              canPlayGuitar: 'CanPlayGuitar',
+ *              canComposeSongs: 'CanComposeSongs',
+ *              canSing: 'CanSing'
+ *          }
+ *     })
+ * 
+ *     Ext.define('CoolPerson', {
+ *          extend: 'Person',
+ * 
+ *          mixins: {
+ *              canPlayGuitar: 'CanPlayGuitar',
+ *              canSing: 'CanSing'
+ *          },
+ * 
+ *          sing: function() {
+ *              alert("Ahem....");
+ * 
+ *              this.mixins.canSing.sing.call(this);
+ * 
+ *              alert("[Playing guitar at the same time...]");
+ * 
+ *              this.playGuitar();
+ *          }
+ *     });
+ * 
+ *     var me = new CoolPerson("Jacky");
+ * 
+ *     me.sing(); // alert("Ahem...");
+ *                // alert("I'm on the highway to hell...");
+ *                // alert("[Playing guitar at the same time...]");
+ *                // alert("F#...G...D...A");
+ * 
+ * # Config: #
+ * 
+ *     Ext.define('SmartPhone', {
+ *          config: {
+ *              hasTouchScreen: false,
+ *              operatingSystem: 'Other',
+ *              price: 500
+ *          },
+ * 
+ *          isExpensive: false,
+ * 
+ *          constructor: function(config) {
+ *              this.initConfig(config);
+ * 
+ *              return this;
+ *          },
+ * 
+ *          applyPrice: function(price) {
+ *              this.isExpensive = (price > 500);
+ * 
+ *              return price;
+ *          },
+ * 
+ *          applyOperatingSystem: function(operatingSystem) {
+ *              if (!(/^(iOS|Android|BlackBerry)$/i).test(operatingSystem)) {
+ *                  return 'Other';
+ *              }
+ * 
+ *              return operatingSystem;
+ *          }
+ *     });
+ * 
+ *     var iPhone = new SmartPhone({
+ *          hasTouchScreen: true,
+ *          operatingSystem: 'iOS'
+ *     });
+ * 
+ *     iPhone.getPrice(); // 500;
+ *     iPhone.getOperatingSystem(); // 'iOS'
+ *     iPhone.getHasTouchScreen(); // true;
+ *     iPhone.hasTouchScreen(); // true
+ * 
+ *     iPhone.isExpensive; // false;
+ *     iPhone.setPrice(600);
+ *     iPhone.getPrice(); // 600
+ *     iPhone.isExpensive; // true;
+ * 
+ *     iPhone.setOperatingSystem('AlienOS');
+ *     iPhone.getOperatingSystem(); // 'Other'
+ * 
+ * # Statics: #
+ * 
+ *     Ext.define('Computer', {
+ *          statics: {
+ *              factory: function(brand) {
+ *                 // 'this' in static methods refer to the class itself
+ *                  return new this(brand);
+ *              }
+ *          },
+ * 
+ *          constructor: function() { ... }
+ *     });
+ * 
+ *     var dellComputer = Computer.factory('Dell');
+ * 
  * Also see {@link Ext.Base#statics} and {@link Ext.Base#self} for more details on accessing
  * static properties within class methods
  *
  */
-
 (function() {
 
     var Class,
@@ -213,20 +211,24 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
      * Note that the creation process can be asynchronous depending on the pre-processors used.
      * @return {Ext.Base} The newly created class
      */
-    Ext.Class = Class = function(newClass, classData, createdFn) {
+    Ext.Class = Class = function(newClass, classData, onClassCreated) {
         if (typeof newClass !== 'function') {
-            createdFn = classData;
+            onClassCreated = classData;
             classData = newClass;
             newClass = function() {
                 return this.constructor.apply(this, arguments);
             };
         }
 
+        if (!classData) {
+            classData = {};
+        }
+
         var preprocessorStack = classData.preprocessors || Class.getDefaultPreprocessors(),
             registeredPreprocessors = Class.getPreprocessors(),
             index = 0,
             preprocessors = [],
-            preprocessor, preprocessors, staticPropertyName, process, i, j, ln, clsPrototype;
+            preprocessor, preprocessors, staticPropertyName, process, i, j, ln;
 
         for (i = 0, ln = baseStaticProperties.length; i < ln; i++) {
             staticPropertyName = baseStaticProperties[i];
@@ -242,7 +244,7 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
                 preprocessor = registeredPreprocessors[preprocessor];
 
                 if (!preprocessor.always) {
-                    if (classData[preprocessor.name] !== undefined) {
+                    if (classData.hasOwnProperty(preprocessor.name)) {
                         preprocessors.push(preprocessor.fn);
                     }
                 }
@@ -255,32 +257,32 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
             }
         }
 
+        classData.onClassCreated = onClassCreated;
+
+        classData.onBeforeClassCreated = function(cls, data) {
+            onClassCreated = data.onClassCreated;
+
+            delete data.onBeforeClassCreated;
+            delete data.onClassCreated;
+
+            cls.implement(data);
+
+            if (onClassCreated) {
+                onClassCreated.call(cls, cls);
+            }
+        };
+
         process = function(cls, data) {
             preprocessor = preprocessors[index++];
 
-            clsPrototype = cls.prototype;
-
-            if (preprocessor === undefined) {
-                if (data.config && clsPrototype.config) {
-                    Ext.Object.merge(clsPrototype.config, data.config);
-                    delete data.config;
-                }
-
-                cls.implement(data);
-
-                if (createdFn) {
-                    createdFn.call(cls);
-                }
-
-                if (clsPrototype.$onAfterClassExtended !== undefined &&
-                    clsPrototype.hasOwnProperty('$onAfterClassExtended') === false) {
-                    clsPrototype.$onAfterClassExtended.call(cls, cls, data);
-                }
-
+            if (!preprocessor) {
+                data.onBeforeClassCreated.apply(this, arguments);
                 return;
             }
 
-            preprocessor.call(this, cls, data, process);
+            if (preprocessor.call(this, cls, data, process) !== false) {
+                process.apply(this, arguments);
+            }
         };
 
         process.call(Class, newClass, classData);
@@ -414,7 +416,7 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
         }
     });
 
-    Class.registerPreprocessor('extend', function(cls, data, fn) {
+    Class.registerPreprocessor('extend', function(cls, data) {
         var extend = data.extend,
             base = Ext.Base,
             basePrototype = base.prototype,
@@ -432,9 +434,7 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
         parentPrototype = parent.prototype;
 
         prototype.prototype = parentPrototype;
-        cls.prototype = new prototype();
-
-        clsPrototype = cls.prototype;
+        clsPrototype = cls.prototype = new prototype();
 
         if (!('$class' in parent)) {
             for (i in basePrototype) {
@@ -453,11 +453,11 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
         // Statics inheritance
         parentStatics = parentPrototype.$inheritableStatics;
 
-        if (parentStatics !== undefined) {
+        if (parentStatics) {
             for (k = 0, ln = parentStatics.length; k < ln; k++) {
                 staticName = parentStatics[k];
 
-                if (!cls[staticName]) {
+                if (!cls.hasOwnProperty(staticName)) {
                     cls[staticName] = parent[staticName];
                 }
             }
@@ -465,29 +465,24 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
 
         // Merge the parent class' config object without referencing it
         if (parentPrototype.config) {
-            data.config = Ext.Object.merge({}, parentPrototype.config, data.config || {});
+            clsPrototype.config = Ext.Object.merge({}, parentPrototype.config);
+        }
+        else {
+            clsPrototype.config = {};
         }
 
-        if (clsPrototype.$onExtended !== undefined) {
+        if (clsPrototype.$onExtended) {
             clsPrototype.$onExtended.call(cls, cls, data);
         }
 
-        // onClassExtended callback
-        if (data.onClassExtended !== undefined) {
+        if (data.onClassExtended) {
             clsPrototype.$onExtended = data.onClassExtended;
             delete data.onClassExtended;
         }
 
-        if (data.onAfterClassExtended !== undefined) {
-            clsPrototype.$onAfterClassExtended = data.onAfterClassExtended;
-            delete data.onAfterClassExtended;
-        }
-
-        fn.apply(this, arguments);
-
     }, true);
 
-    Class.registerPreprocessor('statics', function(cls, data, fn) {
+    Class.registerPreprocessor('statics', function(cls, data) {
         var statics = data.statics,
             name;
 
@@ -498,12 +493,9 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
         }
 
         delete data.statics;
-
-        fn.apply(this, arguments);
-
     });
 
-    Class.registerPreprocessor('inheritableStatics', function(cls, data, fn) {
+    Class.registerPreprocessor('inheritableStatics', function(cls, data) {
         var statics = data.inheritableStatics,
             inheritableStatics,
             prototype = cls.prototype,
@@ -511,7 +503,7 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
 
         inheritableStatics = prototype.$inheritableStatics;
 
-        if (inheritableStatics === undefined) {
+        if (!inheritableStatics) {
             inheritableStatics = prototype.$inheritableStatics = [];
         }
 
@@ -523,27 +515,23 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
         }
 
         delete data.inheritableStatics;
-
-        fn.call(this, cls, data);
     });
 
-    Class.registerPreprocessor('mixins', function(cls, data, fn) {
+    Class.registerPreprocessor('mixins', function(cls, data) {
         cls.mixin(data.mixins);
 
         delete data.mixins;
-
-        fn.call(this, cls, data);
     });
 
-    Class.registerPreprocessor('config', function(cls, data, fn) {
+    Class.registerPreprocessor('config', function(cls, data) {
+        var prototype = cls.prototype;
+
         Ext.Object.each(data.config, function(name) {
             var cName = name.charAt(0).toUpperCase() + name.substr(1),
                 pName = name,
                 apply = 'apply' + cName,
                 setter = 'set' + cName,
-                getter = 'get' + cName,
-                reset = 'reset' + cName,
-                prototype = cls.prototype;
+                getter = 'get' + cName;
 
             if (!(apply in prototype) && !data.hasOwnProperty(apply)) {
                 data[apply] = function(val) {
@@ -570,7 +558,8 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
             }
         });
 
-        fn.call(this, cls, data);
+        Ext.Object.merge(prototype.config, data.config);
+        delete data.config;
     });
 
     Class.setDefaultPreprocessors(['extend', 'statics', 'inheritableStatics', 'mixins', 'config']);

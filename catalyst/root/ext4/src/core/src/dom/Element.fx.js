@@ -147,11 +147,14 @@ Ext.core.Element.addMethods(function(){
                 } else if (visMode == El.OFFSETS){
 
                     if (!visible){
-                        me.hideModeStyles = {
-                            position: me.getStyle('position'),
-                            top: me.getStyle('top'),
-                            left: me.getStyle('left')
-                        };
+                        // Remember position for restoring, if we are not already hidden by offsets.
+                        if (!me.hideModeStyles) {
+                            me.hideModeStyles = {
+                                position: me.getStyle('position'),
+                                top: me.getStyle('top'),
+                                left: me.getStyle('left')
+                            };
+                        }
                         me.applyStyles({position: 'absolute', top: '-10000px', left: '-10000px'});
                     }
 

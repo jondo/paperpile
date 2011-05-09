@@ -75,15 +75,15 @@ Ext.define('Ext.state.Provider', {
      * @return {Mixed} The decoded value
      */
     decodeValue : function(value){
-        /**
-         * a -> Array
-         * n -> Number
-         * d -> Date
-         * b -> Boolean
-         * s -> String
-         * o -> Object
-         * -> Empty (null)
-         */
+
+        // a -> Array
+        // n -> Number
+        // d -> Date
+        // b -> Boolean
+        // s -> String
+        // o -> Object
+        // -> Empty (null)
+
         var me = this,
             re = /^(a|n|d|b|s|o|e)\:(.*)$/,
             matches = re.exec(unescape(value)),

@@ -6,7 +6,8 @@
  * @class Ext.form.field.Base
  */
 
-$form-field-height: 21px !default;
+$form-field-height: 22px !default;
+$form-toolbar-field-height: 20px !default;
 
 //padding
 $form-field-padding: 1px 3px !default;
@@ -22,7 +23,7 @@ $form-field-color: #000 !default;
 $form-field-empty-color: gray !default;
 
 //border
-$form-field-border-color: adjust-color($neutral-color, $hue: 234.545deg, $saturation: -41.453%, $lightness: -14.706%) !default;
+$form-field-border-color: #B5B8C8 !default;
 $form-field-border-width: 1px !default;
 
 $form-field-focus-border-color: adjust-color($base-color, $hue: -4.322deg, $saturation: -1.065%, $lightness: -16.863%) !default;
@@ -61,6 +62,7 @@ $form-checkbox-size: 13px !default;
  */
 $form-radio-image: 'form/radio.gif' !default;
 
+
 /**
  * Error messages
  */
@@ -79,11 +81,12 @@ $form-error-msg-line-height: 16px !default;
  * Trigger Field
  */
 $form-trigger-width: 17px !default;
-$form-trigger-height: 21px !default;
+$form-trigger-height: $form-field-height !default;
+$form-toolbar-trigger-height: $form-toolbar-field-height !default;
 
 $form-trigger-border-bottom-width: 1px !default;
 $form-trigger-border-bottom-style: solid !default;
-$form-trigger-border-bottom-color: adjust-color($neutral-color, $hue: 234.545deg, $saturation: -41.453%, $lightness: -14.706%) !default;
+$form-trigger-border-bottom-color: $form-field-border-color !default;
 $form-trigger-border-bottom: $form-trigger-border-bottom-width $form-trigger-border-bottom-style $form-trigger-border-bottom-color !default;
 
 $form-trigger-border-bottom-color-over: adjust-color($base-color, $hue: -4.322deg, $saturation: -1.065%, $lightness: -16.863%) !default;

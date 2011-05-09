@@ -92,16 +92,28 @@ Ext.define('Ext.dd.DD', {
      * @param {int} iPageY the Y coordinate of the mousedown or drag event
      */
     alignElWithMouse: function(el, iPageX, iPageY) {
-        var oCoord = this.getTargetCoord(iPageX, iPageY);
-        var fly = el.dom ? el : Ext.fly(el, '_dd');
+        var oCoord = this.getTargetCoord(iPageX, iPageY),
+            fly = el.dom ? el : Ext.fly(el, '_dd'),
+            elSize = fly.getSize(),
+            EL = Ext.core.Element,
+            vpSize;
+
         if (!this.deltaSetXY) {
-            var aCoord = [oCoord.x, oCoord.y];
+            vpSize = this.cachedViewportSize = { width: EL.getDocumentWidth(), height: EL.getDocumentHeight() };
+            var aCoord = [
+                Math.max(0, Math.min(oCoord.x, vpSize.width - elSize.width)),
+                Math.max(0, Math.min(oCoord.y, vpSize.height - elSize.height))
+            ];
             fly.setXY(aCoord);
             var newLeft = fly.getLeft(true);
             var newTop  = fly.getTop(true);
             this.deltaSetXY = [newLeft - oCoord.x, newTop - oCoord.y];
         } else {
-            fly.setLeftTop(oCoord.x + this.deltaSetXY[0], oCoord.y + this.deltaSetXY[1]);
+            vpSize = this.cachedViewportSize;
+            fly.setLeftTop(
+                Math.max(0, Math.min(oCoord.x + this.deltaSetXY[0], vpSize.width - elSize.width)),
+                Math.max(0, Math.min(oCoord.y + this.deltaSetXY[1], vpSize.height - elSize.height))
+            );
         }
 
         this.cachePosition(oCoord.x, oCoord.y);

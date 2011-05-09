@@ -63,10 +63,10 @@ Ext.define('Ext.layout.container.AbstractContainer', {
     layout: function() {
         var me = this,
             owner = me.owner;
-        if (Ext.isNumber(owner.height) || owner.isViewPort) {
+        if (Ext.isNumber(owner.height) || owner.isViewport) {
             me.managedHeight = false;
         }
-        if (Ext.isNumber(owner.width) || owner.isViewPort) {
+        if (Ext.isNumber(owner.width) || owner.isViewport) {
             me.managedWidth = false;
         }
         me.callParent(arguments);

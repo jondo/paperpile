@@ -136,8 +136,12 @@ This process will be automated with Sencha Command, to be released and documente
 
 (function(Manager, Class, flexSetter, alias) {
 
-    var isNonBrowser = typeof window === 'undefined',
+    var
+        //<if nonBrowser>
+        isNonBrowser = typeof window === 'undefined',
         isNodeJS = isNonBrowser && (typeof require === 'function'),
+        isPhantomJS = (typeof phantom !== 'undefined' && phantom.fs),
+        //</if>
         dependencyProperties = ['extend', 'mixins', 'requires'],
         Loader;
 
@@ -196,6 +200,9 @@ This process will be automated with Sencha Command, to be released and documente
          * @private
          */
         numLoadedFiles: 0,
+
+        /** @private */
+        hasFileLoadError: false,
 
         /**
          * @private
@@ -363,10 +370,34 @@ This process will be automated with Sencha Command, to be released and documente
         getPath: function(className) {
             var path = '',
                 paths = this.config.paths,
+                prefix = this.getPrefix(className);
+
+            if (prefix.length > 0) {
+                if (prefix === className) {
+                    return paths[prefix];
+                }
+
+                path = paths[prefix];
+                className = className.substring(prefix.length + 1);
+            }
+
+            if (path.length > 0) {
+                path += '/';
+            }
+
+            return path.replace(/\/\.\//g, '/') + className.replace(/\./g, "/") + '.js';
+        },
+
+        /**
+         * @private
+         * @param {String} className
+         */
+        getPrefix: function(className) {
+            var paths = this.config.paths,
                 prefix, deepestPrefix = '';
 
             if (paths.hasOwnProperty(className)) {
-                return paths[className];
+                return className;
             }
 
             for (prefix in paths) {
@@ -377,21 +408,7 @@ This process will be automated with Sencha Command, to be released and documente
                 }
             }
 
-            if (deepestPrefix) {
-                className = className.substring(deepestPrefix.length + 1);
-
-                if (paths.hasOwnProperty(deepestPrefix)) {
-                    path = paths[deepestPrefix];
-                }
-            }
-
-            if (path.length > 0) {
-                path += '/';
-            }
-
-            path += className.replace(/\./g, "/") + '.js';
-
-            return path;
+            return deepestPrefix;
         },
 
         /**
@@ -464,7 +481,7 @@ This process will be automated with Sencha Command, to be released and documente
             script.type = 'text/javascript';
             script.src = url;
             script.onload = onLoadFn;
-            script.onerror = onError;
+            script.onerror = onErrorFn;
             script.onreadystatechange = function() {
                 if (this.readyState === 'loaded' || this.readyState === 'complete') {
                     onLoadFn();
@@ -500,6 +517,7 @@ This process will be automated with Sencha Command, to be released and documente
             var me = this,
                 noCacheUrl = url + (this.getConfig('disableCaching') ? ('?' + this.getConfig('disableCachingParam') + '=' + Ext.Date.now()) : ''),
                 fileName = url.split('/').pop(),
+                isCrossOriginRestricted = false,
                 xhr, status, onScriptError;
 
             scope = scope || this;
@@ -508,7 +526,7 @@ This process will be automated with Sencha Command, to be released and documente
 
             if (!synchronous) {
                 onScriptError = function() {
-                    onError.call(me, "Failed loading '" + url + "', please verify that the file exists", synchronous);
+                    onError.call(scope, "Failed loading '" + url + "', please verify that the file exists", synchronous);
                 };
 
                 if (!Ext.isReady && Ext.onDocumentReady) {
@@ -527,12 +545,34 @@ This process will be automated with Sencha Command, to be released and documente
                     xhr = new ActiveXObject('Microsoft.XMLHTTP');
                 }
 
-                xhr.open('GET', noCacheUrl, false);
-                xhr.send(null);
+                try {
+                    xhr.open('GET', noCacheUrl, false);
+                    xhr.send(null);
+                } catch (e) {
+                    isCrossOriginRestricted = true;
+                }
 
                 status = (xhr.status === 1223) ? 204 : xhr.status;
 
-                if (status >= 200 && status < 300) {
+                if (!isCrossOriginRestricted) {
+                    isCrossOriginRestricted = (status === 0);
+                }
+
+                if (isCrossOriginRestricted
+                //<if isNonBrowser>
+                && !isPhantomJS
+                //</if>
+                ) {
+                    onError.call(this, "Failed loading synchronously via XHR: '" + url + "'; It's likely that the file is either " +
+                                       "being loaded from a different domain or from the local file system whereby cross origin " +
+                                       "requests are not allowed due to security reasons. Use asynchronous loading with " +
+                                       "Ext.require instead.", synchronous);
+                }
+                else if (status >= 200 && status < 300
+                //<if isNonBrowser>
+                || isPhantomJS
+                //</if>
+                ) {
                     // Firebug friendly, file names are still shown even though they're eval'ed code
                     new Function(xhr.responseText + "\n//@ sourceURL=" + fileName)();
 
@@ -543,6 +583,9 @@ This process will be automated with Sencha Command, to be released and documente
                                        "verify that the file exists. " +
                                        "XHR status code: " + status, synchronous);
                 }
+
+                // Prevent potential IE memory leak
+                xhr = null;
             }
         },
 
@@ -638,7 +681,6 @@ This process will be automated with Sencha Command, to be released and documente
                 }
             }
 
-            //<debug error>
             // If the dynamic dependency feature is not being used, throw an error
             // if the dependencies are not defined
             if (!this.config.enabled) {
@@ -651,7 +693,6 @@ This process will be automated with Sencha Command, to be released and documente
                     });
                 }
             }
-            //</debug>
 
             if (classNames.length === 0) {
                 fn.call(scope);
@@ -712,12 +753,8 @@ This process will be automated with Sencha Command, to be released and documente
                     //</if>
                     this.loadScriptFile(
                         filePath,
-                        function() {
-                            this.onFileLoaded.call(this, className, filePath);
-                        },
-                        function() {
-                            this.onFileLoadError.call(this, className, filePath);
-                        },
+                        Ext.Function.pass(this.onFileLoaded, [className, filePath], this),
+                        Ext.Function.pass(this.onFileLoadError, [className, filePath]),
                         this,
                         this.syncModeEnabled
                     );
@@ -753,7 +790,7 @@ This process will be automated with Sencha Command, to be released and documente
             //</debug>
 
             //<debug>
-            if (!this.syncModeEnabled && this.numPendingFiles === 0 && this.isLoading) {
+            if (!this.syncModeEnabled && this.numPendingFiles === 0 && this.isLoading && !this.hasFileLoadError) {
                 var queue = this.queue,
                     requires,
                     i, ln, j, subLn, missingClasses = [], missingPaths = [];
@@ -772,7 +809,11 @@ This process will be automated with Sencha Command, to be released and documente
                     return;
                 }
 
-                for (i = 0, ln = missingClasses.length; i < ln; i++) {
+                missingClasses = Ext.Array.filter(missingClasses, function(item) {
+                    return !this.requiresMap.hasOwnProperty(item);
+                }, this);
+
+                for (i = 0,ln = missingClasses.length; i < ln; i++) {
                     missingPaths.push(this.classNameToFilePathMap[missingClasses[i]]);
                 }
 
@@ -792,14 +833,15 @@ This process will be automated with Sencha Command, to be released and documente
          */
         onFileLoadError: function(className, filePath, errorMessage, isSynchronous) {
             this.numPendingFiles--;
+            this.hasFileLoadError = true;
+
             //<debug error>
             Ext.Error.raise({
                 sourceClass: "Ext.Loader",
                 classToLoad: className,
                 loadPath: filePath,
                 loadingType: isSynchronous ? 'synchronous' : 'async',
-                msg: "Error attempting to load class '" + className + "' from path '" +
-                     filePath + "': " + errorMessage
+                msg: errorMessage
             });
             //</debug>
         },
@@ -846,6 +888,10 @@ This process will be automated with Sencha Command, to be released and documente
                 while (readyListeners.length) {
                     listener = readyListeners.shift();
                     listener.fn.call(listener.scope);
+
+                    if (this.isLoading) {
+                        return this;
+                    }
                 }
             }
 
@@ -925,7 +971,7 @@ This process will be automated with Sencha Command, to be released and documente
         Loader.onReady(fn, scope, true, options);
     };
 
-    Class.registerPreprocessor('loader', function(cls, data, fn) {
+    Class.registerPreprocessor('loader', function(cls, data, continueFn) {
         var me = this,
             dependencies = [],
             className = Manager.getName(cls),
@@ -984,8 +1030,7 @@ This process will be automated with Sencha Command, to be released and documente
         }
 
         if (dependencies.length === 0) {
-            Loader.historyPush(className);
-            fn.apply(this, arguments);
+//            Loader.historyPush(className);
             return;
         }
 
@@ -1033,8 +1078,6 @@ This process will be automated with Sencha Command, to be released and documente
         //</debug>
 
         Loader.require(dependencies, function() {
-            Loader.historyPush(className);
-
             for (i = 0, ln = dependencyProperties.length; i < ln; i++) {
                 propertyName = dependencyProperties[i];
 
@@ -1067,23 +1110,28 @@ This process will be automated with Sencha Command, to be released and documente
                 }
             }
 
-            fn.call(me, cls, data);
+            continueFn.call(me, cls, data);
         });
 
+        return false;
     }, true);
 
     Class.setDefaultPreprocessorPosition('loader', 'after', 'className');
 
-    Manager.registerPostprocessor('uses', function(name, cls, data, fn) {
-        var uses = Ext.Array.from(data.uses);
+    Manager.registerPostprocessor('uses', function(name, cls, data) {
+        var uses = Ext.Array.from(data.uses),
+            items = [],
+            i, ln, item;
 
-        uses = Ext.Array.filter(uses, function(use) {
-            return Ext.isString(use);
-        });
+        for (i = 0, ln = uses.length; i < ln; i++) {
+            item = uses[i];
 
-        Loader.addOptionalRequires(uses);
+            if (typeof item === 'string') {
+                items.push(item);
+            }
+        }
 
-        fn.call(this, name, cls, data);
+        Loader.addOptionalRequires(items);
     });
 
     Manager.setDefaultPostprocessorPosition('uses', 'last');

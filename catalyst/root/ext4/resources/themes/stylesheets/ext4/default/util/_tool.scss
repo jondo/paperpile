@@ -28,7 +28,7 @@
     .#{$prefix}panel-header-vertical,
     .#{$prefix}window-header-vertical {
         .#{$prefix}tool {
-                margin-top: 2px;
+                margin-bottom: 2px;
         }
     }
 
@@ -46,7 +46,8 @@
         }
     }
 
-    .#{$prefix}panel-collapsed {
+    .#{$prefix}panel-collapsed,
+    .#{$prefix}fieldset-collapsed {
         .#{$prefix}tool-toggle {
             background-position: 0 -75px;
         }

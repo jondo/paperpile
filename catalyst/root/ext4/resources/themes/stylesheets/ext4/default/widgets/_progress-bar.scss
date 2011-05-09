@@ -50,8 +50,10 @@
     @include extjs-progress-ui(
         'default',
         
-        $ui-border-color: $progress-border-color,
         $ui-background-color: $progress-background-color,
+        $ui-border-color: $progress-border-color,
+        
+        $ui-bar-background-color: $progress-bar-background-color,
 
         $ui-color-front: $progress-text-color-front,
         $ui-color-back: $progress-text-color-back
@@ -68,16 +70,18 @@
     
     $ui-border-color: null,
     $ui-background-color: null,
-    $ui-background-gradient: glossy,
+    
+    $ui-bar-background-color: null,
+    $ui-bar-background-gradient: glossy,
     
     $ui-color-front: null,
     $ui-color-back: null
 ){
     @if $ui-base-color != null {
-        @if $ui-border-color == null {     $ui-border-color: $ui-base-color; }
-        @if $ui-background-color == null { $ui-background-color: $ui-base-color; }
-        @if $ui-color-front == null {      $ui-color-front: lighten($ui-base-color, 60); }
-        @if $ui-color-back == null {       $ui-color-back: darken($ui-base-color, 60); }
+        @if $ui-border-color == null {         $ui-border-color: $ui-base-color; }
+        @if $ui-bar-background-color == null { $ui-bar-background-color: $ui-base-color; }
+        @if $ui-color-front == null {          $ui-color-front: lighten($ui-base-color, 60); }
+        @if $ui-color-back == null {           $ui-color-back: darken($ui-base-color, 60); }
     }
     
     .#{$prefix}progress-#{$ui-label} {
@@ -87,7 +91,7 @@
             @if $ui-border-color != null { border-right-color: $ui-border-color; }
             @if $ui-border-color != null { border-top-color: lighten($ui-border-color, 25); }
 
-            @if $ui-background-color != null { @include background-gradient($ui-background-color, $ui-background-gradient); }
+            @if $ui-bar-background-color != null { @include background-gradient($ui-bar-background-color, $ui-bar-background-gradient); }
         }
         
         .#{$prefix}progress-text {

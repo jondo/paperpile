@@ -8,7 +8,8 @@
  * with an inline RestProxy</p>
  * 
 <pre><code>
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: ['id', 'name', 'email'],
 
     proxy: {
@@ -138,14 +139,15 @@ Ext.define('Ext.data.proxy.Rest', {
      * so that additional parameters like the cache buster string are appended
      */
     buildUrl: function(request) {
-        var operation = request.operation,
+        var me        = this,
+            operation = request.operation,
             records   = operation.records || [],
             record    = records[0],
-            format    = this.format,
-            url       = request.url || this.url,
+            format    = me.format,
+            url       = me.getUrl(request),
             id        = record ? record.getId() : operation.id;
         
-        if (this.appendId && id) {
+        if (me.appendId && id) {
             if (!url.match(/\/$/)) {
                 url += '/';
             }
@@ -163,7 +165,7 @@ Ext.define('Ext.data.proxy.Rest', {
         
         request.url = url;
         
-        return this.callParent(arguments);
+        return me.callParent(arguments);
     }
 }, function() {
     Ext.apply(this.prototype, {

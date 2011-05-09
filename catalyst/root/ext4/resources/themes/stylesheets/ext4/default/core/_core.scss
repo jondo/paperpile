@@ -19,12 +19,24 @@ body {
     zoom: 1;
 }
 
+.#{$prefix}shim {
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: hidden;
+    @include opacity(0);
+}
+
 .#{$prefix}hide-display {
     display: none !important;
 }
 
 .#{$prefix}hide-visibility {
     visibility:hidden !important;
+}
+
+.#{$prefix}item-disabled {
+    @include opacity(0.4);
 }
 
 .#{$prefix}hidden,
@@ -44,11 +56,17 @@ body {
     position: relative;
 }
 
+@if $include-ie {
+    .#{$prefix}ie6 .#{$prefix}masked select,
+    .#{$prefix}ie6.#{$prefix}body-masked select {
+        visibility: hidden !important;
+    }
+}
 
 // Styles for the three schemes for showing shadows under an element: CSS3, IE blur transform, or 9 point framing with images.
 .#{$prefix}css-shadow {
     position: absolute;
-    background-color: $css-shadow-background-color;
+    @include border-radius($window-border-radius);
 }
 
 .#{$prefix}ie-shadow {

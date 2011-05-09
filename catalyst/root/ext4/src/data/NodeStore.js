@@ -115,7 +115,7 @@ Ext.define('Ext.data.NodeStore', {
             return;
         }
         
-        if (!parent.isVisible()) {
+        if (!me.isVisible(parent)) {
             return;
         }
 
@@ -175,8 +175,8 @@ Ext.define('Ext.data.NodeStore', {
     onNodeAppend: function(parent, node, index) {
         var me = this,
             refNode, sibling;
-            
-        if (node.isVisible()) {
+
+        if (me.isVisible(node)) {
             if (index === 0) {
                 refNode = parent;
             } else {
@@ -204,7 +204,7 @@ Ext.define('Ext.data.NodeStore', {
         var me = this,
             index = this.indexOf(refNode);
             
-        if (index != -1 && node.isVisible()) {
+        if (index != -1 && me.isVisible(node)) {
             me.insert(index, node);
             if (!node.isLeaf() && node.isExpanded()) {
                 if (node.isLoaded()) {
@@ -227,5 +227,21 @@ Ext.define('Ext.data.NodeStore', {
             }            
             me.remove(node);
         }
+    },
+    
+    isVisible: function(node) {
+        var parent = node.parentNode;
+        while (parent) {
+            if (parent === this.node && !this.rootVisible && parent.isExpanded()) {
+                return true;
+            }
+            
+            if (this.indexOf(parent) === -1 || !parent.isExpanded()) {
+                return false;
+            }
+            
+            parent = parent.parentNode;
+        }
+        return true;
     }
 });

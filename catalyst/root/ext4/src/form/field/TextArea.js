@@ -1,34 +1,32 @@
 /**
  * @class Ext.form.field.TextArea
  * @extends Ext.form.field.Text
- * 
- * This class creates a multiline text field, which can be used as a direct replacement for traditional
- * textarea fields. In addition, it supports automatically {@link #grow growing} the height of the textarea to
- * fit its content.
- * 
- * All of the configuration options from {@link Ext.form.Text} can be used on TextArea.
- * 
- * {@img Ext.form.TextArea/Ext.form.TextArea.png Ext.form.TextArea component}
- * 
- * Example usage:
- * 
- *     Ext.create('Ext.form.Panel', {
- *         title      : 'Sample TextArea',
- *         width      : 400,
- *         bodyPadding: 10,
- *         renderTo   : Ext.getBody(),
- *         items: [{
- *             xtype     : 'textareafield',
- *             grow      : true,
- *             name      : 'message',
- *             fieldLabel: 'Message',
- *             anchor    : '100%'
- *         }]
- *     }); 
- * 
- * Some other useful configuration options when using {@link #grow} are {@link #growMin} and {@link #growMax}. These
- * allow you to set the minimum and maximum grow heights for the textarea.
- * 
+
+This class creates a multiline text field, which can be used as a direct replacement for traditional 
+textarea fields. In addition, it supports automatically {@link #grow growing} the height of the textarea to 
+fit its content.
+
+All of the configuration options from {@link Ext.form.field.Text} can be used on TextArea.
+{@img Ext.form.TextArea/Ext.form.TextArea.png Ext.form.TextArea component}
+Example usage:
+
+    Ext.create('Ext.form.FormPanel', {
+        title      : 'Sample TextArea',
+        width      : 400,
+        bodyPadding: 10,
+        renderTo   : Ext.getBody(),
+        items: [{
+            xtype     : 'textareafield',
+            grow      : true,
+            name      : 'message',
+            fieldLabel: 'Message',
+            anchor    : '100%'
+        }]
+    }); 
+
+Some other useful configuration options when using {@link #grow} are {@link #growMin} and {@link #growMax}. These 
+allow you to set the minimum and maximum grow heights for the textarea.
+
  * @constructor
  * Creates a new TextArea
  * @param {Object} config Configuration options

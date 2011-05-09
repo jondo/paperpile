@@ -44,7 +44,7 @@ Ext.define('Paperpile.pub.Grid', {
     };
 
     var me = this;
-    this.view = new Ext.DataView({
+    this.view = new Ext.view.View({
       itemId: 'grid',
       autoheight: true,
       multiSelect: true,

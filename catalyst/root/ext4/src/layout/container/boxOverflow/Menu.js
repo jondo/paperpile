@@ -128,6 +128,11 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
 
         for (; i < len; i++) {
             item = items[i];
+
+            // Do not show a separator as a first item
+            if (!i && (item instanceof Ext.toolbar.Separator)) {
+                continue;
+            }
             if (prev && (needsSep(item, prev) || needsSep(prev, item))) {
                 menu.add('-');
             }
@@ -149,7 +154,7 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
      * @param {Ext.Component} component The component to create the config for
      * @param {Boolean} hideOnClick Passed through to the menu item
      */
-    createMenuConfig : function(component, hideOnClick){
+    createMenuConfig : function(component, hideOnClick) {
         var config = Ext.apply({}, component.initialConfig),
             group  = component.toggleGroup;
 
@@ -159,7 +164,8 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
 
         Ext.apply(config, {
             text       : component.overflowText || component.text,
-            hideOnClick: hideOnClick
+            hideOnClick: hideOnClick,
+            destroyMenu: false
         });
 
         if (group || component.enableToggle) {
@@ -187,20 +193,22 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
      * @param {Ext.Component} component The component to add
      */
     addComponentToMenu : function(menu, component) {
+        var me = this;
         if (component instanceof Ext.toolbar.Separator) {
             menu.add('-');
-
-        } else if (Ext.isFunction(component.isXType)) {
+        } else if (component.isComponent) {
             if (component.isXType('splitbutton')) {
-                menu.add(this.createMenuConfig(component, true));
+                menu.add(me.createMenuConfig(component, true));
 
             } else if (component.isXType('button')) {
-                menu.add(this.createMenuConfig(component, !component.menu));
+                menu.add(me.createMenuConfig(component, !component.menu));
 
             } else if (component.isXType('buttongroup')) {
                 component.items.each(function(item){
-                     this.addComponentToMenu(menu, item);
-                }, this);
+                     me.addComponentToMenu(menu, item);
+                });
+            } else {
+                menu.add(Ext.create(Ext.getClassName(component), me.createMenuConfig(component)));
             }
         }
     },
@@ -210,11 +218,13 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
      * Deletes the sub-menu of each item in the expander menu. Submenus are created for items such as
      * splitbuttons and buttongroups, where the Toolbar item cannot be represented by a single menu item
      */
-    clearMenu : function(){
+    clearMenu : function() {
         var menu = this.moreMenu;
         if (menu && menu.items) {
-            menu.items.each(function(item){
-                delete item.menu;
+            menu.items.each(function(item) {
+                if (item.menu) {
+                    delete item.menu;
+                }
             });
         }
     },
@@ -232,7 +242,7 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
             available = targetSize[sizeProp],
             boxes = calculations.boxes,
             i = 0,
-            len   = boxes.length,
+            len = boxes.length,
             box;
 
         if (!me.menuTrigger) {
@@ -246,7 +256,6 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
              * because the container is currently not large enough.
              */
             me.menu = Ext.create('Ext.menu.Menu', {
-                ownerCt : me.layout.container,
                 hideMode: 'offsets',
                 listeners: {
                     scope: me,
@@ -261,6 +270,7 @@ Ext.define('Ext.layout.container.boxOverflow.Menu', {
              * The expand button which triggers the overflow menu to be shown
              */
             me.menuTrigger = Ext.create('Ext.button.Button', {
+                ownerCt : me.layout.owner, // To enable the Menu to ascertain a valid zIndexManager owner in the same tree
                 iconCls : Ext.baseCSSPrefix + layout.owner.getXType() + '-more-icon',
                 ui      : layout.owner instanceof Ext.toolbar.Toolbar ? 'default-toolbar' : 'default',
                 menu    : me.menu,

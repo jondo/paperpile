@@ -1,46 +1,53 @@
 /**
  * @class Ext.form.field.HtmlEditor
  * @extends Ext.Component
+ *
  * Provides a lightweight HTML Editor component. Some toolbar features are not supported by Safari and will be
- * automatically hidden when needed.  These are noted in the config options where appropriate.
- * <br><br>The editor's toolbar buttons have tooltips defined in the {@link #buttonTips} property, but they are not
+ * automatically hidden when needed. These are noted in the config options where appropriate.
+ * 
+ * The editor's toolbar buttons have tooltips defined in the {@link #buttonTips} property, but they are not
  * enabled by default unless the global {@link Ext.tip.QuickTipManager} singleton is {@link Ext.tip.QuickTipManager#init initialized}.
- * <br><br>An Editor is a sensitive component that can't be used in all spots standard fields can be used. Putting an Editor within
+ * 
+ * An Editor is a sensitive component that can't be used in all spots standard fields can be used. Putting an Editor within
  * any element that has display set to 'none' can cause problems in Safari and Firefox due to their default iframe reloading bugs.
+ *
  * {@img Ext.form.HtmlEditor/Ext.form.HtmlEditor1.png Ext.form.HtmlEditor component}
- * <br><br>Example usage:
+ *
+ * ## Example usage
+ *
  * {@img Ext.form.HtmlEditor/Ext.form.HtmlEditor2.png Ext.form.HtmlEditor component}
- * <pre><code>
-    // Simple example rendered with default options:
-    Ext.tip.QuickTips.init();  // enable tooltips
-    Ext.create('Ext.form.HtmlEditor', {
-        width: 580,
-        height: 250,
-        renderTo: Ext.getBody()        
-    });
-    
-    // Passed via xtype into a container and with custom options:
-    Ext.tip.QuickTips.init();  // enable tooltips
-    new Ext.panel.Panel({
-        title: 'HTML Editor',
-        renderTo: Ext.getBody(),
-        width: 550,
-        height: 250,
-        frame: true,
-        layout: 'fit',
-        items: {
-            xtype: 'htmleditor',
-            enableColors: false,
-            enableAlignments: false
-        }
-    });
-</code></pre>
+ *
+ *     // Simple example rendered with default options:
+ *     Ext.tip.QuickTips.init();  // enable tooltips
+ *     Ext.create('Ext.form.HtmlEditor', {
+ *         width: 580,
+ *         height: 250,
+ *         renderTo: Ext.getBody()        
+ *     });
+ * 
+ * {@img Ext.form.HtmlEditor/Ext.form.HtmlEditor2.png Ext.form.HtmlEditor component}
+ * 
+ *     // Passed via xtype into a container and with custom options:
+ *     Ext.tip.QuickTips.init();  // enable tooltips
+ *     new Ext.panel.Panel({
+ *         title: 'HTML Editor',
+ *         renderTo: Ext.getBody(),
+ *         width: 550,
+ *         height: 250,
+ *         frame: true,
+ *         layout: 'fit',
+ *         items: {
+ *             xtype: 'htmleditor',
+ *             enableColors: false,
+ *             enableAlignments: false
+ *         }
+ *     });
+ *
  * @constructor
  * Create a new HtmlEditor
  * @param {Object} config
  * @xtype htmleditor
  */
-
 Ext.define('Ext.form.field.HtmlEditor', {
     extend:'Ext.Component',
     mixins: {
@@ -136,6 +143,8 @@ Ext.define('Ext.form.field.HtmlEditor', {
     iframePad:3,
     hideMode:'offsets',
 
+    maskOnDisable: true,
+    
     // private
     initComponent : function(){
         var me = this;
@@ -251,14 +260,14 @@ Ext.define('Ext.form.field.HtmlEditor', {
                     if (selectEl) {
                         selectEl.dom.disabled = true;
                     }
-                    Ext.Component.superclass.onDisable.apply(arguments);
+                    Ext.Component.superclass.onDisable.apply(this, arguments);
                 },
                 onEnable: function() {
                     var selectEl = this.selectEl;
                     if (selectEl) {
                         selectEl.dom.disabled = false;
                     }
-                    Ext.Component.superclass.onEnable.apply(arguments);
+                    Ext.Component.superclass.onEnable.apply(this, arguments);
                 }
             });
 
@@ -290,7 +299,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
                     itemId: 'forecolor',
                     cls: baseCSSPrefix + 'btn-icon',
                     iconCls: baseCSSPrefix + 'edit-forecolor',
-                    clickEvent:'mousedown',
+                    overflowText: editor.buttonTips.forecolor.title,
                     tooltip: tipsEnabled ? editor.buttonTips.forecolor || undef : undef,
                     tabIndex:-1,
                     menu : Ext.widget('menu', {
@@ -313,7 +322,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
                     itemId: 'backcolor',
                     cls: baseCSSPrefix + 'btn-icon',
                     iconCls: baseCSSPrefix + 'edit-backcolor',
-                    clickEvent:'mousedown',
+                    overflowText: editor.buttonTips.backcolor.title,
                     tooltip: tipsEnabled ? editor.buttonTips.backcolor || undef : undef,
                     tabIndex:-1,
                     menu : Ext.widget('menu', {
@@ -380,7 +389,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
         // build the toolbar
         toolbar = Ext.widget('toolbar', {
             renderTo: me.toolbarWrap,
-            padding: '0 0 0 2px',
+            enableOverflow: true,
             items: items
         });
 
@@ -563,7 +572,6 @@ Ext.define('Ext.form.field.HtmlEditor', {
         };
         Ext.TaskManager.start(task);
     },
-
 
     checkDesignMode: function() {
         var me = this,
@@ -800,18 +808,39 @@ Ext.define('Ext.form.field.HtmlEditor', {
                 buffer:100
             });
 
+            // These events need to be relayed from the inner document (where they stop
+            // bubbling) up to the outer document. This has to be done at the DOM level so
+            // the event reaches listeners on elements like the document body. The effected
+            // mechanisms that depend on this bubbling behavior are listed to the right
+            // of the event.
+            fn = me.onRelayedEvent;
+            Ext.EventManager.on(doc, {
+                mousedown: fn, // menu dismisal (MenuManager) and Window onMouseDown (toFront)
+                mousemove: fn, // window resize drag detection
+                mouseup: fn,   // window resize termination
+                click: fn,     // not sure, but just to be safe
+                dblclick: fn,  // not sure again
+                scope: me
+            });
+
             if (Ext.isGecko) {
                 Ext.EventManager.on(doc, 'keypress', me.applyCommand, me);
             }
-            if (Ext.isIE || Ext.isWebKit || Ext.isOpera) {
+            if (me.fixKeys) {
                 Ext.EventManager.on(doc, 'keydown', me.fixKeys, me);
             }
+
+            // We need to be sure we remove all our events from the iframe on unload or we're going to LEAK!
+            Ext.EventManager.on(window, 'unload', me.beforeDestroy, me);
             doc.editorInitialized = true;
+
             me.initialized = true;
             me.pushValue();
             me.setReadOnly(me.readOnly);
             me.fireEvent('initialize', me);
-        } catch(ex) {}
+        } catch(ex) {
+            // ignore (why?)
+        }
     },
 
     // private
@@ -834,10 +863,29 @@ Ext.define('Ext.form.field.HtmlEditor', {
                         }
                     }
                 }
-            } catch(e) {}
+            } catch(e) {
+                // ignore (why?)
+            }
             Ext.destroyMembers('tb', 'toolbarWrap', 'iframeEl', 'textareaEl');
         }
         me.callParent();
+    },
+
+    // private
+    onRelayedEvent: function (event) {
+        // relay event from the iframe's document to the document that owns the iframe...
+
+        var iframeEl = this.iframeEl,
+            iframeXY = iframeEl.getXY(),
+            eventXY = event.getXY();
+
+        // the event from the inner document has XY relative to that document's origin,
+        // so adjust it to use the origin of the iframe in the outer document:
+        event.xy = [iframeXY[0] + eventXY[0], iframeXY[1] + eventXY[1]];
+
+        event.injectEvent(iframeEl); // blame the iframe for the event...
+
+        event.xy = eventXY; // restore the original XY (just for safety)
     },
 
     // private
@@ -858,7 +906,9 @@ Ext.define('Ext.form.field.HtmlEditor', {
             try {
                 me.execCmd('useCSS', true);
                 me.execCmd('styleWithCSS', false);
-            } catch(e) {}
+            } catch(e) {
+                // ignore (why?)
+            }
         }
         me.fireEvent('activate', me);
     },
@@ -867,7 +917,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
     adjustFont: function(btn) {
         var adjust = btn.getItemId() === 'increasefontsize' ? 1 : -1,
             size = this.getDoc().queryCommandValue('FontSize') || '2',
-            isPxSize = size.indexOf('px') !== -1,
+            isPxSize = Ext.isString(size) && size.indexOf('px') !== -1,
             isSafari;
         size = parseInt(size, 10);
         if (isPxSize) {
@@ -906,7 +956,6 @@ Ext.define('Ext.form.field.HtmlEditor', {
     onEditorEvent: function(e) {
         this.updateToolbar();
     },
-
 
     /**
      * Protected method that will not generally be called directly. It triggers
@@ -1075,7 +1124,8 @@ Ext.define('Ext.form.field.HtmlEditor', {
                 }
             };
         }
-        else if (Ext.isOpera) {
+
+        if (Ext.isOpera) {
             return function(e){
                 var me = this;
                 if (e.getKey() === e.TAB) {
@@ -1086,7 +1136,8 @@ Ext.define('Ext.form.field.HtmlEditor', {
                 }
             };
         }
-        else if (Ext.isWebKit) {
+
+        if (Ext.isWebKit) {
             return function(e){
                 var me = this,
                     k = e.getKey();
@@ -1100,8 +1151,10 @@ Ext.define('Ext.form.field.HtmlEditor', {
                     me.execCmd('InsertHtml','<br /><br />');
                     me.deferFocus();
                 }
-             };
+            };
         }
+
+        return null; // not needed, so null
     }(),
 
     /**

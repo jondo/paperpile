@@ -45,6 +45,6 @@ Ext.define('Sample.Person', {
     },
 
     getAverageIQ: function() {
-        return this.statics().averageIQ;
+        return this.self.averageIQ;
     }
 });

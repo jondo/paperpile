@@ -38,19 +38,22 @@ Ext.define('Ext.Layer', {
 
     extend: 'Ext.core.Element',
 
-    constructor: function(config, existingEl){
+    constructor: function(config, existingEl) {
         config = config || {};
         var me = this,
             dh = Ext.core.DomHelper,
             cp = config.parentEl,
             pel = cp ? Ext.getDom(cp) : document.body,
-            hm = config.hideMode;
+        hm = config.hideMode;
 
         if (existingEl) {
             me.dom = Ext.getDom(existingEl);
         }
         if (!me.dom) {
-            me.dom = dh.append(pel, config.dh || {tag: 'div', cls: Ext.baseCSSPrefix + 'layer'});
+            me.dom = dh.append(pel, config.dh || {
+                tag: 'div',
+                cls: Ext.baseCSSPrefix + 'layer'
+            });
         } else {
             me.addCls(Ext.baseCSSPrefix + 'layer');
             if (!me.dom.parentNode) {
@@ -58,7 +61,7 @@ Ext.define('Ext.Layer', {
             }
         }
 
-        if(config.cls){
+        if (config.cls) {
             me.addCls(config.cls);
         }
         me.constrain = config.constrain !== false;
@@ -77,7 +80,7 @@ Ext.define('Ext.Layer', {
             me.setVisibilityMode(Ext.core.Element.VISIBILITY);
         }
 
-        if (config.id){
+        if (config.id) {
             me.id = me.dom.id = config.id;
         } else {
             me.id = Ext.id(me.dom);
@@ -86,8 +89,8 @@ Ext.define('Ext.Layer', {
         if (config.shadow) {
             me.shadowOffset = config.shadowOffset || 4;
             me.shadow = Ext.create('Ext.Shadow', {
-                offset : me.shadowOffset,
-                mode : config.shadow
+                offset: me.shadowOffset,
+                mode: config.shadow
             });
             me.disableShadow();
         } else {
@@ -101,14 +104,13 @@ Ext.define('Ext.Layer', {
         }
     },
 
-    getZIndex : function() {
+    getZIndex: function() {
         return parseInt((this.getShim() || this).getStyle('z-index'), 10);
     },
 
-    getShim : function() {
+    getShim: function() {
         var me = this,
-            shim,
-            pn;
+            shim, pn;
 
         if (!me.useShim) {
             return null;
@@ -118,22 +120,18 @@ Ext.define('Ext.Layer', {
             if (!shim) {
                 shim = me.createShim();
                 shim.enableDisplayMode('block');
-                shim.setStyle({
-                    display: 'none',
-                    visibility: 'visible'
-                });
+                shim.hide();
             }
             pn = me.dom.parentNode;
             if (shim.dom.parentNode != pn) {
                 pn.insertBefore(shim.dom, me.dom);
             }
-            shim.setStyle('z-index', me.getZIndex()-2);
             me.shim = shim;
         }
         return me.shim;
     },
 
-    hideShim : function() {
+    hideShim: function() {
         if (this.shim) {
             this.shim.setDisplayed(false);
             this.self.shims.push(this.shim);
@@ -141,7 +139,7 @@ Ext.define('Ext.Layer', {
         }
     },
 
-    disableShadow : function() {
+    disableShadow: function() {
         if (this.shadow) {
             this.shadowDisabled = true;
             this.shadow.hide();
@@ -150,7 +148,7 @@ Ext.define('Ext.Layer', {
         }
     },
 
-    enableShadow : function(show){
+    enableShadow: function(show) {
         if (this.shadow) {
             this.shadowDisabled = false;
             this.shadowOffset = this.lastShadowOffset;
@@ -169,19 +167,18 @@ Ext.define('Ext.Layer', {
      * so code size was sacrificed for efficiency (e.g. no getBox/setBox, no XY calls)</p>
      * @param {Boolean} doShow Pass true to ensure that the shadow is shown.
      */
-    sync : function(doShow) {
+    sync: function(doShow) {
         var me = this,
             shadow = me.shadow,
-            shadowAdj,
-            shimStyle,
-            shadowSize;
+            shadowPos, shimStyle, shadowSize;
 
         if (!this.updating && this.isVisible() && (shadow || this.useShim)) {
             var shim = this.getShim(),
                 l = this.getLeft(true),
                 t = this.getTop(true),
                 w = this.getWidth(),
-                h = this.getHeight();
+                h = this.getHeight(),
+                shimIndex;
 
             if (shadow && !this.shadowDisabled) {
                 if (doShow && !shadow.isVisible()) {
@@ -190,22 +187,33 @@ Ext.define('Ext.Layer', {
                     shadow.realign(l, t, w, h);
                 }
                 if (shim) {
-                    if (doShow) {
-                       shim.show();
+                    // TODO: Determine how the shims zIndex is above the layer zIndex at this point
+                    shimIndex = shim.getStyle('z-index');
+                    if (shimIndex > me.zindex) {
+                        me.shim.setStyle('z-index', me.zindex - 2);
                     }
+                    shim.show();
                     // fit the shim behind the shadow, so it is shimmed too
-                    shadowAdj = shadow.el.getXY();
-                    shimStyle = shim.dom.style;
-                    shadowSize = shadow.el.getSize();
-                    shimStyle.left = (shadowAdj[0]) + 'px';
-                    shimStyle.top = (shadowAdj[1]) + 'px';
-                    shimStyle.width = (shadowSize.width) + 'px';
-                    shimStyle.height = (shadowSize.height) + 'px';
+                    if (shadow.isVisible()) {
+                        shadowPos = shadow.el.getXY();
+                        shimStyle = shim.dom.style;
+                        shadowSize = shadow.el.getSize();
+                        shimStyle.left = (shadowPos[0]) + 'px';
+                        shimStyle.top = (shadowPos[1]) + 'px';
+                        shimStyle.width = (shadowSize.width) + 'px';
+                        shimStyle.height = (shadowSize.height) + 'px';
+                    } else {
+                        shim.setSize(w, h);
+                        shim.setLeftTop(l, t);
+                    }
                 }
             } else if (shim) {
-                if (doShow) {
-                   shim.show();
+                // TODO: Determine how the shims zIndex is above the layer zIndex at this point
+                shimIndex = shim.getStyle('z-index');
+                if (shimIndex > me.zindex) {
+                    me.shim.setStyle('z-index', me.zindex - 2);
                 }
+                shim.show();
                 shim.setSize(w, h);
                 shim.setLeftTop(l, t);
             }
@@ -213,24 +221,24 @@ Ext.define('Ext.Layer', {
         return this;
     },
 
-    remove : function() {
+    remove: function() {
         this.hideUnders();
         this.callParent();
     },
 
     // private
-    beginUpdate : function() {
+    beginUpdate: function() {
         this.updating = true;
     },
 
     // private
-    endUpdate : function() {
+    endUpdate: function() {
         this.updating = false;
         this.sync(true);
     },
 
     // private
-    hideUnders : function() {
+    hideUnders: function() {
         if (this.shadow) {
             this.shadow.hide();
         }
@@ -238,18 +246,18 @@ Ext.define('Ext.Layer', {
     },
 
     // private
-    constrainXY : function(){
+    constrainXY: function() {
         if (this.constrain) {
             var vw = Ext.core.Element.getViewWidth(),
                 vh = Ext.core.Element.getViewHeight(),
                 s = Ext.getDoc().getScroll(),
                 xy = this.getXY(),
-                x = xy[0], y = xy[1],
+                x = xy[0],
+                y = xy[1],
                 so = this.shadowOffset,
                 w = this.dom.offsetWidth + so,
                 h = this.dom.offsetHeight + so,
                 moved = false; // only move it if it needs it
-
             // first validate right/bottom
             if ((x + w) > vw + s.left) {
                 x = vw - w - so;
@@ -276,12 +284,12 @@ Ext.define('Ext.Layer', {
         return this;
     },
 
-    getConstrainOffset : function(){
+    getConstrainOffset: function() {
         return this.shadowOffset;
     },
 
     // overridden Element method
-    setVisible : function(visible, animate, duration, callback, easing){
+    setVisible: function(visible, animate, duration, callback, easing) {
         var me = this,
             cb;
 
@@ -307,41 +315,41 @@ Ext.define('Ext.Layer', {
     },
 
     // private
-    beforeFx : function() {
+    beforeFx: function() {
         this.beforeAction();
         return this.callParent(arguments);
     },
 
     // private
-    afterFx : function() {
+    afterFx: function() {
         this.callParent(arguments);
         this.sync(this.isVisible());
     },
 
     // private
-    beforeAction : function(){
+    beforeAction: function() {
         if (!this.updating && this.shadow) {
             this.shadow.hide();
         }
     },
 
     // overridden Element method
-    setLeft : function(left){
+    setLeft: function(left) {
         this.callParent(arguments);
         return this.sync();
     },
 
-    setTop : function(top){
+    setTop: function(top) {
         this.callParent(arguments);
         return this.sync();
     },
 
-    setLeftTop : function(left, top){
+    setLeftTop: function(left, top) {
         this.callParent(arguments);
         return this.sync();
     },
 
-    setXY : function(xy, animate, duration, callback, easing){
+    setXY: function(xy, animate, duration, callback, easing) {
 
         // Callback will restore shadow state and call the passed callback
         callback = this.createCB(callback);
@@ -356,11 +364,11 @@ Ext.define('Ext.Layer', {
     },
 
     // private
-    createCB : function(callback) {
+    createCB: function(callback) {
         var me = this,
             showShadow = me.shadow && me.shadow.isVisible();
 
-        return function(){
+        return function() {
             me.constrainXY();
             me.sync(showShadow);
             if (callback) {
@@ -370,19 +378,19 @@ Ext.define('Ext.Layer', {
     },
 
     // overridden Element method
-    setX : function(x, animate, duration, callback, easing){
+    setX: function(x, animate, duration, callback, easing) {
         this.setXY([x, this.getY()], animate, duration, callback, easing);
         return this;
     },
 
     // overridden Element method
-    setY : function(y, animate, duration, callback, easing){
+    setY: function(y, animate, duration, callback, easing) {
         this.setXY([this.getX(), y], animate, duration, callback, easing);
         return this;
     },
 
     // overridden Element method
-    setSize : function(w, h, animate, duration, callback, easing){
+    setSize: function(w, h, animate, duration, callback, easing) {
         // Callback will restore shadow state and call the passed callback
         callback = this.createCB(callback);
 
@@ -395,7 +403,7 @@ Ext.define('Ext.Layer', {
     },
 
     // overridden Element method
-    setWidth : function(w, animate, duration, callback, easing){
+    setWidth: function(w, animate, duration, callback, easing) {
         // Callback will restore shadow state and call the passed callback
         callback = this.createCB(callback);
 
@@ -408,7 +416,7 @@ Ext.define('Ext.Layer', {
     },
 
     // overridden Element method
-    setHeight : function(h, animate, duration, callback, easing){
+    setHeight: function(h, animate, duration, callback, easing) {
         // Callback will restore shadow state and call the passed callback
         callback = this.createCB(callback);
 
@@ -421,7 +429,7 @@ Ext.define('Ext.Layer', {
     },
 
     // overridden Element method
-    setBounds : function(x, y, width, height, animate, duration, callback, easing){
+    setBounds: function(x, y, width, height, animate, duration, callback, easing) {
         // Callback will restore shadow state and call the passed callback
         callback = this.createCB(callback);
 
@@ -444,9 +452,9 @@ Ext.define('Ext.Layer', {
      * @param {Number} zindex The new z-index to set
      * @return {this} The Layer
      */
-    setZIndex : function(zindex){
+    setZIndex: function(zindex) {
         this.zindex = zindex;
-        if (this.shim) {
+        if (this.getShim()) {
             this.shim.setStyle('z-index', zindex++);
         }
         if (this.shadow) {

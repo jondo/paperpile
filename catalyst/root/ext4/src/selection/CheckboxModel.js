@@ -83,8 +83,10 @@ Ext.define('Ext.selection.CheckboxModel', {
             e.stopEvent();
             var isChecked = header.el.hasCls(Ext.baseCSSPrefix + 'grid-hd-checker-on');
             if (isChecked) {
+                // We have to supress the event or it will scrollTo the change
                 this.deselectAll(true);
             } else {
+                // We have to supress the event or it will scrollTo the change
                 this.selectAll(true);
             }
         }
@@ -102,15 +104,21 @@ Ext.define('Ext.selection.CheckboxModel', {
             sortable: false,
             fixed: true,
             hideable: false,
-            draggable: false,
             menuDisabled: true,
             dataIndex: '',
             cls: Ext.baseCSSPrefix + 'column-header-checkbox ',
-            renderer : function(v, p, record) {
-                p.tdCls = Ext.baseCSSPrefix + 'grid-cell-special';
-                return '<div class="' + Ext.baseCSSPrefix + 'grid-row-checker">&#160;</div>';
-            }
+            renderer: Ext.Function.bind(this.renderer, this)
         };
+    },
+
+    /**
+     * Generates the HTML to be rendered in the injected checkbox column for each row.
+     * Creates the standard checkbox markup by default; can be overridden to provide custom rendering.
+     * See {@link Ext.grid.column.Column#renderer} for description of allowed parameters.
+     */
+    renderer: function(value, metaData, record, rowIndex, colIndex, store, view) {
+        metaData.tdCls = Ext.baseCSSPrefix + 'grid-cell-special';
+        return '<div class="' + Ext.baseCSSPrefix + 'grid-row-checker">&#160;</div>';
     },
 
     // override

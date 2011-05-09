@@ -7,34 +7,48 @@
  * `<table>`, GridPanel makes it easy to fetch, sort and filter large amounts of data.
  * 
  * Grids are composed of 2 main pieces - a {@link Ext.data.Store Store} full of data and a set of columns to render.
- * Here's the simplest way to set up a Grid:
- * 
+ *
+ * {@img Ext.grid.Panel/Ext.grid.Panel1.png Ext.grid.Panel component}
+ *
+ * ## Basic GridPanel
+ *
+ *     Ext.create('Ext.data.Store', {
+ *         storeId:'simpsonsStore',
+ *         fields:['name', 'email', 'phone'],
+ *         data:{'items':[
+ *             {"name":"Lisa", "email":"lisa@simpsons.com", "phone":"555-111-1224"},
+ *             {"name":"Bart", "email":"bart@simpsons.com", "phone":"555--222-1234"},
+ *             {"name":"Homer", "email":"home@simpsons.com", "phone":"555-222-1244"},                        
+ *             {"name":"Marge", "email":"marge@simpsons.com", "phone":"555-222-1254"}            
+ *         ]},
+ *         proxy: {
+ *             type: 'memory',
+ *             reader: {
+ *                 type: 'json',
+ *                 root: 'items'
+ *             }
+ *         }
+ *     });
+ *     
  *     Ext.create('Ext.grid.Panel', {
- *         title: 'Users',
- *         store: {
- *             fields: ['name', 'email', 'phone'],
- *             proxy: {
- *                 type: 'ajax',
- *                 url : '/users.json'
- *             },
- *             autoLoad: true
- *         },
+ *         title: 'Simpsons',
+ *         store: Ext.data.StoreManager.lookup('simpsonsStore'),
  *         columns: [
  *             {header: 'Name',  dataIndex: 'name'},
- *             {header: 'Email', dataIndex: 'email'},
+ *             {header: 'Email', dataIndex: 'email', flex:1},
  *             {header: 'Phone', dataIndex: 'phone'}
  *         ],
  *         height: 200,
- *         width: 500,
+ *         width: 400,
  *         renderTo: Ext.getBody()
  *     });
  * 
- * The code above produces a simple grid with three columns. We specified a Store which will load its data over AJAX from
- * the url '/users.json'. In most apps we would be placing the grid inside another container and wouldn't need to use the
+ * The code above produces a simple grid with three columns. We specified a Store which will load JSON data inline. 
+ * In most apps we would be placing the grid inside another container and wouldn't need to use the
  * {@link #height}, {@link #width} and {@link #renderTo} configurations but they are included here to make it easy to get
  * up and running.
  * 
- * The grid we created above will contain a header bar with a title ('Users'), a row of column headers directly underneath
+ * The grid we created above will contain a header bar with a title ('Simpsons'), a row of column headers directly underneath
  * and finally the grid rows under the headers.
  * 
  * ## Configuring columns
@@ -100,11 +114,13 @@
  *         store: ...
  *     });
  * 
- * Specifying the {@link Ext.selection.CellModel cellmodel} changes a couple of things. Firstly, clicking on a cell now
+ * Specifying the `cellmodel` changes a couple of things. Firstly, clicking on a cell now
  * selects just that cell (using a {@link Ext.selection.RowModel rowmodel} will select the entire row), and secondly the
  * keyboard navigation will walk from cell to cell instead of row to row. Cell-based selection models are usually used in
  * conjunction with editing.
  * 
+ * {@img Ext.grid.Panel/Ext.grid.Panel2.png Ext.grid.Panel cell editing}
+ *
  * ## Editing
  * 
  * Grid has built-in support for in-line editing. There are two chief editing modes - cell editing and row editing. Cell
@@ -112,19 +128,14 @@
  * on both the name and the email columns:
  * 
  *     Ext.create('Ext.grid.Panel', {
- *         store: myStore,
+ *         title: 'Simpsons',
+ *         store: Ext.data.StoreManager.lookup('simpsonsStore'),
  *         columns: [
- *             {
- *                 header: 'Name',
- *                 dataIndex: 'name',
- *                 field: 'textfield'
- *             },
- *             {
- *                 header: 'Email',
- *                 dataIndex: 'email',
- *                 field: {
- *                     xtype: 'textfield',
- *                     allowBlank: false
+ *             {header: 'Name',  dataIndex: 'name', field: 'textfield'},
+ *             {header: 'Email', dataIndex: 'email', flex:1, 
+ *                 field:{
+ *                     xtype:'textfield',
+ *                     allowBlank:false
  *                 }
  *             },
  *             {header: 'Phone', dataIndex: 'phone'}
@@ -134,7 +145,10 @@
  *             Ext.create('Ext.grid.plugin.CellEditing', {
  *                 clicksToEdit: 1
  *             })
- *         ]
+ *         ],
+ *         height: 200,
+ *         width: 400,
+ *         renderTo: Ext.getBody()
  *     });
  * 
  * This requires a little explanation. We're passing in {@link #store store} and {@link #columns columns} as normal, but 
@@ -146,6 +160,8 @@
  * instance of the {@link Ext.grid.plugin.CellEditing CellEditing plugin}, which we configured to activate each editor after a
  * single click.
  * 
+ * {@img Ext.grid.Panel/Ext.grid.Panel3.png Ext.grid.Panel row editing}
+ *
  * ## Row Editing
  * 
  * The other type of editing is row-based editing, using the RowEditor component. This enables you to edit an entire row
@@ -153,21 +169,14 @@
  * do is change the plugin type to {@link Ext.grid.plugin.RowEditing}, and set the selType to 'rowmodel':
  * 
  *     Ext.create('Ext.grid.Panel', {
- *         store: myStore,
+ *         title: 'Simpsons',
+ *         store: Ext.data.StoreManager.lookup('simpsonsStore'),
  *         columns: [
- *             {
- *                 header: 'Name',
- *                 dataIndex: 'name',
- *                 field: {
- *                     xtype: 'textfield'
- *                 }
- *             },
- *             {
- *                 header: 'Email',
- *                 dataIndex: 'email',
- *                 field: {
- *                     xtype: 'textfield',
- *                     allowBlank: false
+ *             {header: 'Name',  dataIndex: 'name', field: 'textfield'},
+ *             {header: 'Email', dataIndex: 'email', flex:1, 
+ *                 field:{
+ *                     xtype:'textfield',
+ *                     allowBlank:false
  *                 }
  *             },
  *             {header: 'Phone', dataIndex: 'phone'}
@@ -177,7 +186,10 @@
  *             Ext.create('Ext.grid.plugin.RowEditing', {
  *                 clicksToEdit: 1
  *             })
- *         ]
+ *         ],
+ *         height: 200,
+ *         width: 400,
+ *         renderTo: Ext.getBody()
  *     });
  * 
  * Again we passed some configuration to our {@link Ext.grid.plugin.RowEditing} plugin, and now when we click each row a row
@@ -194,8 +206,8 @@
  *             sorters: ['name', 'phone']
  *         },
  *         columns: [
- *             {header: 'Name',  dataIndex: 'name'},
- *             {header: 'Email', dataIndex: 'email'}
+ *             {text: 'Name',  dataIndex: 'name'},
+ *             {text: 'Email', dataIndex: 'email'}
  *         ]
  *     });
  * 
@@ -207,33 +219,113 @@
  *         {property: 'email', direction: 'DESC'},
  *     ]);
  * 
- * 
+ * {@img Ext.grid.Panel/Ext.grid.Panel4.png Ext.grid.Panel grouping}
  * 
  * ## Grouping
  * 
  * Grid supports the grouping of rows by any field. For example if we had a set of employee records, we might want to 
  * group by the department that each employee works in. Here's how we might set that up:
  * 
- *     Ext.create('Ext.grid.Panel', {
- *         store: {
- *             groupField: 'department',
- *             fields: ['name', 'salary', 'department'],
- *             proxy: {
- *                 type: 'ajax',
- *                 url : 'employees.json'
+ *     var store = Ext.create('Ext.data.Store', {
+ *         storeId:'employeeStore',
+ *         fields:['name', 'senority', 'department'],
+ *         groupField: 'department',
+ *         data:{'employees':[
+ *             {"name":"Michael Scott", "senority":7, "department":"Manangement"},
+ *             {"name":"Dwight Schrute", "senority":2, "department":"Sales"},
+ *             {"name":"Jim Halpert", "senority":3, "department":"Sales"},
+ *             {"name":"Kevin Malone", "senority":4, "department":"Accounting"},
+ *             {"name":"Angela Martin", "senority":5, "department":"Accounting"}                        
+ *         ]},
+ *         proxy: {
+ *             type: 'memory',
+ *             reader: {
+ *                 type: 'json',
+ *                 root: 'employees'
  *             }
- *         },
- *         columns: ['name', 'salary'],
- *         features: 'grouping'
+ *         }
+ *     });
+ *     
+ *     Ext.create('Ext.grid.Panel', {
+ *         title: 'Employees',
+ *         store: Ext.data.StoreManager.lookup('employeeStore'),
+ *         columns: [
+ *             {header: 'Name',  dataIndex: 'name'},
+ *             {header: 'Senority', dataIndex: 'senority'}
+ *         ],        
+ *         features: [{ftype:'grouping'}],
+ *         width: 200,
+ *         height: 275,
+ *         renderTo: Ext.getBody()
  *     });
  * 
- * 
  * ## Infinite Scrolling
- * 
- * 
+ *
+ * Grid supports infinite scrolling as an alternative to using a paging toolbar. Your users can scroll through thousands
+ * of records without the performance penalties of renderering all the records on screen at once. The grid should be bound
+ * to a store with a pageSize specified.
+ *
+ *     var grid = Ext.create('Ext.grid.Panel', {
+ *         // Use a PagingGridScroller (this is interchangeable with a PagingToolbar)
+ *         verticalScrollerType: 'paginggridscroller',
+ *         // do not reset the scrollbar when the view refreshs
+ *         invalidateScrollerOnRefresh: false,
+ *         // infinite scrolling does not support selection
+ *         disableSelection: true,
+ *         // ...
+ *     });
  * 
  * ## Paging
+ *
+ * Grid supports paging through large sets of data via a PagingToolbar or PagingGridScroller (see the Infinite Scrolling section above).
+ * To leverage paging via a toolbar or scroller, you need to set a pageSize configuration on the Store.
+ *
+ *     var itemsPerPage = 2;   // set the number of items you want per page
+ *     
+ *     var store = Ext.create('Ext.data.Store', {
+ *         id:'simpsonsStore',
+ *         autoLoad: false,
+ *         fields:['name', 'email', 'phone'],
+ *         pageSize: itemsPerPage, // items per page
+ *         proxy: {
+ *             type: 'ajax',
+ *             url: 'pagingstore.js',  // url that will load data with respect to start and limit params
+ *             reader: {
+ *                 type: 'json',
+ *                 root: 'items',
+ *                 totalProperty: 'total'
+ *             }
+ *         }
+ *     });
+ *     
+ *     // specify segment of data you want to load using params
+ *     store.load({
+ *         params:{
+ *             start:0,    
+ *             limit: itemsPerPage
+ *         }
+ *     });
+ *     
+ *     Ext.create('Ext.grid.Panel', {
+ *         title: 'Simpsons',
+ *         store: store,
+ *         columns: [
+ *             {header: 'Name',  dataIndex: 'name'},
+ *             {header: 'Email', dataIndex: 'email', flex:1},
+ *             {header: 'Phone', dataIndex: 'phone'}
+ *         ],
+ *         width: 400,
+ *         height: 125,
+ *         dockedItems: [{
+ *             xtype: 'pagingtoolbar',
+ *             store: store,   // same store GridPanel is using
+ *             dock: 'bottom',
+ *             displayInfo: true
+ *         }],
+ *         renderTo: Ext.getBody()
+ *     }); 
  * 
+ * {@img Ext.grid.Panel/Ext.grid.Panel5.png Ext.grid.Panel grouping}
  * 
  * @docauthor Ed Spencer
  */
@@ -259,8 +351,16 @@ Ext.define('Ext.grid.Panel', {
         var me = this;
 
         if (me.columnLines) {
-            me.cls = (me.cls || '') + ' ' + Ext.baseCSSPrefix + 'grid-with-col-lines';
+            me.setColumnLines(me.columnLines);
         }
+        
         me.callParent();
+    },
+    
+    setColumnLines: function(show) {
+        var me = this,
+            method = (show) ? 'addClsWithUI' : 'removeClsWithUI';
+        
+        me[method]('with-col-lines')
     }
 });

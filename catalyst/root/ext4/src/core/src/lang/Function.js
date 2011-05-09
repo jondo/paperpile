@@ -311,7 +311,7 @@ sayGoodbye('Fred'); // both alerts show
                     timerId = null;
                 }
                 timerId = setTimeout(function(){
-                    fn.apply(me || scope, args || arguments);
+                    fn.apply(scope || me, args || arguments);
                 }, buffer);
             };
         }();

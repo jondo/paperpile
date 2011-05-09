@@ -1,6 +1,12 @@
 /**
  * @class Ext.util.Cookies
- * Utility class for managing and interacting with cookies.
+
+Utility class for setting/reading values from browser cookies.
+Values can be written using the {@link #set} method.
+Values can be read using the {@link #get} method.
+A cookie can be invalidated on the client machine using the {@link #clear} method.
+
+ * @markdown
  * @singleton
  */
 Ext.define('Ext.util.Cookies', {

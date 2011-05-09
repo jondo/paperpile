@@ -37,7 +37,12 @@ Ext.define('Ext.layout.component.Tip', {
         if (!Ext.isNumber(width)) {
             minWidth = owner.minWidth;
             maxWidth = owner.maxWidth;
-            naturalWidth = el.getWidth();
+            // IE6/7 in strict mode have a problem doing an autoWidth
+            if (Ext.isStrict && (Ext.isIE6 || Ext.isIE7)) {
+                constrainedWidth = me.doAutoWidth();
+            } else {
+                naturalWidth = el.getWidth();
+            }
             if (naturalWidth < minWidth) {
                 constrainedWidth = minWidth;
             }
@@ -51,5 +56,21 @@ Ext.define('Ext.layout.component.Tip', {
 
         // Restore position
         el.setXY(xy);
+    },
+    
+    doAutoWidth: function(){
+        var me = this,
+            owner = me.owner,
+            body = owner.body,
+            width = body.getTextWidth();
+            
+        if (owner.header) {
+            width = Math.max(width, owner.header.getWidth());
+        }
+        if (!Ext.isDefined(me.frameWidth)) {
+            me.frameWidth = owner.el.getWidth() - body.getWidth();
+        }
+        width += me.frameWidth + body.getPadding('lr');
+        return width;
     }
 });

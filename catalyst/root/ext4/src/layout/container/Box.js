@@ -454,7 +454,7 @@ Ext.define('Ext.layout.container.Box', {
                 // The updateInnerCtSize method explicitly adds the border widths to the set size of the innerCt.
                 diff = mmax(availPerpendicularSize, maxSize) - me.innerCt.getBorderWidth(me.perpendicularLT + me.perpendicularRB) - calcs[perpendicularPrefix];
                 if (diff > 0) {
-                    calcs[me.perpendicularLeftTop] = perpendicularOffset + (diff / 2);
+                    calcs[me.perpendicularLeftTop] = perpendicularOffset + Math.round(diff / 2);
                 }
             }
 

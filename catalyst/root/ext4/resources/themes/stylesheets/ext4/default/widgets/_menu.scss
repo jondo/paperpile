@@ -5,7 +5,7 @@
     .#{$prefix}menu-body {
         @include no-select;
         background: $menu-background-color !important;
-        padding: 2px;
+        padding: $menu-padding;
     }
 
     .#{$prefix}menu-icon-separator {
@@ -47,7 +47,7 @@
 
     .#{$prefix}menu-item-link {
         display: block;
-        padding: 0px 2px;
+        padding: 0px $menu-padding;
         margin: 1px;
         text-decoration: none !important;
         line-height: 16px;
@@ -100,7 +100,7 @@
         height: 2px;
         border-top: solid 1px $menu-separator-border-color;
         background-color: $menu-separator-background-color;
-        margin: 2px 0px;
+        margin: $menu-padding 0px;
         overflow: hidden;
     }
 
@@ -114,7 +114,7 @@
     }
 
     .#{$prefix}menu-item-indent {
-        margin-left: $menu-item-indent;
+        margin-left: $menu-item-indent + $menu-padding + 2px; /* The 2px is the width of the seperator */
     }
 
     .#{$prefix}menu-item-active {
@@ -165,7 +165,7 @@
         .#{$prefix}ie7,
         .#{$prefix}quirks .#{$prefix}ie8 {
             .#{$prefix}menu-item-link {
-                padding-bottom: 2px;
+                padding-bottom: $menu-padding;
             }
         }
     }

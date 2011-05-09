@@ -6,7 +6,7 @@
  * any DOM structure you wish. The DOM element to show in the proxy is provided by either a
  * provided implementation of {@link #getDragData}, or by registered draggables registered with {@link Ext.dd.Registry}</p>
  * <p>If you wish to provide draggability for an arbitrary number of DOM nodes, each of which represent some
- * application object (For example nodes in a {@link Ext.DataView DataView}) then use of this class
+ * application object (For example nodes in a {@link Ext.view.View DataView}) then use of this class
  * is the most efficient way to "activate" those nodes.</p>
  * <p>By default, this class requires that draggable child nodes are registered with {@link Ext.dd.Registry}.
  * However a simpler way to allow a DragZone to manage any number of draggable elements is to configure
@@ -37,7 +37,7 @@ myDataView.on('render', function(v) {
                     sourceEl: sourceEl,
                     repairXY: Ext.fly(sourceEl).getXY(),
                     sourceStore: v.store,
-                    draggedRecord: v.{@link Ext.DataView#getRecord getRecord}(sourceEl)
+                    draggedRecord: v.{@link Ext.view.View#getRecord getRecord}(sourceEl)
                 }
             }
         },

@@ -238,6 +238,9 @@ window.undefined = window.undefined;
         isGecko = !isWebKit && check(/gecko/),
         isGecko3 = isGecko && check(/rv:1\.9/),
         isGecko4 = isGecko && check(/rv:2\.0/),
+        isFF3_0 = isGecko3 && check(/rv:1\.9\.0/),
+        isFF3_5 = isGecko3 && check(/rv:1\.9\.1/),
+        isFF3_6 = isGecko3 && check(/rv:1\.9\.2/),
         isWindows = check(/windows|win32/),
         isMac = check(/macintosh|mac os x/),
         isLinux = check(/linux/),
@@ -248,7 +251,7 @@ window.undefined = window.undefined;
         document.execCommand("BackgroundImageCache", false, true);
     } catch(e) {}
 
-    Ext.setVersion('extjs', '4.0.0rc');
+    Ext.setVersion('extjs', '4.0.0');
     Ext.apply(Ext, {
         /**
          * URL to a blank file used by Ext when in secure mode for iframe src and onReady src to prevent
@@ -457,6 +460,24 @@ function(el){
          * @type Boolean
          */
         isGecko4 : isGecko4,
+
+        /**
+         * True if the detected browser uses FireFox 3.0
+         * @type Boolean
+         */
+
+        isFF3_0 : isFF3_0,
+        /**
+         * True if the detected browser uses FireFox 3.5
+         * @type Boolean
+         */
+
+        isFF3_5 : isFF3_5,
+        /**
+         * True if the detected browser uses FireFox 3.6
+         * @type Boolean
+         */
+        isFF3_6 : isFF3_6,
 
         /**
          * True if the detected platform is Linux.
@@ -751,7 +772,7 @@ Ext.zip(
          * you may want to set this to true.
          * @type Boolean
          */
-        useShims: Ext.isIE6
+        useShims: isIE6
     });
 })();
 

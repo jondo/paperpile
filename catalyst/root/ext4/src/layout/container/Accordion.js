@@ -134,7 +134,8 @@ Ext.define('Ext.layout.container.Accordion', {
             i = 0,
             comp,
             targetSize = me.getLayoutTargetSize(),
-            renderedPanels = [];
+            renderedPanels = [],
+            border;
 
         for (; i < ln; i++) {
             comp = items[i];
@@ -156,7 +157,7 @@ Ext.define('Ext.layout.container.Accordion', {
                 delete comp.hideHeader;
                 comp.collapsible = true;
                 comp.title = comp.title || '&#160;';
-                comp.border = !(me.owner instanceof Ext.panel.Panel) || me.owner.border === false;
+                comp.setBorder(false);
 
                 // Set initial sizes
                 comp.width = targetSize.width;
@@ -193,10 +194,10 @@ Ext.define('Ext.layout.container.Accordion', {
                 comp.flex = 1;
             }
         }
-
+        
         // Render all Panels.
         me.callParent(arguments);
-
+                
         // Postprocess rendered Panels.
         ln = renderedPanels.length;
         for (i = 0; i < ln; i++) {
@@ -206,10 +207,12 @@ Ext.define('Ext.layout.container.Accordion', {
             delete comp.width;
 
             comp.header.addCls(Ext.baseCSSPrefix + 'accordion-hd');
-
+            comp.body.addCls(Ext.baseCSSPrefix + 'accordion-body');
+            
             // If we are fitting, then intercept expand/collapse requests. 
             if (me.fill) {
                 me.owner.mon(comp, {
+                    show: me.onComponentShow,
                     beforeexpand: me.onComponentExpand,
                     beforecollapse: me.onComponentCollapse,
                     scope: me
@@ -220,7 +223,9 @@ Ext.define('Ext.layout.container.Accordion', {
 
     onLayout: function() {
         var me = this;
-
+        
+        me.updatePanelClasses();
+                
         if (me.fill) {
             me.callParent(arguments);
         } else {
@@ -238,7 +243,32 @@ Ext.define('Ext.layout.container.Accordion', {
                 }
             }
         }
+        
         return me;
+    },
+    
+    updatePanelClasses: function() {
+        var children = this.getLayoutItems(),
+            ln = children.length,
+            siblingCollapsed = true,
+            i, child;
+            
+        for (i = 0; i < ln; i++) {
+            child = children[i];
+            if (!siblingCollapsed) {
+                child.header.addCls(Ext.baseCSSPrefix + 'accordion-hd-sibling-expanded');
+            }
+            else {
+                child.header.removeCls(Ext.baseCSSPrefix + 'accordion-hd-sibling-expanded');
+            }
+            if (i + 1 == ln && child.collapsed) {
+                child.header.addCls(Ext.baseCSSPrefix + 'accordion-hd-last-collapsed');
+            }
+            else {
+                child.header.removeCls(Ext.baseCSSPrefix + 'accordion-hd-last-collapsed');
+            }
+            siblingCollapsed = child.collapsed;
+        }
     },
 
     // When a Component expands, adjust the heights of the other Components to be just enough to accommodate
@@ -255,10 +285,11 @@ Ext.define('Ext.layout.container.Accordion', {
             comp = it[i];
             if (comp === toExpand && comp.collapsed) {
                 me.setExpanded(comp);
-            } else if (!me.multi && (comp !== toExpand && !comp.collapsed)) {
+            } else if (!me.multi && (comp.rendered && comp.header.rendered && comp !== toExpand && !comp.collapsed)) {
                 me.setCollapsed(comp);
             }
         }
+        
         me.animate = me.initialAnimate;
         me.layout();
         me.animate = false;
@@ -280,6 +311,7 @@ Ext.define('Ext.layout.container.Accordion', {
             if (expanded.length === 1 && expanded[0] === comp) {
                 me.setExpanded(toExpand);
             }
+            
             me.animate = me.initialAnimate;
             me.layout();
             me.animate = false;
@@ -289,6 +321,11 @@ Ext.define('Ext.layout.container.Accordion', {
             me.onComponentExpand(toExpand);
         }
         return false;
+    },
+
+    onComponentShow: function(comp) {
+        // Showing a Component means that you want to see it, so expand it.
+        this.onComponentExpand(comp);
     },
 
     setCollapsed: function(comp) {

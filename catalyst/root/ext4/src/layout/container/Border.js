@@ -40,7 +40,7 @@
             margins: '5 5 0 0'
         }],
         renderTo: Ext.getBody()
-    });         
+    });
 </code></pre>
  * <p><b><u>Notes</u></b>:</p><div class="mdetail-params"><ul>
  * <li>Any Container using the Border layout <b>must</b> have a child item with <code>region:'center'</code>.
@@ -531,7 +531,11 @@ Ext.define('Ext.layout.container.Border', {
             }
             placeholder = me.owner.createComponent(placeholder);
             if (comp.isXType('panel')) {
-                comp.on('titlechange', me.onRegionTitleChange, me);
+                comp.on({
+                    titlechange: me.onRegionTitleChange,
+                    iconchange: me.onRegionIconChange,
+                    scope: me
+                });
             }
         }
 
@@ -541,14 +545,23 @@ Ext.define('Ext.layout.container.Border', {
 
         return placeholder;
     },
-    /*
+
+    /**
      * @private
      * Update the placeholder title when panel title has been set or changed.
      */
     onRegionTitleChange: function(comp, newTitle) {
         comp.placeholder.setTitle(newTitle);
     },
-      
+
+    /**
+     * @private
+     * Update the placeholder iconCls when panel iconCls has been set or changed.
+     */
+    onRegionIconChange: function(comp, newIconCls) {
+        comp.placeholder.setIconCls(newIconCls);
+    },
+
     /**
      * @private
      * Calculates the size and positioning of the passed child item. Must be present because Panel's expand,
@@ -581,7 +594,6 @@ Ext.define('Ext.layout.container.Border', {
             miniCollapse = comp.collapseMode == 'mini',
             shadowContainer = comp.shadowOwnerCt,
             shadowLayout = shadowContainer.layout,
-            centerComp = shadowContainer.child('[region=center]'),
             placeholder = comp.placeholder,
             placeholderBox,
             targetSize = shadowLayout.getLayoutTargetSize(),
@@ -683,6 +695,11 @@ Ext.define('Ext.layout.container.Border', {
             compEl.setLeftTop(-10000, -10000);
             shadowLayout.layout();
             afterCollapse();
+
+            // Horrible workaround for https://sencha.jira.com/browse/EXTJSIV-1562
+            if (Ext.isIE) {
+                placeholder.setCalculatedSize(placeholder.el.getWidth());
+            }
         }
 
         return false;

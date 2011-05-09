@@ -1,17 +1,39 @@
 /**
  * @class Ext.grid.feature.Grouping
  * @extends Ext.grid.feature.Feature
+ * 
+ * This feature allows to display the grid rows aggregated into groups as specified by the {@link Ext.data.Store#groupers}
+ * specified on the Store. The group will show the title for the group name and then the appropriate records for the group
+ * underneath. The groups can also be expanded and collapsed.
+ * 
+ * ## Extra Events
+ * This feature adds several extra events that will be fired on the grid to interact with the groups:
  *
- * The Grouping Feature enhances a grid view's markup to support grouping at
- * any arbitrary depth via recursion.
- *
- * Will expose additional events on the gridview with the prefix of 'group'.
- * For example: 'groupclick', 'groupdblclick', 'groupcontextmenu'.
- *
- * @xtype grouping
+ *  - {@link #groupclick}
+ *  - {@link #groupdblclick}
+ *  - {@link #groupcontextmenu}
+ *  - {@link #groupexpand}
+ *  - {@link #groupcollapse}
+ * 
+ * ## Menu Augmentation
+ * This feature adds extra options to the grid column menu to provide the user with functionality to modify the grouping.
+ * This can be disabled by setting the {@link #enableGroupingMenu} option. The option to disallow grouping from being turned off
+ * by thew user is {@link #enableNoGroups}.
+ * 
+ * ## Controlling Group Text
+ * The {@link #groupHeaderTpl} is used to control the rendered title for each group. It can modified to customized
+ * the default display.
+ * 
+ * ## Example Usage
+ * 
+ *     var groupingFeature = Ext.create('Ext.grid.feature.Grouping', {
+ *         groupHeaderTpl: 'Group: {name} ({rows.length})', //print the number of items in the group
+ *         startCollapsed: true // start all groups collapsed
+ *     });
+ * 
+ * @ftype grouping
  * @author Nicolas Ferrero
  */
-
 Ext.define('Ext.grid.feature.Grouping', {
     extend: 'Ext.grid.feature.Feature',
     alias: 'feature.grouping',
@@ -117,8 +139,9 @@ Ext.define('Ext.grid.feature.Grouping', {
     enableNoGroups : true,
     
     enable: function() {
-        var me = this,
-            store = me.view.store,
+        var me    = this,
+            view  = me.view,
+            store = view.store,
             groupToggleMenuItem;
             
         if (me.lastGroupIndex) {
@@ -127,11 +150,13 @@ Ext.define('Ext.grid.feature.Grouping', {
         me.callParent();
         groupToggleMenuItem = me.view.headerCt.getMenu().down('#groupToggleMenuItem');
         groupToggleMenuItem.setChecked(true, true);
+        view.refresh();
     },
 
     disable: function() {
-        var me = this,
-            store = me.view.store,
+        var me    = this,
+            view  = me.view,
+            store = view.store,
             groupToggleMenuItem,
             lastGroup;
             
@@ -145,6 +170,7 @@ Ext.define('Ext.grid.feature.Grouping', {
         groupToggleMenuItem = me.view.headerCt.getMenu().down('#groupToggleMenuItem');
         groupToggleMenuItem.setChecked(true, true);
         groupToggleMenuItem.setChecked(false, true);
+        view.refresh();
     },
 
     getFeatureTpl: function(values, parent, x, xcount) {
@@ -215,8 +241,17 @@ Ext.define('Ext.grid.feature.Grouping', {
         var me       = this,
             view     = me.view,
             headerCt = view.headerCt;
-            
+        headerCt.showMenuBy = me.showMenuBy;
         headerCt.getMenuItems = me.getMenuItems();
+    },
+    
+    showMenuBy: function(t, header) {
+        var menu = this.getMenu(),
+            groupMenuItem  = menu.down('#groupMenuItem'),
+            groupableMth = header.groupable === false ?  'disable' : 'enable';
+            
+        groupMenuItem[groupableMth]();
+        Ext.grid.header.Container.prototype.showMenuBy.apply(this, arguments);
     },
     
     getMenuItems: function() {
@@ -271,7 +306,6 @@ Ext.define('Ext.grid.feature.Grouping', {
      */
     onGroupToggleMenuItemClick: function(menuItem, checked) {
         this[checked ? 'enable' : 'disable']();
-        this.view.refresh();
     },
 
     /**
@@ -334,6 +368,7 @@ Ext.define('Ext.grid.feature.Grouping', {
         groupBd.removeCls(me.collapsedCls);
         groupBd.prev().removeCls(me.hdCollapsedCls);
 
+        grid.determineScrollbars();
         grid.invalidateScroller();
         view.fireEvent('groupexpand');
     },
@@ -354,6 +389,7 @@ Ext.define('Ext.grid.feature.Grouping', {
         groupBd.addCls(me.collapsedCls);
         groupBd.prev().addCls(me.hdCollapsedCls);
 
+        grid.determineScrollbars();
         grid.invalidateScroller();
         view.fireEvent('groupcollapse');
     },
@@ -462,5 +498,21 @@ Ext.define('Ext.grid.feature.Grouping', {
             };
         }
         return o;
+    },
+    
+    // adds the groupName to the groupclick, groupdblclick, groupcontextmenu
+    // events that are fired on the view. Chose not to return the actual
+    // group itself because of its expense and because developers can simply
+    // grab the group via store.getGroups(groupName)
+    getFireEventArgs: function(type, view, featureTarget) {
+        var returnArray = [type, view, featureTarget],
+            groupBd     = Ext.fly(featureTarget.nextSibling, '_grouping'),
+            groupBdId   = Ext.getDom(groupBd).id,
+            prefix      = view.id + '-gp-',
+            groupName   = groupBdId.substr(prefix.length);
+        
+        returnArray.push(groupName);
+        
+        return returnArray;
     }
 });

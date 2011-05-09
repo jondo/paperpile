@@ -11,10 +11,7 @@ $panel-border-color: adjust-color($base-color, $hue: 0.844deg, $saturation: 7.64
 // ===============================
 // ========= PANEL BODY ==========
 // ===============================
-$panel-body-border-width: 1px !default;
 $panel-body-border-style: solid !default;
-
-// UI defaults
 $panel-body-background-color: #fff !default;
 $panel-body-color: #000 !default;
 $panel-body-border-color: $panel-border-color !default;
@@ -33,7 +30,7 @@ $panel-header-inner-border: true !default;
 $panel-header-inner-border-width: 1px 0 0 !default;
 
 //padding
-$panel-header-padding: 4px !default;
+$panel-header-padding: 5px 4px 4px 5px !default;
 
 //fonts
 $panel-header-font-size: ceil($font-size * .9) !default; //11px

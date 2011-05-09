@@ -1,13 +1,68 @@
 /**
  * @class Ext.grid.column.Column
  * @extends Ext.grid.header.Container
+ * 
+ * This class specifies the definition for a column inside a {@link Ext.grid.Panel}. It encompasses
+ * both the grid header configuration as well as displaying data within the grid itself. If the
+ * {@link #columns} configuration is specified, this column will become a column group and can
+ * container other columns inside. In general, this class will not be created directly, rather
+ * an array of column configurations will be passed to the grid:
+ * 
+ * {@img Ext.grid.column.Column/Ext.grid.column.Column.png Ext.grid.column.Column grid column}
  *
- * Clicking on a header will toggle sort by the bound dataIndex if the Column is configured {@link #sortable}.
+ * ## Code
+ *    Ext.create('Ext.data.Store', {
+ *        storeId:'employeeStore',
+ *        fields:['firstname', 'lastname', 'senority', 'dep', 'hired'],
+ *        data:[
+ *            {firstname:"Michael", lastname:"Scott", senority:7, dep:"Manangement", hired:"01/10/2004"},
+ *            {firstname:"Dwight", lastname:"Schrute", senority:2, dep:"Sales", hired:"04/01/2004"},
+ *            {firstname:"Jim", lastname:"Halpert", senority:3, dep:"Sales", hired:"02/22/2006"},
+ *            {firstname:"Kevin", lastname:"Malone", senority:4, dep:"Accounting", hired:"06/10/2007"},
+ *            {firstname:"Angela", lastname:"Martin", senority:5, dep:"Accounting", hired:"10/21/2008"}                        
+ *        ]
+ *    });
+ *    
+ *    Ext.create('Ext.grid.Panel', {
+ *        title: 'Column Demo',
+ *        store: Ext.data.StoreManager.lookup('employeeStore'),
+ *        columns: [
+ *            {text: 'First Name',  dataIndex:'firstname'},
+ *            {text: 'Last Name',  dataIndex:'lastname'},
+ *            {text: 'Hired Month',  dataIndex:'hired', xtype:'datecolumn', format:'M'},              
+ *            {text: 'Deparment (Yrs)', xtype:'templatecolumn', tpl:'{dep} ({senority})'}
+ *        ],
+ *        width: 400,
+ *        renderTo: Ext.getBody()
+ *    });
+ *     
+ * ## Convenience Subclasses
+ * There are several column subclasses that provide default rendering for various data types
  *
- * Opening a menu will allow you to turn on/off Headers found in a particular
- * section.
- *
- * Allows a user to freeze columns
+ *  - {@link Ext.grid.column.Action}: Renders icons that can respond to click events inline
+ *  - {@link Ext.grid.column.Boolean}: Renders for boolean values 
+ *  - {@link Ext.grid.column.Date}: Renders for date values
+ *  - {@link Ext.grid.column.Number}: Renders for numeric values
+ *  - {@link Ext.grid.column.Template}: Renders a value using an {@link Ext.XTemplate} using the record data 
+ * 
+ * ## Setting Sizes
+ * The columns are laid out by a {@link Ext.layout.container.HBox} layout, so a column can either
+ * be given an explicit width value or a flex configuration. If no width is specified the grid will
+ * automatically the size the column to 100px. For column groups, the size is calculated by measuring
+ * the width of the child columns, so a width option should not be specified in that case.
+ * 
+ * ## Header Options
+ *  - {@link #text}: Sets the header text for the column
+ *  - {@link #sortable}: Specifies whether the column can be sorted by clicking the header or using the column menu
+ *  - {@link #hideable}: Specifies whether the column can be hidden using the column menu
+ *  - {@link #menuDisabled}: Disables the column header menu
+ *  - {@link #draggable}: Specifies whether the column header can be reordered by dragging
+ *  - {@link #groupable}: Specifies whether the grid can be grouped by the column dataIndex. See also {@link Ext.grid.feature.Grouping}
+ * 
+ * ## Data Options
+ *  - {@link #dataIndex}: The dataIndex is the field in the underlying {@link Ext.data.Store} to use as the value for the column.
+ *  - {@link #renderer}: Allows the underlying store value to be transformed before being displayed in the grid
+ * 
  * @xtype gridcolumn
  */
 Ext.define('Ext.grid.column.Column', {
@@ -62,7 +117,14 @@ Ext.define('Ext.grid.column.Column', {
      * Whether local/remote sorting is used is specified in <code>{@link Ext.data.Store#remoteSort}</code>.
      */
     sortable: true,
-
+    
+    /**
+     * @cfg {Boolean} groupable Optional. If the grid uses a {@link Ext.grid.feature.Grouping}, this option
+     * may be used to disable the header menu item to group by the column selected. By default,
+     * the header menu group option is enabled. Set to false to disable (but still show) the
+     * group option in the header menu for the column.
+     */
+     
     /**
      * @cfg {Boolean} hideable Optional. Specify as <tt>false</tt> to prevent the user from hiding this column
      * (defaults to true).
@@ -71,13 +133,32 @@ Ext.define('Ext.grid.column.Column', {
 
     /**
      * @cfg {Boolean} menuDisabled
-     * Defaults to false.
+     * True to disabled the column header menu containing sort/hide options. Defaults to false.
      */
     menuDisabled: false,
 
     /**
      * @cfg {Function} renderer
-     * Defaults to false.
+     * <p>A renderer is an 'interceptor' method which can be used transform data (value, appearance, etc.) before it
+     * is rendered. Example:</p>
+     * <pre><code>{
+    renderer: function(value){
+        if (value === 1) {
+            return '1 person';
+        }
+        return value + ' people';
+    }
+}
+     * </code></pre>
+     * @param {Mixed} value The data value for the current cell
+     * @param {Object} metaData A collection of metadata about the current cell; can be used or modified by
+     * the renderer. Recognized properties are: <tt>tdCls</tt>, <tt>tdAttr</tt>, and <tt>style</tt>.
+     * @param {Ext.data.Model} record The record for the current row
+     * @param {Number} rowIndex The index of the current row
+     * @param {Number} colIndex The index of the current column
+     * @param {Ext.data.Store} store The data store
+     * @param {Ext.view.View} view The current view
+     * @return {String} The HTML to be rendered
      */
     renderer: false,
 
@@ -96,6 +177,10 @@ Ext.define('Ext.grid.column.Column', {
     // Header does not use the typical ComponentDraggable class and therefore we
     // override this with an emptyFn. It is controlled at the HeaderDragZone.
     initDraggable: Ext.emptyFn,
+
+    /**
+     * @cfg {String} tdCls <p>Optional. A CSS class names to apply to the table cells for this column.</p>
+     */
 
     /**
      * @property {Ext.core.Element} triggerEl
@@ -218,6 +303,14 @@ Ext.define('Ext.grid.column.Column', {
         return this.up(':not([isHeader])');
     },
 
+    /**
+     * Returns the true grid column index assiciated with this Column only if this column is a base level Column.
+     * If it is a group column, it returns <code>false</code>
+     */
+    getIndex: function() {
+        return this.isGroupColumn ? false : this.getOwnerHeaderCt().getHeaderIndex(this);
+    },
+
     afterRender: function() {
         var me = this,
             el = me.el;
@@ -232,11 +325,15 @@ Ext.define('Ext.grid.column.Column', {
             scope:     me
         });
         
-        me.mon(me.getFocusEl(), {
-            focus: me.onTitleMouseOver,
-            blur: me.onTitleMouseOut,
-            scope: me
-        });
+        // BrowserBug: Ie8 Strict Mode, this will break the focus for this browser,
+        // must be fixed when focus management will be implemented.
+        if (!Ext.isIE8 || !Ext.isStrict) {
+            me.mon(me.getFocusEl(), {
+                focus: me.onTitleMouseOver,
+                blur: me.onTitleMouseOut,
+                scope: me
+            });
+        }
 
         me.mon(me.titleContainer, {
             mouseenter:  me.onTitleMouseOver,
@@ -289,8 +386,9 @@ Ext.define('Ext.grid.column.Column', {
         me.callParent(arguments);
 
         // Only changes at the base level inform the grid's HeaderContainer which will update the View
+        // Skip this if the width is null or undefined which will be the Box layout's initial pass  through the child Components
         // Skip this if it's the initial size setting in which case there is no ownerheaderCt yet - that is set afterRender
-        if (!me.isGroupHeader && ownerHeaderCt) {
+        if (width && !me.isGroupHeader && ownerHeaderCt) {
             ownerHeaderCt.onHeaderResize(me, width, true);
         }
     },
@@ -340,7 +438,9 @@ Ext.define('Ext.grid.column.Column', {
     },
 
     onDownKey: function(e) {
-        this.onElClick(e, this.triggerEl.dom || this.el.dom);
+        if (this.triggerEl) {
+            this.onElClick(e, this.triggerEl.dom || this.el.dom);
+        }
     },
 
     onEnterKey: function(e) {
@@ -577,7 +677,7 @@ Ext.define('Ext.grid.column.Column', {
     },
 
     getCellSelector: function() {
-        return '.' + Ext.baseCSSPrefix + 'grid-cell-' + this.id;
+        return '.' + Ext.baseCSSPrefix + 'grid-cell-' + this.getItemId();
     },
 
     getCellInnerSelector: function() {
@@ -590,38 +690,26 @@ Ext.define('Ext.grid.column.Column', {
 
     isOnRightEdge: function(e) {
         return (this.el.getRight() - e.getXY()[0] <= this.handleWidth);
-    },
+    }
     
     /**
      * Retrieves the editing field for editing associated with this header. Returns false if there
      * is no field associated with the Header the method will return false. If the
-     * field has not been instantiated it will be created.
+     * field has not been instantiated it will be created. Note: These methods only has an implementation
+     * if a Editing plugin has been enabled on the grid.
      * @param record The {@link Ext.data.Model Model} instance being edited.
+     * @param {Mixed} defaultField An object representing a default field to be created
      * @returns {Ext.form.field.Field} field
+     * @method getEditor
      */
-    getEditingField: function(record) {
-        var field = this.field;
-        if (!field) {
-            return false;
-        } else {
-            // if already created
-            if (field.events) {
-                return field;
-            } else {
-                return Ext.ComponentManager.create(field, 'textfield');
-            }
-        }
-    },
+    // intentionally omit getEditor and setEditor definitions bc we applyIf into columns
+    // when the editing plugin is injected
+    
     
     /**
-     * Sets the form field to be used for editing.
+     * Sets the form field to be used for editing. Note: This method only has an implementation
+     * if an Editing plugin has been enabled on the grid.
      * @param {Mixed} field An object representing a field to be created. If no xtype is specified a 'textfield' is assumed.
+     * @method setEditor
      */
-    setEditingField: function(field) {
-        var oldField = this.field;
-        if (oldField.destroy) {
-            oldField.destroy();
-        }
-        this.field = field;
-    }
 });

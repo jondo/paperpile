@@ -169,19 +169,42 @@ Ext.define('Ext.form.field.Field', {
     /**
      * <p>Returns the parameter(s) that would be included in a standard form submit for this field. Typically this
      * will be an object with a single name-value pair, the name being this field's {@link #getName name} and the
-     * value being its current value. More advanced field implementations may return more than one name-value pair.</p>
+     * value being its current stringified value. More advanced field implementations may return more than one
+     * name-value pair.</p>
      * <p>Note that the values returned from this method are not guaranteed to have been successfully
      * {@link #validate validated}.</p>
      * @return {Object} A mapping of submit parameter names to values; each value should be a string, or an array
      * of strings if that particular name has multiple values. It can also return <tt>null</tt> if there are no
-     * parameters to be be submitted.
+     * parameters to be submitted.
      */
     getSubmitData: function() {
         var me = this,
             data = null;
-        if (!me.disabled && me.submitValue) {
+        if (!me.disabled && me.submitValue && !me.isFileUpload()) {
             data = {};
             data[me.getName()] = '' + me.getValue();
+        }
+        return data;
+    },
+
+    /**
+     * <p>Returns the value(s) that should be saved to the {@link Ext.data.Model} instance for this field, when
+     * {@link Ext.form.Basic#updateRecord} is called. Typically this will be an object with a single name-value
+     * pair, the name being this field's {@link #getName name} and the value being its current data value. More
+     * advanced field implementations may return more than one name-value pair. The returned values will be
+     * saved to the corresponding field names in the Model.</p>
+     * <p>Note that the values returned from this method are not guaranteed to have been successfully
+     * {@link #validate validated}.</p>
+     * @return {Object} A mapping of submit parameter names to values; each value should be a string, or an array
+     * of strings if that particular name has multiple values. It can also return <tt>null</tt> if there are no
+     * parameters to be submitted.
+     */
+    getModelData: function() {
+        var me = this,
+            data = null;
+        if (!me.disabled && !me.isFileUpload()) {
+            data = {};
+            data[me.getName()] = me.getValue();
         }
         return data;
     },

@@ -21,7 +21,7 @@
         padding: 3px 0 0;
         z-index: 2;
         position: relative;
-        font-size: 12px;
+        font-size: $form-label-font-size;
         @include no-select;
     }
 

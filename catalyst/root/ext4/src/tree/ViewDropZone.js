@@ -245,27 +245,30 @@ Ext.define('Ext.tree.ViewDropZone', {
 
         // A function to transfer the data into the destination tree
         transferData = function() {
+            var node;
             for (i = 0, len = data.records.length; i < len; i++) {
                 argList[0] = data.records[i];
-                insertionMethod.apply(targetNode, argList);
+                node = insertionMethod.apply(targetNode, argList);
                 
                 if (Ext.enableFx && me.dropHighlight) {
-                    recordDomNodes.push(view.getNode(argList[0]));
+                    recordDomNodes.push(view.getNode(node));
                 }
             }
             
             // Kick off highlights after everything's been inserted, so they are
             // more in sync without insertion/render overhead.
             if (Ext.enableFx && me.dropHighlight) {
+                //FIXME: the check for n.firstChild is not a great solution here. Ideally the line should simply read 
+                //Ext.fly(n.firstChild) but this yields errors in IE6 and 7. See ticket EXTJSIV-1705 for more details
                 Ext.Array.forEach(recordDomNodes, function(n) {
-                    Ext.fly(n.firstChild).highlight(me.dropHighlightColor);
+                    Ext.fly(n.firstChild ? n.firstChild : n).highlight(me.dropHighlightColor);
                 });
             }
         };
 
         // If dropping right on an unexpanded node, transfer the data after it is expanded.
         if (needTargetExpand) {
-            targetNode.expand(transferData);
+            targetNode.expand(false, transferData);
         }
         // Otherwise, call the data transfer function immediately
         else {

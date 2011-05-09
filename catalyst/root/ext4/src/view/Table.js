@@ -1,17 +1,26 @@
 /**
  * @class Ext.view.Table
- * @extends Ext.DataView
- *
- * The grid view binds a store to the underlying html markup of a grid. In most
- * cases you may configure a grid view from the Ext.grid.Panel with the
- * viewConfig configuration.
- *
- * The selection model is shared across sibling grid views.
- * @xtype gridview
+ * @extends Ext.view.View
+
+This class encapsulates the user interface for a tabular data set.
+It acts as a centralized manager for controlling the various interface
+elements of the view. This includes handling events, such as row and cell
+level based DOM events. It also reacts to events from the underlying {@link Ext.selection.Model}
+to provide visual feedback to the user. 
+
+This class does not provide ways to manipulate the underlying data of the configured
+{@link Ext.data.Store}.
+
+This is the base class for both {@link Ext.grid.View} and {@link Ext.tree.View} and is not
+to be used directly.
+
+ * @markdown
+ * @abstract
+ * @xtype tableview
  * @author Nicolas Ferrero
  */
 Ext.define('Ext.view.Table', {
-    extend: 'Ext.DataView',
+    extend: 'Ext.view.View',
     alias: 'widget.tableview',
     uses: [
         'Ext.view.TableChunker',
@@ -117,6 +126,36 @@ viewConfig: {
 
     // scroll the view to the top
     scrollToTop: Ext.emptyFn,
+    
+    /**
+     * Get the columns used for generating a template via TableChunker.
+     * See {@link Ext.grid.header.Container#getGridColumns}.
+     * @private
+     */
+    getGridColumns: function() {
+        return this.headerCt.getGridColumns();    
+    },
+    
+    /**
+     * Get a leaf level header by index regardless of what the nesting
+     * structure is.
+     * @private
+     * @param {Number} index The index
+     */
+    getHeaderAtIndex: function(index) {
+        return this.headerCt.getHeaderAtIndex(index);
+    },
+    
+    /**
+     * Get the cell (td) for a particular record and column.
+     * @param {Ext.data.Model} record
+     * @param {Ext.grid.column.Colunm} column
+     * @private
+     */
+    getCell: function(record, column) {
+        var row = this.getNode(record);
+        return Ext.fly(row).down(column.getCellSelector());
+    },
 
     /**
      * Get a reference to a feature
@@ -431,12 +470,13 @@ viewConfig: {
         var row        = this.getNode(rowIdx),
             el         = this.el,
             adjustment = 0,
-            elRegion   = el.getRegion(),
             panel      = this.ownerCt,
             rowRegion,
+            elRegion,
             record;
-
-        if (row) {
+            
+        if (row && this.el) {
+            elRegion  = el.getRegion();
             rowRegion = Ext.fly(row).getRegion();
             // row is above
             if (rowRegion.top < elRegion.top) {
@@ -551,6 +591,17 @@ viewConfig: {
 
         //this.saveScrollState();
         me.setNewTemplate();
+        
+        // The table.unselectable() call below adds a selectstart listener to the table element.
+        // Before we clear the whole dataview in the callParent, we remove all the listeners from the
+        // table. This prevents a big memory leak on IE6 and IE7.
+        if (me.rendered) {
+            table = me.el.child('table');
+            if (table) {
+                table.removeAllListeners();
+            }
+        }
+        
         me.callParent(arguments);
 
         //this.restoreScrollState();
@@ -611,7 +662,9 @@ viewConfig: {
             features = this.features,
             ln = features.length,
             type = e.type,
-            i, feature, prefix, featureTarget;
+            i, feature, prefix, featureTarget,
+            beforeArgs, args,
+            panel = me.ownerCt;
 
         this.callParent(arguments);
 
@@ -625,9 +678,20 @@ viewConfig: {
                 featureTarget = e.getTarget(feature.eventSelector, me.getTargetEl());
                 if (featureTarget) {
                     prefix = feature.eventPrefix;
+                    // allows features to implement getFireEventArgs to change the
+                    // fireEvent signature
+                    beforeArgs = feature.getFireEventArgs('before' + prefix + type, me, featureTarget);
+                    args = feature.getFireEventArgs(prefix + type, me, featureTarget);
+                    
                     if (
-                        (me.fireEvent('before' + prefix + type, me, featureTarget) === false) ||
-                        (me.fireEvent(prefix + type, me, featureTarget) === false)
+                        // before view event
+                        (me.fireEvent.apply(me, beforeArgs) === false) ||
+                        // panel grid event
+                        (panel.fireEvent.apply(panel, beforeArgs) === false) ||
+                        // view event
+                        (me.fireEvent.apply(me, args) === false) ||
+                        // panel event
+                        (panel.fireEvent.apply(panel, args) === false)
                     ) {
                         return false;
                     }
@@ -703,13 +767,19 @@ viewConfig: {
     },
 
     /**
-     * @param {Object} position The current row and column
+     * @param {Object} position The current row and column: an object containing the following properties:<ul>
+     * <li>row<div class="sub-desc"> The row <b>index</b></div></li>
+     * <li>column<div class="sub-desc">The column <b>index</b></div></li>
+     * </ul>
      * @param {String} direction 'up', 'down', 'right' and 'left'
      * @param {Ext.EventObject} e event
      * @param {Boolean} preventWrap Set to true to prevent wrap around to the next or previous row.
      * @param {Function} verifierFn A function to verify the validity of the calculated position. When using this function, you must return true to allow the newPosition to be returned.
      * @param {Scope} scope Scope to run the verifierFn in
-     * @returns {Object} newPosition The newPosition or false.
+     * @returns {Object} newPosition An object containing the following properties:<ul>
+     * <li>row<div class="sub-desc"> The row <b>index</b></div></li>
+     * <li>column<div class="sub-desc">The column <b>index</b></div></li>
+     * </ul>
      * @private
      */
     walkCells: function(pos, direction, e, preventWrap, verifierFn, scope) {
@@ -861,6 +931,16 @@ viewConfig: {
         }
 
         return nextIdx - activeHeaderIdx;
+    },
+
+    beforeDestroy: function() {
+        if (this.rendered) {
+            table = this.el.child('table');
+            if (table) {
+                table.removeAllListeners();
+            }
+        }
+        this.callParent(arguments);
     },
 
     /**

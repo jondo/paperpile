@@ -11,7 +11,8 @@
  *
 <pre><code>
 // Set up a {@link Ext.data.Model model} to use in our Store
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: [
         {name: 'firstName', type: 'string'},
         {name: 'lastName',  type: 'string'},
@@ -188,7 +189,7 @@ new Ext.List({
     //other config goes here
 });
 
-new Ext.DataView({
+new Ext.view.View({
     store: 'usersStore',
 
     //other config goes here
@@ -289,15 +290,6 @@ Ext.define('Ext.data.Store', {
     clearOnPageLoad: true,
 
     /**
-     * True if a model was created implicitly for this Store. This happens if a fields array is passed to the Store's constructor
-     * instead of a model constructor or name.
-     * @property implicitModel
-     * @type Boolean
-     * @private
-     */
-    implicitModel: false,
-
-    /**
      * True if the Store is currently loading via its Proxy
      * @property loading
      * @type Boolean
@@ -310,6 +302,20 @@ Ext.define('Ext.data.Store', {
      * causing the sorters to be reapplied after filtering. Defaults to true
      */
     sortOnFilter: true,
+    
+    /**
+     * @cfg {Boolean} buffered
+     * Allow the store to buffer and pre-fetch pages of records. This is to be used in conjunction with a view will
+     * tell the store to pre-fetch records ahead of a time.
+     */
+    buffered: false,
+    
+    /**
+     * @cfg {Number} purgePageCount 
+     * The number of pages to keep in the cache before purging additional records. A value of 0 indicates to never purge the prefetched data.
+     * This option is only relevant when the {@link #buffered} option is set to true.
+     */
+    purgePageCount: 5,
 
     isStore: true,
 
@@ -322,14 +328,41 @@ Ext.define('Ext.data.Store', {
             proxy,
             data;
             
+        if (config.buffered || me.buffered) {
+            me.prefetchData = Ext.create('Ext.util.MixedCollection', false, function(record) {
+                return record.index;
+            });
+            me.pendingRequests = [];
+            me.pagesRequested = [];
+            
+            me.sortOnLoad = false;
+            me.filterOnLoad = false;
+        }
+            
         me.addEvents(
+            /**
+             * @event beforeprefetch
+             * Fires before a prefetch occurs. Return false to cancel.
+             * @param {Ext.data.store} this
+             * @param {Ext.data.Operation} operation The associated operation
+             */
+            'beforeprefetch',
             /**
              * @event groupchange
              * Fired whenever the grouping in the grid changes
              * @param {Ext.data.Store} store The store
              * @param {Array} groupers The array of grouper objects
              */
-            'groupchange'
+            'groupchange',
+            /**
+             * @event load
+             * Fires whenever records have been prefetched
+             * @param {Ext.data.store} this
+             * @param {Array} records An array of records
+             * @param {Boolean} successful True if the operation was successful.
+             * @param {Ext.data.Operation} operation The associated operation
+             */
+            'prefetch'
         );
         data = config.data || me.data;
 
@@ -383,7 +416,6 @@ Ext.define('Ext.data.Store', {
             me.sort();
             delete me.inlineData;
         } else if (me.autoLoad) {
-            // debugger;
             Ext.defer(me.load, 10, me, [typeof me.autoLoad === 'object' ? me.autoLoad: undefined]);
             // Remove the defer call, we may need reinstate this at some point, but currently it's not obvious why it's here.
             // this.load(typeof this.autoLoad == 'object' ? this.autoLoad : undefined);
@@ -558,9 +590,10 @@ myStore.getGroups(); //returns:
     }
 ]
 </code></pre>
+     * @param {String} groupName (Optional) Pass in an optional groupName argument to access a specific group as defined by {@link #getGroupString}
      * @return {Array} The grouped data
      */
-    getGroups: function() {
+    getGroups: function(requestGroupString) {
         var records = this.data.items,
             length = records.length,
             groups = [],
@@ -588,7 +621,7 @@ myStore.getGroups(); //returns:
             group.children.push(record);
         }
 
-        return groups;
+        return requestGroupString ? pointers[requestGroupString] : groups;
     },
 
     /**
@@ -740,7 +773,9 @@ new Ext.data.Store({
         for (i = 0, len = records.length; i < len; i++) {
             record = me.createModel(records[i]);
             record.set(me.modelDefaults);
-
+            // reassign the model in the array in case it wasn't created yet
+            records[i] = record;
+            
             me.data.insert(index + i, record);
             record.join(me);
 
@@ -784,6 +819,7 @@ myStore.add({some: 'data'}, {some: 'other data'});
 
         for (; i < length; i++) {
             record = me.createModel(records[i]);
+            // reassign the model in the array in case it wasn't created yet
             records[i] = record;
         }
 
@@ -835,6 +871,7 @@ myStore.add({some: 'data'}, {some: 'other data'});
             sync = false,
             i = 0,
             length = records.length,
+            isPhantom,
             index,
             record;
 
@@ -847,13 +884,15 @@ myStore.add({some: 'data'}, {some: 'other data'});
             }
             
             if (index > -1) {
-                if (!isMove) {
+                isPhantom = record.phantom === true;
+                if (!isMove && !isPhantom) {
+                    // don't push phantom records onto removed
                     me.removed.push(record);
                 }
 
                 record.unjoin(me);
                 me.data.remove(record);
-                sync = sync || record.phantom !== true;
+                sync = sync || !isPhantom;
 
                 me.fireEvent('remove', me, record, index);
             }
@@ -952,37 +991,7 @@ store.load(function(records, operation, success) {
         //this is a callback that would have been passed to the 'read' function and is optional
         Ext.callback(operation.callback, operation.scope || me, [records, operation, successful]);
     },
-
-    /**
-     * @private
-     * Callback for any write Operation over the Proxy. Updates the Store's MixedCollection to reflect
-     * the updates provided by the Proxy
-     */
-    onProxyWrite: function(operation) {
-        var me = this,
-            success = operation.wasSuccessful(),
-            records = operation.getRecords();
-
-        switch (operation.action) {
-            case 'create':
-                me.onCreateRecords(records, operation, success);
-                break;
-            case 'update':
-                me.onUpdateRecords(records, operation, success);
-                break;
-            case 'destroy':
-                me.onDestroyRecords(records, operation, success);
-                break;
-        }
-
-        if (success) {
-            me.fireEvent('write', me, operation);
-            me.fireEvent('datachanged', me);
-        }
-        //this is a callback that would have been passed to the 'create', 'update' or 'destroy' function and is optional
-        Ext.callback(operation.callback, operation.scope || me, [records, operation, success]);
-    },
-
+    
     /**
      * Create any new records when a write is returned from the server.
      * @private
@@ -1325,7 +1334,391 @@ store.load(function(records, operation, success) {
 
         this.data.clear();
     },
+    
+    // Buffering
+    /**
+     * Prefetches data the Store using its configured {@link #proxy}.
+     * @param {Object} options Optional config object, passed into the Ext.data.Operation object before loading.
+     * See {@link #load}
+     */
+    prefetch: function(options) {
+        var me = this,
+            operation,
+            requestId = me.getRequestId();
 
+        options = options || {};
+
+        Ext.applyIf(options, {
+            action : 'read',
+            filters: me.filters.items,
+            sorters: me.sorters.items,
+            requestId: requestId
+        });
+        me.pendingRequests.push(requestId);
+
+        operation = Ext.create('Ext.data.Operation', options);
+
+        // HACK to implement loadMask support.
+        //if (operation.blocking) {
+        //    me.fireEvent('beforeload', me, operation);
+        //}
+        if (me.fireEvent('beforeprefetch', me, operation) !== false) {
+            me.loading = true;
+            me.proxy.read(operation, me.onProxyPrefetch, me);
+        }
+        
+        return me;
+    },
+    
+    /**
+     * Prefetches a page of data.
+     * @param {Number} page The page to prefetch
+     * @param {Object} options Optional config object, passed into the Ext.data.Operation object before loading.
+     * See {@link #load}
+     * @param
+     */
+    prefetchPage: function(page, options) {
+        var me = this,
+            pageSize = me.pageSize,
+            start = (page - 1) * me.pageSize,
+            end = start + pageSize;
+        
+        // Currently not requesting this page and range isn't already satisified 
+        if (Ext.Array.indexOf(me.pagesRequested, page) === -1 && !me.rangeSatisfied(start, end)) {
+            options = options || {};
+            me.pagesRequested.push(page);
+            Ext.applyIf(options, {
+                page : page,
+                start: start,
+                limit: pageSize,
+                callback: me.onWaitForGuarantee,
+                scope: me
+            });
+            
+            me.prefetch(options);
+        }
+        
+    },
+    
+    /**
+     * Returns a unique requestId to track requests.
+     * @private
+     */
+    getRequestId: function() {
+        this.requestSeed = this.requestSeed || 1;
+        return this.requestSeed++;
+    },
+    
+    /**
+     * Handles a success pre-fetch
+     * @private
+     * @param {Ext.data.Operation} operation The operation that completed
+     */
+    onProxyPrefetch: function(operation) {
+        var me         = this,
+            resultSet  = operation.getResultSet(),
+            records    = operation.getRecords(),
+            
+            successful = operation.wasSuccessful();
+        
+        if (resultSet) {
+            me.totalCount = resultSet.total;
+            me.fireEvent('totalcountchange', me.totalCount);
+        }
+        
+        if (successful) {
+            me.cacheRecords(records, operation);
+        }
+        Ext.Array.remove(me.pendingRequests, operation.requestId);
+        if (operation.page) {
+            Ext.Array.remove(me.pagesRequested, operation.page);
+        }
+        
+        me.loading = false;
+        me.fireEvent('prefetch', me, records, successful, operation);
+        
+        // HACK to support loadMask
+        if (operation.blocking) {
+            me.fireEvent('load', me, records, successful);
+        }
+
+        //this is a callback that would have been passed to the 'read' function and is optional
+        Ext.callback(operation.callback, operation.scope || me, [records, operation, successful]);
+    },
+    
+    /**
+     * Caches the records in the prefetch and stripes them with their server-side
+     * index.
+     * @private
+     * @param {Array} records The records to cache
+     * @param {Ext.data.Operation} The associated operation
+     */
+    cacheRecords: function(records, operation) {
+        var me     = this,
+            i      = 0,
+            length = records.length,
+            start  = operation ? operation.start : 0;
+        
+        if (!Ext.isDefined(me.totalCount)) {
+            me.totalCount = records.length;
+            me.fireEvent('totalcountchange', me.totalCount);
+        }
+        
+        for (; i < length; i++) {
+            // this is the true index, not the viewIndex
+            records[i].index = start + i;
+        }
+        
+        me.prefetchData.addAll(records);
+        if (me.purgePageCount) {
+            me.purgeRecords();
+        }
+        
+    },
+    
+    
+    /**
+     * Purge the least recently used records in the prefetch if the purgeCount
+     * has been exceeded.
+     */
+    purgeRecords: function() {
+        var me = this,
+            prefetchCount = me.prefetchData.getCount(),
+            purgeCount = me.purgePageCount * me.pageSize,
+            numRecordsToPurge = prefetchCount - purgeCount - 1,
+            i = 0;
+
+        for (; i <= numRecordsToPurge; i++) {
+            me.prefetchData.removeAt(0);
+        }
+    },
+    
+    /**
+     * Determines if the range has already been satisfied in the prefetchData.
+     * @private
+     * @param {Number} start The start index
+     * @param {Number} end The end index in the range
+     */
+    rangeSatisfied: function(start, end) {
+        var me = this,
+            i = start,
+            satisfied = true;
+
+        for (; i < end; i++) {
+            if (!me.prefetchData.getByKey(i)) {
+                satisfied = false;
+                //<debug>
+                if (end - i > me.pageSize) {
+                    Ext.Error.raise("A single page prefetch could never satisfy this request.");
+                }
+                //</debug>
+                break;
+            }
+        }
+        return satisfied;
+    },
+    
+    /**
+     * Determines the page from a record index
+     * @param {Number} index The record index
+     * @return {Number} The page the record belongs to
+     */
+    getPageFromRecordIndex: function(index) {
+        return Math.floor(index / this.pageSize) + 1;
+    },
+    
+    /**
+     * Handles a guaranteed range being loaded
+     * @private
+     */
+    onGuaranteedRange: function() {
+        var me = this,
+            totalCount = me.getTotalCount(),
+            start = me.requestStart,
+            end = ((totalCount - 1) < me.requestEnd) ? totalCount - 1 : me.requestEnd,
+            range = [],
+            record,
+            i = start;
+            
+        //<debug>
+        if (start > end) {
+            Ext.Error.raise("Start (" + start + ") was greater than end (" + end + ")");
+        }
+        //</debug>
+        
+        if (start !== me.guaranteedStart && end !== me.guaranteedEnd) {
+            me.guaranteedStart = start;
+            me.guaranteedEnd = end;
+            
+            for (; i <= end; i++) {
+                record = me.prefetchData.getByKey(i);
+                //<debug>
+                if (!record) {
+                    Ext.Error.raise("Record was not found and store said it was guaranteed");
+                }
+                //</debug>
+                range.push(record);
+            }
+            me.fireEvent('guaranteedrange', range, start, end);
+            if (me.cb) {
+                me.cb.call(me.scope || me, range);
+            }
+        }
+        
+        me.unmask();
+    },
+    
+    // hack to support loadmask
+    mask: function() {
+        this.masked = true;
+        this.fireEvent('beforeload');
+    },
+    
+    // hack to support loadmask
+    unmask: function() {
+        if (this.masked) {
+            this.fireEvent('load');
+        }
+    },
+    
+    /**
+     * Returns the number of pending requests out.
+     */
+    hasPendingRequests: function() {
+        return this.pendingRequests.length;
+    },
+    
+    
+    // wait until all requests finish, until guaranteeing the range.
+    onWaitForGuarantee: function() {
+        if (!this.hasPendingRequests()) {
+            this.onGuaranteedRange();
+        }
+    },
+    
+    /**
+     * Guarantee a specific range, this will load the store with a range (that
+     * must be the pageSize or smaller) and take care of any loading that may
+     * be necessary.
+     */
+    guaranteeRange: function(start, end, cb, scope) {
+        //<debug>
+        if (start && end) {
+            if (end - start > this.pageSize) {
+                Ext.Error.raise({
+                    start: start,
+                    end: end,
+                    pageSize: this.pageSize,
+                    msg: "Requested a bigger range than the specified pageSize"
+                });
+            }
+        }
+        //</debug>
+        
+        end = (end > this.totalCount) ? this.totalCount - 1 : end;
+        
+        var me = this,
+            i = start,
+            prefetchData = me.prefetchData,
+            range = [],
+            startLoaded = !!prefetchData.getByKey(start),
+            endLoaded = !!prefetchData.getByKey(end),
+            startPage = me.getPageFromRecordIndex(start),
+            endPage = me.getPageFromRecordIndex(end);
+            
+        me.cb = cb;
+        me.scope = scope;
+
+        me.requestStart = start;
+        me.requestEnd = end;
+        // neither beginning or end are loaded
+        if (!startLoaded || !endLoaded) {
+            // same page, lets load it
+            if (startPage === endPage) {
+                me.mask();
+                me.prefetchPage(startPage, {
+                    //blocking: true,
+                    callback: me.onWaitForGuarantee,
+                    scope: me
+                });
+            // need to load two pages
+            } else {
+                me.mask();
+                me.prefetchPage(startPage, {
+                    //blocking: true,
+                    callback: me.onWaitForGuarantee,
+                    scope: me
+                });
+                me.prefetchPage(endPage, {
+                    //blocking: true,
+                    callback: me.onWaitForGuarantee,
+                    scope: me
+                });
+            }
+        // Request was already satisfied via the prefetch
+        } else {
+            me.onGuaranteedRange();
+        }
+    },
+    
+    // because prefetchData is stored by index
+    // this invalidates all of the prefetchedData
+    sort: function() {
+        var me = this,
+            prefetchData = me.prefetchData,
+            sorters,
+            start,
+            end,
+            range;
+            
+        if (me.buffered) {
+            if (me.remoteSort) {
+                prefetchData.clear();
+                me.callParent(arguments);
+            } else {
+                sorters = me.getSorters();
+                start = me.guaranteedStart;
+                end = me.guaranteedEnd;
+                range;
+                
+                if (sorters.length) {
+                    prefetchData.sort(sorters);
+                    range = prefetchData.getRange();
+                    prefetchData.clear();
+                    me.cacheRecords(range);
+                    delete me.guaranteedStart;
+                    delete me.guaranteedEnd;
+                    me.guaranteeRange(start, end);
+                }
+                me.callParent(arguments);
+            }
+        } else {
+            me.callParent(arguments);
+        }
+    },
+
+    // overriden to provide striping of the indexes as sorting occurs.
+    // this cannot be done inside of sort because datachanged has already
+    // fired and will trigger a repaint of the bound view.
+    doSort: function(sorterFn) {
+        var me = this;
+        if (me.remoteSort) {
+            //the load function will pick up the new sorters and request the sorted data from the proxy
+            me.load();
+        } else {
+            me.data.sortBy(sorterFn);
+            if (!me.buffered) {
+                var range = me.getRange(),
+                    ln = range.length,
+                    i  = 0;
+                for (; i < ln; i++) {
+                    range[i].index = i;
+                }
+            }
+            me.fireEvent('datachanged', me);
+        }
+    },
+    
     /**
      * Finds the index of the first matching Record in this store by a specific field value.
      * @param {String} fieldName The name of the Record field to test.
@@ -1503,23 +1896,20 @@ store.load(function(records, operation, success) {
     indexOfId: function(id) {
         return this.data.indexOfKey(id);
     },
-
+        
+    /**
+     * Remove all items from the store.
+     * @param {Boolean} silent Prevent the `clear` event from being fired.
+     */
     removeAll: function(silent) {
-        var me = this,
-            items = [];
+        var me = this;
 
-        me.each(function(rec) {
-            items.push(rec);
-        });
         me.clearData();
         if (me.snapshot) {
             me.snapshot.clear();
         }
-        //if(this.pruneModifiedRecords){
-        //    this.modified = [];
-        //}
         if (silent !== true) {
-            me.fireEvent('clear', me, items);
+            me.fireEvent('clear', me);
         }
     },
 

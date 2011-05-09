@@ -20,8 +20,8 @@
         height: 35px;
     }
 
-    .#{$prefix}layout-split-up,
-    .#{$prefix}layout-split-down {
+    .#{$prefix}layout-split-top,
+    .#{$prefix}layout-split-bottom {
         left: 50%;
 
         width: 35px;
@@ -38,11 +38,11 @@
         background: theme-image($theme-name, 'util/splitter/mini-right.gif') no-repeat top left;
     }
 
-    .#{$prefix}layout-split-up {
+    .#{$prefix}layout-split-top {
         background: theme-image($theme-name, 'util/splitter/mini-top.gif') no-repeat top left;
     }
 
-    .#{$prefix}layout-split-down {
+    .#{$prefix}layout-split-bottom {
         background: theme-image($theme-name, 'util/splitter/mini-bottom.gif') no-repeat top left;
     }
 
@@ -55,11 +55,11 @@
             background: theme-image($theme-name, 'util/splitter/mini-left.gif') no-repeat top right;
         }
 
-        .#{$prefix}layout-split-up {
+        .#{$prefix}layout-split-top {
             background: theme-image($theme-name, 'util/splitter/mini-bottom.gif') no-repeat top left;
         }
 
-        .#{$prefix}layout-split-down {
+        .#{$prefix}layout-split-bottom {
             background: theme-image($theme-name, 'util/splitter/mini-top.gif') no-repeat top left;
         }
     }
@@ -67,10 +67,12 @@
     .#{$prefix}splitter-horizontal {
         cursor: e-resize;
         cursor: row-resize;
+        font-size:1px;
     }
     .#{$prefix}splitter-vertical {
         cursor: e-resize;
         cursor: col-resize;
+        font-size:1px;
     }
     .#{$prefix}splitter-collapsed {
         cursor: default;
@@ -78,6 +80,7 @@
 
     .#{$prefix}splitter-active {
         z-index: 4;
+        font-size:1px;
         background-color: rgb(180, 180, 180);
         @include opacity(0.8);
     }

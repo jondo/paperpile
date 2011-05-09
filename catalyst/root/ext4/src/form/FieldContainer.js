@@ -133,6 +133,8 @@ Ext.define('Ext.form.FieldContainer', {
      * {@link #msgTarget}. Defaults to false.
      */
     combineErrors: false,
+    
+    maskOnDisable: false,
 
     initComponent: function() {
         var me = this,
@@ -262,5 +264,4 @@ Ext.define('Ext.form.FieldContainer', {
     getTargetEl: function() {
         return this.bodyEl || this.callParent();
     }
-
 });

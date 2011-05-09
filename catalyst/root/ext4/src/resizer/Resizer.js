@@ -26,7 +26,7 @@ Value   Description
  * <p>Here's an example showing the creation of a typical Resizer:</p>
  * <pre><code>
     <div id="elToResize" style="width:200px; height:100px; background-color:#000000;"></div>
-    
+
     Ext.create('Ext.resizer.Resizer', {
         el: 'elToResize',
         handles: 'all',
@@ -53,7 +53,7 @@ Ext.define('Ext.resizer.Resizer', {
     wrapCls:   Ext.baseCSSPrefix + 'resizable-wrap',
 
     /**
-     * @cfg {Boolean} dynamic 
+     * @cfg {Boolean} dynamic
      * <p>Specify as true to update the {@link #target} (Element or {@link Ext.Component Component}) dynamically during dragging.
      * This is <code>true</code> by default, but the {@link Ext.Component Component} class passes <code>false</code> when it
      * is configured as {@link Ext.Component#resizable}.</p>
@@ -314,7 +314,7 @@ Ext.define('Ext.resizer.Resizer', {
         if (Ext.isNumber(me.height)) {
             me.height = Ext.Number.constrain(me.height, me.minHeight, me.maxHeight);
         }
-        
+
         // Size the element
         if (me.width != null || me.height != null) {
             if (me.originalTarget) {
@@ -323,7 +323,7 @@ Ext.define('Ext.resizer.Resizer', {
             }
             me.resizeTo(me.width, me.height);
         }
-           
+
         me.forceHandlesHeight();
     },
 
@@ -380,8 +380,8 @@ Ext.define('Ext.resizer.Resizer', {
     },
 
     /**
-     * <p>Returns the element that was configured with the el or target config property.  
-     * If a component was configured with the target property then this will return the 
+     * <p>Returns the element that was configured with the el or target config property.
+     * If a component was configured with the target property then this will return the
      * element of this component.<p>
      * <p>Textarea and img elements will be wrapped with an additional div because
       * these elements do not support child nodes. The original element can be accessed
@@ -420,10 +420,15 @@ Ext.define('Ext.resizer.Resizer', {
         var me = this,
             handle;
         if (Ext.isIE6) {
-            handle = me['east'] || me['west'];
+            handle = me.east; 
             if (handle) {
                 handle.setHeight(me.el.getHeight());
             }
+            handle = me.west; 
+            if (handle) {
+                handle.setHeight(me.el.getHeight());
+            }
+            me.el.repaint();
         }
     }
 });

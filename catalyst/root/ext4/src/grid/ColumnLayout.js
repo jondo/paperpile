@@ -18,6 +18,7 @@
 Ext.define('Ext.grid.ColumnLayout', {
     extend: 'Ext.layout.container.HBox',
     alias: 'layout.gridcolumn',
+    type : 'column',
 
     // Height-stretched innerCt must be able to revert back to unstretched height
     clearInnerCtOnLayout: false,
@@ -35,9 +36,9 @@ Ext.define('Ext.grid.ColumnLayout', {
             i = 0,
             items = me.getLayoutItems(),
             len = items.length,
-            item;
+            item, returnValue;
 
-        me.callParent(arguments);
+        returnValue = me.callParent(arguments);
 
         // Size to a sane minimum height before possibly being stretched to accommodate grouped headers
         me.innerCt.setHeight(23);
@@ -58,6 +59,7 @@ Ext.define('Ext.grid.ColumnLayout', {
                 }
             }
         }
+        return returnValue;
     },
 
     // Override to enforce the forceFit config.
@@ -114,10 +116,25 @@ Ext.define('Ext.grid.ColumnLayout', {
     // FIX: when flexing we actually don't have enough space as we would
     // typically because of the scrollOffset on the GridView, must reserve this
     updateInnerCtSize: function(tSize, calcs) {
-        var me = this;
+        var me    = this,
+            extra = 0;
+
         // Columns must not account for scroll offset
         if (!me.isColumn && calcs.meta.tooNarrow) {
-            tSize.width = calcs.meta.desiredSize + (me.reserveOffset ? me.availableSpaceOffset : 0);
+            if (
+                Ext.isWebKit ||
+                Ext.isGecko ||
+                (Ext.isIEQuirks && (Ext.isIE6 || Ext.isIE7 || Ext.isIE8))
+            ) {
+                extra = 1;
+            // IE6-8 not quirks
+            } else if (Ext.isIE6 || Ext.isIE7 || Ext.isIE8) {
+                extra = 2;
+            }
+            
+            // this is the 1px accounted for in the Scroller when subtracting 1px.
+            extra++;
+            tSize.width = calcs.meta.desiredSize + (me.reserveOffset ? me.availableSpaceOffset : 0) + extra;
         }
         return me.callParent(arguments);
     },

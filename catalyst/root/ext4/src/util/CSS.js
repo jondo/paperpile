@@ -129,7 +129,9 @@ Ext.define('Ext.util.CSS', function() {
 
                 for (; i < len; i++) {
                     try {
-                        this.cacheStyleSheet(ds[i]);
+                        if (!ds[i].disabled) {
+                            this.cacheStyleSheet(ds[i]);
+                        }
                     } catch(e) {} 
                 }
             }

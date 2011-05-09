@@ -54,8 +54,8 @@ Ext.define('Ext.selection.CellModel', {
         me.bind(view.getStore(), true);
 
         view.on({
-            cellmousedown: this.onMouseDown,
-            refresh: this.onViewRefresh,
+            cellmousedown: me.onMouseDown,
+            refresh: me.onViewRefresh,
             scope: me
         });
 
@@ -91,14 +91,6 @@ Ext.define('Ext.selection.CellModel', {
     getHeaderCt: function() {
         return this.primaryView.headerCt;
     },
-    
-    getActiveHeader: function() {
-        if (this.position) {
-            return this.getHeaderCt().getHeaderAtIndex(this.position.column);
-        }
-        return false;
-
-    },
 
     onKeyUp: function(e, t) {
         this.move('up', e);
@@ -117,9 +109,10 @@ Ext.define('Ext.selection.CellModel', {
     },
     
     move: function(dir, e) {
-        var pos = this.primaryView.walkCells(this.getCurrentPosition(), dir, e, this.preventWrap);
+        var me = this,
+            pos = me.primaryView.walkCells(me.getCurrentPosition(), dir, e, me.preventWrap);
         if (pos) {
-            this.setCurrentPosition(pos);
+            me.setCurrentPosition(pos);
         }
         return pos;
     },
@@ -136,15 +129,17 @@ Ext.define('Ext.selection.CellModel', {
      * @param {Object} position The position to set.
      */
     setCurrentPosition: function(pos) {
-        if (this.position) {
-            this.onCellDeselect(this.position);
+        var me = this;
+        
+        if (me.position) {
+            me.onCellDeselect(me.position);
         }
         if (pos) {
-            this.onCellSelect(pos);
+            me.onCellSelect(pos);
         }
-        this.position = pos;
+        me.position = pos;
     },
-    
+
     /**
      * Set the current position based on where the user clicks.
      * @private
@@ -155,66 +150,63 @@ Ext.define('Ext.selection.CellModel', {
             column: cellIndex
         });
     },
-    
+
     // notify the view that the cell has been selected to update the ui
-    // approriately and bring the cell into focus
+    // appropriately and bring the cell into focus
     onCellSelect: function(position) {
         var me = this,
             store = me.view.getStore(),
             record = store.getAt(position.row);
-        
+
         me.doSelect(record);
         me.primaryView.onCellSelect(position);
         // TODO: Remove temporary cellFocus call here.
         me.primaryView.onCellFocus(position);
-        
         me.fireEvent('select', me, record, position.row, position.column);
     },
-    
+
     // notify view that the cell has been deselected to update the ui
     // appropriately
     onCellDeselect: function(position) {
         var me = this,
             store = me.view.getStore(),
             record = store.getAt(position.row);
-        
+
         me.doDeselect(record);
         me.primaryView.onCellDeselect(position);
-        
         me.fireEvent('deselect', me, record, position.row, position.column);
     },
-    
-    
+
     onKeyTab: function(e, t) {
         var me = this,
             direction = e.shiftKey ? 'left' : 'right',
             editingPlugin = me.view.editingPlugin,
             position = me.move(direction, e);
-        
+
         if (editingPlugin && position && me.wasEditing) {
             editingPlugin.startEditByPosition(position);
         }
         delete me.wasEditing;
     },
-    
+
     onEditorTab: function(editingPlugin, e) {
         var me = this,
             direction = e.shiftKey ? 'left' : 'right',
             position  = me.move(direction, e);
-        
+
         if (position) {
             editingPlugin.startEditByPosition(position);
             me.wasEditing = true;
         }
     },
-    
+
     refresh: function() {
         var pos = this.getCurrentPosition();
         if (pos) {
             this.onCellSelect(pos);
         }
     },
-    
+
     onViewRefresh: function() {
         var pos = this.getCurrentPosition();
         if (pos) {
@@ -222,7 +214,7 @@ Ext.define('Ext.selection.CellModel', {
             this.setCurrentPosition(null);
         }
     },
-    
+
     selectByPosition: function(position) {
         this.setCurrentPosition(position);
     }

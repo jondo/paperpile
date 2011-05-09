@@ -131,7 +131,6 @@ Ext.define('Ext.grid.plugin.DragDrop', {
      * AbstractComponent calls destroy on all its plugins at destroy time.
      */
     destroy: function() {
-        this.clearListeners();
         Ext.destroy(this.dragZone, this.dropZone);
     },
 

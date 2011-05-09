@@ -61,6 +61,20 @@
         }
     }
     
+    .#{$prefix}btn-disabled {
+        @include opacity(1);
+    }
+    
+    .#{$prefix}btn-disabled span {
+        @include opacity(.5);
+    }
+    
+    //remove the opacity rule of IE6.
+    .#{$prefix}ie6 .#{$prefix}btn-disabled,
+    .#{$prefix}ie6 .#{$prefix}btn-disabled span {
+        filter:none;
+    }
+    
     @if $include-ie {
         * html .#{$prefix}ie {
             .#{$prefix}btn button {
@@ -113,7 +127,11 @@
         .#{$prefix}btn-inner {
             padding-right: 0 !important;
         }
-    }  
+    }
+
+    .#{$prefix}toolbar .#{$prefix}btn-arrow-right {
+        padding-right: $button-toolbar-arrow-size;
+    }
 
     .#{$prefix}btn-arrow-bottom {
         background: transparent no-repeat center bottom;
@@ -141,6 +159,7 @@
     
     .#{$prefix}toolbar .#{$prefix}btn-split-right {
         background-image: theme-image($theme-name, 'button/s-arrow-noline.gif');
+        padding-right: $button-toolbar-split-size !important;
     }
     
     .#{$prefix}toolbar .#{$prefix}btn-split-bottom {
@@ -154,8 +173,6 @@
     .#{$prefix}item-disabled,
     .#{$prefix}item-disabled * {
         cursor: default;
-        
-        color: gray !important;
     }
 
     .#{$prefix}cycle-fixed-width .#{$prefix}btn-inner {

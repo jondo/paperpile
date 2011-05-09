@@ -4,7 +4,7 @@
  */
 Ext.define('Ext.util.Floating', {
 
-    uses: ['Ext.Layer'],
+    uses: ['Ext.Layer', 'Ext.window.Window'],
 
     /**
      * @cfg {Boolean} focusOnToFront
@@ -31,6 +31,83 @@ Ext.define('Ext.util.Floating', {
             constrain: false,
             shim: this.shim === false ? false : undefined
         }), this.el);
+    },
+
+    onFloatRender: function() {
+        var me = this;
+        me.zIndexParent = me.getZIndexParent();
+        me.setFloatParent(me.ownerCt);
+        delete me.ownerCt;
+
+        if (me.zIndexParent) {
+            me.zIndexParent.registerFloatingItem(me);
+        } else {
+            Ext.WindowManager.register(me);
+        }
+    },
+
+    setFloatParent: function(floatParent) {
+        var me = this;
+
+        // Remove listeners from previous floatParent
+        if (me.floatParent) {
+            me.mun(me.floatParent, {
+                hide: me.onFloatParentHide,
+                show: me.onFloatParentShow,
+                scope: me
+            });
+        }
+
+        me.floatParent = floatParent;
+
+        // Floating Components as children of Containers must hide when their parent hides.
+        if (floatParent) {
+            me.mon(me.floatParent, {
+                hide: me.onFloatParentHide,
+                show: me.onFloatParentShow,
+                scope: me
+            });
+        }
+
+        // If a floating Component is configured to be constrained, but has no configured
+        // constrainTo setting, set its constrainTo to be it's ownerCt before rendering.
+        if ((me.constrain || me.constrainHeader) && !me.constrainTo) {
+            me.constrainTo = floatParent ? floatParent.getTargetEl() : me.container;
+        }
+    },
+
+    onFloatParentHide: function() {
+        this.showOnParentShow = this.isVisible();
+        this.hide();
+    },
+
+    onFloatParentShow: function() {
+        if (this.showOnParentShow) {
+            delete this.showOnParentShow;
+            this.show();
+        }
+    },
+
+    /**
+     * @private
+     * <p>Finds the ancestor Container responsible for allocating zIndexes for the passed Component.</p>
+     * <p>That will be the outermost floating Container (a Container which has no ownerCt and has floating:true).</p>
+     * <p>If we have no ancestors, or we walk all the way up to the document body, there's no zIndexParent,
+     * and the global Ext.WindowManager will be used.</p>
+     */
+    getZIndexParent: function() {
+        var p = this.ownerCt,
+            c;
+
+        if (p) {
+            while (p) {
+                c = p;
+                p = p.ownerCt;
+            }
+            if (c.floating) {
+                return c;
+            }
+        }
     },
 
     // private
@@ -84,12 +161,16 @@ Ext.define('Ext.util.Floating', {
 
     /**
      * Aligns this floating Component to the specified element
-     * @param {Mixed} element The element to align to.
+     * @param {Mixed} element The element or {@link Ext.Component} to align to. If passing a component, it must
+     * be a omponent instance. If a string id is passed, it will be used as an element id.
      * @param {String} position (optional, defaults to "tl-bl?") The position to align to (see {@link Ext.core.Element#alignTo} for more details).
      * @param {Array} offsets (optional) Offset the positioning by [x, y]
      * @return {Component} this
      */
     alignTo: function(element, position, offsets) {
+        if (element.isComponent) {
+            element = element.getEl();
+        }
         var xy = this.el.getAlignToXY(element, position, offsets);
         this.setPagePosition(xy);
         return this;
@@ -103,6 +184,12 @@ Ext.define('Ext.util.Floating', {
      */
     toFront: function(preventFocus) {
         var me = this;
+
+        // Find the floating Component which provides the base for this Component's zIndexing.
+        // That must move to front to then be able to rebase its zIndex stack and move this to the front
+        if (me.zIndexParent) {
+            me.zIndexParent.toFront(true);
+        }
         if (me.zIndexManager.bringToFront(me)) {
             if (!Ext.isDefined(preventFocus)) {
                 preventFocus = !me.focusOnToFront;
@@ -118,19 +205,25 @@ Ext.define('Ext.util.Floating', {
     },
 
     /**
-     * Makes this the active Component by showing its shadow, or deactivates it by hiding its shadow.  This method also
-     * fires the {@link #activate} or {@link #deactivate} event depending on which action occurred. This method is
-     * called internally by {@link Ext.ZIndexManager}.
+     * <p>This method is called internally by {@link Ext.ZIndexManager} to signal that a floating
+     * Component has either been moved to the top of its zIndex stack, or pushed from the top of its zIndex stack.</p>
+     * <p>If a <i>Window</i> is superceded by another Window, deactivating it hides its shadow.</p>
+     * <p>This method also fires the {@link #activate} or {@link #deactivate} event depending on which action occurred.</p>
      * @param {Boolean} active True to activate the Component, false to deactivate it (defaults to false)
+     * @param {Component} newActive The newly active Component which is taking over topmost zIndex position.
      */
-    setActive: function(active) {
+    setActive: function(active, newActive) {
         if (active) {
-            if (!this.maximized) {
+            if ((this instanceof Ext.window.Window) && !this.maximized) {
                 this.el.enableShadow(true);
             }
             this.fireEvent('activate', this);
         } else {
-            this.el.disableShadow();
+            // Only the *Windows* in a zIndex stack share a shadow. All other types of floaters
+            // can keep their shadows all the time
+            if ((this instanceof Ext.window.Window) && (newActive instanceof Ext.window.Window)) {
+                this.el.disableShadow();
+            }
             this.fireEvent('deactivate', this);
         }
     },
@@ -166,7 +259,7 @@ Ext.define('Ext.util.Floating', {
         var parent = this.floatParent,
             container = parent ? parent.getTargetEl() : this.container,
             size = container.getViewSize(false);
-            
+
         this.setSize(size);
     }
 });

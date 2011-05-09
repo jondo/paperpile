@@ -56,7 +56,7 @@ Ext.define('Ext.selection.RowModel', {
         me.bind(view.getStore(), true);
 
         view.on({
-            itemmousedown: this.onRowMouseDown,
+            itemmousedown: me.onRowMouseDown,
             scope: me
         });
 
@@ -276,7 +276,7 @@ Ext.define('Ext.selection.RowModel', {
         // will be visible.
         if (idx + 1 < me.store.getCount()) {
             record = me.store.getAt(idx + 1);
-            if (me.selected.getCount() == 0) {
+            if (me.selected.getCount() === 0) {
                 me.doSelect(record);
                 //view.focusRow(idx + 1);
             } else if (e.shiftKey && me.lastFocused) {
@@ -380,7 +380,7 @@ Ext.define('Ext.selection.RowModel', {
         var me = this,
             view = me.views[0],
             record = editingPlugin.getActiveRecord(),
-            header = editingPlugin.getActiveHeader(),
+            header = editingPlugin.getActiveColumn(),
             position = view.getPosition(record, header),
             direction = e.shiftKey ? 'left' : 'right',
             newPosition  = view.walkCells(position, direction, e, this.preventWrap);

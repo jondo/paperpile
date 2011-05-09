@@ -450,12 +450,23 @@ Ext.override(Ext.core.Element, {
     getViewRegion: function() {
         var me = this,
             isBody = me.dom === document.body,
-            scroll = me.getScroll(),
-            pos = isBody ? [0, 0] : me.getXY(),
-            top = pos[1] + scroll.top + (isBody ?  0 : me.getBorderWidth('t') + me.getPadding('t')),
-            left = pos[0] + scroll.left + (isBody ? 0 : me.getBorderWidth('l') + me.getPadding('l')),
-            width = isBody ? Ext.core.Element.getViewportWidth() : me.getWidth(true),
-            height = isBody ? Ext.core.Element.getViewportHeight() : me.getHeight(true);
+            scroll, pos, top, left, width, height;
+            
+        // For the body we want to do some special logic
+        if (isBody) {
+            scroll = me.getScroll();
+            left = scroll.left;
+            top = scroll.top;
+            width = Ext.core.Element.getViewportWidth();
+            height = Ext.core.Element.getViewportHeight();
+        }
+        else {
+            pos = me.getXY();
+            left = pos[0] + me.getBorderWidth('l') + me.getPadding('l');
+            top = pos[1] + me.getBorderWidth('t') + me.getPadding('t');
+            width = me.getWidth(true);
+            height = me.getHeight(true);
+        }
 
         return Ext.create('Ext.util.Region', top, left + width, top + height, left);
     },

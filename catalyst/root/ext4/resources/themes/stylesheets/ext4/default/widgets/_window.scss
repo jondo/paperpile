@@ -14,17 +14,6 @@
     .#{$prefix}window-body {
         position: relative;
         border-style: $window-body-border-style;
-        border-width: $window-body-border-width;
-    }
-        
-    .#{$prefix}window-noborder-body {
-        border-width: 0;
-    }
-
-    // border:false on a Window means no borders on the body
-    // Supercede above rules.
-    .#{$prefix}window-noborder-body {
-        border: 0 none;
     }
 
     //maximized window
@@ -92,7 +81,7 @@
         $ui-background-color: $window-background-color
     );
     
-    .x-window-body-plain {
+    .#{$prefix}window-body-plain {
         background: transparent;
     }
 }
@@ -155,21 +144,23 @@
     
     .#{$prefix}window-header-text-#{$ui-label} {
         @if $ui-header-color != null { color: $ui-header-color; }
-        @if $ui-header-font-size != null { font-size: $ui-header-font-size; }
         @if $ui-header-font-weight != null { font-weight: $ui-header-font-weight; }
         
-        line-height: $window-header-font-size;
+        line-height: $ui-header-font-size;
         
         @include no-select;
         white-space: nowrap;
         overflow: visible;
+        
+        font-family: $font-family;
+        font-size: $ui-header-font-size;
     }
     
     @if $ui-border-radius != null {
-        @include x-frame('window-header-#{$ui-label}-top', null, top($ui-border-radius) right($ui-border-radius) 0 0, $window-border-width, 5px 5px 0, $ui-background-color);
-        @include x-frame('window-header-#{$ui-label}-right', null, 0 right($ui-border-radius) bottom($ui-border-radius) 0, $window-border-width, 5px 5px 5px 0, $ui-background-color);
-        @include x-frame('window-header-#{$ui-label}-bottom', null, 0 0 bottom($ui-border-radius) left($ui-border-radius), $window-border-width, 0 5px 5px, $ui-background-color);
-        @include x-frame('window-header-#{$ui-label}-left', null, top($ui-border-radius) 0 0 left($ui-border-radius), $window-border-width, 5px 0px 5px 5px, $ui-background-color);
+        @include x-frame('window-header', '#{$ui-label}-top',    top($ui-border-radius) right($ui-border-radius) 0 0, $window-border-width, 5px 5px 0, $ui-background-color);
+        @include x-frame('window-header', '#{$ui-label}-right',  0 right($ui-border-radius) bottom($ui-border-radius) 0, $window-border-width, 5px 5px 5px 0, $ui-background-color);
+        @include x-frame('window-header', '#{$ui-label}-bottom', 0 0 bottom($ui-border-radius) left($ui-border-radius), $window-border-width, 0 5px 5px, $ui-background-color);
+        @include x-frame('window-header', '#{$ui-label}-left',   top($ui-border-radius) 0 0 left($ui-border-radius), $window-border-width, 5px 0px 5px 5px, $ui-background-color);
     }
     
     .#{$prefix}window-header-#{$ui-label}-top {

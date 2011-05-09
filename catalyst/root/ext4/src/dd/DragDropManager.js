@@ -1170,17 +1170,28 @@ Ext.define('Ext.dd.DragDropManager', {
      * @static
      */
     getScroll: function () {
-        var t, l, dde=document.documentElement, db=document.body;
-        if (dde && (dde.scrollTop || dde.scrollLeft)) {
-            t = dde.scrollTop;
-            l = dde.scrollLeft;
-        } else if (db) {
-            t = db.scrollTop;
-            l = db.scrollLeft;
+        var doc   = window.document,
+            docEl = doc.documentElement,
+            body  = doc.body,
+            top   = 0,
+            left  = 0;
+            
+        if (Ext.isGecko4) {
+            top  = window.scrollYOffset;
+            left = window.scrollXOffset;
         } else {
-
+            if (docEl && (docEl.scrollTop || docEl.scrollLeft)) {
+                top  = docEl.scrollTop;
+                left = docEl.scrollLeft;
+            } else if (body) {
+                top  = body.scrollTop;
+                left = body.scrollLeft;
+            } 
         }
-        return { top: t, left: l };
+        return {
+            top: top,
+            left: left
+        };
     },
 
     /**

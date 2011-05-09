@@ -7,6 +7,8 @@
     .#{$prefix}btn-group-body {
         position: relative;
         zoom: 1;
+        
+        padding: $btn-group-padding;
     }
     
     .#{$prefix}btn-group-header-text {
@@ -55,24 +57,22 @@
             $width: $btn-group-inner-border-width, 
             $color: $ui-inner-border-color
         );
-
-        margin: $btn-group-margin;
     }
 
-    .#{$prefix}btn-group-header-default {
+    .#{$prefix}btn-group-header-#{$ui-label}-framed {
         margin: $btn-group-header-margin;
     }
 
-    .#{$prefix}btn-group-header-body-default {
+    .#{$prefix}btn-group-header-body-#{$ui-label}-framed {
         padding: $btn-group-header-padding;
 
         background: $ui-header-background-color;
 
         @include border-top-radius($ui-border-radius);
-
-        .#{$prefix}btn-group-header-text {
-            font: $ui-header-font;
-            color: $ui-header-color;
-        }
+    }
+    
+    .#{$prefix}btn-group-header-text-#{$ui-label}-framed {
+        font: $ui-header-font;
+        color: $ui-header-color;
     }
 }

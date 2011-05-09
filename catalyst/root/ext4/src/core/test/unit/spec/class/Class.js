@@ -30,6 +30,7 @@ describe("Ext.Class", function() {
 
         beforeEach(function() {
             cls = function() {};
+            cls.prototype.config = {};
             cls.ownMethod = function(name, fn) {
                 this.prototype[name] = fn;
             };
@@ -40,7 +41,7 @@ describe("Ext.Class", function() {
             it("should extend from Base if no 'extend' property found", function() {
                 var data = {};
 
-                Ext.Class.preprocessors.extend.fn(cls, data, emptyFn);
+                Ext.Class.preprocessors.extend.fn(cls, data, emptyFn, emptyFn);
 
                 expect((new cls) instanceof Ext.Base).toBeTruthy();
             });
@@ -50,7 +51,7 @@ describe("Ext.Class", function() {
                     extend: My.awesome.Class
                 };
 
-                Ext.Class.preprocessors.extend.fn(cls, data, emptyFn);
+                Ext.Class.preprocessors.extend.fn(cls, data, emptyFn, emptyFn);
 
                 expect((new cls) instanceof My.awesome.Class).toBeTruthy();
             });
@@ -62,7 +63,7 @@ describe("Ext.Class", function() {
 
                 var parentPrototype = My.awesome.Class.prototype;
 
-                Ext.Class.preprocessors.extend.fn(cls, data, emptyFn);
+                Ext.Class.preprocessors.extend.fn(cls, data, emptyFn, emptyFn);
 
                 expect(cls.superclass).toEqual(parentPrototype);
                 expect((new cls).superclass).toEqual(parentPrototype);
@@ -78,7 +79,7 @@ describe("Ext.Class", function() {
                     }
                 };
 
-                Ext.Class.preprocessors.config.fn(cls, data, emptyFn);
+                Ext.Class.preprocessors.config.fn(cls, data, emptyFn, emptyFn);
 
                 expect(data.getSomeName).toBeDefined();
             });
@@ -95,7 +96,7 @@ describe("Ext.Class", function() {
                     called = true;
                 };
 
-                Ext.Class.preprocessors.config.fn(cls, data, emptyFn);
+                Ext.Class.preprocessors.config.fn(cls, data, emptyFn, emptyFn);
 
                 expect(data.getSomeName).not.toBeDefined();
             });
@@ -107,7 +108,7 @@ describe("Ext.Class", function() {
                     }
                 };
 
-                Ext.Class.preprocessors.config.fn(cls, data, emptyFn);
+                Ext.Class.preprocessors.config.fn(cls, data, emptyFn, emptyFn);
 
                 expect(data.setSomeName).toBeDefined();
             });
@@ -125,7 +126,7 @@ describe("Ext.Class", function() {
                     called = true;
                 };
 
-                Ext.Class.preprocessors.config.fn(cls, data, emptyFn);
+                Ext.Class.preprocessors.config.fn(cls, data, emptyFn, emptyFn);
 
                 expect(data.setSomeName).not.toBeDefined();
             });
@@ -137,7 +138,7 @@ describe("Ext.Class", function() {
                     }
                 };
 
-                Ext.Class.preprocessors.config.fn(cls, data, emptyFn);
+                Ext.Class.preprocessors.config.fn(cls, data, emptyFn, emptyFn);
 
                 expect(data.applySomeName).toBeDefined();
             });
@@ -154,7 +155,7 @@ describe("Ext.Class", function() {
                     called = true;
                 };
 
-                Ext.Class.preprocessors.config.fn(cls, data, emptyFn);
+                Ext.Class.preprocessors.config.fn(cls, data, emptyFn, emptyFn);
 
                 expect(data.applySomeName).not.toBeDefined();
             });
@@ -169,7 +170,7 @@ describe("Ext.Class", function() {
                     }
                 };
 
-                Ext.Class.preprocessors.statics.fn(cls, data, emptyFn);
+                Ext.Class.preprocessors.statics.fn(cls, data, emptyFn, emptyFn);
 
                 var obj = new cls;
 
@@ -189,7 +190,7 @@ describe("Ext.Class", function() {
                     }
                 };
 
-                Ext.Class.preprocessors.inheritableStatics.fn(cls, data, emptyFn);
+                Ext.Class.preprocessors.inheritableStatics.fn(cls, data, emptyFn, emptyFn);
 
                 var obj = new cls;
 
@@ -207,8 +208,8 @@ describe("Ext.Class", function() {
                     }
                 }, cls2 = function(){};
 
-                Ext.Class.preprocessors.inheritableStatics.fn(cls, data, emptyFn);
-                Ext.Class.preprocessors.extend.fn(cls2, { extend: cls }, emptyFn);
+                Ext.Class.preprocessors.inheritableStatics.fn(cls, data, emptyFn, emptyFn);
+                Ext.Class.preprocessors.extend.fn(cls2, { extend: cls }, emptyFn, emptyFn);
 
                 expect(cls2.someName).toEqual('someValue');
                 expect(cls2.someMethod).toBe(Ext.emptyFn);
@@ -225,8 +226,8 @@ describe("Ext.Class", function() {
                 cls2.someName = 'someOtherValue';
                 cls2.someMethod = function(){};
 
-                Ext.Class.preprocessors.inheritableStatics.fn(cls, data, emptyFn);
-                Ext.Class.preprocessors.extend.fn(cls2, { extend: cls }, emptyFn);
+                Ext.Class.preprocessors.inheritableStatics.fn(cls, data, emptyFn, emptyFn);
+                Ext.Class.preprocessors.extend.fn(cls2, { extend: cls }, emptyFn, emptyFn);
 
                 expect(cls2.someName).toEqual('someOtherValue');
                 expect(cls2.someMethod).not.toBe(Ext.emptyFn);

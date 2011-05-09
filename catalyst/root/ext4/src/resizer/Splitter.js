@@ -135,7 +135,7 @@ Ext.define('Ext.resizer.Splitter', {
 
         // Read the data out the truth table
         me.orientation = ['horizontal', 'vertical'][idx & 1];
-        return ['down', 'right', 'up', 'left'][idx];
+        return ['bottom', 'right', 'top', 'left'][idx];
     },
 
     getCollapseTarget: function() {

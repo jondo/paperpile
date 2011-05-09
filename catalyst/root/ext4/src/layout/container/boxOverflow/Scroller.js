@@ -167,6 +167,8 @@ Ext.define('Ext.layout.container.boxOverflow.Scroller', {
         this.beforeScroller.show();
         this.afterScroller.show();
         this.updateScrollButtons();
+        
+        this.layout.owner.addClsWithUI('scroller');
     },
 
     /**
@@ -177,6 +179,8 @@ Ext.define('Ext.layout.container.boxOverflow.Scroller', {
         if (this.beforeScroller != undefined) {
             this.beforeScroller.hide();
             this.afterScroller.hide();
+            
+            this.layout.owner.removeClsWithUI('scroller');
         }
     },
 

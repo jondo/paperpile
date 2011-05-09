@@ -90,10 +90,11 @@ Ext.define('Ext.form.action.DirectLoad', {
      * @return Array
      */
     getArgs: function() {
-        var args = [],
-            form = this.form,
+        var me = this,
+            args = [],
+            form = me.form,
             paramOrder = form.paramOrder,
-            params = this.getParams(),
+            params = me.getParams(),
             i, len;
 
         // If a paramOrder was specified, add the params into the argument list in that order.
@@ -108,7 +109,7 @@ Ext.define('Ext.form.action.DirectLoad', {
         }
 
         // Add the callback and scope to the end of the arguments list
-        args.push(this.onSuccess, this);
+        args.push(me.onSuccess, me);
 
         return args;
     },
@@ -124,7 +125,6 @@ Ext.define('Ext.form.action.DirectLoad', {
         if (trans.type == Ext.direct.Manager.self.exceptions.SERVER) {
             result = {};
         }
-        this.callParent([result]);
         this.callParent([result]);
     }
 });

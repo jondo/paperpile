@@ -6,7 +6,7 @@ Ext.define('Sample.Musician', {
             return new this({
                 name: musician.getName(),
                 height: musician.getHeight(),
-                isCool: musician.isCool(),
+                isCool: musician.getIsCool(),
                 gender: musician.getGender()
             });
         }

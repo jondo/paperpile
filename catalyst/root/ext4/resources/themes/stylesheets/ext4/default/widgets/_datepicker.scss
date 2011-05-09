@@ -14,10 +14,6 @@
             
             border-width: 0;
         }
-        
-        span {
-            color: #fff !important;
-        }
     }
     
     .#{$prefix}datepicker-inner,
@@ -103,19 +99,14 @@
             border-width: 0 !important;
         }
         
+        span {
+            color: #fff !important;
+        }
+        
         .#{$prefix}btn-split-right {
             background: theme-image($theme-name, $datepicker-month-arrow-image) no-repeat right center !important;
             
             padding-right: 12px;
-        }
-    }
-
-    .#{$prefix}quirks {
-        .#{$prefix}ie6,
-        .#{$prefix}ie8 {
-            .#{$prefix}datepicker-month {
-                margin-top: 3px;
-            }
         }
     }
             
@@ -360,6 +351,19 @@
         cursor: pointer;
         cursor: hand;
         background-position: -15px -105px;
+    }
+    
+    @if $include-ie {
+        .#{$prefix}quirks {
+            .#{$prefix}ie7,
+            .#{$prefix}ie8 {
+                .#{$prefix}monthpicker-buttons {
+                    .#{$prefix}btn {
+                        margin-top: 2px;
+                    }
+                }
+            }
+        }
     }
 
     //nlg support

@@ -40,7 +40,6 @@ var t = new Ext.Template(
    </code></pre>
  * <p><b>Notes</b>:</p>
  * <div class="mdetail-params"><ul>
- * <li>Formatting and <code>disableFormats</code> are not applicable for Sencha Touch.</li>
  * <li>For a list of available format functions, see {@link Ext.util.Format}.</li>
  * <li><code>disableFormats</code> reduces <code>{@link #apply}</code> time
  * when no formatting is required.</li>
@@ -54,7 +53,7 @@ Ext.define('Ext.Template', {
 
     /* Begin Definitions */
 
-    requires: ['Ext.core.DomHelper'],
+    requires: ['Ext.core.DomHelper', 'Ext.util.Format'],
 
     statics: {
         /**
@@ -81,7 +80,7 @@ Ext.define('Ext.Template', {
             value;
 
         me.initialConfig = {};
-        
+
         if (length > 1) {
             for (; i < length; i++) {
                 value = args[i];
@@ -125,7 +124,7 @@ Ext.define('Ext.Template', {
     applyTemplate: function(values) {
         var me = this,
             useFormat = me.disableFormats !== true,
-            fm = Ext.String,
+            fm = Ext.util.Format,
             tpl = me;
 
         if (me.compiled) {
@@ -175,7 +174,7 @@ Ext.define('Ext.Template', {
      */
     compile: function() {
         var me = this,
-            fm = Ext.String,
+            fm = Ext.util.Format,
             useFormat = me.disableFormats !== true,
             body, bodyReturn;
 
@@ -269,11 +268,6 @@ Ext.define('Ext.Template', {
         return returnElement ? Ext.get(el.firstChild, true) : el.firstChild;
     }
 }, function() {
-    //FIXME: We have to copy these here at the moment because these methods have been split between Ext.util.Format and Ext.String :/
-    Ext.apply(Ext.util.Format, {
-        ellipsis: Ext.String.ellipsis,
-        htmlEncode: Ext.String.htmlEncode
-    });
 
     /**
      * Alias for {@link #applyTemplate}

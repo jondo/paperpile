@@ -71,7 +71,7 @@ if(opt.anim.isAnimated()){
     var DOC = document,
         EC = Ext.cache;
 
-    Ext.core.Element = function(element, forceNew) {
+    Ext.Element = Ext.core.Element = function(element, forceNew) {
         var dom = typeof element == "string" ? DOC.getElementById(element) : element,
         id;
 
@@ -759,7 +759,7 @@ el.un('click', this.handlerFn);
      * @method clearListeners
      */
     ep.clearListeners = ep.removeAllListeners;
-    
+
     /**
      * Removes this element's dom reference.  Note that event and cache removal is handled at {@link Ext#removeNode Ext.removeNode}.
      * Alias to {@link #remove}.

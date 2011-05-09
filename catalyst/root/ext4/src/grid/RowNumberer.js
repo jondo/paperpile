@@ -1,18 +1,18 @@
 /**
  * @class Ext.grid.RowNumberer
  * @extends Ext.grid.column.Column
- * This is a utility class that can be passed into a {@link Ext.grid.Header} as a column config that provides
+ * This is a utility class that can be passed into a {@link Ext.grid.column.Column} as a column config that provides
  * an automatic row numbering column.
- * <br>Usage:<br>
- <pre><code>
- // This is a typical column config with the first column providing row numbers
- var colModel = new Ext.grid.ColumnModel([
-    new Ext.grid.RowNumberer(),
-    {header: "Name", width: 80, sortable: true},
-    {header: "Code", width: 50, sortable: true},
-    {header: "Description", width: 200, sortable: true}
- ]);
- </code></pre>
+ * <br>Usage:<br><pre><code>
+columns: [
+    Ext.create('Ext.grid.RowNumberer'),
+    {text: "Company", flex: 1, sortable: true, dataIndex: 'company'},
+    {text: "Price", width: 120, sortable: true, renderer: Ext.util.Format.usMoney, dataIndex: 'price'},
+    {text: "Change", width: 120, sortable: true, dataIndex: 'change'},
+    {text: "% Change", width: 120, sortable: true, dataIndex: 'pctChange'},
+    {text: "Last Updated", width: 120, sortable: true, renderer: Ext.util.Format.dateRenderer('m/d/Y'), dataIndex: 'lastChange'}
+]
+ *</code></pre>
  * @constructor
  * @param {Object} config The configuration options
  */
@@ -24,20 +24,20 @@ Ext.define('Ext.grid.RowNumberer', {
      * number column (defaults to '&#160').
      */
     text: "&#160",
-    
+
     /**
      * @cfg {Number} width The default width in pixels of the row number column (defaults to 23).
      */
     width: 23,
-    
+
     /**
      * @cfg {Boolean} sortable True if the row number column is sortable (defaults to false).
      * @hide
      */
     sortable: false,
-    
+
     align: 'right',
-    
+
     constructor : function(config){
         this.callParent(arguments);
         if (this.rowspan) {
@@ -58,7 +58,7 @@ Ext.define('Ext.grid.RowNumberer', {
         if (this.rowspan){
             metaData.cellAttr = 'rowspan="'+this.rowspan+'"';
         }
-        
+
         metaData.tdCls = Ext.baseCSSPrefix + 'grid-cell-special';
         return store.indexOfTotal(record) + 1;
     }

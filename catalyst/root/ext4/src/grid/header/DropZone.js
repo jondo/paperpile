@@ -68,11 +68,34 @@ Ext.define('Ext.grid.header.DropZone', {
             region, topIndicator, bottomIndicator, topAnchor, bottomAnchor,
             topXY, bottomXY, headerCtEl, minX, maxX;
 
+        // Cannot drag beyond non-draggable start column
+        if (!header.draggable && header.getIndex() == 0) {
+            return false;
+        }
+
         this.lastLocation = location;
 
         if ((draggedHeader !== header) &&
             ((pos === "before" && nextHd !== header) ||
-            (pos === "after" && prevHd !== header))) {
+            (pos === "after" && prevHd !== header)) &&
+            !header.isDescendantOf(draggedHeader)) {
+
+            // As we move in between different DropZones that are in the same
+            // group (such as the case when in a locked grid), invalidateDrop
+            // on the other dropZones.
+            var allDropZones = Ext.dd.DragDropManager.getRelated(this),
+                ln = allDropZones.length,
+                i  = 0,
+                dropZone;
+
+            for (; i < ln; i++) {
+                dropZone = allDropZones[i];
+                if (dropZone !== this && dropZone.invalidateDrop) {
+                    dropZone.invalidateDrop();
+                }
+            }
+
+
             this.valid = true;
             topIndicator = this.getTopIndicator();
             bottomIndicator = this.getBottomIndicator();
@@ -113,8 +136,7 @@ Ext.define('Ext.grid.header.DropZone', {
 
     invalidateDrop: function() {
         this.valid = false;
-        this.getTopIndicator().hide();
-        this.getBottomIndicator().hide();
+        this.hideIndicators();
     },
 
     onNodeOver: function(node, dragZone, e, data) {
@@ -124,9 +146,13 @@ Ext.define('Ext.grid.header.DropZone', {
         return this.valid ? this.dropAllowed : this.dropNotAllowed;
     },
 
-    onNodeOut: function() {
+    hideIndicators: function() {
         this.getTopIndicator().hide();
         this.getBottomIndicator().hide();
+    },
+
+    onNodeOut: function() {
+        this.hideIndicators();
     },
 
     onNodeDrop: function(node, dragZone, e, data) {
@@ -142,21 +168,22 @@ Ext.define('Ext.grid.header.DropZone', {
                 groupCt,
                 scrollerOwner;
 
+            if (lastLocation.pos === 'after') {
+                toIdx++;
+            }
+
             // If we are dragging in between two HeaderContainers that have had the lockable
             // mixin injected we will lock/unlock headers in between sections. Note that lockable
             // does NOT currently support grouped headers.
-            if (fromCt.lockableInjected && toCt.lockableInjected && toCt.lockedCt) {
+            if (fromCt !== toCt && fromCt.lockableInjected && toCt.lockableInjected && toCt.lockedCt) {
                 scrollerOwner = fromCt.up('[scrollerOwner]');
                 scrollerOwner.lock(hd, toIdx);
-            } else if (fromCt.lockableInjected && toCt.lockableInjected && fromCt.lockedCt) {
+            } else if (fromCt !== toCt && fromCt.lockableInjected && toCt.lockableInjected && fromCt.lockedCt) {
                 scrollerOwner = fromCt.up('[scrollerOwner]');
                 scrollerOwner.unlock(hd, toIdx);
             } else {
-                if (lastLocation.pos === 'after') {
-                    toIdx++;
-                }
-
-                // If dragging rightwards, then after removal, the insertion index will be one less.
+                // If dragging rightwards, then after removal, the insertion index will be one less when moving
+                // in between the same container.
                 if ((fromCt === toCt) && (toIdx > fromCt.items.indexOf(hd))) {
                     toIdx--;
                 }
@@ -198,7 +225,9 @@ Ext.define('Ext.grid.header.DropZone', {
                     hd.savedFlex = hd.flex;
                     delete hd.flex;
                     hd.width = hd.getWidth();
-                    toCt.minWidth = toCt.getWidth() + hd.getWidth();
+                    // When there was previously a flex, we need to ensure we don't count for the
+                    // border twice.
+                    toCt.minWidth = toCt.getWidth() + hd.getWidth() - (hd.savedFlex ? 1 : 0);
                     toCt.setWidth(toCt.minWidth);
                 } else {
                     if (hd.savedFlex) {

@@ -7,22 +7,58 @@
  * As with all other series, the Pie Series must be appended in the *series* Chart array configuration. See the Chart 
  * documentation for more information. A typical configuration object for the pie series could be:
  * 
- *     series: [{
- *         type: 'pie',
- *         field: 'data1',
- *         showInLegend: true,
- *         highlight: {
- *           segment: {
- *             margin: 20
- *           }
- *         },
- *         label: {
- *             field: 'name',
- *             display: 'rotate',
- *             contrast: true,
- *             font: '18px Arial'
- *         }
- *     }]
+{@img Ext.chart.series.Pie/Ext.chart.series.Pie.png Ext.chart.series.Pie chart series}
+  <pre><code>
+    var store = Ext.create('Ext.data.JsonStore', {
+        fields: ['name', 'data1', 'data2', 'data3', 'data4', 'data5'],
+        data: [
+            {'name':'metric one', 'data1':10, 'data2':12, 'data3':14, 'data4':8, 'data5':13},
+            {'name':'metric two', 'data1':7, 'data2':8, 'data3':16, 'data4':10, 'data5':3},
+            {'name':'metric three', 'data1':5, 'data2':2, 'data3':14, 'data4':12, 'data5':7},
+            {'name':'metric four', 'data1':2, 'data2':14, 'data3':6, 'data4':1, 'data5':23},
+            {'name':'metric five', 'data1':27, 'data2':38, 'data3':36, 'data4':13, 'data5':33}                                                
+        ]
+    });
+    
+    Ext.create('Ext.chart.Chart', {
+        renderTo: Ext.getBody(),
+        width: 500,
+        height: 300,
+        animate: true,
+        store: store,
+        theme: 'Base:gradients',
+        series: [{
+            type: 'pie',
+            field: 'data1',
+            showInLegend: true,
+            tips: {
+              trackMouse: true,
+              width: 140,
+              height: 28,
+              renderer: function(storeItem, item) {
+                //calculate and display percentage on hover
+                var total = 0;
+                store.each(function(rec) {
+                    total += rec.get('data1');
+                });
+                this.setTitle(storeItem.get('name') + ': ' + Math.round(storeItem.get('data1') / total * 100) + '%');
+              }
+            },
+            highlight: {
+              segment: {
+                margin: 20
+              }
+            },
+            label: {
+                field: 'name',
+                display: 'rotate',
+                contrast: true,
+                font: '18px Arial'
+            }
+        }]    
+    });
+   </code></pre>
+ 
  * 
  * In this configuration we set `pie` as the type for the series, set an object with specific style properties for highlighting options 
  * (triggered when hovering elements). We also set true to `showInLegend` so all the pie slices can be represented by a legend item. 
@@ -235,7 +271,6 @@ Ext.define('Ext.chart.series.Pie', {
             y = me.centerY,
             startAngle = slice.startAngle,
             endAngle = slice.endAngle,
-            radius = Math.max(('rho' in slice) ? slice.rho: me.radius, me.label.minMargin),
             donut = +me.donut,
             a1 = Math.min(startAngle, endAngle) * rad,
             a2 = Math.max(startAngle, endAngle) * rad,
@@ -363,6 +398,12 @@ Ext.define('Ext.chart.series.Pie', {
             } 
             value = record.get(field);
             middleAngle = angle - 360 * value / totalField / 2;
+            // TODO - Put up an empty circle
+            if (isNaN(middleAngle)) {
+                middleAngle = 360;
+                value = 1;
+                totalField = 1;
+            }
             // First slice
             if (!i || first == 0) {
                 angle = 360 - middleAngle;
@@ -580,7 +621,7 @@ Ext.define('Ext.chart.series.Pie', {
             theta = Math.atan2(y, x || 1),
             dg = theta * 180 / Math.PI,
             prevDg;
-
+        
         function fixAngle(a) {
             if (a < 0) a += 360;
             return a % 360;
@@ -789,6 +830,13 @@ Ext.define('Ext.chart.series.Pie', {
         var me = this,
             rad = me.rad;
         item = item || this.items[this._index];
+        
+        //TODO(nico): sometimes in IE itemmouseover is triggered
+        //twice without triggering itemmouseout in between. This
+        //fixes the highlighting bug. Eventually, events should be
+        //changed to trigger one itemmouseout between two itemmouseovers.
+        this.unHighlightItem();
+        
         if (!item || item.sprite && item.sprite._animating) {
             return;
         }
@@ -810,7 +858,18 @@ Ext.define('Ext.chart.series.Pie', {
                     x = r * Math.cos(middle),
                     y = r * Math.sin(middle);
 
-
+                //TODO(nico): rounding to 1e-10
+                //gives the right translation. Translation
+                //was buggy for very small numbers. In this
+                //case we're not looking to translate to very small
+                //numbers but not to translate at all.
+                if (Math.abs(x) < 1e-10) {
+                    x = 0;
+                }
+                if (Math.abs(y) < 1e-10) {
+                    y = 0;
+                }
+                
                 if (animate) {
                     label.stopAnimation();
                     label.animate({
@@ -847,7 +906,7 @@ Ext.define('Ext.chart.series.Pie', {
                         }
                     }
                     attrs = {
-                        segment: Ext.apply(to, me.highlightCfg.segment)
+                        segment: Ext.applyIf(to, me.highlightCfg.segment)
                     };
                     if (animate) {
                         shadow.stopAnimation();
@@ -933,7 +992,7 @@ Ext.define('Ext.chart.series.Pie', {
                                 }
                             }
                             shadow = shadows[j];
-                            if (shadow) {
+                            if (animate) {
                                 shadow.stopAnimation();
                                 shadow.animate({
                                     to: {

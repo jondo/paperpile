@@ -4,6 +4,33 @@
  * Defines a mask for a chart's series.
  * The 'chart' member must be set prior to rendering.
  *
+ * A Mask can be used to select a certain region in a chart.
+ * When enabled, the `select` event will be triggered when a
+ * region is selected by the mask, allowing the user to perform
+ * other tasks like zooming on that region, etc.
+ *
+ * In order to use the mask one has to set the Chart `mask` option to
+ * `true`, `vertical` or `horizontal`. Then a possible configuration for the
+ * listener could be:
+ *
+        items: {
+            xtype: 'chart',
+            animate: true,
+            store: store1,
+            mask: 'horizontal',
+            listeners: {
+                select: {
+                    fn: function(me, selection) {
+                        me.setZoom(selection);
+                        me.mask.hide();
+                    }
+                }
+            },
+
+ * In this example we zoom the chart to that particular region. You can also get
+ * a handle to a mask instance from the chart object. The `chart.mask` element is a
+ * `Ext.Panel`.
+ * 
  * @constructor
  */
 Ext.define('Ext.chart.Mask', {

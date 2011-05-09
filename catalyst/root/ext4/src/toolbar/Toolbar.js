@@ -202,6 +202,9 @@ Ext.define('Ext.toolbar.Toolbar', {
         'Ext.layout.container.VBox',
         'Ext.FocusManager'
     ],
+    uses: [
+        'Ext.toolbar.Separator'
+    ],
     alias: 'widget.toolbar',
     alternateClassName: 'Ext.Toolbar',
     
@@ -237,16 +240,37 @@ Ext.define('Ext.toolbar.Toolbar', {
     // private
     trackMenus: true,
     
+    itemCls: Ext.baseCSSPrefix + 'toolbar-item',
+    
     initComponent: function() {
         var me = this,
             keys;
 
+        // check for simplified (old-style) overflow config:
+        if (!me.layout && me.enableOverflow) {
+            me.layout = { overflowHandler: 'Menu' };
+        }
+        
+        if (me.dock === 'right' || me.dock === 'left') {
+            me.vertical = true;
+        }
+
         me.layout = Ext.applyIf(Ext.isString(me.layout) ? {
             type: me.layout
-        } : me.layout||{}, {
+        } : me.layout || {}, {
             type: me.vertical ? 'vbox' : 'hbox',
-            align: me.vertical ? 'center' : 'middle'
+            align: me.vertical ? 'stretchmax' : 'middle'
         });
+        
+        if (me.vertical) {
+            me.addClsWithUI('vertical');
+        }
+        
+        // @TODO: remove this hack and implement a more general solution
+        if (me.ui === 'footer') {
+            me.ignoreBorderManagement = true;
+        }
+        
         me.callParent();
 
         /**
@@ -338,9 +362,15 @@ Ext.define('Ext.toolbar.Toolbar', {
 
     // private
     onBeforeAdd: function(component) {
-        if (component.is('button') && this.ui != 'footer') {
+        if (component.is('field') || (component.is('button') && this.ui != 'footer')) {
             component.ui = component.ui + '-toolbar';
         }
+        
+        // Any separators needs to know if is vertical or not
+        if (component instanceof Ext.toolbar.Separator) {
+            component.setUI((this.vertical) ? 'vertical' : 'horizontal');
+        }
+        
         this.callParent(arguments);
     },
 

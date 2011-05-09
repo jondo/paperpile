@@ -4,26 +4,29 @@
  * A specialized SplitButton that contains a menu of {@link Ext.menu.CheckItem} elements.  The button automatically
  * cycles through each menu item on click, raising the button's {@link #change} event (or calling the button's
  * {@link #changeHandler} function, if supplied) for the active menu item. Clicking on the arrow section of the
- * button displays the dropdown menu just like a normal SplitButton.  Example usage:
+ * button displays the dropdown menu just like a normal SplitButton.  
+ * {@img Ext.button.Cycle/Ext.button.Cycle.png Ext.button.Cycle component}
+ * Example usage:
  * <pre><code>
-var btn = new Ext.button.Cycle({
-    showText: true,
-    prependText: 'View as ',
-    menu: {
-        id: 'view-type-menu',
-        items: [{
-            text:'text only',
-            iconCls:'view-text',
-            checked:true
-        },{
-            text:'HTML',
-            iconCls:'view-html'
-        }]
-    },
-    changeHandler:function(cycleBtn, activeItem){
-        Ext.Msg.alert('Change View', activeItem.text);
-    }
-});
+    Ext.create('Ext.button.Cycle', {
+        showText: true,
+        prependText: 'View as ',
+        renderTo: Ext.getBody(),
+        menu: {
+            id: 'view-type-menu',
+            items: [{
+                text:'text only',
+                iconCls:'view-text',
+                checked:true
+            },{
+                text:'HTML',
+                iconCls:'view-html'
+            }]
+        },
+        changeHandler:function(cycleBtn, activeItem){
+            Ext.Msg.alert('Change View', activeItem.text);
+        }
+    });
 </code></pre>
  * @constructor
  * Create a new split button

@@ -6,6 +6,47 @@
  * to handle when the buttons are clicked. A good example of this is the {@link Ext.form.field.Number} field
  * which uses the spinner to increment and decrement the field's value by its {@link Ext.form.field.Number#step step}
  * config value.</p>
+ * {@img Ext.form.field.Spinner/Ext.form.field.Spinner.png Ext.form.field.Spinner field}
+ * For example:
+     Ext.define('Ext.ux.CustomSpinner', {
+        extend: 'Ext.form.field.Spinner',
+        alias: 'widget.customspinner',
+        
+        // override onSpinUp (using step isn't neccessary)
+        onSpinUp: function() {
+            var me = this;
+            if (!me.readOnly) {
+                var val = me.step; // set the default value to the step value
+                if(me.getValue() !== '') {
+                    val = parseInt(me.getValue().slice(0, -5)); // gets rid of " Pack"
+                }                          
+                me.setValue((val + me.step) + ' Pack');
+            }
+        },
+        
+        // override onSpinDown
+        onSpinDown: function() {
+            var me = this;
+            if (!me.readOnly) {
+                if(me.getValue() !== '') {
+                    val = parseInt(me.getValue().slice(0, -5)); // gets rid of " Pack"
+                }            
+                me.setValue((val - me.step) + ' Pack');
+            }
+        }
+    });
+    
+    Ext.create('Ext.form.FormPanel', {
+        title: 'Form with SpinnerField',
+        bodyPadding: 5,
+        width: 350,
+        renderTo: Ext.getBody(),
+        items:[{
+            xtype: 'customspinner',
+            fieldLabel: 'How Much Beer?',
+            step: 6
+        }]
+    });
  * <p>By default, pressing the up and down arrow keys will also trigger the onSpinUp and onSpinDown methods;
  * to prevent this, set <tt>{@link #keyNavEnabled} = false</tt>.</p>
  *

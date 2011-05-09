@@ -6,7 +6,7 @@ $tip-background-gradient: false !default;
 
 //text
 $tip-body-color      : adjust-color($neutral-color, $hue: 0deg, $saturation: 0%, $lightness: -66.667%) !default;
-$tip-body-font-size  : 11px !default;
+$tip-body-font-size  : ceil($font-size * .9) !default;
 $tip-body-font-weight: normal !default;
 $tip-body-padding: 3px !default;
 $tip-body-link-color: darken($tip-body-color, 10%) !default;

@@ -19,6 +19,9 @@ Ext.define('Ext.grid.property.HeaderContainer', {
     trueText: 'true',
     falseText: 'false',
 
+    // private
+    nameColumnCls: Ext.baseCSSPrefix + 'grid-property-name',
+    
     constructor : function(grid, store) {
 
         this.grid = grid;
@@ -28,20 +31,21 @@ Ext.define('Ext.grid.property.HeaderContainer', {
                 header: this.nameText,
                 width: 115,
                 sortable: true,
-                dataIndex: 'name',
+                dataIndex: grid.nameField,
                 renderer: Ext.Function.bind(this.renderProp, this),
-                itemId: 'name',
-                menuDisabled :true
+                itemId: grid.nameField,
+                menuDisabled :true,
+                tdCls: this.nameColumnCls
             }, {
                 header: this.valueText,
                 renderer: Ext.Function.bind(this.renderCell, this),
-                getEditingField: function(record) {
+                getEditor: function(record) {
                     return grid.getCellEditor(record, this);
                 },
                 flex: 1,
                 fixed: true,
-                dataIndex: 'value',
-                itemId: 'value',
+                dataIndex: grid.valueField,
+                itemId: grid.valueField,
                 menuDisabled: true
             }]
         }]);
@@ -56,17 +60,19 @@ Ext.define('Ext.grid.property.HeaderContainer', {
     // private
     // Render a property value cell
     renderCell : function(val, meta, rec) {
-        var renderer = this.grid.customRenderers[rec.get('name')];
+        var me = this,
+            renderer = this.grid.customRenderers[rec.get(me.grid.nameField)],
+            result = val;
+
         if (renderer) {
             return renderer.apply(this, arguments);
         }
-        var rv = val;
         if (Ext.isDate(val)) {
-            rv = this.renderDate(val);
+            result = this.renderDate(val);
         } else if (Ext.isBoolean(val)) {
-            rv = this.renderBool(val);
+            result = this.renderBool(val);
         }
-        return Ext.util.Format.htmlEncode(rv);
+        return Ext.util.Format.htmlEncode(result);
     },
 
     // private

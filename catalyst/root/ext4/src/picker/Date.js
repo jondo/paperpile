@@ -238,6 +238,12 @@ Ext.define('Ext.picker.Date', {
     longDayFormat: 'F d, Y',
 
     /**
+     * @cfg {Object} keyNavConfig Specifies optional custom key event handlers for the {@link Ext.util.KeyNav}
+     * attached to this date picker. Must conform to the config format recognized by the {@link Ext.util.KeyNav}
+     * constructor. Handlers specified in this object will replace default handlers of the same name.
+     */
+
+    /**
      * @cfg {Boolean} focusOnShow
      * True to automatically focus the picker on show. Defaults to <tt>false</tt>.
      */
@@ -366,7 +372,7 @@ Ext.define('Ext.picker.Date', {
             stopDefault:true
         });
 
-        me.keyNav = Ext.create('Ext.util.KeyNav', me.eventEl, {
+        me.keyNav = Ext.create('Ext.util.KeyNav', me.eventEl, Ext.apply({
             scope: me,
             'left' : function(e){
                 if(e.ctrlKey){
@@ -405,7 +411,7 @@ Ext.define('Ext.picker.Date', {
                 e.stopPropagation();
                 return true;
             }
-        });
+        }, me.keyNavConfig));
 
         if(me.showToday){
             me.todayKeyListener = me.eventEl.addKeyListener(Ext.EventObject.SPACE, me.selectToday,  me);

@@ -14,7 +14,8 @@
  * manages a User, their Orders, OrderItems and Products. First we'll define the models:
  * 
 <pre><code>
-Ext.regModel("User", {
+Ext.define("User", {
+    extend: 'Ext.data.Model',
     fields: [
         'id', 'name'
     ],
@@ -31,7 +32,8 @@ Ext.regModel("User", {
     }
 });
 
-Ext.regModel("Order", {
+Ext.define("Order", {
+    extend: 'Ext.data.Model',
     fields: [
         'id', 'total'
     ],
@@ -40,7 +42,8 @@ Ext.regModel("Order", {
     belongsTo: 'User'
 });
 
-Ext.regModel("OrderItem", {
+Ext.define("OrderItem", {
+    extend: 'Ext.data.Model',
     fields: [
         'id', 'price', 'quantity', 'order_id', 'product_id'
     ],
@@ -48,7 +51,8 @@ Ext.regModel("OrderItem", {
     belongsTo: ['Order', {model: 'Product', associationKey: 'product'}]
 });
 
-Ext.regModel("Product", {
+Ext.define("Product", {
+    extend: 'Ext.data.Model',
     fields: [
         'id', 'name'
     ],
@@ -326,7 +330,7 @@ Ext.define('Ext.data.reader.Reader', {
             Model   = me.model,
             i       = 0,
             length  = root.length,
-            idProp  = me.idProperty || Model.prototype.idProperty,
+            idProp  = me.getIdProperty(),
             node, id, record;
             
         if (!root.length && Ext.isObject(root)) {
@@ -474,11 +478,27 @@ Ext.define('Ext.data.reader.Reader', {
         Ext.apply(this, meta);
         
         if (fields) {
-            newModel = Ext.regModel("Ext.data.reader.Json-Model" + Ext.id(), {fields: fields});
+            newModel = Ext.define("Ext.data.reader.Json-Model" + Ext.id(), {
+                extend: 'Ext.data.Model',
+                fields: fields
+            });
             this.setModel(newModel, true);
         } else {
             this.buildExtractors(true);
         }
+    },
+    
+    /**
+     * Get the idProperty to use for extracting data
+     * @private
+     * @return {String} The id property
+     */
+    getIdProperty: function(){
+        var prop = this.idProperty;
+        if (Ext.isEmpty(prop)) {
+            prop = this.model.prototype.idProperty;
+        }
+        return prop;
     },
 
     /**
@@ -489,7 +509,7 @@ Ext.define('Ext.data.reader.Reader', {
      */
     buildExtractors: function(force) {
         var me          = this,
-            idProp      = me.idProperty || me.model.prototype.idProperty,
+            idProp      = me.getIdProperty(),
             totalProp   = me.totalProperty,
             successProp = me.successProperty,
             messageProp = me.messageProperty,

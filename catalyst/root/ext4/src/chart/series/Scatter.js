@@ -6,18 +6,41 @@
  * These variables can be mapped into x, y coordinates and also to an element's radius/size, color, etc.
  * As with all other series, the Scatter Series must be appended in the *series* Chart array configuration. See the Chart 
  * documentation for more information on creating charts. A typical configuration object for the scatter could be:
- * 
+ *
+{@img Ext.chart.series.Scatter/Ext.chart.series.Scatter.png Ext.chart.series.Scatter chart series}  
   <pre><code>
-        series: [{
-            type: 'scatter',
-            markerConfig: {
-                radius: 5,
-                size: 5
-            },
-            axis: 'left',
-            xField: 'name',
-            yField: 'data1'
+    var store = Ext.create('Ext.data.JsonStore', {
+        fields: ['name', 'data1', 'data2', 'data3', 'data4', 'data5'],
+        data: [
+            {'name':'metric one', 'data1':10, 'data2':12, 'data3':14, 'data4':8, 'data5':13},
+            {'name':'metric two', 'data1':7, 'data2':8, 'data3':16, 'data4':10, 'data5':3},
+            {'name':'metric three', 'data1':5, 'data2':2, 'data3':14, 'data4':12, 'data5':7},
+            {'name':'metric four', 'data1':2, 'data2':14, 'data3':6, 'data4':1, 'data5':23},
+            {'name':'metric five', 'data1':27, 'data2':38, 'data3':36, 'data4':13, 'data5':33}                                                
+        ]
+    });
+    
+    Ext.create('Ext.chart.Chart', {
+        renderTo: Ext.getBody(),
+        width: 500,
+        height: 300,
+        animate: true,
+        theme:'Category2',
+        store: store,
+        axes: [{
+            type: 'Numeric',
+            position: 'bottom',
+            fields: ['data1', 'data2', 'data3'],
+            title: 'Sample Values',
+            grid: true,
+            minimum: 0
         }, {
+            type: 'Category',
+            position: 'left',
+            fields: ['name'],
+            title: 'Sample Metrics'
+        }],
+        series: [{
             type: 'scatter',
             markerConfig: {
                 radius: 5,
@@ -35,7 +58,8 @@
             axis: 'left',
             xField: 'name',
             yField: 'data3'
-        }]
+        }]   
+    });
    </code></pre>
  
  * 
@@ -106,7 +130,7 @@ Ext.define('Ext.chart.series.Scatter', {
             chart = me.chart,
             store = chart.substore || chart.store,
             axes = [].concat(me.axis),
-            bbox, xScale, yScale, ln, minX, minY, maxX, maxY, i, axis;
+            bbox, xScale, yScale, ln, minX, minY, maxX, maxY, i, axis, ends;
 
         me.setBBox();
         bbox = me.bbox;
@@ -114,14 +138,14 @@ Ext.define('Ext.chart.series.Scatter', {
         for (i = 0, ln = axes.length; i < ln; i++) { 
             axis = chart.axes.get(axes[i]);
             if (axis) {
-                axis = axis.calcEnds();
+                ends = axis.calcEnds();
                 if (axis.position == 'top' || axis.position == 'bottom') {
-                    minX = axis.from;
-                    maxX = axis.to;
+                    minX = ends.from;
+                    maxX = ends.to;
                 }
                 else {
-                    minY = axis.from;
-                    maxY = axis.to;
+                    minY = ends.from;
+                    maxY = ends.to;
                 }
             }
         }
@@ -145,6 +169,7 @@ Ext.define('Ext.chart.series.Scatter', {
 
         if (isNaN(minX)) {
             minX = 0;
+            maxX = store.getCount() - 1;
             xScale = bbox.width / (store.getCount() - 1);
         }
         else {
@@ -153,6 +178,7 @@ Ext.define('Ext.chart.series.Scatter', {
 
         if (isNaN(minY)) {
             minY = 0;
+            maxY = store.getCount() - 1;
             yScale = bbox.height / (store.getCount() - 1);
         } 
         else {
@@ -191,22 +217,21 @@ Ext.define('Ext.chart.series.Scatter', {
         store.each(function(record, i) {
             xValue = record.get(me.xField);
             yValue = record.get(me.yField);
-
-            // Ensure a value
-            if (typeof xValue == 'string') {
-                xValue = i;
-            }
-            if (typeof yValue == 'string') {
-                yValue = i;
-            }
             //skip undefined values
-            if (typeof yValue == 'undefined') {
+            if (typeof yValue == 'undefined' || (typeof yValue == 'string' && !yValue)) {
                 //<debug warn>
                 if (Ext.isDefined(Ext.global.console)) {
                     Ext.global.console.warn("[Ext.chart.series.Scatter]  Skipping a store element with an undefined value at ", record, xValue, yValue);
                 }
                 //</debug>
                 return;
+            }
+            // Ensure a value
+            if (typeof xValue == 'string' || typeof xValue == 'object') {
+                xValue = i;
+            }
+            if (typeof yValue == 'string' || typeof yValue == 'object') {
+                yValue = i;
             }
             x = boxX + (xValue - minX) * xScale;
             y = boxY + boxHeight - (yValue - minY) * yScale;

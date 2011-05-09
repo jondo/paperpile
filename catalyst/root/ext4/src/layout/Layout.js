@@ -48,6 +48,7 @@ Ext.define('Ext.layout.Layout', {
         if (me.beforeLayout.apply(me, arguments) !== false) {
             me.layoutCancelled = false;
             me.onLayout.apply(me, arguments);
+            me.childrenChanged = false;
             me.owner.needsLayout = false;
             me.layoutBusy = false;
             me.afterLayout.apply(me, arguments);
@@ -155,8 +156,15 @@ Ext.define('Ext.layout.Layout', {
      * Applies itemCls
      */
     configureItem: function(item) {
-        if (this.itemCls) {
-            item.el.addCls(this.itemCls);
+        var me = this,
+            el = item.el,
+            owner = me.owner;
+            
+        if (me.itemCls) {
+            el.addCls(me.itemCls);
+        }
+        if (owner.itemCls) {
+            el.addCls(owner.itemCls);
         }
     },
     
@@ -172,8 +180,17 @@ Ext.define('Ext.layout.Layout', {
      * Removes itemCls
      */
     afterRemove : function(item) {
-        if (this.itemCls && item.rendered) {
-            item.el.removeCls(this.itemCls);
+        var me = this,
+            el = item.el,
+            owner = me.owner;
+            
+        if (item.rendered) {
+            if (me.itemCls) {
+                el.removeCls(me.itemCls);
+            }
+            if (owner.itemCls) {
+                el.removeCls(owner.itemCls);
+            }
         }
     },
 

@@ -2,8 +2,25 @@
  * @class Ext.menu.Item
  * @extends Ext.Component
 
-A base class for all menu items that require menu-related functionality such as click handling,
-sub-menus, icons, etc.
+ * A base class for all menu items that require menu-related functionality such as click handling,
+ * sub-menus, icons, etc.
+ * {@img Ext.menu.Menu/Ext.menu.Menu.png Ext.menu.Menu component}
+__Example Usage:__
+    Ext.create('Ext.menu.Menu', {
+		width: 100,
+		height: 100,
+		floating: false,  // usually you want this set to True (default)
+		renderTo: Ext.getBody(),  // usually rendered by it's containing component
+		items: [{
+		    text: 'icon item',
+		    iconCls: 'add16'
+		},{
+			text: 'text item',
+		},{                        
+			text: 'plain item',
+			plain: true        
+		}]
+	}); 
 
  * @xtype menuitem
  * @markdown
@@ -145,6 +162,8 @@ Ext.define('Ext.menu.Item', {
             '</a>',
         '</tpl>'
     ],
+    
+    maskOnDisable: false,
     
     /**
      * @cfg {String} text

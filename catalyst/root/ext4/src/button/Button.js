@@ -8,23 +8,23 @@ and {@link #config-scale sizing options}. Specify a {@link #config-handler handl
 a user clicks the button, or use {@link #config-listeners listeners} for other events such as
 {@link #events-mouseover mouseover}.
 
+{@img Ext.button.Button/Ext.button.Button1.png Ext.button.Button component}
 Example usage:
 
-    new Ext.Button({
-        renderTo: document.body,
+    Ext.create('Ext.Button', {
         text: 'Click me',
+        renderTo: Ext.getBody(),        
         handler: function() {
             alert('You clicked the button!')
         }
     });
 
 The {@link #handler} configuration can also be updated dynamically using the {@link #setHandler} method.
-
 Example usage:
 
-    new Ext.Button({
-        renderTo: document.body,
+    Ext.create('Ext.Button', {
         text    : 'Dyanmic Handler Button',
+        renderTo: Ext.getBody(),
         handler : function() {
             //this button will spit out a different number every time you click it.
             //so firstly we must check if that number is already set:
@@ -42,8 +42,8 @@ Example usage:
 
 A button within a container:
 
-    new Ext.Container({
-        renderTo: document.body,
+    Ext.create('Ext.Container', {
+        renderTo: Ext.getBody(),
         items   : [
             {
                 xtype: 'button',
@@ -57,33 +57,34 @@ A useful option of Button is the {@link #scale} configuration. This configuratio
 * `'medium'`
 * `'large'`
 
+{@img Ext.button.Button/Ext.button.Button2.png Ext.button.Button component}
 Example usage:
 
-    new Ext.Button({
+    Ext.create('Ext.Button', {
         renderTo: document.body,
         text    : 'Click me',
         scale   : 'large'
     });
 
 Buttons can also be toggled. To enable this, you simple set the {@link #enableToggle} property to `true`.
-
+{@img Ext.button.Button/Ext.button.Button3.png Ext.button.Button component}
 Example usage:
 
-    new Ext.Button({
-        renderTo    : document.body,
-        text        : 'Click Me',
+    Ext.create('Ext.Button', {
+        renderTo: Ext.getBody(),
+        text: 'Click Me',
         enableToggle: true
     });
 
 You can assign a menu to a button by using the {@link #menu} configuration. This standard configuration can either be a reference to a {@link Ext.menu.Menu menu}
 object, a {@link Ext.menu.Menu menu} id or a {@link Ext.menu.Menu menu} config blob. When assigning a menu to a button, an arrow is automatically added to the button.
 You can change the alignment of the arrow using the {@link #arrowAlign} configuration on button.
-
+{@img Ext.button.Button/Ext.button.Button4.png Ext.button.Button component}
 Example usage:
 
-    new Ext.Button({
-        renderTo  : document.body,
+    Ext.create('Ext.Button', {
         text      : 'Menu button',
+        renderTo  : Ext.getBody(),        
         arrowAlign: 'bottom',
         menu      : [
             {text: 'Item 1'},
@@ -106,9 +107,9 @@ Button has a variety of different listeners:
 
 Example usage:
 
-    new Ext.Button({
-        renderTo : document.body,
+    Ext.create('Ext.Button', {
         text     : 'Button',
+        renderTo : Ext.getBody(),
         listeners: {
             click: function() {
                 //this == the button, as we are in the local scope
@@ -302,21 +303,25 @@ Ext.define('Ext.button.Button', {
      * @cfg {String} pressedCls
      * The CSS class to add to a button when it is in the pressed state. (Defaults to 'x-btn-pressed')
      */
-
+    pressedCls: 'pressed',
+    
     /**
      * @cfg {String} overCls
      * The CSS class to add to a button when it is in the over (hovered) state. (Defaults to 'x-btn-over')
      */
-
+    overCls: 'over',
+    
     /**
      * @cfg {String} focusCls
      * The CSS class to add to a button when it is in the focussed state. (Defaults to 'x-btn-focus')
      */
-     
+    focusCls: 'focus',
+    
     /**
      * @cfg {String} menuActiveCls
      * The CSS class to add to a button when it's menu is active. (Defaults to 'x-btn-menu-active')
      */
+    menuActiveCls: 'menu-active',
 
     ariaRole: 'button',
 
@@ -349,7 +354,12 @@ Ext.define('Ext.button.Button', {
      * <p>Defaults to <b><tt>'small'</tt></b>.</p>
      */
     scale: 'small',
-
+    
+    /**
+     * @private An array of allowed scales.
+     */
+    allowedScales: ['small', 'medium', 'large'],
+    
     /**
      * @cfg {Object} scope The scope (<tt><b>this</b></tt> reference) in which the
      * <code>{@link #handler}</code> and <code>{@link #toggleHandler}</code> is
@@ -414,6 +424,8 @@ Ext.define('Ext.button.Button', {
      * the button from doing this automatic sizing.
      * Defaults to <tt>undefined</tt>.
      */
+     
+    maskOnDisable: false,
 
     // inherit docs
     initComponent: function() {
@@ -536,26 +548,28 @@ Ext.define('Ext.button.Button', {
     setButtonCls: function() {
         var me = this,
             el = me.el,
-            cls = "";
+            cls = [];
 
         if (me.useSetClass) {
             if (!Ext.isEmpty(me.oldCls)) {
-                el.removeCls([me.oldCls, me.pressedCls]);
+                me.removeClsWithUI(me.oldCls);
+                me.removeClsWithUI(me.pressedCls);
             }
             
             // Check whether the button has an icon or not, and if it has an icon, what is th alignment
             if (me.iconCls || me.icon) {
                 if (me.text) {
-                    cls += me.getClsWithUIs('icon-text-' + me.iconAlign);
+                    cls.push('icon-text-' + me.iconAlign);
                 } else {
-                    cls += me.getClsWithUIs('icon');
+                    cls.push('icon');
                 }
             } else if (me.text) {
-                cls += me.getClsWithUIs('noicon');
+                cls.push('noicon');
             }
             
-            me.oldCls = cls || '';
-            el.addCls([me.oldCls, me.pressed ? me.pressedCls : null]);
+            me.oldCls = cls;
+            me.addClsWithUI(cls);
+            me.addClsWithUI(me.pressed ? me.pressedCls : null);
         }
     },
     
@@ -564,19 +578,7 @@ Ext.define('Ext.button.Button', {
         // classNames for the button
         var me = this,
             repeater, btn;
-
-        // If a scale has been set, add it as a UI
-        if (me.scale) {
-            me.ui = [me.ui + '-' + me.scale];
-        }
-
-        // Set all the state classNames, as they need to include the UI
-        me.disabledCls = me.getClsWithUIs('disabled');
-        me.overCls = me.getClsWithUIs('over');
-        me.focusCls = me.getClsWithUIs('focus');
-        me.pressedCls = me.getClsWithUIs('pressed');
-        me.menuActiveCls = me.getClsWithUIs('menu-active');
-
+            
         // Apply the renderData to the template args
         Ext.applyIf(me.renderData, me.getTemplateArgs());
 
@@ -586,6 +588,10 @@ Ext.define('Ext.button.Button', {
             btnWrap: 'em',
             btnInnerEl: '.' + me.baseCls + '-inner'
         });
+        
+        if (me.scale) {
+            me.ui = me.ui + '-' + me.scale;
+        }
 
         // Render internal structure
         me.callParent(arguments);
@@ -625,6 +631,13 @@ Ext.define('Ext.button.Button', {
                 mouseout: me.onMouseOut,
                 mousedown: me.onMouseDown
             });
+
+            if (me.split) {
+                me.mon(btn, {
+                    mousemove: me.onMouseMove,
+                    scope: me
+                });
+            }
         }
 
         // Check if the button has a menu
@@ -768,7 +781,7 @@ Ext.define('Ext.button.Button', {
                 tooltip));
                 me.tooltip = tooltip;
             } else {
-                me.btnEl.dom[me.tooltipType] = tooltip;
+                me.btnEl.dom.setAttribute('data-' + this.tooltipType, tooltip);
             }
         } else {
             me.tooltip = tooltip;
@@ -889,7 +902,7 @@ Ext.define('Ext.button.Button', {
         state = state === undefined ? !me.pressed: !!state;
         if (state !== me.pressed) {
             if (me.rendered) {
-                me.el[state ? 'addCls': 'removeCls'](me.pressedCls);
+                me[state ? 'addClsWithUI': 'removeClsWithUI'](me.pressedCls);
             }
             me.btnEl.dom.setAttribute('aria-pressed', state);
             me.pressed = state;
@@ -963,6 +976,7 @@ Ext.define('Ext.button.Button', {
             if (me.handler) {
                 me.handler.call(me.scope || me, me, e);
             }
+            me.onBlur();
         }
     },
 
@@ -972,33 +986,9 @@ Ext.define('Ext.button.Button', {
      * @param e
      */
     onMouseOver: function(e) {
-        var me = this,
-            to = e.getTarget(),
-            from = e.getRelatedTarget(),
-            splitSize = 18,
-            overlap, height, width;
-
-        if (me.disabled) {
-            return;
-        }
-
-        me.onMouseEnter(e);
-
-        //check if the user is hovering over the arrow
-        if (me.arrowAlign == 'right') {
-            overlap = e.getX() - me.el.getX();
-            width = me.el.getWidth();
-
-            if ((to === me.btnWrap.dom && to != me.btnEl.dom) || overlap > (width - splitSize)) {
-                me.onMenuTriggerOver(e);
-            }
-        } else {
-            overlap = e.getY() - me.el.getY();
-            height = me.el.getHeight();
-
-            if ((to === me.btnWrap.dom && to != me.btnEl.dom) || overlap > (height - splitSize)) {
-                me.onMenuTriggerOver(e);
-            }
+        var me = this;
+        if (!me.disabled && !e.within(me.el, true, true)) {
+            me.onMouseEnter(e);
         }
     },
 
@@ -1009,18 +999,65 @@ Ext.define('Ext.button.Button', {
      * @param e
      */
     onMouseOut: function(e) {
-        var me = this,
-            from = e.getTarget(),
-            to = e.getRelatedTarget();
+        var me = this;
+        if (!e.within(me.el, true, true)) {
+            if (me.overMenuTrigger) {
+                me.onMenuTriggerOut(e);
+            }
+            me.onMouseLeave(e);
+        }
+    },
 
-        if (from === me.el.dom) {
-            if (to !== me.btnEl.dom && to !== me.btnWrap.dom) {
-                me.onMouseLeave(e);
+    /**
+     * @private mousemove handler called when the mouse moves anywhere within the encapsulating element.
+     * The position is checked to determine if the mouse is entering or leaving the trigger area. Using
+     * mousemove to check this is more resource intensive than we'd like, but it is necessary because
+     * the trigger area does not line up exactly with sub-elements so we don't always get mouseover/out
+     * events when needed. In the future we should consider making the trigger a separate element that
+     * is absolutely positioned and sized over the trigger area.
+     */
+    onMouseMove: function(e) {
+        var me = this,
+            el = me.el,
+            over = me.overMenuTrigger,
+            overlap, btnSize;
+
+        if (me.split) {
+            if (me.arrowAlign === 'right') {
+                overlap = e.getX() - el.getX();
+                btnSize = el.getWidth();
+            } else {
+                overlap = e.getY() - el.getY();
+                btnSize = el.getHeight();
+            }
+
+            if (overlap > (btnSize - me.getTriggerSize())) {
+                if (!over) {
+                    me.onMenuTriggerOver(e);
+                }
+            } else {
+                if (over) {
+                    me.onMenuTriggerOut(e);
+                }
             }
         }
-        else if (from === me.btnWrap.dom) {
-            me.onMenuTriggerOut(e);
+    },
+
+    /**
+     * @private Measures the size of the trigger area for menu and split buttons. Will be a width for
+     * a right-aligned trigger and a height for a bottom-aligned trigger. Cached after first measurement.
+     */
+    getTriggerSize: function() {
+        var me = this,
+            size = me.triggerSize,
+            side, sideFirstLetter, undef;
+            
+        if (size === undef) {
+            side = me.arrowAlign;
+            sideFirstLetter = side.charAt(0);
+            size = me.triggerSize = me.el.getFrameWidth(sideFirstLetter) + me.btnWrap.getFrameWidth(sideFirstLetter) + (me.frameSize && me.frameSize[side] || 0);
         }
+        return size;
     },
 
     /**
@@ -1030,7 +1067,7 @@ Ext.define('Ext.button.Button', {
      */
     onMouseEnter: function(e) {
         var me = this;
-        me.el.addCls(me.overCls);
+        me.addClsWithUI(me.overCls);
         me.fireEvent('mouseover', me, e);
     },
 
@@ -1041,7 +1078,7 @@ Ext.define('Ext.button.Button', {
      */
     onMouseLeave: function(e) {
         var me = this;
-        me.el.removeCls(me.overCls);
+        me.removeClsWithUI(me.overCls);
         me.fireEvent('mouseout', me, e);
     },
 
@@ -1051,13 +1088,8 @@ Ext.define('Ext.button.Button', {
      * @param e
      */
     onMenuTriggerOver: function(e) {
-        var me = this,
-            from = e.getRelatedTarget();
-
+        var me = this;
         me.overMenuTrigger = true;
-        if (from !== me.el.dom && from !== me.btnEl.dom) {
-            me.onMouseEnter(e);
-        }
         me.fireEvent('menutriggerover', me, me.menu, e);
     },
 
@@ -1067,35 +1099,84 @@ Ext.define('Ext.button.Button', {
      * @param e
      */
     onMenuTriggerOut: function(e) {
-        var me = this,
-            to = e.getRelatedTarget();
-
+        var me = this;
         delete me.overMenuTrigger;
         me.fireEvent('menutriggerout', me, me.menu, e);
-        if (to !== me.el.dom && to !== me.btnEl.dom) {
-            me.onMouseLeave(e);
-        }
+    },
+    
+    // inherit docs
+    enable : function(silent) {
+        var me = this;
+
+        me.callParent(arguments);
+        
+        me.removeClsWithUI('disabled');
+
+        return me;
     },
 
+    // inherit docs
+    disable : function(silent) {
+        var me = this;
+        
+        me.callParent(arguments);
+        
+        me.addClsWithUI('disabled');
+
+        return me;
+    },
+    
+    /**
+     * Method to change the scale of the button. See {@link #scale} for allowed configurations.
+     * @param {String} scale The scale to change to.
+     */
+    setScale: function(scale) {
+        var me = this,
+            ui = me.ui.replace('-' + me.scale, '');
+        
+        //check if it is an allowed scale
+        if (!Ext.Array.contains(me.allowedScales, scale)) {
+            throw('#setScale: scale must be an allowed scale (' + me.allowedScales.join(', ') + ')');
+        }
+        
+        me.scale = scale;
+        me.setUI(ui);
+    },
+    
+    // inherit docs
+    setUI: function(ui) {
+        var me = this;
+        
+        //we need to append the scale to the UI, if not already done
+        if (me.scale && !ui.match(me.scale)) {
+            ui = ui + '-' + me.scale;
+        }
+        
+        me.callParent([ui]);
+        
+        // Set all the state classNames, as they need to include the UI
+        // me.disabledCls += ' ' + me.baseCls + '-' + me.ui + '-disabled';
+    },
+    
     // private
     onFocus: function(e) {
         var me = this;
         if (!me.disabled) {
-            me.el.addCls(me.focusCls);
+            me.addClsWithUI(me.focusCls);
         }
     },
 
     // private
     onBlur: function(e) {
         var me = this;
-        me.el.removeCls(me.focusCls);
+        me.removeClsWithUI(me.focusCls);
     },
 
     // private
     onMouseDown: function(e) {
         var me = this;
         if (!me.disabled && e.button === 0) {
-            me.el.addCls(me.pressedCls);
+            me.addClsWithUI(me.pressedCls);
             me.doc.on('mouseup', me.onMouseUp, me);
         }
     },
@@ -1104,7 +1185,7 @@ Ext.define('Ext.button.Button', {
         var me = this;
         if (e.button === 0) {
             if (!me.pressed) {
-                me.el.removeCls(me.pressedCls);
+                me.removeClsWithUI(me.pressedCls);
             }
             me.doc.un('mouseup', me.onMouseUp, me);
         }
@@ -1113,14 +1194,14 @@ Ext.define('Ext.button.Button', {
     onMenuShow: function(e) {
         var me = this;
         me.ignoreNextClick = 0;
-        me.el.addCls(me.menuActiveCls);
+        me.addClsWithUI(me.menuActiveCls);
         me.fireEvent('menushow', me, me.menu);
     },
 
     // private
     onMenuHide: function(e) {
         var me = this;
-        me.el.removeCls(me.menuActiveCls);
+        me.removeClsWithUI(me.menuActiveCls);
         me.ignoreNextClick = Ext.defer(me.restoreClick, 250, me);
         me.fireEvent('menuhide', me, me.menu);
     },

@@ -1,38 +1,43 @@
 /**
+ * @author Jacky Nguyen <jacky@sencha.com>
+ * @docauthor Jacky Nguyen <jacky@sencha.com>
  * @class Ext.Version
+ *
+ * A utility class that wrap around a string version number and provide convenient
+ * method to perform comparison. See also: {@link Ext.Version#compare compare}. Example:
+
+    var version = new Ext.Version('1.0.2beta');
+    console.log("Version is " + version); // Version is 1.0.2beta
+
+    console.log(version.getMajor()); // 1
+    console.log(version.getMinor()); // 0
+    console.log(version.getPatch()); // 2
+    console.log(version.getBuild()); // 0
+    console.log(version.getRelease()); // beta
+
+    console.log(version.isGreaterThan('1.0.1')); // True
+    console.log(version.isGreaterThan('1.0.2alpha')); // True
+    console.log(version.isGreaterThan('1.0.2RC')); // False
+    console.log(version.isGreaterThan('1.0.2')); // False
+    console.log(version.isLessThan('1.0.2')); // True
+
+    console.log(version.match(1.0)); // True
+    console.log(version.match('1.0.2')); // True
+
+ * @markdown
  */
 (function() {
 
 // Current core version
-var version = '4.0.0rc',
-    Version = Ext.Version = Ext.extend(Object, {
+var version = '4.0.0', Version;
+    Ext.Version = Version = Ext.extend(Object, {
 
         /**
-         * A utility class that wrap around a string version number and provide convenient
-         * method to do comparison. See also: {@link Ext.Version#compare compare}. Example:
-         * <pre><code>
-         * var version = new Ext.Version('1.0.2beta');
-         * console.log("Version is " + version); // Version is 1.0.2beta
-         *
-         * console.log(version.getMajor()); // 1
-         * console.log(version.getMinor()); // 0
-         * console.log(version.getPatch()); // 2
-         * console.log(version.getBuild()); // 0
-         * console.log(version.getRelease()); // beta
-         *
-         * console.log(version.gt('1.0.1')); // True
-         * console.log(version.gt('1.0.2alpha')); // True
-         * console.log(version.gt('1.0.2RC')); // False
-         * console.log(version.gt('1.0.2')); // False
-         *
-         * console.log(version.match(1.0)); // True
-         * console.log(version.match('1.0.2')); // True
-         * </code></pre>
-         *
          * @constructor
          * @param {String/Number} version The version number in the follow standard format: major[.minor[.patch[.build[release]]]]
          * Examples: 1.0 or 1.2.3beta or 1.2.3.4RC
          * @return {Ext.Version} this
+         * @param version
          */
         constructor: function(version) {
             var parts, releaseStartIndex;

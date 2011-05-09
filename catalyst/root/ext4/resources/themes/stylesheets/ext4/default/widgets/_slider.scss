@@ -116,4 +116,28 @@
     .#{$prefix}slider-vert .#{$prefix}slider-thumb {
         background-image: theme-image($theme-name, 'slider/slider-v-thumb.png');
     }
+    
+    @if $include-ie {
+        .#{$prefix}ie6 {
+            .#{$prefix}slider-horz,
+            .#{$prefix}slider-horz .#{$prefix}slider-end,
+            .#{$prefix}slider-horz .#{$prefix}slider-inner {
+                background-image: theme-image($theme-name, 'slider/slider-bg.gif');
+            }
+
+            .#{$prefix}slider-horz .#{$prefix}slider-thumb {
+                background-image: theme-image($theme-name, 'slider/slider-thumb.gif');
+            }
+
+            .#{$prefix}slider-vert,
+            .#{$prefix}slider-vert .#{$prefix}slider-end,
+            .#{$prefix}slider-vert .#{$prefix}slider-inner {
+                background-image: theme-image($theme-name, 'slider/slider-v-bg.gif');
+            }
+
+            .#{$prefix}slider-vert .#{$prefix}slider-thumb {
+                background-image: theme-image($theme-name, 'slider/slider-v-thumb.gif');
+            }
+        }
+    }
 }

@@ -1,6 +1,32 @@
 /**
  * @class Ext.draw.CompositeSprite
  * @extends Ext.util.MixedCollection
+ *
+ * A composite Sprite handles a group of sprites with common methods to a sprite
+ * such as `hide`, `show`, `setAttributes`. These methods are applied to the set of sprites
+ * added to the group.
+ *
+ * CompositeSprite extends {@link Ext.util.MixedCollection} so you can use the same methods
+ * in `MixedCollection` to iterate through sprites, add and remove elements, etc.
+ *
+ * In order to create a CompositeSprite, one has to provide a handle to the surface where it is
+ * rendered:
+ *
+ *     var group = Ext.create('Ext.draw.CompositeSprite', {
+ *         surface: drawComponent.surface
+ *     });
+ *                  
+ * Then just by using `MixedCollection` methods it's possible to add {@link Ext.draw.Sprite}s:
+ *  
+ *     group.add(sprite1);
+ *     group.add(sprite2);
+ *     group.add(sprite3);
+ *                  
+ * And then apply common Sprite methods to them:
+ *  
+ *     group.setAttributes({
+ *         fill: '#f00'
+ *     }, true);
  */
 Ext.define('Ext.draw.CompositeSprite', {
 
@@ -12,7 +38,7 @@ Ext.define('Ext.draw.CompositeSprite', {
     },
 
     /* End Definitions */
-    isSpriteGroup: true,
+    isCompositeSprite: true,
     constructor: function(config) {
         var me = this;
         
@@ -30,27 +56,27 @@ Ext.define('Ext.draw.CompositeSprite', {
         me.callParent();
     },
 
-    // private
+    // @private
     onClick: function(e) {
         this.fireEvent('click', e);
     },
 
-    // private
+    // @private
     onMouseUp: function(e) {
         this.fireEvent('mouseup', e);
     },
 
-    // private
+    // @private
     onMouseDown: function(e) {
         this.fireEvent('mousedown', e);
     },
 
-    // private
+    // @private
     onMouseOver: function(e) {
         this.fireEvent('mouseover', e);
     },
 
-    // private
+    // @private
     onMouseOut: function(e) {
         this.fireEvent('mouseout', e);
     },
@@ -68,6 +94,7 @@ Ext.define('Ext.draw.CompositeSprite', {
         });
     },
 
+    /** Add a Sprite to the Group */
     add: function(key, o) {
         var result = this.callParent(arguments);
         this.attachEvents(result);
@@ -78,6 +105,7 @@ Ext.define('Ext.draw.CompositeSprite', {
         return this.callParent(arguments);
     },
 
+    /** Remove a Sprite from the Group */
     remove: function(o) {
         var me = this;
         
@@ -91,7 +119,11 @@ Ext.define('Ext.draw.CompositeSprite', {
         });
         me.callParent(arguments);
     },
-    // Returns the group bounding box.
+    
+    /**
+     * Returns the group bounding box.
+     * Behaves like {@link Ext.draw.Sprite} getBBox method.
+    */
     getBBox: function() {
         var i = 0,
             sprite,
@@ -124,6 +156,12 @@ Ext.define('Ext.draw.CompositeSprite', {
         };
     },
 
+    /**
+     *  Iterates through all sprites calling
+     *  `setAttributes` on each one. For more information
+     *  {@link Ext.draw.Sprite} provides a description of the
+     *  attributes that can be set with this method.
+     */
     setAttributes: function(attrs, redraw) {
         var i = 0,
             items = this.items,
@@ -135,6 +173,10 @@ Ext.define('Ext.draw.CompositeSprite', {
         return this;
     },
 
+    /**
+     * Hides all sprites. If the first parameter of the method is true
+     * then a redraw will be forced for each sprite.
+     */
     hide: function(attrs) {
         var i = 0,
             items = this.items,
@@ -146,6 +188,10 @@ Ext.define('Ext.draw.CompositeSprite', {
         return this;
     },
 
+    /**
+     * Shows all sprites. If the first parameter of the method is true
+     * then a redraw will be forced for each sprite.
+     */
     show: function(attrs) {
         var i = 0,
             items = this.items,
@@ -176,11 +222,12 @@ Ext.define('Ext.draw.CompositeSprite', {
         var i = 0,
             items = this.items,
             len = this.length,
-            item;
+            item, el;
             
         for (; i < len; i++) {
             item = items[i];
-            if (item.el) {
+            el = item.el;
+            if (el) {
                 el.setStyle(obj);
             }
         }

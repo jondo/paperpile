@@ -11,6 +11,16 @@
  * <p>To handle when the user selects a time from the list, you can subscribe to the {@link #selectionchange}
  * event.</p>
  *
+ * {@img Ext.picker.Time/Ext.picker.Time.png Ext.picker.Time component}
+ *
+ * ## Code
+     new Ext.create('Ext.picker.Time', {
+        width: 60,
+        minValue: Ext.Date.parse('04:30:00 AM', 'h:i:s A'),
+        maxValue: Ext.Date.parse('08:00:00 AM', 'h:i:s A'),
+        renderTo: Ext.getBody()
+    });
+ *
  * @constructor
  * Create a new TimePicker
  * @param {Object} config The config object

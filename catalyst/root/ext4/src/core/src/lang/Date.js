@@ -153,9 +153,9 @@ Ext.Date = {
 
     /**
      * Returns the number of milliseconds between two dates
-     * @param {Date} dateA
-     * @param {Date} dateB (optional) Defaults to now
-     * @return {Number} The diff in milliseconds
+     * @param {Date} dateA The first date
+     * @param {Date} dateB (optional) The second date, defaults to now
+     * @return {Number} The difference in milliseconds
      */
     getElapsed: function(dateA, dateB) {
         return Math.abs(dateA - (dateB || new Date()));
@@ -1007,6 +1007,12 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
         return utilDate.format(date, format);
     },
 
+    /**
+     * Formats a date given the supplied format string.
+     * @param {Date} date The date to format
+     * @param {String} format The format string
+     * @return {String} The formatted date
+     */
     format: function(date, format) {
         if (utilDate.formatFunctions[format] == null) {
             utilDate.createFormat(format);
@@ -1024,6 +1030,7 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
      * getTimezone() first tries to get the timezone abbreviation from between a pair of parentheses
      * (which may or may not be present), failing which it proceeds to get the timezone abbreviation
      * from the GMT offset portion of the date string.
+     * @param {Date} date The date
      * @return {String} The abbreviated timezone name (e.g. 'CST', 'PDT', 'EDT', 'MPST' ...).
      */
     getTimezone : function(date) {
@@ -1044,6 +1051,7 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
 
     /**
      * Get the offset from GMT of the current date (equivalent to the format specifier 'O').
+     * @param {Date} date The date
      * @param {Boolean} colon (optional) true to separate the hours and minutes with a colon (defaults to false).
      * @return {String} The 4-character offset string prefixed with + or - (e.g. '-0600').
      */
@@ -1057,6 +1065,7 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
 
     /**
      * Get the numeric day number of the year, adjusted for leap year.
+     * @param {Date} date The date
      * @return {Number} 0 to 364 (365 in leap years).
      */
     getDayOfYear: function(date) {
@@ -1074,6 +1083,7 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
     /**
      * Get the numeric ISO-8601 week number of the year.
      * (equivalent to the format specifier 'W', but without a leading zero).
+     * @param {Date} date The date
      * @return {Number} 1 to 53
      */
     getWeekOfYear : (function() {
@@ -1092,6 +1102,7 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
 
     /**
      * Checks if the current date falls within a leap year.
+     * @param {Date} date The date
      * @return {Boolean} True if the current date falls within a leap year, false otherwise.
      */
     isLeapYear : function(date) {
@@ -1105,9 +1116,11 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
      * the {@link #monthNames} array to retrieve the textual day name.
      * Example:
      * <pre><code>
-var dt = new Date('1/10/2007');
-console.log(Ext.Date.dayNames[dt.getFirstDayOfMonth()]); //output: 'Monday'
-</code></pre>
+var dt = new Date('1/10/2007'),
+    firstDay = Ext.Date.getFirstDayOfMonth(dt);
+console.log(Ext.Date.dayNames[firstDay]); //output: 'Monday'
+     * </code></pre>
+     * @param {Date} date The date
      * @return {Number} The day number (0-6).
      */
     getFirstDayOfMonth : function(date) {
@@ -1121,9 +1134,11 @@ console.log(Ext.Date.dayNames[dt.getFirstDayOfMonth()]); //output: 'Monday'
      * the {@link #monthNames} array to retrieve the textual day name.
      * Example:
      * <pre><code>
-var dt = new Date('1/10/2007');
-console.log(Ext.Date.dayNames[dt.getLastDayOfMonth()]); //output: 'Wednesday'
-</code></pre>
+var dt = new Date('1/10/2007'),
+    lastDay = Ext.Date.getLastDayOfMonth(dt);
+console.log(Ext.Date.dayNames[lastDay]); //output: 'Wednesday'
+     * </code></pre>
+     * @param {Date} date The date
      * @return {Number} The day number (0-6).
      */
     getLastDayOfMonth : function(date) {
@@ -1133,6 +1148,7 @@ console.log(Ext.Date.dayNames[dt.getLastDayOfMonth()]); //output: 'Wednesday'
 
     /**
      * Get the date of the first day of the month in which this date resides.
+     * @param {Date} date The date
      * @return {Date}
      */
     getFirstDateOfMonth : function(date) {
@@ -1141,6 +1157,7 @@ console.log(Ext.Date.dayNames[dt.getLastDayOfMonth()]); //output: 'Wednesday'
 
     /**
      * Get the date of the last day of the month in which this date resides.
+     * @param {Date} date The date
      * @return {Date}
      */
     getLastDateOfMonth : function(date) {
@@ -1149,6 +1166,7 @@ console.log(Ext.Date.dayNames[dt.getLastDayOfMonth()]); //output: 'Wednesday'
 
     /**
      * Get the number of days in the current month, adjusted for leap year.
+     * @param {Date} date The date
      * @return {Number} The number of days in the month.
      */
     getDaysInMonth: (function() {
@@ -1163,6 +1181,7 @@ console.log(Ext.Date.dayNames[dt.getLastDayOfMonth()]); //output: 'Wednesday'
 
     /**
      * Get the English ordinal suffix of the current day (equivalent to the format specifier 'S').
+     * @param {Date} date The date
      * @return {String} 'st, 'nd', 'rd' or 'th'.
      */
     getSuffix : function(date) {
@@ -1197,11 +1216,12 @@ copy.setDate(5);
 console.log(orig);  //returns 'Thu Oct 05 2006'!
 
 //correct way:
-var orig = new Date('10/1/2006');
-var copy = orig.clone();
+var orig = new Date('10/1/2006'),
+    copy = Ext.Date.clone(orig);
 copy.setDate(5);
 console.log(orig);  //returns 'Thu Oct 01 2006'
-</code></pre>
+     * </code></pre>
+     * @param {Date} date The date
      * @return {Date} The new Date instance.
      */
     clone : function(date) {
@@ -1210,6 +1230,7 @@ console.log(orig);  //returns 'Thu Oct 01 2006'
 
     /**
      * Checks if the current date is affected by Daylight Saving Time (DST).
+     * @param {Date} date The date
      * @return {Boolean} True if the current date is affected by DST.
      */
     isDST : function(date) {
@@ -1222,6 +1243,7 @@ console.log(orig);  //returns 'Thu Oct 01 2006'
      * Attempts to clear all time information from this Date by setting the time to midnight of the same day,
      * automatically adjusting for Daylight Saving Time (DST) where applicable.
      * (note: DST timezone information for the browser's host operating system is assumed to be up-to-date)
+     * @param {Date} date The date
      * @param {Boolean} clone true to create a clone of this date, clear the time and return it (defaults to false).
      * @return {Date} this or the clone.
      */
@@ -1265,14 +1287,12 @@ var dt = Ext.Date.add(new Date('10/29/2006'), Ext.Date.DAY, 5);
 console.log(dt); //returns 'Fri Nov 03 2006 00:00:00'
 
 // Negative values will be subtracted:
-var dt2 = new Date('10/1/2006').add(Ext.Date.DAY, -5);
+var dt2 = Ext.Date.add(new Date('10/1/2006'), Ext.Date.DAY, -5);
 console.log(dt2); //returns 'Tue Sep 26 2006 00:00:00'
 
-// You can even chain several calls together in one line:
-var dt3 = new Date('10/1/2006').add(Ext.Date.DAY, 5).add(Ext.Date.HOUR, 8).add(Ext.Date.MINUTE, -30);
-console.log(dt3); //returns 'Fri Oct 06 2006 07:30:00'
-</code></pre>
+     * </code></pre>
      *
+     * @param {Date} date The date to modify
      * @param {String} interval A valid date interval enum value.
      * @param {Number} value The amount to add to the current date.
      * @return {Date} The new Date instance.
@@ -1314,7 +1334,8 @@ console.log(dt3); //returns 'Fri Oct 06 2006 07:30:00'
     },
 
     /**
-     * Checks if this date falls on or between the given start and end dates.
+     * Checks if a date falls on or between the given start and end dates.
+     * @param {Date} date The date to check
      * @param {Date} start Start date
      * @param {Date} end End date
      * @return {Boolean} true if this date falls on or between the given start and end dates.

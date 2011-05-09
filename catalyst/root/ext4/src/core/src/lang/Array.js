@@ -419,7 +419,7 @@ Ext.Array.toArray('splitted', 0, 3); // returns ['s', 'p', 'l', 'i']
          *
          * - An empty array if given value is `undefined` or `null`
          * - Itself if given value is already an array
-         * - An array copy if given value is {@link Ext.isIterable iterable} (arguments, NodeList and alike)
+         * - An array copy if given value is {@link Ext#isIterable iterable} (arguments, NodeList and alike)
          * - An array with one item which is the given value, otherwise
          *
          * @param {Array/Mixed} value The value to convert to an array if it's not already is an array
@@ -791,7 +791,7 @@ Ext.Array.toArray('splitted', 0, 3); // returns ['s', 'p', 'l', 'i']
     Ext.flatten = Ext.Array.flatten;
 
     /**
-     * Old alias to {@link Ext.Array#clean}
+     * Old alias to {@link Ext.Array#clean Ext.Array.clean}
      * @deprecated 4.0.0 Use {@link Ext.Array.clean} instead
      * @member Ext
      * @method clean
@@ -799,7 +799,7 @@ Ext.Array.toArray('splitted', 0, 3); // returns ['s', 'p', 'l', 'i']
     Ext.clean = Ext.Array.clean;
 
     /**
-     * Old alias to {@link Ext.Array#unique}
+     * Old alias to {@link Ext.Array#unique Ext.Array.unique}
      * @deprecated 4.0.0 Use {@link Ext.Array.unique} instead
      * @member Ext
      * @method unique
@@ -807,15 +807,15 @@ Ext.Array.toArray('splitted', 0, 3); // returns ['s', 'p', 'l', 'i']
     Ext.unique = Ext.Array.unique;
 
     /**
-     * Old alias to {@link Ext.Array#pluck}
-     * @deprecated 4.0.0 Use {@link Ext.Array.pluck} instead
+     * Old alias to {@link Ext.Array#pluck Ext.Array.pluck}
+     * @deprecated 4.0.0 Use {@link Ext.Array#pluck Ext.Array.pluck} instead
      * @member Ext
      * @method pluck
      */
     Ext.pluck = Ext.Array.pluck;
 
     /**
-     * Convenient alias to {@link Ext.Array#toArray}
+     * Convenient alias to {@link Ext.Array#toArray Ext.Array.toArray}
      * @param {Iterable} the iterable object to be turned into a true Array.
      * @member Ext
      * @method toArray

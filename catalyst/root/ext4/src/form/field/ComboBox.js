@@ -1,25 +1,25 @@
 /**
  * @class Ext.form.field.ComboBox
  * @extends Ext.form.field.Picker
- * 
+ *
  * A combobox control with support for autocomplete, remote loading, and many other features.
- * 
+ *
  * A ComboBox is like a combination of a traditional HTML text `&lt;input&gt;` field and a `&lt;select&gt;`
  * field; the user is able to type freely into the field, and/or pick values from a dropdown selection
  * list. The user can input any value by default, even if it does not appear in the selection list;
  * to prevent free-form values and restrict them to items in the list, set {@link #forceSelection} to `true`.
- * 
+ *
  * The selection list's options are populated from any {@link Ext.data.Store}, including remote
  * stores. The data items in the store are mapped to each option's displayed text and backing value via
  * the {@link #valueField} and {@link #displayField} configurations, respectively.
- * 
+ *
  * If your store is not remote, i.e. it depends only on local data and is loaded up front, you should be
  * sure to set the {@link #queryMode} to `'local'`, as this will improve responsiveness for the user.
  *
  * {@img Ext.form.ComboBox/Ext.form.ComboBox.png Ext.form.ComboBox component}
  *
  * ## Example usage:
- * 
+ *
  *     // The data store containing the list of states
  *     var states = Ext.create('Ext.data.Store', {
  *         fields: ['abbr', 'name'],
@@ -30,7 +30,7 @@
  *             //...
  *         ]
  *     });
- *     
+ *
  *     // Create the combo box, attached to the states data store
  *     Ext.create('Ext.form.ComboBox', {
  *         fieldLabel: 'Choose State',
@@ -40,11 +40,11 @@
  *         valueField: 'abbr',
  *         renderTo: Ext.getBody()
  *     });
- * 
+ *
  * ## Events
- * 
+ *
  * To do something when something in ComboBox is selected, configure the select event:
- * 
+ *
  *     var cb = Ext.create('Ext.form.ComboBox', {
  *         // all of your config options
  *         listeners:{
@@ -52,16 +52,16 @@
  *              'select': yourFunction
  *         }
  *     });
- * 
+ *
  *     // Alternatively, you can assign events after the object is created:
  *     var cb = new Ext.form.field.ComboBox(yourOptions);
  *     cb.on('select', yourFunction, yourScope);
- * 
+ *
  * ## Multiple Selection
- * 
+ *
  * ComboBox also allows selection of multiple items from the list; to enable multi-selection set the
  * {@link #multiSelect} config to `true`.
- * 
+ *
  * @constructor
  * Create a new ComboBox.
  * @param {Object} config Configuration options
@@ -234,7 +234,7 @@ var combo = new Ext.form.field.ComboBox({
      * Whether the Tab key should select the currently highlighted item. Defaults to <tt>true</tt>.
      */
     selectOnTab: true,
-    
+
     /**
      * @cfg {Boolean} forceSelection <tt>true</tt> to restrict the selected value to one of the values in the list,
      * <tt>false</tt> to allow the user to set arbitrary text into the field (defaults to <tt>false</tt>)
@@ -284,10 +284,18 @@ var combo = new Ext.form.field.ComboBox({
     defaultListConfig: {
         emptyText: '',
         loadingText: 'Loading...',
+        loadingHeight: 70,
         minWidth: 70,
         maxHeight: 300,
         shadow: 'sides'
     },
+
+    /**
+     * @cfg {Mixed} transform
+     * The id, DOM node or {@link Ext.core.Element} of an existing HTML <tt>&lt;select&gt;</tt> element to
+     * convert into a ComboBox. The target select's options will be used to build the options in the ComboBox
+     * dropdown; a configured {@link #store} will take precedence over this.
+     */
 
     /**
      * @cfg {Object} listConfig
@@ -315,12 +323,14 @@ var combo = new Ext.form.field.ComboBox({
 
     initComponent: function() {
         var me = this,
-            isLocalMode = me.queryMode === 'local',
-            isDefined = Ext.isDefined;
+            isDefined = Ext.isDefined,
+            store = me.store,
+            transform = me.transform,
+            transformSelect, isLocalMode;
 
         //<debug>
-        if (!me.store) {
-            Ext.Error.raise('A valid store instance must be configured on the combo.');
+        if (!store && !transform) {
+            Ext.Error.raise('Either a valid store, or a HTML select to transform, must be configured on the combo.');
         }
         if (me.typeAhead && me.multiSelect) {
             Ext.Error.raise('typeAhead and multiSelect are mutually exclusive options -- please remove one of them.');
@@ -348,30 +358,48 @@ var combo = new Ext.form.field.ComboBox({
              * </ul>
              */
             'beforequery',
-            
+
             /*
              * @event select
              * Fires when at least one list item is selected.
              * @param {Ext.form.field.ComboBox} combo This combo box
              * @param {Array} records The selected records
-             */            
+             */
             'select'
         );
 
+        // Build store from 'transform' HTML select element's options
+        if (!store && transform) {
+            transformSelect = Ext.getDom(transform);
+            if (transformSelect) {
+                store = Ext.Array.map(Ext.Array.from(transformSelect.options), function(option) {
+                    return [option.value, option.text];
+                });
+                if (!me.name) {
+                    me.name = transformSelect.name;
+                }
+                if (!('value' in me)) {
+                    me.value = transformSelect.value;
+                }
+            }
+        }
 
-        me.bindStore(me.store, true);
-        if (me.store.autoCreated) {
+        me.bindStore(store, true);
+        store = me.store;
+        if (store.autoCreated) {
             me.queryMode = 'local';
             me.valueField = me.displayField = 'field1';
-            if (!me.store.expanded) {
+            if (!store.expanded) {
                 me.displayField = 'field2';
             }
         }
+
 
         if (!isDefined(me.valueField)) {
             me.valueField = me.displayField;
         }
 
+        isLocalMode = me.queryMode === 'local';
         if (!isDefined(me.queryDelay)) {
             me.queryDelay = isLocalMode ? 10 : 500;
         }
@@ -397,6 +425,13 @@ var combo = new Ext.form.field.ComboBox({
         // store has already been loaded, setValue
         if (me.store.getCount() > 0) {
             me.setValue(me.value);
+        }
+
+        // render in place of 'transform' select
+        if (transformSelect) {
+            me.render(transformSelect.parentNode, transformSelect);
+            Ext.removeNode(transformSelect);
+            delete me.renderTo;
         }
     },
 
@@ -472,8 +507,11 @@ var combo = new Ext.form.field.ComboBox({
             if (oldStore !== store && oldStore.autoDestroy) {
                 oldStore.destroy();
             } else {
-                oldStore.un('load', me.onLoad, me);
-                oldStore.un('exception', me.collapse, me);
+                oldStore.un({
+                    scope: me,
+                    load: me.onLoad,
+                    exception: me.collapse
+                });
             }
             if (!store) {
                 me.store = null;
@@ -558,7 +596,7 @@ var combo = new Ext.form.field.ComboBox({
             // make sure they aren't querying the same thing
             if (!me.queryCaching || me.lastQuery !== queryString) {
                 me.lastQuery = queryString;
-                store.clearFilter();
+                store.clearFilter(!forceAll);
                 if (isLocalMode) {
                     if (!forceAll) {
                         store.filter(me.displayField, queryString);
@@ -627,8 +665,6 @@ var combo = new Ext.form.field.ComboBox({
         }
     },
 
-
-
     onTriggerClick: function() {
         var me = this;
         if (!me.readOnly && !me.disabled) {
@@ -674,8 +710,8 @@ var combo = new Ext.form.field.ComboBox({
 
     createPicker: function() {
         var me = this,
-            value = Ext.Array.from(me.value),
             picker,
+            menuCls = Ext.baseCSSPrefix + 'menu',
             opts = Ext.apply({
                 selModel: {
                     mode: me.multiSelect ? 'SIMPLE' : 'SINGLE'
@@ -683,7 +719,7 @@ var combo = new Ext.form.field.ComboBox({
                 floating: true,
                 hidden: true,
                 ownerCt: me.ownerCt,
-                renderTo: document.body,
+                cls: me.el.up('.' + menuCls) ? menuCls : '',
                 store: me.store,
                 displayField: me.displayField,
                 focusOnToFront: false,
@@ -692,12 +728,8 @@ var combo = new Ext.form.field.ComboBox({
 
         picker = me.picker = Ext.create('Ext.view.BoundList', opts);
 
-        // Set the BoundList's selection to match the current value
-        if (value.length > 0) {
-            me.select(value);
-        }
-
         me.mon(picker, {
+            itemclick: me.onItemClick,
             refresh: me.onListRefresh,
             scope: me
         });
@@ -713,6 +745,24 @@ var combo = new Ext.form.field.ComboBox({
     onListRefresh: function() {
         this.alignPicker();
         this.syncSelection();
+    },
+    
+    onItemClick: function(picker, record){
+        /*
+         * If we're doing single selection, the selection change events won't fire when
+         * clicking on the selected element. Detect it here.
+         */
+        var me = this,
+            lastSelection = me.lastSelection,
+            valueField = me.valueField,
+            selected;
+        
+        if (!me.multiSelect && lastSelection) {
+            selected = lastSelection[0];
+            if (record.get(valueField) === selected.get(valueField)) {
+                me.collapse();
+            }
+        }   
     },
 
     onListSelectionChange: function(list, selectedRecords) {
@@ -741,7 +791,10 @@ var combo = new Ext.form.field.ComboBox({
             selectOnTab = me.selectOnTab,
             picker = me.getPicker();
 
-        if (!keyNav) {
+        // Handle BoundList navigation from the input field. Insert a tab listener specially to enable selectOnTab.
+        if (keyNav) {
+            keyNav.enable();
+        } else {
             keyNav = me.listKeyNav = Ext.create('Ext.view.BoundListKeyNav', this.inputEl, {
                 boundList: picker,
                 forceKeyDown: true,
@@ -754,13 +807,14 @@ var combo = new Ext.form.field.ComboBox({
                     return true;
                 }
             });
-            // stop tab monitoring from Ext.form.field.Trigger so it doesn't short-circuit selectOnTab
-            if (selectOnTab) {
-                me.ignoreMonitorTab = true;
-            }
         }
-        Ext.defer(keyNav.enable, 1, keyNav); //wait a bit so it doesn't react to the down arrow opening the picker
 
+        // While list is expanded, stop tab monitoring from Ext.form.field.Trigger so it doesn't short-circuit selectOnTab
+        if (selectOnTab) {
+            me.ignoreMonitorTab = true;
+        }
+
+        Ext.defer(keyNav.enable, 1, keyNav); //wait a bit so it doesn't react to the down arrow opening the picker
         me.inputEl.focus();
     },
 
@@ -777,8 +831,6 @@ var combo = new Ext.form.field.ComboBox({
         }
     },
 
-
-
     /**
      * Selects an item by a {@link Ext.data.Model Model}, or by a key value.
      * @param r
@@ -786,7 +838,6 @@ var combo = new Ext.form.field.ComboBox({
     select: function(r) {
         this.setValue(r, true);
     },
-
 
     /**
      * Find the record by searching for a specific field/value combination
@@ -856,7 +907,10 @@ var combo = new Ext.form.field.ComboBox({
         }
 
         // Set the value of this field. If we are multiselecting, then that is an array.
-        me.value = (processedValue.length == 1) ? processedValue[0] : processedValue;
+        me.value = me.multiSelect ? processedValue : processedValue[0];
+        if (!Ext.isDefined(me.value)) {
+            me.value = null;
+        }
         me.displayTplData = displayTplData; //store for getDisplayValue method
         me.lastSelection = me.valueModels = models;
 
@@ -904,7 +958,7 @@ var combo = new Ext.form.field.ComboBox({
 
         return value;
     },
-    
+
     getSubmitValue: function() {
         return this.getValue();
     },

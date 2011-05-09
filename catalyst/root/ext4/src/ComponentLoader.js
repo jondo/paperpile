@@ -1,23 +1,46 @@
 /**
  * @class Ext.ComponentLoader
- * @extend Ext.ElementLoader
- * A class used to load remote content to a component. Sample usage:
- * <pre><code>
-new Ext.Component({
-    tpl: '{firstName} - {lastName}',
-    loader: {
-        url: 'myPage.php',
-        renderer: 'data',
-        params: {
-            userId: 1
-        }
-    }
-});
- * </code></pre>
- * <p>
- * In general this class will not be instanced directly, rather a loader configuration will be passed to the
- * constructor of the {@link Ext.Component}
- * </p>
+ * @extends Ext.ElementLoader
+ * 
+ * This class is used to load content via Ajax into a {@link Ext.Component}. In general 
+ * this class will not be instanced directly, rather a loader configuration will be passed to the
+ * constructor of the {@link Ext.Component}.
+ * 
+ * ## HTML Renderer
+ * By default, the content loaded will be processed as raw html. The response text
+ * from the request is taken and added to the component. This can be used in
+ * conjunction with the {@link #scripts} option to execute any inline scripts in
+ * the resulting content. Using this renderer has the same effect as passing the
+ * {@link Ext.Component#html} configuration option.
+ * 
+ * ## Data Renderer
+ * This renderer allows content to be added by using JSON data and a {@link Ext.XTemplate}.
+ * The content received from the response is passed to the {@link Ext.Component#update} method.
+ * This content is run through the attached {@link Ext.Component#tpl} and the data is added to
+ * the Component. Using this renderer has the same effect as using the {@link Ext.Component#data}
+ * configuration in conjunction with a {@link Ext.Component#tpl}.
+ * 
+ * ## Component Renderer
+ * This renderer can only be used with a {@link Ext.Container} and subclasses. It allows for
+ * Components to be loaded remotely into a Container. The response is expected to be a single/series of
+ * {@link Ext.Component} configuration objects. When the response is received, the data is decoded
+ * and then passed to {@link Ext.Container#add}. Using this renderer has the same effect as specifying
+ * the {@link Ext.Container#items} configuration on a Container. 
+ * 
+ * ## Custom Renderer
+ * A custom function can be passed to handle any other special case, see the {@link #renderer} option.
+ * 
+ * ## Example Usage
+ *     new Ext.Component({
+ *         tpl: '{firstName} - {lastName}',
+ *         loader: {
+ *             url: 'myPage.php',
+ *             renderer: 'data',
+ *             params: {
+ *                 userId: 1
+ *             }
+ *         }
+ *     });
  */
 Ext.define('Ext.ComponentLoader', {
 

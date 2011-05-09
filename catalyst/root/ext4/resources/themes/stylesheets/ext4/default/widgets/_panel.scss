@@ -3,25 +3,32 @@
   * Used to create the base structure of an Ext.Panel
   */
 @mixin extjs-panel {
-    .#{$prefix}panel, .#{$prefix}plain {
+    .#{$prefix}panel,
+    .#{$prefix}plain {
         overflow: hidden;
         position: relative;
     }
-
+    
     // Workaround for disappearing right edge in IE6
      @if $include-ie {
-        .#{$prefix}ie6 {
-            .#{$prefix}panel-framed-mr,
-            .#{$prefix}panel-framed-br {
+        .#{$prefix}ie {
+            .#{$prefix}panel-header,
+            .#{$prefix}panel-header-tl,
+            .#{$prefix}panel-header-tc,
+            .#{$prefix}panel-header-tr,
+            .#{$prefix}panel-header-ml,
+            .#{$prefix}panel-header-mc,
+            .#{$prefix}panel-header-mr,
+            .#{$prefix}panel-header-bl,
+            .#{$prefix}panel-header-bc,
+            .#{$prefix}panel-header-br {
                 zoom: 1;
             }
         }
     }
-            
+    
     //panel header
     .#{$prefix}panel-header {
-        border-bottom-width: 0;
-        
         padding: $panel-header-padding;
     }
     
@@ -36,11 +43,7 @@
         margin-top:-1px;
         margin-bottom:-1px;
     }
-
-    .#{$prefix}panel-header.#{$prefix}panel-header-framed {
-        border-bottom-width: 1px !important;
-    }
-
+    
     .#{$prefix}panel-header-draggable,
     .#{$prefix}panel-header-draggable .#{$prefix}panel-header-text,
     .#{$prefix}window-header-draggable,
@@ -67,7 +70,7 @@
         }
     }
 
-    // Vertical headers must be inline blocks so that they acquire width from the content 
+    // Vertical headers must be inline blocks so that they acquire width from the content
     .#{$prefix}panel-header-vertical, .#{$prefix}panel-header-vertical .#{$prefix}panel-header-body,
     .#{$prefix}btn-group-header-vertical, .#{$prefix}btn-group-header-vertical .#{$prefix}btn-group-header-body,
     .#{$prefix}window-header-vertical, .#{$prefix}window-header-vertical .#{$prefix}window-header-body {
@@ -79,7 +82,7 @@
         @include no-select;
         white-space: nowrap;
     }
-    
+
     .#{$prefix}panel-header-left,
     .#{$prefix}panel-header-right {
         .#{$prefix}vml-base {
@@ -91,66 +94,36 @@
     .#{$prefix}panel-body {
         overflow: hidden;
         position: relative;
-        border-style: $panel-body-border-style;
-        border-width: $panel-body-border-width;
-    }
-
-    //panel with border:false specified
-    .#{$prefix}panel-noborder-docked-top,
-    .#{$prefix}panel-noborder-docked-bottom,
-    .#{$prefix}panel-noborder-docked-left,
-    .#{$prefix}panel-noborder-docked-right,
-    .#{$prefix}panel-noborder-body {
-        border-width: 0 !important;
-    }
-
-    /**
-      * Dock Layouts
-      * @todo move this somewhere else?
-      */
-    .#{$prefix}docked-top {
-        border-bottom-width: 0 !important;
-        
-        .#{$prefix}panel-wrap-child {
-            border-bottom-width: 0 !important;
-        }
-    }
-    
-    .#{$prefix}docked-bottom {
-        border-top-width: 0 !important;
-        
-        .#{$prefix}panel-wrap-child {
-            border-top-width: 0 !important;
-        }
-    }
-    
-    .#{$prefix}docked-left {
-        border-right-width: 0 !important;
-
-        .#{$prefix}panel-wrap-child {
-            border-right-width: 0 !important;
-        }
-    }
-    
-    .#{$prefix}docked-right {
-        border-left-width: 0 !important;
-
-        .#{$prefix}panel-wrap-child {
-            border-left-width: 0 !important;
-        }
-    }
-
-    // Needs important to win over the .#{$prefix}docked-left/right/top/bottom rules above.
-    .#{$prefix}panel-collapsed-placeholder {
-        border-width: 1px !important;
     }
 
     .#{$prefix}panel-header-vertical {
         .#{$prefix}surface {
-            margin-top: 5px;
+            margin-top: 2px;
         }
     }
     
+    .#{$prefix}panel-header-plain-vertical {
+        .#{$prefix}surface {
+            margin-top: 0;
+        }
+    }
+    
+        
+    .#{$prefix}panel-collapsed {
+        .#{$prefix}panel-header-collapsed-border-top {
+            border-bottom-width: $panel-header-border-width !important;
+        }
+        .#{$prefix}panel-header-collapsed-border-right {
+            border-left-width: $panel-header-border-width !important;
+        }
+        .#{$prefix}panel-header-collapsed-border-bottom {
+            border-top-width: $panel-header-border-width !important;
+        }
+        .#{$prefix}panel-header-collapsed-border-left {
+            border-right-width: $panel-header-border-width !important;
+        }
+    }
+
     @if not $supports-gradients or $compile-all {
         .#{$prefix}nlg .#{$prefix}panel-header-vertical {
             .#{$prefix}frame-mc {
@@ -159,35 +132,48 @@
         }
     }
 
-    .#{$prefix}region-collapsed-placeholder {
-        border-width: 1px;
-    }
-    
     @if $include-panel-uis == true {
         @include extjs-panel-ui(
             'default',
-            
+
             $ui-base-color: $panel-base-color,
             $ui-border-color: $panel-border-color,
             
-            $ui-frame-background-color: $panel-frame-background-color,
-            $ui-frame-border-radius: $panel-frame-border-radius,
-            $ui-frame-border-color: $panel-frame-border-color,
-
             $ui-header-color: $panel-header-color,
             $ui-header-font-size: $panel-header-font-size,
             $ui-header-font-weight: $panel-header-font-weight,
             $ui-header-border-color: $panel-header-border-color,
-/*            $ui-header-inner-border-color: $panel-header-inner-border-color,*/
             $ui-header-background-color: $panel-header-background-color,
             $ui-header-background-gradient: $panel-header-background-gradient,
 
             $ui-body-color: $panel-body-color,
             $ui-body-border-color: $panel-body-border-color,
+            $ui-body-border-width: 1px,
             $ui-body-background-color: $panel-body-background-color
         );
+        
+        @include extjs-panel-ui(
+            'default-framed',
+
+            $ui-base-color: $panel-base-color,
+            $ui-border-width: $panel-frame-border-width,
+            $ui-border-color: $panel-frame-border-color,
+            $ui-border-radius: $panel-frame-border-radius,
+
+            $ui-header-color: $panel-header-color,
+            $ui-header-font-size: $panel-header-font-size,
+            $ui-header-font-weight: $panel-header-font-weight,
+            $ui-header-border-color: $panel-frame-border-color,
+            $ui-header-background-color: $panel-header-background-color,
+            $ui-header-background-gradient: $panel-header-background-gradient,
+
+            $ui-body-color: $panel-body-color,
+            $ui-body-border-color: $panel-body-border-color,
+            $ui-body-border-width: 0,
+            $ui-body-background-color: $panel-frame-background-color
+        );
     }
-    
+
     .x-panel-header-plain,
     .x-panel-body-plain {
         border: 0;
@@ -201,45 +187,50 @@
   */
 @mixin extjs-panel-ui(
     $ui-label,
-    
+
     $ui-base-color: null,
+
     $ui-border-color: null,
-    
-    $ui-frame-background-color: null,
-    $ui-frame-border-radius: null,
-    $ui-frame-border-color: null,
-    
+    $ui-border-radius: null,
+    $ui-border-width: 0,
+
     $ui-header-color: null,
     $ui-header-font-family: $panel-header-font-family,
     $ui-header-font-size: $panel-header-font-size,
     $ui-header-font-weight: $panel-header-font-weight,
-    $ui-header-border-color: null,
+    $ui-header-border-color: $ui-border-color,
     $ui-header-background-color: null,
-    $ui-header-background-gradient: null,
-    $ui-header-inner-border-color: lighten($ui-header-background-color, 10),
-    
+    $ui-header-background-gradient: matte,
+    $ui-header-inner-border-color: null,
+
     $ui-body-color: null,
     $ui-body-border-color: null,
-    $ui-body-background-color: null
+    $ui-body-border-width: null,
+    $ui-body-border-style: solid,
+    $ui-body-background-color: null,
+    $ui-body-font-size: null,
+    $ui-body-font-weight: null
 ){
+    @if $ui-base-color != null {
+        @if $ui-border-color == null { $ui-border-color: $ui-base-color; }
+
+        @if $ui-header-color == null { $ui-header-color: #fff; }
+        @if $ui-header-background-color == null { $ui-header-background-color: lighten($ui-base-color, 15); }
+    }
+    
+    @if $ui-header-inner-border-color == null and $ui-header-background-color != null {
+        $ui-header-inner-border-color: lighten($ui-header-background-color, 10);
+    }
+
     .#{$prefix}panel-#{$ui-label} {
         @if $ui-border-color != null { border-color: $ui-border-color; }
     }
-    
-    .#{$prefix}panel-framed-#{$ui-label} {
-        @if $ui-frame-border-color != null {     border-color: $ui-frame-border-color; }
-        @if $ui-frame-background-color != null { background: $ui-frame-background-color; }
-        
-        @if $panel-header-inner-border and $ui-header-inner-border-color != null {
-            @include inner-border(
-                $width: 1px, 
-                $color: $ui-header-inner-border-color
-            );
-        }
-    }
-    
-    //panel header
+
+    // header
     .#{$prefix}panel-header-#{$ui-label} {
+        @if $ui-header-font-size != null { font-size: $ui-header-font-size; }
+        line-height: $panel-header-line-height;
+
         @if $ui-header-border-color != null {
             border-color: $ui-header-border-color;
             border-width: $panel-header-border-width;
@@ -248,75 +239,60 @@
 
         @if $supports-gradients or $compile-all {
             @if $ui-header-background-color != null { @include background-gradient($ui-header-background-color, $ui-header-background-gradient); }
-            
+
             @if $panel-header-inner-border and $ui-header-inner-border-color != null {
                 @include inner-border(
-                    $width: $panel-header-inner-border-width, 
+                    $width: $panel-header-inner-border-width,
                     $color: $ui-header-inner-border-color
                 );
             }
         }
-        
-        .#{$prefix}panel-header-text-#{$prefix} {
-            @if $ui-header-font-weight != null { font-weight: $ui-header-font-weight; }
-            @if $ui-header-font-size != null { font-size: $ui-header-font-size; }
-            @if $ui-header-color != null { color: $ui-header-color; }
-        }
     }
     
+    // header background images
     @if $ui-header-background-color != null and $ui-header-background-gradient != null {
         @if not $supports-gradients or $compile-all {
-            .#{$prefix}nlg .#{$prefix}panel-header-#{$ui-label}-top,
-            .#{$prefix}nlg .#{$prefix}panel-header-#{$ui-label}-bottom {
+            .#{$prefix}nlg .#{$prefix}panel-header-#{$ui-label}-top {
                 background-image: theme-image($theme-name, 'panel-header/panel-header-#{$ui-label}-top-bg.gif');
             }
             
+            .#{$prefix}nlg .#{$prefix}panel-header-#{$ui-label}-bottom {
+                background-image: theme-image($theme-name, 'panel-header/panel-header-#{$ui-label}-bottom-bg.gif');
+            }
+
             .#{$prefix}nlg .#{$prefix}panel-header-#{$ui-label}-left {
                 background-image: theme-image($theme-name, 'panel-header/panel-header-#{$ui-label}-left-bg.gif');
-/*                background-position: top left !important;*/
             }
-            
+
             .#{$prefix}nlg .#{$prefix}panel-header-#{$ui-label}-right {
                 background-image: theme-image($theme-name, 'panel-header/panel-header-#{$ui-label}-right-bg.gif');
-/*                background-position: top right !important;*/
             }
         }
     }
-
-    .#{$prefix}panel-header-#{$ui-label}-framed {
-        border-bottom-width: 1px !important;
-        
-        @if $panel-header-inner-border != null {
-            @include inner-border(
-                $width: 1px 1px 0, 
-                $color: $ui-header-inner-border-color
-            );
-        }
-    }
-
+    
+    // header text
     .#{$prefix}panel-header-text-#{$ui-label} {
         @if $ui-header-color != null { color: $ui-header-color; }
-        
+
         @if $ui-header-font-size != null {   font-size: $ui-header-font-size; }
         @if $ui-header-font-weight != null { font-weight: $ui-header-font-weight; }
         @if $ui-header-font-family != null { font-family: $ui-header-font-family; }
-        
-        line-height: $panel-header-line-height;
     }
 
-    //panel body
+    // body
     .#{$prefix}panel-body-#{$ui-label} {
         @if $ui-body-background-color != null { background: $ui-body-background-color; }
         @if $ui-body-border-color != null {     border-color: $ui-body-border-color; }
         @if $ui-body-color != null {            color: $ui-body-color; }
-    }
-
-    .#{$prefix}panel-body-#{$ui-label}-framed {
-        border-width: 0;
-        @if $ui-frame-background-color != null { background: $ui-frame-background-color; }
+        @if $ui-body-font-size != null {        font-size: $ui-body-font-size; }
+        @if $ui-body-font-weight != null {      font-size: $ui-body-font-weight; }
+        
+        @if $ui-body-border-width != null {
+            border-width: $ui-body-border-width;
+            @if $ui-body-border-style != null { border-style: $ui-body-border-style; }
+        }
     }
     
-
     .#{$prefix}panel-collapsed {
         .#{$prefix}window-header-#{$ui-label},
         .#{$prefix}panel-header-#{$ui-label} {
@@ -324,10 +300,10 @@
         }
     }
 
-    .#{$prefix}panel-header-#{$ui-label}-vetical {
+    .#{$prefix}panel-header-#{$ui-label}-vertical {
         @if $ui-body-border-color != null { border-color: $ui-body-border-color; }
     }
-    
+
     @if $ui-base-color != null {
         @if $supports-gradients or $compile-all {
             .#{$prefix}panel-header-#{$ui-label}-left,
@@ -356,72 +332,121 @@
             }
         }
     }
-    
-    @if $ui-frame-border-radius != null {
+
+    @if $ui-border-radius != null {
         @include x-frame(
             'panel',
-            $ui: '#{$ui-label}-framed',
-        
+            $ui: '#{$ui-label}',
+
             /* Radius, width, padding and background-color */
-            $border-radius   : $ui-frame-border-radius, 
-            $border-width    : $panel-frame-border-width, 
-            $padding         : $panel-frame-padding, 
-            $background-color: $ui-frame-background-color
+            $border-radius   : $ui-border-radius,
+            $border-width    : $ui-border-width,
+            $padding         : $panel-frame-padding,
+            $background-color: $ui-body-background-color
         );
+
+
+        @include x-frame('panel-header', '#{$ui-label}-top',    top($ui-border-radius) right($ui-border-radius) 0 0,    $ui-border-width, 4px 5px 4px 5px, $ui-header-background-color, $ui-header-background-gradient);
+        @include x-frame('panel-header', '#{$ui-label}-right',  0 right($ui-border-radius) bottom($ui-border-radius) 0, $ui-border-width, 4px 5px 4px 5px, $ui-header-background-color, $ui-header-background-gradient, false, right);
+        @include x-frame('panel-header', '#{$ui-label}-bottom', 0 0 bottom($ui-border-radius) left($ui-border-radius),  $ui-border-width, 4px 5px 4px 5px, $ui-header-background-color, $ui-header-background-gradient);
+        @include x-frame('panel-header', '#{$ui-label}-left',   top($ui-border-radius) 0 0 left($ui-border-radius),     $ui-border-width, 4px 5px 4px 5px, $ui-header-background-color, $ui-header-background-gradient, false, right);
         
-        @include x-frame('panel-header', '#{$ui-label}-framed-top', top($ui-frame-border-radius) right($ui-frame-border-radius) 0 0,    $panel-frame-border-width, 4px, $ui-header-background-color, $ui-header-background-gradient);
-        @include x-frame('panel-header', '#{$ui-label}-framed-right', 0 right($ui-frame-border-radius) bottom($ui-frame-border-radius) 0, $panel-frame-border-width, 4px, $ui-header-background-color, $ui-header-background-gradient, false, right);
-        @include x-frame('panel-header', '#{$ui-label}-framed-bottom', 0 0 bottom($ui-frame-border-radius) left($ui-frame-border-radius),  $panel-frame-border-width, 4px, $ui-header-background-color, $ui-header-background-gradient);
-        @include x-frame('panel-header', '#{$ui-label}-framed-left', top($ui-frame-border-radius) 0 0 left($ui-frame-border-radius),     $panel-frame-border-width, 4px, $ui-header-background-color, $ui-header-background-gradient, false, right);
-        
+        .#{$prefix}panel-header-#{$ui-label}-top {
+            @include inner-border(1px 1px 0 1px, $ui-header-inner-border-color);
+        }
+
+        .#{$prefix}panel-header-#{$ui-label}-right {
+            @include inner-border(1px 1px 1px 0, $ui-header-inner-border-color);
+        }
+
+        .#{$prefix}panel-header-#{$ui-label}-bottom {
+            @include inner-border(0 1px 1px 1px, $ui-header-inner-border-color);
+        }
+
+        .#{$prefix}panel-header-#{$ui-label}-left {
+            @include inner-border(1px 0 1px 1px, $ui-header-inner-border-color);
+        }
+    } @else {
         .#{$prefix}panel-collapsed {
-            .#{$prefix}panel-header-#{$ui-label}-framed-top {
-                @include border-bottom-radius($ui-frame-border-radius);
+            .#{$prefix}panel-header-#{$ui-label}-top {
+                @include border-bottom-radius($ui-border-radius);
             }
 
-            .#{$prefix}panel-header-#{$ui-label}-framed-right {
-                @include border-left-radius($ui-frame-border-radius);
+            .#{$prefix}panel-header-#{$ui-label}-right {
+                @include border-left-radius($ui-border-radius);
             }
 
-            .#{$prefix}panel-header-#{$ui-label}-framed-bottom {
-                @include border-top-radius($ui-frame-border-radius);
+            .#{$prefix}panel-header-#{$ui-label}-bottom {
+                @include border-top-radius($ui-border-radius);
             }
 
-            .#{$prefix}panel-header-#{$ui-label}-framed-left {
-                @include border-right-radius($ui-frame-border-radius);
+            .#{$prefix}panel-header-#{$ui-label}-left {
+                @include border-right-radius($ui-border-radius);
             }
+        }
+        
+        .#{$prefix}nlg .#{$prefix}panel-header-#{$ui-label}-right {
+            background-position: top right;
+        }
+        
+        .#{$prefix}panel-header-#{$ui-label}-top {
+            @include inner-border(1px 0 0 0, $ui-header-inner-border-color);
+        }
+
+        .#{$prefix}panel-header-#{$ui-label}-right {
+            @include inner-border(0 1px 0 0, $ui-header-inner-border-color);
+        }
+
+        .#{$prefix}panel-header-#{$ui-label}-bottom {
+            @include inner-border(0 0 1px, $ui-header-inner-border-color);
+        }
+
+        .#{$prefix}panel-header-#{$ui-label}-left {
+            @include inner-border(0 0 0 1px, $ui-header-inner-border-color);
         }
     }
     
-    .#{$prefix}panel-header-#{$ui-label}-top {
-        @include inner-border(1px 1px 0 1px, $ui-header-inner-border-color);
-    }
-
-    .#{$prefix}panel-header-#{$ui-label}-right {
-        @include inner-border(1px 1px 1px 0, $ui-header-inner-border-color);
+    .#{$prefix}nlg .#{$prefix}panel-header-#{$ui-label}-bottom {
+        background-position: bottom left;
     }
     
-    .#{$prefix}panel-header-#{$ui-label}-framed-right-mc {
+    @if $ui-border-radius != null {
+        .#{$prefix}panel .#{$prefix}panel-header-#{$ui-label}-top {
+            border-bottom-width: 1px !important;
+        }
+
+        .#{$prefix}panel .#{$prefix}panel-header-#{$ui-label}-right {
+            border-left-width: 1px !important;
+        }
+
+        .#{$prefix}panel .#{$prefix}panel-header-#{$ui-label}-bottom {
+            border-top-width: 1px !important;
+        }
+
+        .#{$prefix}panel .#{$prefix}panel-header-#{$ui-label}-left {
+            border-right-width: 1px !important;
+        }
+        
+        .#{$prefix}panel-header-#{$ui-label}-collapsed {
+            @include border-radius($ui-border-radius);
+        }
+        
+        @include x-frame('panel-header', '#{$ui-label}-collapsed-top',    top($ui-border-radius) right($ui-border-radius) bottom($ui-border-radius) left($ui-border-radius), $ui-border-width, 4px 5px 4px 5px, $ui-header-background-color, $ui-header-background-gradient);
+        @include x-frame('panel-header', '#{$ui-label}-collapsed-right',  top($ui-border-radius) right($ui-border-radius) bottom($ui-border-radius) left($ui-border-radius), $ui-border-width, 4px 5px 4px 5px, $ui-header-background-color, $ui-header-background-gradient, false, right);
+        @include x-frame('panel-header', '#{$ui-label}-collapsed-bottom', top($ui-border-radius) right($ui-border-radius) bottom($ui-border-radius) left($ui-border-radius), $ui-border-width, 4px 5px 4px 5px, $ui-header-background-color, $ui-header-background-gradient);
+        @include x-frame('panel-header', '#{$ui-label}-collapsed-left',   top($ui-border-radius) right($ui-border-radius) bottom($ui-border-radius) left($ui-border-radius), $ui-border-width, 4px 5px 4px 5px, $ui-header-background-color, $ui-header-background-gradient, false, right);
+    }
+    
+    //background positioning of images
+    .#{$prefix}panel-header-#{$ui-label}-right-tc,
+    .#{$prefix}panel-header-#{$ui-label}-right-mc,
+    .#{$prefix}panel-header-#{$ui-label}-right-bc {
         background-position: right 0;
     }
     
-    .#{$prefix}panel-header-#{$ui-label}-bottom {
-        @include inner-border(0px 1px 1px, $ui-header-inner-border-color);
-    }
-
-    .#{$prefix}panel-header-#{$ui-label}-framed-bottom-mc {
+    .#{$prefix}panel-header-#{$ui-label}-bottom-tc,
+    .#{$prefix}panel-header-#{$ui-label}-bottom-mc,
+    .#{$prefix}panel-header-#{$ui-label}-bottom-bc {
         background-position: 0 bottom;
-    }
-    
-    .#{$prefix}panel-header-#{$ui-label}-left {
-        @include inner-border(1px 0 1px 1px, $ui-header-inner-border-color);
-    }
-    
-    .#{$prefix}panel-collapsed,
-    .#{$prefix}panel-#{$ui-label}-framed {
-        .#{$prefix}panel-header-top { border-bottom-width: 1px !important; }
-        .#{$prefix}panel-header-bottom { border-top-width: 1px !important; }
-        .#{$prefix}panel-header-left { border-right-width: 1px !important; }
-        .#{$prefix}panel-header-right { border-left-width: 1px !important; }
     }
 }

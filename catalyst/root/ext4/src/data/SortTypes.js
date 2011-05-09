@@ -26,7 +26,8 @@ Ext.apply(Ext.data.SortTypes, {
     }    
 });
 
-Ext.regModel('Employee', {
+Ext.define('Employee', {
+    extend: 'Ext.data.Model',
     fields: [{
         name: 'person',
         sortType: 'asPerson'

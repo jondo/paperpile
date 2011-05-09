@@ -1,18 +1,92 @@
 /**
  * @class Ext.tip.ToolTip
  * @extends Ext.tip.Tip
- * A standard tooltip implementation for providing additional information when hovering over a target element.
+ * 
+ * ToolTip is a {@link Ext.tip.Tip} implementation that handles the common case of displaying a
+ * tooltip when hovering over a certain element or elements on the page. It allows fine-grained
+ * control over the tooltip's alignment relative to the target element or mouse, and the timing
+ * of when it is automatically shown and hidden.
+ * 
+ * This implementation does **not** have a built-in method of automatically populating the tooltip's
+ * text based on the target element; you must either configure a fixed {@link #html} value for each
+ * ToolTip instance, or implement custom logic (e.g. in a {@link #beforeshow} event listener) to
+ * generate the appropriate tooltip content on the fly. See {@link Ext.tip.QuickTip} for a more
+ * convenient way of automatically populating and configuring a tooltip based on specific DOM
+ * attributes of each target element.
+ * 
+ * ## Basic Example
+ * 
+ *     var tip = Ext.create('Ext.tip.ToolTip', {
+ *         target: 'clearButton',
+ *         html: 'Press this button to clear the form'
+ *     });
+ * 
+ * {@img Ext.tip.ToolTip/Ext.tip.ToolTip1.png Basic Ext.tip.ToolTip}
+ * 
+ * ## Delegation
+ * 
+ * In addition to attaching a ToolTip to a single element, you can also use delegation to attach
+ * one ToolTip to many elements under a common parent. This is more efficient than creating many
+ * ToolTip instances. To do this, point the {@link #target} config to a common ancestor of all the
+ * elements, and then set the {@link #delegate} config to a CSS selector that will select all the
+ * appropriate sub-elements.
+ * 
+ * When using delegation, it is likely that you will want to programmatically change the content
+ * of the ToolTip based on each delegate element; you can do this by implementing a custom
+ * listener for the {@link #beforeshow} event. Example:
+ * 
+ *     var myGrid = Ext.create('Ext.grid.GridPanel', gridConfig);
+ *     myGrid.on('render', function(grid) {
+ *         var view = grid.getView();    // Capture the grid's view.
+ *         grid.tip = Ext.create('Ext.tip.ToolTip', {
+ *             target: view.el,          // The overall target element.
+ *             delegate: view.itemSelector, // Each grid row causes its own seperate show and hide.
+ *             trackMouse: true,         // Moving within the row should not hide the tip.
+ *             renderTo: Ext.getBody(),  // Render immediately so that tip.body can be referenced prior to the first show.
+ *             listeners: {              // Change content dynamically depending on which element triggered the show.
+ *                 beforeshow: function updateTipBody(tip) {
+ *                     tip.update('Over company "' + view.getRecord(tip.triggerElement).get('company') + '"');
+ *                 }
+ *             }
+ *         });
+ *     });
+ * 
+ * {@img Ext.tip.ToolTip/Ext.tip.ToolTip2.png Ext.tip.ToolTip with delegation}
+ * 
+ * ## Alignment
+ * 
+ * The following configuration properties allow control over how the ToolTip is aligned relative to
+ * the target element and/or mouse pointer:
+ * 
+ *  - {@link #anchor}
+ *  - {@link #anchorToTarget}
+ *  - {@link #anchorOffset}
+ *  - {@link #trackMouse}
+ *  - {@link #mouseOffset}
+ * 
+ * ## Showing/Hiding
+ * 
+ * The following configuration properties allow control over how and when the ToolTip is automatically
+ * shown and hidden:
+ * 
+ *  - {@link #autoHide}
+ *  - {@link #showDelay}
+ *  - {@link #hideDelay}
+ *  - {@link #dismissDelay}
+ * 
  * @constructor
- * Create a new Tooltip
+ * Create a new ToolTip instance
  * @param {Object} config The configuration options
  * @xtype tooltip
+ * @markdown
+ * @docauthor Jason Johnston <jason@sencha.com>
  */
 Ext.define('Ext.tip.ToolTip', {
     extend: 'Ext.tip.Tip',
     alias: 'widget.tooltip',
     alternateClassName: 'Ext.ToolTip',
     /**
-     * When a Tooltip is configured with the <code>{@link #delegate}</code>
+     * When a ToolTip is configured with the <code>{@link #delegate}</code>
      * option to cause selected child elements of the <code>{@link #target}</code>
      * Element to each trigger a seperate show event, this property is set to
      * the DOM element which triggered the show.
@@ -89,23 +163,19 @@ Ext.define('Ext.tip.ToolTip', {
      * event is placed into the <code>{@link #triggerElement}</code> property
      * before the ToolTip is shown.</p>
      * <p>This may be useful when a Component has regular, repeating elements
-     * in it, each of which need a Tooltip which contains information specific
+     * in it, each of which need a ToolTip which contains information specific
      * to that element. For example:</p><pre><code>
-var myGrid = new Ext.grid.gridPanel(gridConfig);
+var myGrid = Ext.create('Ext.grid.GridPanel', gridConfig);
 myGrid.on('render', function(grid) {
-    var store = grid.getStore();  // Capture the Store.
-    var view = grid.getView();    // Capture the GridView.
-    myGrid.tip = new Ext.tip.ToolTip({
-        target: view.mainBody,    // The overall target element.
-        delegate: '.x-grid3-row', // Each grid row causes its own seperate show and hide.
+    var view = grid.getView();    // Capture the grid's view.
+    grid.tip = Ext.create('Ext.tip.ToolTip', {
+        target: view.el,          // The overall target element.
+        delegate: view.itemSelector, // Each grid row causes its own seperate show and hide.
         trackMouse: true,         // Moving within the row should not hide the tip.
-        renderTo: document.body,  // Render immediately so that tip.body can be
-                                  //  referenced prior to the first show.
-        listeners: {              // Change content dynamically depending on which element
-                                  //  triggered the show.
-            beforeshow: function updateTipBody(tip) {
-                var rowIndex = view.findRowIndex(tip.triggerElement);
-                tip.body.dom.innerHTML = 'Over Record ID ' + store.getAt(rowIndex).id;
+        renderTo: Ext.getBody(),  // Render immediately so that tip.body can be referenced prior to the first show.
+        listeners: {              // Change content dynamically depending on which element triggered the show.
+            beforeshow: function(tip) {
+                tip.update('Over Record ID ' + view.getRecord(tip.triggerElement).id);
             }
         }
     });
@@ -155,20 +225,26 @@ myGrid.on('render', function(grid) {
             t = Ext.get(target),
             tg;
 
+        if (me.target) {
+            tg = Ext.get(me.target);
+            me.mun(tg, 'mouseover', me.onTargetOver, me);
+            me.mun(tg, 'mouseout', me.onTargetOut, me);
+            me.mun(tg, 'mousemove', me.onMouseMove, me);
+        }
+        
+        me.target = t;
         if (t) {
-            if (me.target) {
-                tg = Ext.get(me.target);
-                me.mun(tg, 'mouseover', me.onTargetOver, me);
-                me.mun(tg, 'mouseout', me.onTargetOut, me);
-                me.mun(tg, 'mousemove', me.onMouseMove, me);
-            }
+            
             me.mon(t, {
+                // TODO - investigate why IE6/7 seem to fire recursive resize in e.getXY
+                // breaking QuickTip#onTargetOver (EXTJSIV-1608)
+                freezeEvent: true,
+
                 mouseover: me.onTargetOver,
                 mouseout: me.onTargetOut,
                 mousemove: me.onMouseMove,
                 scope: me
             });
-            me.target = t;
         }
         if (me.anchor) {
             me.anchorTarget = me.target;
@@ -446,18 +522,20 @@ myGrid.on('render', function(grid) {
         // Show this Component first, so that sizing can be calculated
         // pre-show it off screen so that the el will have dimensions
         this.callParent();
-        me.setPagePosition(-10000, -10000);
+        if (this.hidden === false) {
+            me.setPagePosition(-10000, -10000);
 
-        if (me.anchor) {
-            me.anchor = me.origAnchor;
-        }
-        me.showAt(me.getTargetXY());
+            if (me.anchor) {
+                me.anchor = me.origAnchor;
+            }
+            me.showAt(me.getTargetXY());
 
-        if (me.anchor) {
-            me.syncAnchor();
-            me.anchorEl.show();
-        } else {
-            me.anchorEl.hide();
+            if (me.anchor) {
+                me.syncAnchor();
+                me.anchorEl.show();
+            } else {
+                me.anchorEl.hide();
+            }
         }
     },
 

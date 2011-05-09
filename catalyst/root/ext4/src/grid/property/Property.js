@@ -1,9 +1,9 @@
 /**
  * @class Ext.grid.property.Property
  * A specific {@link Ext.data.Model} type that represents a name/value pair and is made to work with the
- * {@link Ext.grid.property.grid}.  Typically, Properties do not need to be created directly as they can be
+ * {@link Ext.grid.property.Grid}.  Typically, Properties do not need to be created directly as they can be
  * created implicitly by simply using the appropriate data configs either via the {@link Ext.grid.property.Grid#source}
- * config property or by calling {@link Ext.grid.property.grid#setSource}.  However, if the need arises, these records
+ * config property or by calling {@link Ext.grid.property.Grid#setSource}.  However, if the need arises, these records
  * can also be created explicitly as shown below.  Example usage:
  * <pre><code>
 var rec = new Ext.grid.property.Property({

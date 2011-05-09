@@ -1,5 +1,6 @@
 /**
  * @class Ext.app.EventBus
+ * @private
  *
  * Class documentation for the MVC classes will be present before 4.0 final, in the mean time please refer to the MVC
  * guide

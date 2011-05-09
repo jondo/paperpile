@@ -405,7 +405,7 @@ api: {
      */
     buildUrl: function(request) {
         var me = this,
-            url = request.url || me.api[request.action] || me.url;
+            url = me.getUrl(request);
         
         //<debug>
         if (!url) {
@@ -418,6 +418,19 @@ api: {
         }
         
         return url;
+    },
+    
+    /**
+     * Get the url for the request taking into account the order of priority,
+     * - The request
+     * - The api
+     * - The url
+     * @private
+     * @param {Ext.data.Request} request The request
+     * @return {String} The url
+     */
+    getUrl: function(request){
+        return request.url || this.api[request.action] || this.url;
     },
     
     /**

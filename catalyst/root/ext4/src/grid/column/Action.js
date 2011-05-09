@@ -2,46 +2,55 @@
  * @class Ext.grid.column.Action
  * @extends Ext.grid.column.Column
  * <p>A Grid header type which renders an icon, or a series of icons in a grid cell, and offers a scoped click
- * handler for each icon. Example usage:</p>
-<pre><code>
-new Ext.grid.Panel({
-    store: myStore,
-    columns: [
-        {
-            xtype: 'ActionColumn',
-            width: 50,
-            items: [
-                {
-                    icon   : 'sell.gif',                // Use a URL in the icon config
-                    tooltip: 'Sell stock',
-                    handler: function(grid, rowIndex, colIndex) {
-                        var rec = store.getAt(rowIndex);
-                        alert("Sell " + rec.get('company'));
-                    }
-                },
-                {
-                    getClass: function(v, meta, rec) {  // Or return a class from a function
-                        if (rec.get('change') < 0) {
-                            this.items[1].tooltip = 'Do not buy!';
-                            return 'alert-col';
-                        } else {
-                            this.items[1].tooltip = 'Buy stock';
-                            return 'buy-col';
-                        }
-                    },
-                    handler: function(grid, rowIndex, colIndex) {
-                        var rec = store.getAt(rowIndex);
-                        alert("Buy " + rec.get('company'));
-                    }
-                }
-            ]
-        }
-        //any other columns here
-    ]
-});
-</pre></code>
+ * handler for each icon.</p>
+ *
+ * {@img Ext.grid.column.Action/Ext.grid.column.Action.png Ext.grid.column.Action grid column}
+ *  
+ * ## Code
+ *     Ext.create('Ext.data.Store', {
+ *         storeId:'employeeStore',
+ *         fields:['firstname', 'lastname', 'senority', 'dep', 'hired'],
+ *         data:[
+ *             {firstname:"Michael", lastname:"Scott"},
+ *             {firstname:"Dwight", lastname:"Schrute"},
+ *             {firstname:"Jim", lastname:"Halpert"},
+ *             {firstname:"Kevin", lastname:"Malone"},
+ *             {firstname:"Angela", lastname:"Martin"}                        
+ *         ]
+ *     });
+ *     
+ *     Ext.create('Ext.grid.Panel', {
+ *         title: 'Action Column Demo',
+ *         store: Ext.data.StoreManager.lookup('employeeStore'),
+ *         columns: [
+ *             {text: 'First Name',  dataIndex:'firstname'},
+ *             {text: 'Last Name',  dataIndex:'lastname'},
+ *             {
+ *                 xtype:'actioncolumn', 
+ *                 width:50,
+ *                 items: [{
+ *                     icon: 'images/edit.png',  // Use a URL in the icon config
+ *                     tooltip: 'Edit',
+ *                     handler: function(grid, rowIndex, colIndex) {
+ *                         var rec = grid.getStore().getAt(rowIndex);
+ *                         alert("Edit " + rec.get('firstname'));
+ *                     }
+ *                 },{
+ *                     icon: 'images/delete.png',
+ *                     tooltip: 'Delete',
+ *                     handler: function(grid, rowIndex, colIndex) {
+ *                         var rec = grid.getStore().getAt(rowIndex);
+ *                         alert("Terminate " + rec.get('firstname'));
+ *                     }                
+ *                 }]
+ *             }
+ *         ],
+ *         width: 250,
+ *         renderTo: Ext.getBody()
+ *     });
  * <p>The action column can be at any index in the columns array, and a grid can have any number of
  * action columns. </p>
+ * @xtype actioncolumn
  */
 Ext.define('Ext.grid.column.Action', {
     extend: 'Ext.grid.column.Column',
@@ -158,8 +167,8 @@ Ext.define('Ext.grid.column.Action', {
             for (i = 0; i < l; i++) {
                 item = items[i];
                 v += '<img alt="' + me.altText + '" src="' + (item.icon || Ext.BLANK_IMAGE_URL) +
-                    '" class="' + Ext.baseCSSPrefix + 'action-col-icon ' + Ext.baseCSSPrefix + 'action-col-' + String(i) + ' ' + (item.iconCls || '') +
-                    ' ' + (Ext.isFunction(item.getClass) ? item.getClass.apply(item.scope||me.scope||me, arguments) : '') + '"' +
+                    '" class="' + Ext.baseCSSPrefix + 'action-col-icon ' + Ext.baseCSSPrefix + 'action-col-' + String(i) + ' ' +  (item.iconCls || '') + 
+                    ' ' + (Ext.isFunction(item.getClass) ? item.getClass.apply(item.scope||me.scope||me, arguments) : (me.iconCls || '')) + '"' +
                     ((item.tooltip) ? ' data-qtip="' + item.tooltip + '"' : '') + ' />';
             }
             return v;

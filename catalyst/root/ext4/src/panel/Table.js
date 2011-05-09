@@ -2,18 +2,18 @@
  * @class Ext.panel.Table
  * @extends Ext.panel.Panel
  * @xtype tablepanel
- * @markdown
  * @private
  * @author Nicolas Ferrero
-TablePanel is a private class and the basis of both TreePanel and GridPanel.
-
-TablePanel aggregates:
-- a Selection Model
-- a View
-- a Store
-- Scrollers
-- Ext.grid.header.Container
-
+ * TablePanel is a private class and the basis of both TreePanel and GridPanel.
+ *
+ * TablePanel aggregates:
+ *
+ *  - a Selection Model
+ *  - a View
+ *  - a Store
+ *  - Scrollers
+ *  - Ext.grid.header.Container
+ *
  */
 Ext.define('Ext.panel.Table', {
     extend: 'Ext.panel.Panel',
@@ -27,8 +27,9 @@ Ext.define('Ext.panel.Table', {
         'Ext.grid.Lockable'
     ],
 
-    cls: Ext.baseCSSPrefix + 'grid-section',
+    cls: Ext.baseCSSPrefix + 'grid',
     extraBodyCls: Ext.baseCSSPrefix + 'grid-body',
+
     layout: 'fit',
     /**
      * Boolean to indicate that a view has been injected into the panel.
@@ -72,11 +73,11 @@ Ext.define('Ext.panel.Table', {
      */
 
     /**
-     * @cfg {Boolean} sortableHeaders
-     * Defaults to true. Set to false to disable header sorting via clicking the
+     * @cfg {Boolean} sortableColumns
+     * Defaults to true. Set to false to disable column sorting via clicking the
      * header and via the Sorting menu items.
      */
-    sortableHeaders: true,
+    sortableColumns: true,
 
     verticalScrollDock: 'right',
     verticalScrollerType: 'gridscroller',
@@ -89,6 +90,10 @@ Ext.define('Ext.panel.Table', {
     scrollerOwner: true,
 
     invalidateScrollerOnRefresh: true,
+    
+    enableColumnMove: true,
+    enableColumnResize: true,
+
 
     initComponent: function() {
         //<debug>
@@ -109,35 +114,42 @@ Ext.define('Ext.panel.Table', {
             horizontal  = false,
             headerCtCfg = me.columns || me.colModel,
             i           = 0,
-            view;
+            view,
+            border = me.border;
 
         // Set our determinScrollbars method to reference a buffered call to determinScrollbars which fires on a 30ms buffer.
         me.determineScrollbars = Ext.Function.createBuffered(me.determineScrollbars, 30);
+        me.injectView = Ext.Function.createBuffered(me.injectView, 30);
+
+        if (me.hideHeaders) {
+            border = false;
+        }
 
         // The columns/colModel config may be either a fully instantiated HeaderContainer, or an array of Column definitions, or a config object of a HeaderContainer
         // Either way, we extract a columns property referencing an array of Column definitions.
         if (headerCtCfg instanceof Ext.grid.header.Container) {
             me.headerCt = headerCtCfg;
+            me.headerCt.border = border;
             me.columns = me.headerCt.items.items;
         } else {
             if (Ext.isArray(headerCtCfg)) {
                 headerCtCfg = {
-                    items: headerCtCfg
+                    items: headerCtCfg,
+                    border: border
                 };
             }
             Ext.apply(headerCtCfg, {
                 forceFit: me.forceFit,
-                sortable: me.sortableHeaders,
-                border:  !me.hideHeaders
+                sortable: me.sortableColumns,
+                enableColumnMove: me.enableColumnMove,
+                enableColumnResize: me.enableColumnResize,
+                border:  border
             });
             me.columns = headerCtCfg.items;
 
              // If any of the Column objects contain a locked property, and are not processed, this is a lockable TablePanel, a
              // special view will be injected by the Ext.grid.Lockable mixin, so no processing of .
              if (Ext.ComponentQuery.query('{locked !== undefined}{processed != true}', me.columns).length) {
-                 me.lockable = true;
-             }
-             if (me.lockable) {
                  me.self.mixin('lockable', Ext.grid.Lockable);
                  me.injectLockable();
              }
@@ -160,6 +172,7 @@ Ext.define('Ext.panel.Table', {
              */
             'scrollershow'
         );
+
         me.bodyCls = me.bodyCls || '';
         me.bodyCls += (' ' + me.extraBodyCls);
 
@@ -182,6 +195,8 @@ Ext.define('Ext.panel.Table', {
             if (me.hideHeaders) {
                 me.headerCt.height = 0;
                 me.headerCt.border = false;
+                me.headerCt.addCls(Ext.baseCSSPrefix + 'grid-header-ct-hidden');
+                me.addCls(Ext.baseCSSPrefix + 'grid-header-hidden');
                 // IE Quirks Mode fix
                 // If hidden configuration option was used, several layout calculations will be bypassed.
                 if (Ext.isIEQuirks) {
@@ -230,8 +245,8 @@ Ext.define('Ext.panel.Table', {
                 });
             }
 
-            me.headerCt.on('headerresize', me.onHeaderResize, me);
-            me.relayEvents(me.headerCt, ['headerresize', 'headermove', 'headerhide', 'headershow', 'sortchange']);
+            me.headerCt.on('columnresize', me.onHeaderResize, me);
+            me.relayEvents(me.headerCt, ['columnresize', 'columnmove', 'columnhide', 'columnshow', 'sortchange']);
             me.features = me.features || [];
             me.dockedItems = me.dockedItems || [];
             me.dockedItems.unshift(me.headerCt);
@@ -252,13 +267,15 @@ Ext.define('Ext.panel.Table', {
                         fn: this.onViewRefresh,
                         scope: me,
                         buffer: 50
-                    }
+                    },
+                    itemupdate: me.onViewItemUpdate,
+                    scope: me
                 });
                 this.relayEvents(view, [
                     /**
                      * @event beforeitemmousedown
                      * Fires before the mousedown event on an item is processed. Returns false to cancel the default action.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.data.Model} record The record that belongs to the item
                      * @param {HTMLElement} item The item's element
                      * @param {Number} index The item's index
@@ -268,7 +285,7 @@ Ext.define('Ext.panel.Table', {
                     /**
                      * @event beforeitemmouseup
                      * Fires before the mouseup event on an item is processed. Returns false to cancel the default action.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.data.Model} record The record that belongs to the item
                      * @param {HTMLElement} item The item's element
                      * @param {Number} index The item's index
@@ -278,7 +295,7 @@ Ext.define('Ext.panel.Table', {
                     /**
                      * @event beforeitemmouseenter
                      * Fires before the mouseenter event on an item is processed. Returns false to cancel the default action.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.data.Model} record The record that belongs to the item
                      * @param {HTMLElement} item The item's element
                      * @param {Number} index The item's index
@@ -288,7 +305,7 @@ Ext.define('Ext.panel.Table', {
                     /**
                      * @event beforeitemmouseleave
                      * Fires before the mouseleave event on an item is processed. Returns false to cancel the default action.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.data.Model} record The record that belongs to the item
                      * @param {HTMLElement} item The item's element
                      * @param {Number} index The item's index
@@ -298,7 +315,7 @@ Ext.define('Ext.panel.Table', {
                     /**
                      * @event beforeitemclick
                      * Fires before the click event on an item is processed. Returns false to cancel the default action.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.data.Model} record The record that belongs to the item
                      * @param {HTMLElement} item The item's element
                      * @param {Number} index The item's index
@@ -308,7 +325,7 @@ Ext.define('Ext.panel.Table', {
                     /**
                      * @event beforeitemdblclick
                      * Fires before the dblclick event on an item is processed. Returns false to cancel the default action.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.data.Model} record The record that belongs to the item
                      * @param {HTMLElement} item The item's element
                      * @param {Number} index The item's index
@@ -318,17 +335,17 @@ Ext.define('Ext.panel.Table', {
                     /**
                      * @event beforeitemcontextmenu
                      * Fires before the contextmenu event on an item is processed. Returns false to cancel the default action.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.data.Model} record The record that belongs to the item
                      * @param {HTMLElement} item The item's element
                      * @param {Number} index The item's index
                      * @param {Ext.EventObject} e The raw event object
                      */
-                    'beforeitemcontextmenu',            
+                    'beforeitemcontextmenu',
                     /**
                      * @event itemmousedown
                      * Fires when there is a mouse down on an item
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.data.Model} record The record that belongs to the item
                      * @param {HTMLElement} item The item's element
                      * @param {Number} index The item's index
@@ -338,7 +355,7 @@ Ext.define('Ext.panel.Table', {
                     /**
                      * @event itemmouseup
                      * Fires when there is a mouse up on an item
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.data.Model} record The record that belongs to the item
                      * @param {HTMLElement} item The item's element
                      * @param {Number} index The item's index
@@ -348,7 +365,7 @@ Ext.define('Ext.panel.Table', {
                     /**
                      * @event itemmouseenter
                      * Fires when the mouse enters an item.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.data.Model} record The record that belongs to the item
                      * @param {HTMLElement} item The item's element
                      * @param {Number} index The item's index
@@ -358,7 +375,7 @@ Ext.define('Ext.panel.Table', {
                     /**
                      * @event itemmouseleave
                      * Fires when the mouse leaves an item.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.data.Model} record The record that belongs to the item
                      * @param {HTMLElement} item The item's element
                      * @param {Number} index The item's index
@@ -368,7 +385,7 @@ Ext.define('Ext.panel.Table', {
                     /**
                      * @event itemclick
                      * Fires when an item is clicked.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.data.Model} record The record that belongs to the item
                      * @param {HTMLElement} item The item's element
                      * @param {Number} index The item's index
@@ -378,7 +395,7 @@ Ext.define('Ext.panel.Table', {
                     /**
                      * @event itemdblclick
                      * Fires when an item is double clicked.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.data.Model} record The record that belongs to the item
                      * @param {HTMLElement} item The item's element
                      * @param {Number} index The item's index
@@ -388,116 +405,116 @@ Ext.define('Ext.panel.Table', {
                     /**
                      * @event itemcontextmenu
                      * Fires when an item is right clicked.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.data.Model} record The record that belongs to the item
                      * @param {HTMLElement} item The item's element
                      * @param {Number} index The item's index
                      * @param {Ext.EventObject} e The raw event object
                      */
-                    'itemcontextmenu',            
+                    'itemcontextmenu',
                     /**
                      * @event beforecontainermousedown
                      * Fires before the mousedown event on the container is processed. Returns false to cancel the default action.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.EventObject} e The raw event object
                      */
                     'beforecontainermousedown',
                     /**
                      * @event beforecontainermouseup
                      * Fires before the mouseup event on the container is processed. Returns false to cancel the default action.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.EventObject} e The raw event object
                      */
                     'beforecontainermouseup',
                     /**
                      * @event beforecontainermouseover
                      * Fires before the mouseover event on the container is processed. Returns false to cancel the default action.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.EventObject} e The raw event object
                      */
                     'beforecontainermouseover',
                     /**
                      * @event beforecontainermouseout
                      * Fires before the mouseout event on the container is processed. Returns false to cancel the default action.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.EventObject} e The raw event object
                      */
                     'beforecontainermouseout',
                     /**
                      * @event beforecontainerclick
                      * Fires before the click event on the container is processed. Returns false to cancel the default action.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.EventObject} e The raw event object
                      */
                     'beforecontainerclick',
                     /**
                      * @event beforecontainerdblclick
                      * Fires before the dblclick event on the container is processed. Returns false to cancel the default action.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.EventObject} e The raw event object
                      */
                     'beforecontainerdblclick',
                     /**
                      * @event beforecontainercontextmenu
                      * Fires before the contextmenu event on the container is processed. Returns false to cancel the default action.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.EventObject} e The raw event object
                      */
                     'beforecontainercontextmenu',
                     /**
                      * @event containermouseup
                      * Fires when there is a mouse up on the container
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.EventObject} e The raw event object
                      */
                     'containermouseup',
                     /**
                      * @event containermouseover
                      * Fires when you move the mouse over the container.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.EventObject} e The raw event object
                      */
                     'containermouseover',
                     /**
                      * @event containermouseout
                      * Fires when you move the mouse out of the container.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.EventObject} e The raw event object
                      */
                     'containermouseout',
                     /**
                      * @event containerclick
                      * Fires when the container is clicked.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.EventObject} e The raw event object
                      */
                     'containerclick',
                     /**
                      * @event containerdblclick
                      * Fires when the container is double clicked.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.EventObject} e The raw event object
                      */
                     'containerdblclick',
                     /**
                      * @event containercontextmenu
                      * Fires when the container is right clicked.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Ext.EventObject} e The raw event object
                      */
                     'containercontextmenu',
-                              
+
                     /**
                      * @event selectionchange
                      * Fires when the selected nodes change. Relayed event from the underlying selection model.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {Array} selections Array of the selected nodes
                      */
                     'selectionchange',
                     /**
                      * @event beforeselect
                      * Fires before a selection is made. If any handlers return false, the selection is cancelled.
-                     * @param {Ext.DataView} this
+                     * @param {Ext.view.View} this
                      * @param {HTMLElement} node The node to be selected
                      * @param {Array} selections Array of currently selected nodes
                      */
@@ -505,14 +522,14 @@ Ext.define('Ext.panel.Table', {
                 ]);
             }
         }
-        me.callParent();
+        me.callParent(arguments);
     },
 
     // state management
     initStateEvents: function(){
         var events = this.stateEvents;
         // push on stateEvents if they don't exist
-        Ext.each(['headerresize', 'headermove', 'headerhide', 'headershow', 'sortchange'], function(event){
+        Ext.each(['columnresize', 'columnmove', 'columnhide', 'columnshow', 'sortchange'], function(event){
             if (Ext.Array.indexOf(events, event)) {
                 events.push(event);
             }
@@ -568,6 +585,8 @@ Ext.define('Ext.panel.Table', {
                 delete header.flex;
                 if (header.rendered) {
                     header.setWidth(headerState.width);
+                } else {
+                    header.minWidth = header.width = headerState.width;
                 }
             }
             header.hidden = headerState.hidden;
@@ -584,6 +603,14 @@ Ext.define('Ext.panel.Table', {
                 store.sort(sorter.property, sorter.direction);
             }
         }
+    },
+
+    /**
+     * Returns the store associated with this Panel.
+     * @return {Ext.data.Store} The store
+     */
+    getStore: function(){
+        return this.store;
     },
 
     /**
@@ -614,19 +641,25 @@ Ext.define('Ext.panel.Table', {
         }
         return me.view;
     },
-    
-    
+
+    /**
+     * @private
+     * @override
+     * autoScroll is never valid for all classes which extend TablePanel.
+     */
+    setAutoScroll: Ext.emptyFn,
+
     // This method hijacks Ext.view.Table's el scroll method.
     // This enables us to keep the virtualized scrollbars in sync
     // with the view. It currently does NOT support animation.
     elScroll: function(direction, distance, animate) {
         var me = this,
             scroller;
-        
+
         if (direction === "up" || direction === "left") {
             distance = -distance;
         }
-        
+
         if (direction === "down" || direction === "up") {
             scroller = me.getVerticalScroller();
             scroller.scrollByDeltaY(distance);
@@ -635,44 +668,26 @@ Ext.define('Ext.panel.Table', {
             scroller.scrollByDeltaX(distance);
         }
     },
-
-    onRender: function() {
-        var me = this,
-            // Find the topmost busy layout manager, and when that has done, add the View to the sized Panel.
-            topContainer = me.findLayoutController();
-
-        if (topContainer) {
-            topContainer.on({
-                afterlayout: function() {
-                    me.afterFirstLayout();
-                },
-                single: true
-            });
-        }
-        // If there's no busy layout above us, add the View after the 
-        else {
-            me.afterComponentLayout = function() {
-                delete me.afterComponentLayout;
-                Ext.getClass(me).prototype.afterComponentLayout.apply(me, arguments);
-                me.afterFirstLayout();
-            };
-        }
-        me.callParent(arguments);
+    
+    afterLayout: function() {
+        this.callParent(arguments);
+        this.injectView();
     },
+    
 
     /**
      * @private
      * Called after this Component has achieved its correct initial size, after all layouts have done their thing.
-     * This is so we can add the View only after the initial size is known.
+     * This is so we can add the View only after the initial size is known. This method is buffered 30ms.
      */
-    afterFirstLayout: function() {
-        if (!this.hasView) {
+    injectView: function() {
+        if (!this.hasView && !this.collapsed) {
             var me   = this,
                 view = me.getView();
-            
+
             me.hasView = true;
             me.add(view);
-    
+
             // hijack the view el's scroll method
             view.el.scroll = Ext.Function.bind(me.elScroll, me);
             // We use to listen to document.body wheel events, but that's a
@@ -681,6 +696,13 @@ Ext.define('Ext.panel.Table', {
                 mousewheel: me.onMouseWheel,
                 scope: me
             });
+        }
+    },
+
+    afterExpand: function() {
+        this.callParent(arguments);
+        if (!this.hasView) {
+            this.injectView();
         }
     },
 
@@ -715,7 +737,7 @@ Ext.define('Ext.panel.Table', {
             scrollHeight,
             clientHeight;
 
-        if (me.view) {
+        if (!me.collapsed && me.view && me.view.el) {
             viewElDom = me.view.el.dom;
             //centerScrollWidth = viewElDom.scrollWidth;
             centerScrollWidth = me.headerCt.getFullWidth();
@@ -733,13 +755,13 @@ Ext.define('Ext.panel.Table', {
 
             clientHeight = viewElDom.clientHeight;
 
-            if (scrollHeight > clientHeight) {
+            if (!me.collapsed && scrollHeight > clientHeight) {
                 me.showVerticalScroller();
             } else {
                 me.hideVerticalScroller();
             }
 
-            if (centerScrollWidth > (centerClientWidth + Ext.getScrollBarWidth() - 2)) {
+            if (!me.collapsed && centerScrollWidth > (centerClientWidth + Ext.getScrollBarWidth() - 2)) {
                 me.showHorizontalScroller();
             } else {
                 me.hideHorizontalScroller();
@@ -766,7 +788,7 @@ Ext.define('Ext.panel.Table', {
             me.removeCls(me.horizontalScrollerPresentCls);
             me.fireEvent('scrollerhide', me.horizontalScroller, 'horizontal');
         }
-        
+
     },
 
     /**
@@ -789,15 +811,17 @@ Ext.define('Ext.panel.Table', {
      * Hide the verticalScroller and remove the verticalScrollerPresentCls.
      */
     hideVerticalScroller: function() {
-        var me = this;
+        var me = this,
+            headerCt = me.headerCt;
 
+        // only trigger a layout when reserveOffset is changing
+        if (headerCt && headerCt.layout.reserveOffset) {
+            headerCt.layout.reserveOffset = false;
+            headerCt.doLayout();
+        }
         if (me.verticalScroller && me.verticalScroller.ownerCt === me) {
             me.removeDocked(me.verticalScroller, false);
             me.removeCls(me.verticalScrollerPresentCls);
-            if (me.headerCt) {
-                me.headerCt.layout.reserveOffset = false;
-                me.headerCt.doLayout();
-            }
             me.fireEvent('scrollerhide', me.verticalScroller, 'vertical');
         }
     },
@@ -806,15 +830,17 @@ Ext.define('Ext.panel.Table', {
      * Show the verticalScroller and add the verticalScrollerPresentCls.
      */
     showVerticalScroller: function() {
-        var me = this;
+        var me = this,
+            headerCt = me.headerCt;
 
+        // only trigger a layout when reserveOffset is changing
+        if (headerCt && !headerCt.layout.reserveOffset) {
+            headerCt.layout.reserveOffset = true;
+            headerCt.doLayout();
+        }
         if (me.verticalScroller && me.verticalScroller.ownerCt !== me) {
             me.addDocked(me.verticalScroller);
             me.addCls(me.verticalScrollerPresentCls);
-            if (me.headerCt) {
-                me.headerCt.layout.reserveOffset = true;
-                me.headerCt.doLayout();
-            }
             me.fireEvent('scrollershow', me.verticalScroller, 'vertical');
         }
     },
@@ -849,11 +875,11 @@ Ext.define('Ext.panel.Table', {
     onHeaderShow: function(headerCt, header) {
         this.invalidateScroller();
     },
-    
+
     getVerticalScroller: function() {
         return this.getScrollerOwner().down('gridscroller[dock=' + this.verticalScrollDock + ']');
     },
-    
+
     getHorizontalScroller: function() {
         return this.getScrollerOwner().down('gridscroller[dock=bottom]');
     },
@@ -883,7 +909,7 @@ Ext.define('Ext.panel.Table', {
                 origScrollTop = vertScrollerEl.dom.scrollTop;
             }
         }
-        
+
         // Webkit Horizontal Axis
         if (browserEvent.wheelDeltaX || browserEvent.wheelDeltaY) {
             deltaX = -browserEvent.wheelDeltaX / 120 * scrollDelta / 3;
@@ -899,17 +925,17 @@ Ext.define('Ext.panel.Table', {
             if (browserEvent.axis && browserEvent.axis === 1) {
                 if (horizScroller) {
                     deltaX = -(scrollDelta * e.getWheelDelta()) / 3;
-                    newScrollLeft = horizScroller.scrollByDeltaX(deltaX);    
+                    newScrollLeft = horizScroller.scrollByDeltaX(deltaX);
                 }
             } else {
                 if (vertScroller) {
-                    
+
                     deltaY = -(scrollDelta * e.getWheelDelta() / 3);
-                    newScrollTop = vertScroller.scrollByDeltaY(deltaY);    
+                    newScrollTop = vertScroller.scrollByDeltaY(deltaY);
                 }
             }
         }
-        
+
         // If after given our delta, the scroller has not progressed, then we're
         // at the end of our scroll range and shouldn't stop the browser event.
         if ((deltaX !== 0 && newScrollLeft !== origScrollLeft) ||
@@ -923,12 +949,69 @@ Ext.define('Ext.panel.Table', {
      * Determine and invalidate scrollers on view refresh
      */
     onViewRefresh: function() {
+        if (Ext.isIE) {
+            this.syncCellHeight();
+        }
         this.determineScrollbars();
         if (this.invalidateScrollerOnRefresh) {
             this.invalidateScroller();
         }
     },
-    
+
+    onViewItemUpdate: function(record, index, tr) {
+        if (Ext.isIE) {
+            this.syncCellHeight([tr]);
+        }
+    },
+
+    // BrowserBug: IE will not stretch the td to fit the height of the entire
+    // tr, so manually sync cellheights on refresh and when an item has been
+    // updated.
+    syncCellHeight: function(trs) {
+        var me    = this,
+            i     = 0,
+            tds,
+            j, tdsLn,
+            tr, td,
+            trsLn,
+            rowHeights = [],
+            cellHeights,
+            cellClsSelector = ('.' + Ext.baseCSSPrefix + 'grid-cell');
+
+        trs   = trs || me.view.getNodes();
+        
+        trsLn = trs.length;
+        // Reading loop
+        for (; i < trsLn; i++) {
+            tr = trs[i];
+            tds = Ext.fly(tr).query(cellClsSelector);
+            tdsLn = tds.length;
+            cellHeights = [];
+            for (j = 0; j < tdsLn; j++) {
+                td = tds[j];
+                cellHeights.push(td.clientHeight);
+            }
+            rowHeights.push(Ext.Array.max(cellHeights));
+        }
+
+        // Setting loop
+        for (i = 0; i < trsLn; i++) {
+            tr = trs[i];
+            tdsLn = tr.childNodes.length;
+            for (j = 0; j < tdsLn; j++) {
+                td = Ext.fly(tr.childNodes[j]);
+                if (rowHeights[i]) {
+                    if (td.is(cellClsSelector)) {
+                        td.setHeight(rowHeights[i]);
+                    } else {
+                        td.down(cellClsSelector).setHeight(rowHeights[i]);
+                    }
+                }
+                
+            }
+        }
+    },
+
     /**
      * Sets the scrollTop of the TablePanel.
      * @param {Number} deltaY
@@ -942,9 +1025,9 @@ Ext.define('Ext.panel.Table', {
         if (verticalScroller) {
             verticalScroller.setScrollTop(top);
         }
-        
+
     },
-    
+
     getScrollerOwner: function() {
         var rootCmp = this;
         if (!this.scrollerOwner) {
@@ -961,7 +1044,9 @@ Ext.define('Ext.panel.Table', {
         var rootCmp = this.getScrollerOwner(),
             scrollerRight;
         scrollerRight = rootCmp.down('gridscroller[dock=' + this.verticalScrollDock + ']');
-        scrollerRight.scrollByDeltaY(deltaY);
+        if (scrollerRight) {
+            scrollerRight.scrollByDeltaY(deltaY);
+        }
     },
 
 
@@ -972,14 +1057,14 @@ Ext.define('Ext.panel.Table', {
     scrollByDeltaX: function(deltaX) {
         this.horizontalScroller.scrollByDeltaX(deltaX);
     },
-    
+
     /**
      * Get left hand side marker for header resizing.
      * @private
      */
     getLhsMarker: function() {
         var me = this;
-        
+
         if (!me.lhsMarker) {
             me.lhsMarker = Ext.core.DomHelper.append(me.el, {
                 cls: Ext.baseCSSPrefix + 'grid-resize-marker'
@@ -987,7 +1072,7 @@ Ext.define('Ext.panel.Table', {
         }
         return me.lhsMarker;
     },
-    
+
     /**
      * Get right hand side marker for header resizing.
      * @private
@@ -1043,23 +1128,18 @@ Ext.define('Ext.panel.Table', {
         }
         return this.selModel;
     },
-    
+
     onVerticalScroll: function(event, target) {
         var owner = this.getScrollerOwner(),
             items = owner.query('tableview'),
             i = 0,
-            len = items.length,
-            center,
-            centerEl,
-            centerScrollWidth,
-            centerClientWidth,
-            width;
-            
+            len = items.length;
+
         for (; i < len; i++) {
             items[i].el.dom.scrollTop = target.scrollTop;
         }
     },
-    
+
     onHorizontalScroll: function(event, target) {
         var owner = this.getScrollerOwner(),
             items = owner.query('tableview'),
@@ -1070,14 +1150,14 @@ Ext.define('Ext.panel.Table', {
             centerScrollWidth,
             centerClientWidth,
             width;
-            
+
         center = items[1] || items[0];
         centerEl = center.el.dom;
         centerScrollWidth = centerEl.scrollWidth;
-        centerClientWidth = centerEl.offsetWidth;    
+        centerClientWidth = centerEl.offsetWidth;
         width = this.horizontalScroller.getWidth();
-        
-        centerEl.scrollLeft = Math.ceil(target.scrollLeft/width * centerClientWidth);
+
+        centerEl.scrollLeft = target.scrollLeft;
         this.headerCt.el.dom.scrollLeft = target.scrollLeft;
     },
 
@@ -1087,23 +1167,36 @@ Ext.define('Ext.panel.Table', {
     getEditorParent: function() {
         return this.body;
     },
-    
+
     bindStore: function(store) {
         var me = this;
         me.store = store;
         me.getView().bindStore(store);
     },
-    
+
     reconfigure: function(store, columns) {
         var me = this;
+
+        if (me.lockable) {
+            me.reconfigureLockable(store, columns);
+            return;
+        }
+
         if (columns) {
             me.headerCt.removeAll();
             me.headerCt.add(columns);
         }
         if (store) {
+            store = Ext.StoreManager.lookup(store);
             me.bindStore(store);
         } else {
             me.getView().refresh();
         }
+    },
+
+    afterComponentLayout: function() {
+        this.callParent(arguments);
+        this.determineScrollbars();
+        this.invalidateScroller();
     }
 });

@@ -21,7 +21,7 @@
     }
 
     .#{$prefix}color-picker a:hover,
-    .#{$prefix}color-picker a.#{$prefix}color-picker-sel {
+    .#{$prefix}color-picker a.#{$prefix}color-picker-selected {
         border-color: $colorpicker-over-border-color;
         background-color: $colorpicker-over-background-color;
     }

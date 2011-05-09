@@ -72,8 +72,8 @@ Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
      */
     
     /**
-     * {@cfg} {Number} saveBuffer A buffer to be applied if many state events are fired within
-     * a short period. Defaults to <tt>100</tt>.
+     * @cfg {Number} saveBuffer A buffer to be applied if many state events are fired within
+     * a short period. Defaults to 100.
      */
     saveDelay: 100,
     

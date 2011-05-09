@@ -1,48 +1,45 @@
 @mixin extjs-grid {
     //main grid view
-    .#{$prefix}grid-section .#{$prefix}grid-body {
-        background: $panel-body-background-color;
-        border-color: $panel-body-border-color;
-        border-style: $panel-body-border-style;
-        border-width: $panel-body-border-width;
+    .#{$prefix}panel {
+        .#{$prefix}grid-body {
+            background: $panel-body-background-color;
+            border-color: $panel-body-border-color;
+            border-style: $panel-body-border-style;
+            border-width: 1px;
+            border-top-color: $grid-header-background-color;
+        }
+
+        .#{$prefix}grid-header-ct-hidden {
+            border-width: 0 0 0 0 !important;
+        }
     }
-    
+
+    .#{$prefix}grid-header-hidden .#{$prefix}grid-body {
+        border-top-color: $panel-body-border-color !important;
+    }
+
     .#{$prefix}grid-view {
         overflow: hidden;
-        
+
         position: relative;
     }
-    
+
     .#{$prefix}grid-table {
         table-layout: fixed;
         border-collapse: separate;
     }
-    
+
+    .#{$prefix}grid-locked .#{$prefix}grid-inner-locked {
+        border-width: 0 1px 0 0 !important;
+        border-style: solid;
+    }
+
     @if $include-ie or $compile-all {
         .#{$prefix}ie .#{$prefix}grid-table {
             border-collapse: collapse;
         }
-        .#{$prefix}strict {
-            .#{$prefix}ie6, .#{$prefix}ie7 {
-                .#{$prefix}grid-table {
-                    border-collapse: separate;
-                }
-            }
-        }
-/*        .#{$prefix}border-box {
-            .#{$prefix}ie9 {
-                .#{$prefix}grid-table {
-                    border-collapse: separate;
-                }
-            }
-        }*/
     }
 
-    //grid header
-    .#{$prefix}header-ct-no-border {
-        border-width: 0 !important;
-    }
-    
     .#{$prefix}grid-header-ct {
         cursor: default;
         zoom: 1;
@@ -53,19 +50,33 @@
             @include background-gradient($grid-header-background-color, $grid-header-background-gradient);
         }
     }
+    
+    @if $include-ie or $compile-all {
+        .#{$prefix}border-box .#{$prefix}ie9 {
+            .#{$prefix}grid-header-ct {
+                padding-left: 1px;
+            }
+        }
+        .#{$prefix}ie6, .#{$prefix}ie7 {
+            .#{$prefix}grid-header-ct {
+                padding-left: 1px;
+            }
+        }
+
+    }
 
     .#{$prefix}column-header {
         padding: 0;
         position: absolute;
         overflow: hidden;
-        
+
         border-right: 1px solid $grid-header-background-color;
         border-left: 0 none;
         border-top: 0 none;
         border-bottom: 0 none;
-        
+
         text-shadow: 0 1px 0 rgba(255, 255, 255, .3);
-        font: normal 11px/15px arial, tahoma, helvetica, sans-serif;
+        font: normal 11px/15px $font-family;
 
         @if $grid-header-color {
             color: $grid-header-color;
@@ -92,9 +103,9 @@
         position: relative;
         white-space: nowrap;
         line-height: 22px;
+        padding: $grid-header-padding;
 
         .#{$prefix}column-header-text {
-            padding-left: 0.5ex;
             white-space: nowrap;
         }
     }
@@ -147,7 +158,7 @@
 
     .#{$prefix}column-header-align-right {
         text-align: right;
-        
+
         .#{$prefix}column-header-text {
             padding-right: 0.5ex;
         }
@@ -161,26 +172,26 @@
 
     // Sort direction indicator is a background of the text span.
     .#{$prefix}column-header-sort-ASC .#{$prefix}column-header-text {
-        padding-right: 15px;
-        background: theme-image($theme-name, 'grid/sort_asc.gif') no-repeat right center;
+        padding-right: 16px;
+        background: theme-image($theme-name, 'grid/sort_asc.gif') no-repeat right 6px;
     }
     .#{$prefix}column-header-sort-DESC .#{$prefix}column-header-text {
-        padding-right: 15px;
-        background: theme-image($theme-name, 'grid/sort_desc.gif') no-repeat right center;
+        padding-right: 16px;
+        background: theme-image($theme-name, 'grid/sort_desc.gif') no-repeat right 6px;
     }
 
     //grid rows
     .#{$prefix}grid-row {
         line-height: 13px;
-        
+
         vertical-align: top;
-        
+
         padding: $grid-row-padding;
-        
+
         -moz-user-select: none;
         -khtml-user-select: none;
         -webkit-user-select: ignore;
-        
+
         .#{$prefix}grid-cell {
             @if $grid-row-cell-color {
                 color: $grid-row-cell-color;
@@ -193,56 +204,57 @@
             border-top-color: lighten($grid-row-cell-border-color, 5);
         }
     }
-    
+
     .#{$prefix}grid-rowwrap-div {
         border-width: $grid-row-wrap-border-width;
         border-color: $grid-row-wrap-border-color;
         border-style: $grid-row-wrap-border-style;
         border-top-color: lighten($grid-row-wrap-border-color, 5);
-        
+
         overflow: hidden;
     }
-    
+
     .#{$prefix}grid-row-alt .#{$prefix}grid-cell,
     .#{$prefix}grid-row-alt .#{$prefix}grid-rowwrap-div {
         background-color: $grid-row-cell-alt-background;
     }
-    
+
     .#{$prefix}grid-row-over .#{$prefix}grid-cell,
     .#{$prefix}grid-row-over .#{$prefix}grid-rowwrap-div {
         border-color: $grid-row-cell-over-border-color;
-        
+
         background-color: $grid-row-cell-over-background-color;
     }
-    
+
     .#{$prefix}grid-row-focused .#{$prefix}grid-cell,
     .#{$prefix}grid-row-focused .#{$prefix}grid-rowwrap-div {
         border-color: $grid-row-cell-focus-border-color;
-        
+
         background-color: $grid-row-cell-focus-background-color;
     }
-    
+
     .#{$prefix}grid-row-selected .#{$prefix}grid-cell,
     .#{$prefix}grid-row-selected .#{$prefix}grid-rowwrap-div {
         border-style: $grid-row-cell-selected-border-style;
         border-color: $grid-row-cell-selected-border-color;
-        
+
         background-color: $grid-row-cell-selected-background-color !important;
     }
-    
+
     @if $include-ie {
         .#{$prefix}ie {
             .#{$prefix}grid-cell {
                 border-width: 0;
             }
-            
+
             .#{$prefix}grid-cell-inner {
                 border-color: $grid-row-cell-border-color;
                 border-style: $grid-row-cell-border-style;
                 border-width: $grid-row-cell-border-width;
                 border-top-color: lighten($grid-row-cell-border-color, 5);
+                height: 100%;
             }
-            
+
             .#{$prefix}grid-row-over .#{$prefix}grid-cell-inner {
                 border-color: $grid-row-cell-over-border-color;
             }
@@ -257,57 +269,57 @@
             }
         }
     }
-    
+
     .#{$prefix}grid-rowwrap-div {
         .#{$prefix}grid-cell,
         .#{$prefix}grid-cell-inner {
             border-width: 0;
-            
+
             background: transparent;
         }
     }
-    
+
     .#{$prefix}grid-row-body-hidden {
         display: none;
     }
 
     .#{$prefix}grid-rowbody {
         font: $grid-row-body-font;
-        
+
         padding: $grid-row-body-padding;
-        
+
         p {
             margin: 5px 5px 10px 5px;
         }
     }
-    
+
     //grid cells
     .#{$prefix}grid-cell {
         overflow: hidden;
-        
+
         font: $grid-cell-font;
-        
+
         -moz-user-select: none;
         -khtml-user-select:none;
         -webkit-user-select:ignore;
     }
-    
+
     .#{$prefix}grid-cell-inner {
         overflow: hidden;
-        
+
         -o-text-overflow: ellipsis;
         text-overflow: ellipsis;
 
         padding: $grid-cell-inner-padding;
-        
+
         white-space: nowrap;
     }
-    
+
     // Action columns with a standard, 16x16 icon require less padding
     .#{$prefix}action-col-cell .#{$prefix}grid-cell-inner {
         padding: 1px 2px 0 2px;
     }
-    
+
     .#{$prefix}ie6,
     .#{$prefix}ie7,
     .#{$prefix}quirks .#{$prefix}ie9,
@@ -321,10 +333,10 @@
     .#{$prefix}grid-row .#{$prefix}grid-cell-special {
         padding: 0;
         border-right: 1px solid $grid-cell-with-col-lines-border-color;
-        
+
         @include background-gradient(#f6f6f6, 'grid-cell-special');
     }
-    
+
     .#{$prefix}ie6,
     .#{$prefix}ie7,
     .#{$prefix}quirks .#{$prefix}ie8,
@@ -334,47 +346,58 @@
         }
     }
     
+    
+    .#{$prefix}strict {
+        .#{$prefix}ie6, .#{$prefix}ie7 {
+            .#{$prefix}grid-cell-inner {
+                padding-top: 2px;
+                padding-bottom: 0;
+            }
+        }
+    }
+
     .#{$prefix}grid-row-selected .#{$prefix}grid-cell-special {
         border-right: 1px solid adjust-color($base-color, $hue: -0.175deg, $saturation: 25.296%, $lightness: -2.549%);
-        
+
         @include background-gradient($grid-row-cell-selected-background-color, 'grid-cell-special');
     }
-    
+
     .#{$prefix}grid-dirty-cell {
         background-image: theme-image($theme-name, 'grid/dirty.gif');
         background-position: 0 0;
         background-repeat: no-repeat;
     }
-    
+
     .#{$prefix}grid-cell-selected {
         background-color: #B8CFEE !important;
     }
-    
+
     @if not $supports-gradients or $compile-all {
         .#{$prefix}nlg {
             .#{$prefix}grid-cell-special {
                 background-repeat: repeat-y;
                 background-position: top right;
             }
-            
+
             .#{$prefix}grid-row .#{$prefix}grid-cell-special,
             .#{$prefix}grid-row-over .#{$prefix}grid-cell-special {
                 background-image: theme-image($theme-name, 'grid/cell-special-bg.gif');
-                
+
             }
-            
+
             .#{$prefix}grid-row-focused .#{$prefix}grid-cell-special,
             .#{$prefix}grid-row-selected .#{$prefix}grid-cell-special {
                 background-image: theme-image($theme-name, 'grid/cell-special-selected-bg.gif');
             }
         }
     }
-    
-    .#{$prefix}grid-with-col-lines .#{$prefix}grid-row .#{$prefix}grid-cell {
+
+    //this is panel as gridpanel doesnt use a baseCls..........
+    .#{$prefix}panel-with-col-lines .#{$prefix}grid-row .#{$prefix}grid-cell {
         padding-right: 0;
         border-right: 1px solid $grid-cell-with-col-lines-border-color;
     }
-    
+
     @if $include-ie {
         .#{$prefix}ie {
             .#{$prefix}grid-cell-special {
@@ -382,7 +405,27 @@
             }
         }
     }
-    
+
+    .#{$prefix}property-grid {
+        .#{$prefix}grid-row .#{$prefix}grid-cell-inner {
+            padding: 3px 6px 5px;
+        }
+
+        .#{$prefix}grid-row .#{$prefix}grid-property-name .#{$prefix}grid-cell-inner,
+        .#{$prefix}grid-row-over .#{$prefix}grid-property-name .#{$prefix}grid-cell-inner {
+            padding-left: 12px;
+            background: theme-image($theme-name, 'grid/property-cell-bg.gif');
+            background-repeat: no-repeat;
+            background-position: -16px 1px;
+        }
+    }
+
+    @if $include-ie {
+        .#{$prefix}quirks .#{$prefix}ie .#{$prefix}grid-row .#{$prefix}grid-property-name .#{$prefix}grid-cell-inner {
+            background-position: -16px 2px;
+        }
+    }
+
     .#{$prefix}unselectable {
         -moz-user-select: none;
         -khtml-user-select: none;
@@ -396,7 +439,7 @@
     .#{$prefix}grid-group-collapsed {
         display: none;
     }
-    
+
     //grid expander
     .#{$prefix}grid-view {
         .#{$prefix}grid-td-expander {
@@ -419,16 +462,16 @@
     .#{$prefix}grid-row-expander {
         background-image: theme-image($theme-name, 'grid/group-collapse.gif');
         background-color: transparent;
-        
+
         width: 9px;
         height: 13px;
-        
+
         margin-left: 3px;
-        
+
         background-repeat: no-repeat;
         background-position: 0 -2px;
     }
-    
+
     .#{$prefix}grid-row-collapsed {
         .#{$prefix}grid-row-expander {
             background-image: theme-image($theme-name, 'grid/group-expand.gif');
@@ -468,7 +511,6 @@
     //pading toolbar
     .#{$prefix}tbar-page-number {
         width: 30px;
-        height: 15px;
     }
 
     //grouped grid
@@ -480,30 +522,30 @@
 
     .#{$prefix}grid-group-hd {
         padding-top: 6px;
-        
+
         .#{$prefix}grid-cell-inner {
             padding: 10px 4px 4px 4px;
-            
+
             background: $grid-grouped-header-background-color;
-        
+
             border-width: $grid-grouped-header-border-width;
             border-style: $grid-grouped-header-border-style;
             border-color: $grid-grouped-header-border-color;
-        
+
             cursor: pointer;
         }
     }
-    
+
     .#{$prefix}grid-group-title {
         background: transparent no-repeat 0 -1px;
         background-image: theme-image($theme-name, 'grid/group-collapse.gif');
-        
+
         color: $grid-grouped-title-color;
         font: $grid-grouped-title-font;
-        
+
         padding: 0 0 0 14px;
     }
-    
+
     .#{$prefix}grid-group-hd-collapsed {
         .#{$prefix}grid-group-title {
             background-image: theme-image($theme-name, 'grid/group-expand.gif');
@@ -526,6 +568,14 @@
         background-image: theme-image($theme-name, 'grid/group-by.gif');
     }
 
+    .#{$prefix}column-header-checkbox .#{$prefix}column-header-inner {
+        padding: 1px;
+    }
+
+    .#{$prefix}grid-cell-special .#{$prefix}grid-cell-inner {
+        padding: 4px;
+    }
+
     .#{$prefix}grid-row-checker,
     .#{$prefix}column-header-checkbox .#{$prefix}column-header-text {
         height: 14px;
@@ -543,22 +593,39 @@
         margin-top: 4px;
         margin-left: 4px;
     }
+    
+    @if $include-ie or $compile-all {
+        /* All IE Quirks mode need to squish the header height or the line-height will become too tall */
+        /* IE6 always needs the hack regardless of quirks/strict */
+        .#{$prefix}quirks .#{$prefix}ie, .#{$prefix}ie6 {
+            .#{$prefix}column-header-checkbox .#{$prefix}column-header-inner {
+                line-height: 18px;
+            }
+        }
+        
+        /* IE 6, 7 & 9 are 1px too far to the right when centering, drop the margin 1px. */
+        .#{$prefix}ie6, .#{$prefix}ie7, .#{$prefix}ie9 {
+            .#{$prefix}column-header-checkbox .#{$prefix}column-header-text {
+                margin-left: 3px;
+            }
+        }
+    }
 
     .#{$prefix}grid-hd-checker-on .#{$prefix}column-header-text {
         background-image: theme-image($theme-name, 'grid/checked.gif');
     }
-    
+
     .#{$prefix}grid-row-checker {
         margin-left: 1px;
-        
+
         background-position: 50% -2px;
     }
-    
+
     .#{$prefix}grid-row-selected .#{$prefix}grid-row-checker,
     .#{$prefix}grid-row-checked .#{$prefix}grid-row-checker {
         background-image: theme-image($theme-name, 'grid/checked.gif');
     }
-    
+
     //grid icons
     .#{$prefix}tbar-page-first {
         background-image: theme-image($theme-name, 'grid/page-first.gif') !important;
@@ -601,7 +668,7 @@
             background-image: theme-image($theme-name, 'grid/page-prev-disabled.gif') !important;
         }
     }
-    
+
     //menu icons
     .xg-hmenu-sort-asc .#{$prefix}menu-item-icon {
         background-image: theme-image($theme-name, 'grid/hmenu-asc.gif');
@@ -618,7 +685,7 @@
     .xg-hmenu-unlock .#{$prefix}menu-item-icon {
         background-image: theme-image($theme-name, 'grid/hmenu-unlock.gif');
     }
-    
+
     .#{$prefix}group-by-icon {
         background-image: theme-image($theme-name, 'grid/group-by.gif');
     }
@@ -657,38 +724,62 @@
             width: 16px;
         }
     }
-    
+
+    .#{$prefix}ie6 {
+        .#{$prefix}grid-drop-indicator-left {
+            background-image: theme-image($theme-name, 'grid/dd-insert-arrow-right.gif');
+        }
+
+        .#{$prefix}grid-drop-indicator-right {
+            background-image: theme-image($theme-name, 'grid/dd-insert-arrow-left.gif');
+        }
+    }
+
     // Row Editor
     .#{$prefix}grid-row-editor {
         position: absolute !important;
         z-index: 1;
         zoom: 1;
         overflow: visible !important;
-        
+
         .#{$prefix}form-field, .#{$prefix}form-display-field {
             font: $grid-row-editor-font;
         }
-        
+
         .#{$prefix}panel-body {
             background-color: $grid-row-editor-background-color;
             border-top: $grid-row-editor-border;
             border-bottom: $grid-row-editor-border;
         }
     }
-    
-    .#{$prefix}grid-row-editor-buttons {
+
+    // Perfect alignment of input text with cell text
+    .#{$prefix}grid-row-editor {
+        // Align input text with text value in cell
+        .#{$prefix}form-text {
+            padding-left: 2px;
+        }
+    }
+    .#{$prefix}grid-editor {
+        // Align checkboxes input
+        .#{$prefix}form-cb-wrap {
+            text-align: center;
+        }
+    }
+
+.#{$prefix}grid-row-editor-buttons {
         background-color: $grid-row-editor-background-color;
         position: absolute;
         bottom: -31px;
         padding: 4px;
         width: 200px;
         height: 32px;
-        
+
         .#{$prefix}strict & {
             width: 192px;
             height: 24px;
         }
-        
+
         &-ml,
         &-mr,
         &-bl,
@@ -697,13 +788,13 @@
             position: absolute;
             overflow: hidden;
         }
-    
+
         &-bl,
         &-br {
             width: 4px;
             height: 4px;
             bottom: 0px;
-            background-image: theme-image($theme-name, 'panel/panel-framed-corners.gif');
+            background-image: theme-image($theme-name, 'panel/panel-default-framed-corners.gif');
         }
         &-bl {
             left: 0px;
@@ -713,7 +804,7 @@
             right: 0px;
             background-position: 0px -20px;
         }
-        
+
         &-bc {
             position: absolute;
             left: 4px;
@@ -722,7 +813,7 @@
             height: 1px;
             background-color: $grid-row-editor-border-color;
         }
-        
+
         &-ml,
         &-mr {
             height: 27px;
@@ -738,7 +829,7 @@
             right: 0px;
         }
     }
-    
+
     .#{$prefix}grid-row-editor-errors {
         ul {
             margin-left: 5px;

@@ -13,7 +13,7 @@ Ext.define('Ext.layout.component.field.Field', {
 
     extend: 'Ext.layout.component.Component',
 
-    uses: ['Ext.tip.QuickTip'],
+    uses: ['Ext.tip.QuickTip', 'Ext.util.TextMetrics'],
 
     /* End Definitions */
 
@@ -188,6 +188,18 @@ Ext.define('Ext.layout.component.field.Field', {
                     if (owner.labelEl) {
                         info.insets.left += owner.labelWidth + owner.labelPad;
                     }
+                },
+                layoutHoriz: function(owner, info) {
+                    // For content-box browsers we can't rely on Labelable.js#getLabelableRenderData
+                    // setting the width style because it needs to account for the final calculated
+                    // padding/border styles for the label. So we set the width programmatically here to
+                    // normalize content-box sizing, while letting border-box browsers use the original
+                    // width style.
+                    var labelEl = owner.labelEl;
+                    if (labelEl && !owner.isLabelSized && !Ext.isBorderBox) {
+                        labelEl.setWidth(owner.labelWidth);
+                        owner.isLabelSized = true;
+                    }
                 }
             }, base);
 
@@ -202,7 +214,8 @@ Ext.define('Ext.layout.component.field.Field', {
                 adjustVertInsets: function(owner, info) {
                     var labelEl = owner.labelEl;
                     if (labelEl) {
-                        info.insets.top += labelEl.getHeight() + owner.labelPad;
+                        info.insets.top += Ext.util.TextMetrics.measure(labelEl, owner.fieldLabel, info.width).height +
+                                           labelEl.getFrameWidth('tb') + owner.labelPad;
                     }
                 }
             }, base),

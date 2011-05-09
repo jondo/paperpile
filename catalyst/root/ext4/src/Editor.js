@@ -1,12 +1,12 @@
 /**
  * @class Ext.Editor
  * @extends Ext.Component
- * 
+ *
  * <p>
  * The Editor class is used to provide inline editing for elements on the page. The editor
  * is backed by a {@link Ext.form.field.Field} that will be displayed to edit the underlying content.
- * The editor is a floating Component, when the editor is shown it is automatically aligned to 
- * display over the top of the bound element it is editing. The Editor contains several options 
+ * The editor is a floating Component, when the editor is shown it is automatically aligned to
+ * display over the top of the bound element it is editing. The Editor contains several options
  * for how to handle key presses:
  * <ul>
  * <li>{@link #completeOnEnter}</li>
@@ -32,24 +32,24 @@ var el = Ext.get('my-text'); // The element to 'edit'
 editor.startEdit(el); // The value of the field will be taken as the innerHTML of the element.
  * </code></pre>
  * {@img Ext.Editor/Ext.Editor.png Ext.Editor component}
- * 
+ *
  * @constructor
  * Create a new Editor
  * @param {Object} config The config object
  * @xtype editor
  */
 Ext.define('Ext.Editor', {
-    
+
     /* Begin Definitions */
-   
+
     extend: 'Ext.Component',
-    
+
     alias: 'widget.editor',
-    
+
     requires: ['Ext.layout.component.Editor'],
-    
+
     /* End Definitions */
-   
+
    componentLayout: 'editor',
 
     /**
@@ -63,7 +63,7 @@ Ext.define('Ext.Editor', {
      * field is blurred. Defaults to <tt>true</tt>.
      */
     allowBlur: true,
-    
+
     /**
      * @cfg {Boolean/Object} autoSize
      * True for the editor to automatically adopt the size of the underlying field. Otherwise, an object
@@ -85,74 +85,75 @@ autoSize: {
 }
      * </pre></code>
      */
-    
+
     /**
      * @cfg {Boolean} revertInvalid
      * True to automatically revert the field value and cancel the edit when the user completes an edit and the field
      * validation fails (defaults to true)
      */
-    
+    revertInvalid: true,
+
     /**
      * @cfg {Boolean} ignoreNoChange
      * True to skip the edit completion process (no save, no events fired) if the user completes an edit and
      * the value has not changed (defaults to false).  Applies only to string values - edits for other data types
      * will never be ignored.
      */
-    
+
     /**
      * @cfg {Boolean} hideEl
      * False to keep the bound element visible while the editor is displayed (defaults to true)
      */
-    
+
     /**
      * @cfg {Mixed} value
      * The data value of the underlying field (defaults to "")
      */
     value : '',
-    
+
     /**
      * @cfg {String} alignment
      * The position to align to (see {@link Ext.core.Element#alignTo} for more details, defaults to "c-c?").
      */
     alignment: 'c-c?',
-    
+
     /**
      * @cfg {Array} offsets
      * The offsets to use when aligning (see {@link Ext.core.Element#alignTo} for more details. Defaults to <tt>[0, 0]</tt>.
      */
     offsets: [0, 0],
-    
+
     /**
      * @cfg {Boolean/String} shadow "sides" for sides/bottom only, "frame" for 4-way shadow, and "drop"
      * for bottom-right shadow (defaults to "frame")
      */
     shadow : 'frame',
-    
+
     /**
      * @cfg {Boolean} constrain True to constrain the editor to the viewport
      */
     constrain : false,
-    
+
     /**
      * @cfg {Boolean} swallowKeys Handle the keydown/keypress events so they don't propagate (defaults to true)
      */
     swallowKeys : true,
-    
+
     /**
      * @cfg {Boolean} completeOnEnter True to complete the edit when the enter key is pressed. Defaults to <tt>true</tt>.
      */
     completeOnEnter : true,
-    
+
     /**
      * @cfg {Boolean} cancelOnEsc True to cancel the edit when the escape key is pressed. Defaults to <tt>true</tt>.
      */
     cancelOnEsc : true,
-    
+
     /**
      * @cfg {Boolean} updateEl True to update the innerHTML of the bound element when the update completes (defaults to false)
      */
     updateEl : false,
-    
+
     /**
      * @cfg {Mixed} parentEl An element to render to. Defaults to the <tt>document.body</tt>.
      */
@@ -171,7 +172,11 @@ autoSize: {
         });
         me.mon(field, {
             scope: me,
-            blur: me.onBlur,
+            blur: {
+                fn: me.onBlur,
+                // slight delay to avoid race condition with startEdits (e.g. grid view refresh)
+                delay: 1
+            },
             specialkey: me.onSpecialKey
         });
 
@@ -181,9 +186,9 @@ autoSize: {
         me.floating = {
             constrain: me.constrain
         };
-        
+
         me.callParent(arguments);
-        
+
         me.addEvents(
             /**
              * @event beforestartedit
@@ -240,7 +245,7 @@ autoSize: {
             'specialkey'
         );
     },
-    
+
     // private
     onAutoSize: function(){
         this.doComponentLayout();
@@ -300,15 +305,15 @@ autoSize: {
     startEdit : function(el, value) {
         var me = this,
             field = me.field;
-            
+
         me.completeEdit();
         me.boundEl = Ext.get(el);
         value = Ext.isDefined(value) ? value : me.boundEl.dom.innerHTML;
-        
+
         if (!me.rendered) {
             me.render(me.parentEl || document.body);
         }
-        
+
         if (me.fireEvent('beforestartedit', me, me.boundEl, value) !== false) {
             me.startValue = value;
             me.show();
@@ -343,7 +348,7 @@ autoSize: {
         var me = this,
             field = me.field,
             value;
-            
+
         if (!me.editing) {
             return;
         }
@@ -380,7 +385,7 @@ autoSize: {
     // private
     onShow : function() {
         var me = this;
-        
+
         me.callParent(arguments);
         if (me.hideEl !== false) {
             me.boundEl.hide();
@@ -398,7 +403,7 @@ autoSize: {
         var me = this,
             startValue = me.startValue,
             value;
-            
+
         if (me.editing) {
             value = me.getValue();
             me.setValue(startValue);
@@ -429,7 +434,7 @@ autoSize: {
     onHide : function() {
         var me = this,
             field = me.field;
-        
+
         if (me.editing) {
             me.completeEdit();
             return;
@@ -438,7 +443,7 @@ autoSize: {
         if (field.collapse) {
             field.collapse();
         }
-        
+
         //field.hide();
         if (me.hideEl !== false) {
             me.boundEl.show();
@@ -464,12 +469,12 @@ autoSize: {
 
     beforeDestroy : function() {
         var me = this;
-        
+
         Ext.destroy(me.field);
         delete me.field;
         delete me.parentEl;
         delete me.boundEl;
-        
+
         me.callParent(arguments);
     }
 });

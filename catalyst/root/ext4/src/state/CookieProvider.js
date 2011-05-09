@@ -58,7 +58,7 @@ Ext.define('Ext.state.CookieProvider', {
     // private
     clear : function(name){
         this.clearCookie(name);
-        me.callParent(arguments);
+        this.callParent(arguments);
     },
 
     // private

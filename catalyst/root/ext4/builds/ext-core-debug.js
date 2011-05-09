@@ -1,3 +1,9 @@
+/*
+Ext JS - JavaScript Library
+Copyright (c) 2006-2011, Sencha Inc.
+All rights reserved.
+licensing@sencha.com
+*/
 /**
  * @class Ext
  * @singleton
@@ -101,11 +107,11 @@
 
         /**
          * Iterates either an array or an object. This method delegates to
-         * {@link Ext.Array.each} if the given value is iterable, and {@link Ext.Object.each} otherwise.
+         * {@link Ext.Array#each Ext.Array.each} if the given value is iterable, and {@link Ext.Object#each Ext.Object.each} otherwise.
          *
          * @param {Object/Array} object The object or array to be iterated.
-         * @param {Function} fn The function to be called for each iteration. See and {@link Ext.Array.each} and
-         * {@link Ext.Object.each} for detailed lists of arguments passed to this function depending on the given object
+         * @param {Function} fn The function to be called for each iteration. See and {@link Ext.Array#each Ext.Array.each} and
+         * {@link Ext.Object#each Ext.Object.each} for detailed lists of arguments passed to this function depending on the given object
          * type that is being iterated.
          * @param {Object} scope (Optional) The scope (`this` reference) in which the specified function is executed.
          * Defaults to the object being iterated itself.
@@ -390,7 +396,12 @@
          * @param {Mixed} value The value to test
          * @return {Boolean}
          */
-        isFunction: function(value) {
+        isFunction:
+        // Safari 3.x and 4.x returns 'function' for typeof <NodeList>, hence we need to fall back to using
+        // Object.prorotype.toString (slower)
+        (typeof document !== 'undefined' && typeof document.getElementsByTagName('body') === 'function') ? function(value) {
+            return toString.call(value) === '[object Function]';
+        } : function(value) {
             return typeof value === 'function';
         },
 
@@ -570,40 +581,45 @@
 })();
 
 /**
+ * @author Jacky Nguyen <jacky@sencha.com>
+ * @docauthor Jacky Nguyen <jacky@sencha.com>
  * @class Ext.Version
+ *
+ * A utility class that wrap around a string version number and provide convenient
+ * method to perform comparison. See also: {@link Ext.Version#compare compare}. Example:
+
+    var version = new Ext.Version('1.0.2beta');
+    console.log("Version is " + version); // Version is 1.0.2beta
+
+    console.log(version.getMajor()); // 1
+    console.log(version.getMinor()); // 0
+    console.log(version.getPatch()); // 2
+    console.log(version.getBuild()); // 0
+    console.log(version.getRelease()); // beta
+
+    console.log(version.isGreaterThan('1.0.1')); // True
+    console.log(version.isGreaterThan('1.0.2alpha')); // True
+    console.log(version.isGreaterThan('1.0.2RC')); // False
+    console.log(version.isGreaterThan('1.0.2')); // False
+    console.log(version.isLessThan('1.0.2')); // True
+
+    console.log(version.match(1.0)); // True
+    console.log(version.match('1.0.2')); // True
+
+ * @markdown
  */
 (function() {
 
 // Current core version
-var version = '4.0.0rc',
-    Version = Ext.Version = Ext.extend(Object, {
+var version = '4.0.0', Version;
+    Ext.Version = Version = Ext.extend(Object, {
 
         /**
-         * A utility class that wrap around a string version number and provide convenient
-         * method to do comparison. See also: {@link Ext.Version#compare compare}. Example:
-         * <pre><code>
-         * var version = new Ext.Version('1.0.2beta');
-         * console.log("Version is " + version); // Version is 1.0.2beta
-         *
-         * console.log(version.getMajor()); // 1
-         * console.log(version.getMinor()); // 0
-         * console.log(version.getPatch()); // 2
-         * console.log(version.getBuild()); // 0
-         * console.log(version.getRelease()); // beta
-         *
-         * console.log(version.gt('1.0.1')); // True
-         * console.log(version.gt('1.0.2alpha')); // True
-         * console.log(version.gt('1.0.2RC')); // False
-         * console.log(version.gt('1.0.2')); // False
-         *
-         * console.log(version.match(1.0)); // True
-         * console.log(version.match('1.0.2')); // True
-         * </code></pre>
-         *
          * @constructor
          * @param {String/Number} version The version number in the follow standard format: major[.minor[.patch[.build[release]]]]
          * Examples: 1.0 or 1.2.3beta or 1.2.3.4RC
          * @return {Ext.Version} this
+         * @param version
          */
         constructor: function(version) {
             var parts, releaseStartIndex;
@@ -1158,7 +1174,7 @@ Ext.Number.from('abc', 1); // returns 1
 })();
 
 /**
- * This method is deprecated, please use {@link Ext.Number.from} instead
+ * This method is deprecated, please use {@link Ext.Number#from Ext.Number.from} instead
  *
  * @deprecated 4.0.0 Replaced by Ext.Number.from
  * @member Ext
@@ -1584,7 +1600,7 @@ Ext.Array.toArray('splitted', 0, 3); // returns ['s', 'p', 'l', 'i']
          *
          * - An empty array if given value is `undefined` or `null`
          * - Itself if given value is already an array
-         * - An array copy if given value is {@link Ext.isIterable iterable} (arguments, NodeList and alike)
+         * - An array copy if given value is {@link Ext#isIterable iterable} (arguments, NodeList and alike)
          * - An array with one item which is the given value, otherwise
          *
          * @param {Array/Mixed} value The value to convert to an array if it's not already is an array
@@ -1956,7 +1972,7 @@ Ext.Array.toArray('splitted', 0, 3); // returns ['s', 'p', 'l', 'i']
     Ext.flatten = Ext.Array.flatten;
 
     /**
-     * Old alias to {@link Ext.Array#clean}
+     * Old alias to {@link Ext.Array#clean Ext.Array.clean}
      * @deprecated 4.0.0 Use {@link Ext.Array.clean} instead
      * @member Ext
      * @method clean
@@ -1964,7 +1980,7 @@ Ext.Array.toArray('splitted', 0, 3); // returns ['s', 'p', 'l', 'i']
     Ext.clean = Ext.Array.clean;
 
     /**
-     * Old alias to {@link Ext.Array#unique}
+     * Old alias to {@link Ext.Array#unique Ext.Array.unique}
      * @deprecated 4.0.0 Use {@link Ext.Array.unique} instead
      * @member Ext
      * @method unique
@@ -1972,15 +1988,15 @@ Ext.Array.toArray('splitted', 0, 3); // returns ['s', 'p', 'l', 'i']
     Ext.unique = Ext.Array.unique;
 
     /**
-     * Old alias to {@link Ext.Array#pluck}
-     * @deprecated 4.0.0 Use {@link Ext.Array.pluck} instead
+     * Old alias to {@link Ext.Array#pluck Ext.Array.pluck}
+     * @deprecated 4.0.0 Use {@link Ext.Array#pluck Ext.Array.pluck} instead
      * @member Ext
      * @method pluck
      */
     Ext.pluck = Ext.Array.pluck;
 
     /**
-     * Convenient alias to {@link Ext.Array#toArray}
+     * Convenient alias to {@link Ext.Array#toArray Ext.Array.toArray}
      * @param {Iterable} the iterable object to be turned into a true Array.
      * @member Ext
      * @method toArray
@@ -2304,7 +2320,7 @@ sayGoodbye('Fred'); // both alerts show
                     timerId = null;
                 }
                 timerId = setTimeout(function(){
-                    fn.apply(me || scope, args || arguments);
+                    fn.apply(scope || me, args || arguments);
                 }, buffer);
             };
         }();
@@ -2864,7 +2880,7 @@ Ext.merge = Ext.Object.merge;
  *
  * @member Ext
  * @method urlEncode
- * @deprecated 4.0.0 Use {@link Ext.Object.toQueryString} instead
+ * @deprecated 4.0.0 Use {@link Ext.Object#toQueryString Ext.Object.toQueryString} instead
  */
 Ext.urlEncode = function() {
     var args = Ext.Array.from(arguments),
@@ -2884,7 +2900,7 @@ Ext.urlEncode = function() {
  *
  * @member Ext
  * @method urlDecode
- * @deprecated 4.0.0 Use {@link Ext.Object.fromQueryString} instead
+ * @deprecated 4.0.0 Use {@link Ext.Object#fromQueryString Ext.Object.fromQueryString} instead
  */
 Ext.urlDecode = function() {
     return Ext.Object.fromQueryString.apply(Ext.Object, arguments);
@@ -3047,9 +3063,9 @@ Ext.Date = {
 
     /**
      * Returns the number of milliseconds between two dates
-     * @param {Date} dateA
-     * @param {Date} dateB (optional) Defaults to now
-     * @return {Number} The diff in milliseconds
+     * @param {Date} dateA The first date
+     * @param {Date} dateB (optional) The second date, defaults to now
+     * @return {Number} The difference in milliseconds
      */
     getElapsed: function(dateA, dateB) {
         return Math.abs(dateA - (dateB || new Date()));
@@ -3901,6 +3917,12 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
         return utilDate.format(date, format);
     },
 
+    /**
+     * Formats a date given the supplied format string.
+     * @param {Date} date The date to format
+     * @param {String} format The format string
+     * @return {String} The formatted date
+     */
     format: function(date, format) {
         if (utilDate.formatFunctions[format] == null) {
             utilDate.createFormat(format);
@@ -3918,6 +3940,7 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
      * getTimezone() first tries to get the timezone abbreviation from between a pair of parentheses
      * (which may or may not be present), failing which it proceeds to get the timezone abbreviation
      * from the GMT offset portion of the date string.
+     * @param {Date} date The date
      * @return {String} The abbreviated timezone name (e.g. 'CST', 'PDT', 'EDT', 'MPST' ...).
      */
     getTimezone : function(date) {
@@ -3938,6 +3961,7 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
 
     /**
      * Get the offset from GMT of the current date (equivalent to the format specifier 'O').
+     * @param {Date} date The date
      * @param {Boolean} colon (optional) true to separate the hours and minutes with a colon (defaults to false).
      * @return {String} The 4-character offset string prefixed with + or - (e.g. '-0600').
      */
@@ -3951,6 +3975,7 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
 
     /**
      * Get the numeric day number of the year, adjusted for leap year.
+     * @param {Date} date The date
      * @return {Number} 0 to 364 (365 in leap years).
      */
     getDayOfYear: function(date) {
@@ -3968,6 +3993,7 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
     /**
      * Get the numeric ISO-8601 week number of the year.
      * (equivalent to the format specifier 'W', but without a leading zero).
+     * @param {Date} date The date
      * @return {Number} 1 to 53
      */
     getWeekOfYear : (function() {
@@ -3986,6 +4012,7 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
 
     /**
      * Checks if the current date falls within a leap year.
+     * @param {Date} date The date
      * @return {Boolean} True if the current date falls within a leap year, false otherwise.
      */
     isLeapYear : function(date) {
@@ -3999,9 +4026,11 @@ dt = Ext.Date.parse("2006-02-29 03:20:01", "Y-m-d H:i:s", true); // returns null
      * the {@link #monthNames} array to retrieve the textual day name.
      * Example:
      * <pre><code>
-var dt = new Date('1/10/2007');
-console.log(Ext.Date.dayNames[dt.getFirstDayOfMonth()]); //output: 'Monday'
-</code></pre>
+var dt = new Date('1/10/2007'),
+    firstDay = Ext.Date.getFirstDayOfMonth(dt);
+console.log(Ext.Date.dayNames[firstDay]); //output: 'Monday'
+     * </code></pre>
+     * @param {Date} date The date
      * @return {Number} The day number (0-6).
      */
     getFirstDayOfMonth : function(date) {
@@ -4015,9 +4044,11 @@ console.log(Ext.Date.dayNames[dt.getFirstDayOfMonth()]); //output: 'Monday'
      * the {@link #monthNames} array to retrieve the textual day name.
      * Example:
      * <pre><code>
-var dt = new Date('1/10/2007');
-console.log(Ext.Date.dayNames[dt.getLastDayOfMonth()]); //output: 'Wednesday'
-</code></pre>
+var dt = new Date('1/10/2007'),
+    lastDay = Ext.Date.getLastDayOfMonth(dt);
+console.log(Ext.Date.dayNames[lastDay]); //output: 'Wednesday'
+     * </code></pre>
+     * @param {Date} date The date
      * @return {Number} The day number (0-6).
      */
     getLastDayOfMonth : function(date) {
@@ -4027,6 +4058,7 @@ console.log(Ext.Date.dayNames[dt.getLastDayOfMonth()]); //output: 'Wednesday'
 
     /**
      * Get the date of the first day of the month in which this date resides.
+     * @param {Date} date The date
      * @return {Date}
      */
     getFirstDateOfMonth : function(date) {
@@ -4035,6 +4067,7 @@ console.log(Ext.Date.dayNames[dt.getLastDayOfMonth()]); //output: 'Wednesday'
 
     /**
      * Get the date of the last day of the month in which this date resides.
+     * @param {Date} date The date
      * @return {Date}
      */
     getLastDateOfMonth : function(date) {
@@ -4043,6 +4076,7 @@ console.log(Ext.Date.dayNames[dt.getLastDayOfMonth()]); //output: 'Wednesday'
 
     /**
      * Get the number of days in the current month, adjusted for leap year.
+     * @param {Date} date The date
      * @return {Number} The number of days in the month.
      */
     getDaysInMonth: (function() {
@@ -4057,6 +4091,7 @@ console.log(Ext.Date.dayNames[dt.getLastDayOfMonth()]); //output: 'Wednesday'
 
     /**
      * Get the English ordinal suffix of the current day (equivalent to the format specifier 'S').
+     * @param {Date} date The date
      * @return {String} 'st, 'nd', 'rd' or 'th'.
      */
     getSuffix : function(date) {
@@ -4091,11 +4126,12 @@ copy.setDate(5);
 console.log(orig);  //returns 'Thu Oct 05 2006'!
 
 //correct way:
-var orig = new Date('10/1/2006');
-var copy = orig.clone();
+var orig = new Date('10/1/2006'),
+    copy = Ext.Date.clone(orig);
 copy.setDate(5);
 console.log(orig);  //returns 'Thu Oct 01 2006'
-</code></pre>
+     * </code></pre>
+     * @param {Date} date The date
      * @return {Date} The new Date instance.
      */
     clone : function(date) {
@@ -4104,6 +4140,7 @@ console.log(orig);  //returns 'Thu Oct 01 2006'
 
     /**
      * Checks if the current date is affected by Daylight Saving Time (DST).
+     * @param {Date} date The date
      * @return {Boolean} True if the current date is affected by DST.
      */
     isDST : function(date) {
@@ -4116,6 +4153,7 @@ console.log(orig);  //returns 'Thu Oct 01 2006'
      * Attempts to clear all time information from this Date by setting the time to midnight of the same day,
      * automatically adjusting for Daylight Saving Time (DST) where applicable.
      * (note: DST timezone information for the browser's host operating system is assumed to be up-to-date)
+     * @param {Date} date The date
      * @param {Boolean} clone true to create a clone of this date, clear the time and return it (defaults to false).
      * @return {Date} this or the clone.
      */
@@ -4159,14 +4197,12 @@ var dt = Ext.Date.add(new Date('10/29/2006'), Ext.Date.DAY, 5);
 console.log(dt); //returns 'Fri Nov 03 2006 00:00:00'
 
 // Negative values will be subtracted:
-var dt2 = new Date('10/1/2006').add(Ext.Date.DAY, -5);
+var dt2 = Ext.Date.add(new Date('10/1/2006'), Ext.Date.DAY, -5);
 console.log(dt2); //returns 'Tue Sep 26 2006 00:00:00'
 
-// You can even chain several calls together in one line:
-var dt3 = new Date('10/1/2006').add(Ext.Date.DAY, 5).add(Ext.Date.HOUR, 8).add(Ext.Date.MINUTE, -30);
-console.log(dt3); //returns 'Fri Oct 06 2006 07:30:00'
-</code></pre>
+     * </code></pre>
      *
+     * @param {Date} date The date to modify
      * @param {String} interval A valid date interval enum value.
      * @param {Number} value The amount to add to the current date.
      * @return {Date} The new Date instance.
@@ -4208,7 +4244,8 @@ console.log(dt3); //returns 'Fri Oct 06 2006 07:30:00'
     },
 
     /**
-     * Checks if this date falls on or between the given start and end dates.
+     * Checks if a date falls on or between the given start and end dates.
+     * @param {Date} date The date to check
      * @param {Date} start Start date
      * @param {Date} end End date
      * @return {Boolean} true if this date falls on or between the given start and end dates.
@@ -4689,7 +4726,7 @@ My.cool.Class.create({
         implement: function(members) {
             var prototype = this.prototype,
                 name, i, member, previous;
-
+            var className = Ext.getClassName(this);
             for (name in members) {
                 if (members.hasOwnProperty(name)) {
                     member = members[name];
@@ -4697,6 +4734,9 @@ My.cool.Class.create({
                     if (typeof member === 'function') {
                         member.$owner = this;
                         member.$name = name;
+                        if (className) {
+                            member.displayName = className + '#' + name;
+                        }
                     }
 
                     prototype[name] = member;
@@ -4866,7 +4906,7 @@ steve.printMoney(); // alerts '$$$$$$$'
                             my[i] = mixin[i];
                         }
                     }
-                    else if (i === 'config' && my.config !== undefined && mixin.config !== undefined) {
+                    else if (i === 'config' && my.config && mixin.config) {
                         Ext.Object.merge(my.config, mixin.config);
                     }
                 }
@@ -4936,198 +4976,196 @@ steve.printMoney(); // alerts '$$$$$$$'
 /**
  * @author Jacky Nguyen <jacky@sencha.com>
  * @docauthor Jacky Nguyen <jacky@sencha.com>
- * @markdown
  * @class Ext.Class
-
-Handles class creation throughout the whole framework. Note that most of the time {@link Ext#define Ext.define} should
-be used instead, since it's a higher level wrapper that aliases to {@link Ext.ClassManager#create}
-to enable namespacing and dynamic dependency resolution.
-
-# Basic syntax: #
-
-    Ext.define(className, properties);
-
-in which `properties` is an object represent a collection of properties that apply to the class. See
-{@link Ext.ClassManager#create} for more detailed instructions.
-
-    Ext.define('Person', {
-         name: 'Unknown',
-
-         constructor: function(name) {
-             if (name) {
-                 this.name = name;
-             }
-
-             return this;
-         },
-
-         eat: function(foodType) {
-             alert("I'm eating: " + foodType);
-
-             return this;
-         }
-    });
-
-    var aaron = new Person("Aaron");
-    aaron.eat("Sandwich"); // alert("I'm eating: Sandwich");
-
-Ext.Class has a powerful set of extensible {@link Ext.Class#registerPreprocessor pre-processors} which takes care of
-everything related to class creation, including but not limited to inheritance, mixins, configuration, statics, etc.
-
-# Inheritance: #
-
-    Ext.define('Developer', {
-         extend: 'Person',
-
-         constructor: function(name, isGeek) {
-             this.isGeek = isGeek;
-
-             // Apply a method from the parent class' prototype
-             this.callParent([name]);
-
-             return this;
-
-         },
-
-         code: function(language) {
-             alert("I'm coding in: " + language);
-
-             this.eat("Bugs");
-
-             return this;
-         }
-    });
-
-    var jacky = new Developer("Jacky", true);
-    jacky.code("JavaScript"); // alert("I'm coding in: JavaScript");
-                              // alert("I'm eating: Bugs");
-
-See {@link Ext.Base#callParent} for more details on calling superclass' methods
-
-# Mixins: #
-
-    Ext.define('CanPlayGuitar', {
-         playGuitar: function() {
-            alert("F#...G...D...A");
-         }
-    });
-
-    Ext.define('CanComposeSongs', {
-         composeSongs: function() { ... }
-    });
-
-    Ext.define('CanSing', {
-         sing: function() {
-             alert("I'm on the highway to hell...")
-         }
-    });
-
-    Ext.define('Musician', {
-         extend: 'Person',
-
-         mixins: {
-             canPlayGuitar: 'CanPlayGuitar',
-             canComposeSongs: 'CanComposeSongs',
-             canSing: 'CanSing'
-         }
-    })
-
-    Ext.define('CoolPerson', {
-         extend: 'Person',
-
-         mixins: {
-             canPlayGuitar: 'CanPlayGuitar',
-             canSing: 'CanSing'
-         },
-
-         sing: function() {
-             alert("Ahem....");
-
-             this.mixins.canSing.sing.call(this);
-
-             alert("[Playing guitar at the same time...]");
-
-             this.playGuitar();
-         }
-    });
-
-    var me = new CoolPerson("Jacky");
-
-    me.sing(); // alert("Ahem...");
-               // alert("I'm on the highway to hell...");
-               // alert("[Playing guitar at the same time...]");
-               // alert("F#...G...D...A");
-
-# Config: #
-
-    Ext.define('SmartPhone', {
-         config: {
-             hasTouchScreen: false,
-             operatingSystem: 'Other',
-             price: 500
-         },
-
-         isExpensive: false,
-
-         constructor: function(config) {
-             this.initConfig(config);
-
-             return this;
-         },
-
-         applyPrice: function(price) {
-             this.isExpensive = (price > 500);
-
-             return price;
-         },
-
-         applyOperatingSystem: function(operatingSystem) {
-             if (!(/^(iOS|Android|BlackBerry)$/i).test(operatingSystem)) {
-                 return 'Other';
-             }
-
-             return operatingSystem;
-         }
-    });
-
-    var iPhone = new SmartPhone({
-         hasTouchScreen: true,
-         operatingSystem: 'iOS'
-    });
-
-    iPhone.getPrice(); // 500;
-    iPhone.getOperatingSystem(); // 'iOS'
-    iPhone.getHasTouchScreen(); // true;
-    iPhone.hasTouchScreen(); // true
-
-    iPhone.isExpensive; // false;
-    iPhone.setPrice(600);
-    iPhone.getPrice(); // 600
-    iPhone.isExpensive; // true;
-
-    iPhone.setOperatingSystem('AlienOS');
-    iPhone.getOperatingSystem(); // 'Other'
-
-# Statics: #
-
-    Ext.define('Computer', {
-         statics: {
-             factory: function(brand) {
-                // 'this' in static methods refer to the class itself
-                 return new this(brand);
-             }
-         },
-
-         constructor: function() { ... }
-    });
-
-    var dellComputer = Computer.factory('Dell');
-
+ * 
+ * Handles class creation throughout the whole framework. Note that most of the time {@link Ext#define Ext.define} should
+ * be used instead, since it's a higher level wrapper that aliases to {@link Ext.ClassManager#create}
+ * to enable namespacing and dynamic dependency resolution.
+ * 
+ * # Basic syntax: #
+ * 
+ *     Ext.define(className, properties);
+ * 
+ * in which `properties` is an object represent a collection of properties that apply to the class. See
+ * {@link Ext.ClassManager#create} for more detailed instructions.
+ * 
+ *     Ext.define('Person', {
+ *          name: 'Unknown',
+ * 
+ *          constructor: function(name) {
+ *              if (name) {
+ *                  this.name = name;
+ *              }
+ * 
+ *              return this;
+ *          },
+ * 
+ *          eat: function(foodType) {
+ *              alert("I'm eating: " + foodType);
+ * 
+ *              return this;
+ *          }
+ *     });
+ * 
+ *     var aaron = new Person("Aaron");
+ *     aaron.eat("Sandwich"); // alert("I'm eating: Sandwich");
+ * 
+ * Ext.Class has a powerful set of extensible {@link Ext.Class#registerPreprocessor pre-processors} which takes care of
+ * everything related to class creation, including but not limited to inheritance, mixins, configuration, statics, etc.
+ * 
+ * # Inheritance: #
+ * 
+ *     Ext.define('Developer', {
+ *          extend: 'Person',
+ * 
+ *          constructor: function(name, isGeek) {
+ *              this.isGeek = isGeek;
+ * 
+ *              // Apply a method from the parent class' prototype
+ *              this.callParent([name]);
+ * 
+ *              return this;
+ * 
+ *          },
+ * 
+ *          code: function(language) {
+ *              alert("I'm coding in: " + language);
+ * 
+ *              this.eat("Bugs");
+ * 
+ *              return this;
+ *          }
+ *     });
+ * 
+ *     var jacky = new Developer("Jacky", true);
+ *     jacky.code("JavaScript"); // alert("I'm coding in: JavaScript");
+ *                               // alert("I'm eating: Bugs");
+ * 
+ * See {@link Ext.Base#callParent} for more details on calling superclass' methods
+ * 
+ * # Mixins: #
+ * 
+ *     Ext.define('CanPlayGuitar', {
+ *          playGuitar: function() {
+ *             alert("F#...G...D...A");
+ *          }
+ *     });
+ * 
+ *     Ext.define('CanComposeSongs', {
+ *          composeSongs: function() { ... }
+ *     });
+ * 
+ *     Ext.define('CanSing', {
+ *          sing: function() {
+ *              alert("I'm on the highway to hell...")
+ *          }
+ *     });
+ * 
+ *     Ext.define('Musician', {
+ *          extend: 'Person',
+ * 
+ *          mixins: {
+ *              canPlayGuitar: 'CanPlayGuitar',
+ *              canComposeSongs: 'CanComposeSongs',
+ *              canSing: 'CanSing'
+ *          }
+ *     })
+ * 
+ *     Ext.define('CoolPerson', {
+ *          extend: 'Person',
+ * 
+ *          mixins: {
+ *              canPlayGuitar: 'CanPlayGuitar',
+ *              canSing: 'CanSing'
+ *          },
+ * 
+ *          sing: function() {
+ *              alert("Ahem....");
+ * 
+ *              this.mixins.canSing.sing.call(this);
+ * 
+ *              alert("[Playing guitar at the same time...]");
+ * 
+ *              this.playGuitar();
+ *          }
+ *     });
+ * 
+ *     var me = new CoolPerson("Jacky");
+ * 
+ *     me.sing(); // alert("Ahem...");
+ *                // alert("I'm on the highway to hell...");
+ *                // alert("[Playing guitar at the same time...]");
+ *                // alert("F#...G...D...A");
+ * 
+ * # Config: #
+ * 
+ *     Ext.define('SmartPhone', {
+ *          config: {
+ *              hasTouchScreen: false,
+ *              operatingSystem: 'Other',
+ *              price: 500
+ *          },
+ * 
+ *          isExpensive: false,
+ * 
+ *          constructor: function(config) {
+ *              this.initConfig(config);
+ * 
+ *              return this;
+ *          },
+ * 
+ *          applyPrice: function(price) {
+ *              this.isExpensive = (price > 500);
+ * 
+ *              return price;
+ *          },
+ * 
+ *          applyOperatingSystem: function(operatingSystem) {
+ *              if (!(/^(iOS|Android|BlackBerry)$/i).test(operatingSystem)) {
+ *                  return 'Other';
+ *              }
+ * 
+ *              return operatingSystem;
+ *          }
+ *     });
+ * 
+ *     var iPhone = new SmartPhone({
+ *          hasTouchScreen: true,
+ *          operatingSystem: 'iOS'
+ *     });
+ * 
+ *     iPhone.getPrice(); // 500;
+ *     iPhone.getOperatingSystem(); // 'iOS'
+ *     iPhone.getHasTouchScreen(); // true;
+ *     iPhone.hasTouchScreen(); // true
+ * 
+ *     iPhone.isExpensive; // false;
+ *     iPhone.setPrice(600);
+ *     iPhone.getPrice(); // 600
+ *     iPhone.isExpensive; // true;
+ * 
+ *     iPhone.setOperatingSystem('AlienOS');
+ *     iPhone.getOperatingSystem(); // 'Other'
+ * 
+ * # Statics: #
+ * 
+ *     Ext.define('Computer', {
+ *          statics: {
+ *              factory: function(brand) {
+ *                 // 'this' in static methods refer to the class itself
+ *                  return new this(brand);
+ *              }
+ *          },
+ * 
+ *          constructor: function() { ... }
+ *     });
+ * 
+ *     var dellComputer = Computer.factory('Dell');
+ * 
  * Also see {@link Ext.Base#statics} and {@link Ext.Base#self} for more details on accessing
  * static properties within class methods
  *
  */
-
 (function() {
 
     var Class,
@@ -5148,20 +5186,24 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
      * Note that the creation process can be asynchronous depending on the pre-processors used.
      * @return {Ext.Base} The newly created class
      */
-    Ext.Class = Class = function(newClass, classData, createdFn) {
+    Ext.Class = Class = function(newClass, classData, onClassCreated) {
         if (typeof newClass !== 'function') {
-            createdFn = classData;
+            onClassCreated = classData;
             classData = newClass;
             newClass = function() {
                 return this.constructor.apply(this, arguments);
             };
         }
 
+        if (!classData) {
+            classData = {};
+        }
+
         var preprocessorStack = classData.preprocessors || Class.getDefaultPreprocessors(),
             registeredPreprocessors = Class.getPreprocessors(),
             index = 0,
             preprocessors = [],
-            preprocessor, preprocessors, staticPropertyName, process, i, j, ln, clsPrototype;
+            preprocessor, preprocessors, staticPropertyName, process, i, j, ln;
 
         for (i = 0, ln = baseStaticProperties.length; i < ln; i++) {
             staticPropertyName = baseStaticProperties[i];
@@ -5177,7 +5219,7 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
                 preprocessor = registeredPreprocessors[preprocessor];
 
                 if (!preprocessor.always) {
-                    if (classData[preprocessor.name] !== undefined) {
+                    if (classData.hasOwnProperty(preprocessor.name)) {
                         preprocessors.push(preprocessor.fn);
                     }
                 }
@@ -5190,32 +5232,32 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
             }
         }
 
+        classData.onClassCreated = onClassCreated;
+
+        classData.onBeforeClassCreated = function(cls, data) {
+            onClassCreated = data.onClassCreated;
+
+            delete data.onBeforeClassCreated;
+            delete data.onClassCreated;
+
+            cls.implement(data);
+
+            if (onClassCreated) {
+                onClassCreated.call(cls, cls);
+            }
+        };
+
         process = function(cls, data) {
             preprocessor = preprocessors[index++];
 
-            clsPrototype = cls.prototype;
-
-            if (preprocessor === undefined) {
-                if (data.config && clsPrototype.config) {
-                    Ext.Object.merge(clsPrototype.config, data.config);
-                    delete data.config;
-                }
-
-                cls.implement(data);
-
-                if (createdFn) {
-                    createdFn.call(cls);
-                }
-
-                if (clsPrototype.$onAfterClassExtended !== undefined &&
-                    clsPrototype.hasOwnProperty('$onAfterClassExtended') === false) {
-                    clsPrototype.$onAfterClassExtended.call(cls, cls, data);
-                }
-
+            if (!preprocessor) {
+                data.onBeforeClassCreated.apply(this, arguments);
                 return;
             }
 
-            preprocessor.call(this, cls, data, process);
+            if (preprocessor.call(this, cls, data, process) !== false) {
+                process.apply(this, arguments);
+            }
         };
 
         process.call(Class, newClass, classData);
@@ -5349,7 +5391,7 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
         }
     });
 
-    Class.registerPreprocessor('extend', function(cls, data, fn) {
+    Class.registerPreprocessor('extend', function(cls, data) {
         var extend = data.extend,
             base = Ext.Base,
             basePrototype = base.prototype,
@@ -5367,9 +5409,7 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
         parentPrototype = parent.prototype;
 
         prototype.prototype = parentPrototype;
-        cls.prototype = new prototype();
-
-        clsPrototype = cls.prototype;
+        clsPrototype = cls.prototype = new prototype();
 
         if (!('$class' in parent)) {
             for (i in basePrototype) {
@@ -5388,11 +5428,11 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
         // Statics inheritance
         parentStatics = parentPrototype.$inheritableStatics;
 
-        if (parentStatics !== undefined) {
+        if (parentStatics) {
             for (k = 0, ln = parentStatics.length; k < ln; k++) {
                 staticName = parentStatics[k];
 
-                if (!cls[staticName]) {
+                if (!cls.hasOwnProperty(staticName)) {
                     cls[staticName] = parent[staticName];
                 }
             }
@@ -5400,29 +5440,24 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
 
         // Merge the parent class' config object without referencing it
         if (parentPrototype.config) {
-            data.config = Ext.Object.merge({}, parentPrototype.config, data.config || {});
+            clsPrototype.config = Ext.Object.merge({}, parentPrototype.config);
+        }
+        else {
+            clsPrototype.config = {};
         }
 
-        if (clsPrototype.$onExtended !== undefined) {
+        if (clsPrototype.$onExtended) {
             clsPrototype.$onExtended.call(cls, cls, data);
         }
 
-        // onClassExtended callback
-        if (data.onClassExtended !== undefined) {
+        if (data.onClassExtended) {
             clsPrototype.$onExtended = data.onClassExtended;
             delete data.onClassExtended;
         }
 
-        if (data.onAfterClassExtended !== undefined) {
-            clsPrototype.$onAfterClassExtended = data.onAfterClassExtended;
-            delete data.onAfterClassExtended;
-        }
-
-        fn.apply(this, arguments);
-
     }, true);
 
-    Class.registerPreprocessor('statics', function(cls, data, fn) {
+    Class.registerPreprocessor('statics', function(cls, data) {
         var statics = data.statics,
             name;
 
@@ -5433,12 +5468,9 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
         }
 
         delete data.statics;
-
-        fn.apply(this, arguments);
-
     });
 
-    Class.registerPreprocessor('inheritableStatics', function(cls, data, fn) {
+    Class.registerPreprocessor('inheritableStatics', function(cls, data) {
         var statics = data.inheritableStatics,
             inheritableStatics,
             prototype = cls.prototype,
@@ -5446,7 +5478,7 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
 
         inheritableStatics = prototype.$inheritableStatics;
 
-        if (inheritableStatics === undefined) {
+        if (!inheritableStatics) {
             inheritableStatics = prototype.$inheritableStatics = [];
         }
 
@@ -5458,27 +5490,23 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
         }
 
         delete data.inheritableStatics;
-
-        fn.call(this, cls, data);
     });
 
-    Class.registerPreprocessor('mixins', function(cls, data, fn) {
+    Class.registerPreprocessor('mixins', function(cls, data) {
         cls.mixin(data.mixins);
 
         delete data.mixins;
-
-        fn.call(this, cls, data);
     });
 
-    Class.registerPreprocessor('config', function(cls, data, fn) {
+    Class.registerPreprocessor('config', function(cls, data) {
+        var prototype = cls.prototype;
+
         Ext.Object.each(data.config, function(name) {
             var cName = name.charAt(0).toUpperCase() + name.substr(1),
                 pName = name,
                 apply = 'apply' + cName,
                 setter = 'set' + cName,
-                getter = 'get' + cName,
-                reset = 'reset' + cName,
-                prototype = cls.prototype;
+                getter = 'get' + cName;
 
             if (!(apply in prototype) && !data.hasOwnProperty(apply)) {
                 data[apply] = function(val) {
@@ -5505,7 +5533,8 @@ See {@link Ext.Base#callParent} for more details on calling superclass' methods
             }
         });
 
-        fn.call(this, cls, data);
+        Ext.Object.merge(prototype.config, data.config);
+        delete data.config;
     });
 
     Class.setDefaultPreprocessors(['extend', 'statics', 'inheritableStatics', 'mixins', 'config']);
@@ -6022,6 +6051,8 @@ these convenient shorthands:
                     if (!postprocessor) {
                         manager.set(className, cls);
 
+                        Ext.Loader.historyPush(className);
+
                         if (createdFn) {
                             createdFn.call(cls, cls);
                         }
@@ -6029,7 +6060,9 @@ these convenient shorthands:
                         return;
                     }
 
-                    postprocessor.call(this, clsName, cls, clsData, process);
+                    if (postprocessor.call(this, clsName, cls, clsData, process) !== false) {
+                        process.apply(this, arguments);
+                    }
                 };
 
                 process.call(manager, className, this, data);
@@ -6065,7 +6098,7 @@ these convenient shorthands:
                     });
                 }
 
-                if (Ext.isDefined(Ext.global.console)) {
+                if (Ext.global.console) {
                     Ext.global.console.warn("[Ext.Loader] Synchronously loading '" + className + "'; consider adding " +
                          "Ext.require('" + alias + "') above Ext.onReady");
                 }
@@ -6146,7 +6179,7 @@ these convenient shorthands:
 
             // Still not existing at this point, try to load it via synchronous mode as the last resort
             if (!cls) {
-                if (Ext.isDefined(Ext.global.console)) {
+                if (Ext.global.console) {
                     Ext.global.console.warn("[Ext.Loader] Synchronously loading '" + name + "'; consider adding " +
                          "Ext.require('" + ((possibleName) ? alias : name) + "') above Ext.onReady");
                 }
@@ -6363,7 +6396,7 @@ these convenient shorthands:
         }
     };
 
-    Manager.registerPostprocessor('alias', function(name, cls, data, fn) {
+    Manager.registerPostprocessor('alias', function(name, cls, data) {
         var aliases = data.alias,
             widgetPrefix = 'widget.',
             i, ln, alias;
@@ -6396,15 +6429,14 @@ these convenient shorthands:
                 break;
             }
         }
-
-        fn.call(this, name, cls, data);
     });
 
     Manager.registerPostprocessor('singleton', function(name, cls, data, fn) {
         fn.call(this, name, new cls(), data);
+        return false;
     });
 
-    Manager.registerPostprocessor('alternateClassName', function(name, cls, data, fn) {
+    Manager.registerPostprocessor('alternateClassName', function(name, cls, data) {
         var alternates = data.alternateClassName,
             i, ln, alternate;
 
@@ -6425,8 +6457,6 @@ these convenient shorthands:
 
             this.set(alternate, cls);
         }
-
-        fn.call(this, name, cls, data);
     });
 
     Manager.setDefaultPostprocessors(['alias', 'singleton', 'alternateClassName']);
@@ -6584,14 +6614,11 @@ these convenient shorthands:
      */
     Ext.ns = Ext.namespace;
 
-    Class.registerPreprocessor('className', function(cls, data, fn) {
+    Class.registerPreprocessor('className', function(cls, data) {
         if (data.$className) {
             cls.$className = data.$className;
             cls.displayName = cls.$className;
         }
-
-        fn.apply(this, arguments);
-
     }, true);
 
     Class.setDefaultPreprocessorPosition('className', 'first');
@@ -6736,8 +6763,7 @@ This process will be automated with Sencha Command, to be released and documente
 
 (function(Manager, Class, flexSetter, alias) {
 
-    var isNonBrowser = typeof window === 'undefined',
-        isNodeJS = isNonBrowser && (typeof require === 'function'),
+    var
         dependencyProperties = ['extend', 'mixins', 'requires'],
         Loader;
 
@@ -6796,6 +6822,9 @@ This process will be automated with Sencha Command, to be released and documente
          * @private
          */
         numLoadedFiles: 0,
+
+        /** @private */
+        hasFileLoadError: false,
 
         /**
          * @private
@@ -6956,10 +6985,34 @@ This process will be automated with Sencha Command, to be released and documente
         getPath: function(className) {
             var path = '',
                 paths = this.config.paths,
+                prefix = this.getPrefix(className);
+
+            if (prefix.length > 0) {
+                if (prefix === className) {
+                    return paths[prefix];
+                }
+
+                path = paths[prefix];
+                className = className.substring(prefix.length + 1);
+            }
+
+            if (path.length > 0) {
+                path += '/';
+            }
+
+            return path.replace(/\/\.\//g, '/') + className.replace(/\./g, "/") + '.js';
+        },
+
+        /**
+         * @private
+         * @param {String} className
+         */
+        getPrefix: function(className) {
+            var paths = this.config.paths,
                 prefix, deepestPrefix = '';
 
             if (paths.hasOwnProperty(className)) {
-                return paths[className];
+                return className;
             }
 
             for (prefix in paths) {
@@ -6970,21 +7023,7 @@ This process will be automated with Sencha Command, to be released and documente
                 }
             }
 
-            if (deepestPrefix) {
-                className = className.substring(deepestPrefix.length + 1);
-
-                if (paths.hasOwnProperty(deepestPrefix)) {
-                    path = paths[deepestPrefix];
-                }
-            }
-
-            if (path.length > 0) {
-                path += '/';
-            }
-
-            path += className.replace(/\./g, "/") + '.js';
-
-            return path;
+            return deepestPrefix;
         },
 
         /**
@@ -7057,7 +7096,7 @@ This process will be automated with Sencha Command, to be released and documente
             script.type = 'text/javascript';
             script.src = url;
             script.onload = onLoadFn;
-            script.onerror = onError;
+            script.onerror = onErrorFn;
             script.onreadystatechange = function() {
                 if (this.readyState === 'loaded' || this.readyState === 'complete') {
                     onLoadFn();
@@ -7093,6 +7132,7 @@ This process will be automated with Sencha Command, to be released and documente
             var me = this,
                 noCacheUrl = url + (this.getConfig('disableCaching') ? ('?' + this.getConfig('disableCachingParam') + '=' + Ext.Date.now()) : ''),
                 fileName = url.split('/').pop(),
+                isCrossOriginRestricted = false,
                 xhr, status, onScriptError;
 
             scope = scope || this;
@@ -7101,7 +7141,7 @@ This process will be automated with Sencha Command, to be released and documente
 
             if (!synchronous) {
                 onScriptError = function() {
-                    onError.call(me, "Failed loading '" + url + "', please verify that the file exists", synchronous);
+                    onError.call(scope, "Failed loading '" + url + "', please verify that the file exists", synchronous);
                 };
 
                 if (!Ext.isReady && Ext.onDocumentReady) {
@@ -7120,12 +7160,28 @@ This process will be automated with Sencha Command, to be released and documente
                     xhr = new ActiveXObject('Microsoft.XMLHTTP');
                 }
 
-                xhr.open('GET', noCacheUrl, false);
-                xhr.send(null);
+                try {
+                    xhr.open('GET', noCacheUrl, false);
+                    xhr.send(null);
+                } catch (e) {
+                    isCrossOriginRestricted = true;
+                }
 
                 status = (xhr.status === 1223) ? 204 : xhr.status;
 
-                if (status >= 200 && status < 300) {
+                if (!isCrossOriginRestricted) {
+                    isCrossOriginRestricted = (status === 0);
+                }
+
+                if (isCrossOriginRestricted
+                ) {
+                    onError.call(this, "Failed loading synchronously via XHR: '" + url + "'; It's likely that the file is either " +
+                                       "being loaded from a different domain or from the local file system whereby cross origin " +
+                                       "requests are not allowed due to security reasons. Use asynchronous loading with " +
+                                       "Ext.require instead.", synchronous);
+                }
+                else if (status >= 200 && status < 300
+                ) {
                     // Firebug friendly, file names are still shown even though they're eval'ed code
                     new Function(xhr.responseText + "\n//@ sourceURL=" + fileName)();
 
@@ -7136,6 +7192,9 @@ This process will be automated with Sencha Command, to be released and documente
                                        "verify that the file exists. " +
                                        "XHR status code: " + status, synchronous);
                 }
+
+                // Prevent potential IE memory leak
+                xhr = null;
             }
         },
 
@@ -7271,12 +7330,8 @@ This process will be automated with Sencha Command, to be released and documente
 
                     this.loadScriptFile(
                         filePath,
-                        function() {
-                            this.onFileLoaded.call(this, className, filePath);
-                        },
-                        function() {
-                            this.onFileLoadError.call(this, className, filePath);
-                        },
+                        Ext.Function.pass(this.onFileLoaded, [className, filePath], this),
+                        Ext.Function.pass(this.onFileLoadError, [className, filePath]),
                         this,
                         this.syncModeEnabled
                     );
@@ -7309,7 +7364,7 @@ This process will be automated with Sencha Command, to be released and documente
                 window.status = "Loading dependencies, " + this.numPendingFiles + " files left...";
             }
 
-            if (!this.syncModeEnabled && this.numPendingFiles === 0 && this.isLoading) {
+            if (!this.syncModeEnabled && this.numPendingFiles === 0 && this.isLoading && !this.hasFileLoadError) {
                 var queue = this.queue,
                     requires,
                     i, ln, j, subLn, missingClasses = [], missingPaths = [];
@@ -7328,7 +7383,11 @@ This process will be automated with Sencha Command, to be released and documente
                     return;
                 }
 
-                for (i = 0, ln = missingClasses.length; i < ln; i++) {
+                missingClasses = Ext.Array.filter(missingClasses, function(item) {
+                    return !this.requiresMap.hasOwnProperty(item);
+                }, this);
+
+                for (i = 0,ln = missingClasses.length; i < ln; i++) {
                     missingPaths.push(this.classNameToFilePathMap[missingClasses[i]]);
                 }
 
@@ -7347,13 +7406,14 @@ This process will be automated with Sencha Command, to be released and documente
          */
         onFileLoadError: function(className, filePath, errorMessage, isSynchronous) {
             this.numPendingFiles--;
+            this.hasFileLoadError = true;
+
             Ext.Error.raise({
                 sourceClass: "Ext.Loader",
                 classToLoad: className,
                 loadPath: filePath,
                 loadingType: isSynchronous ? 'synchronous' : 'async',
-                msg: "Error attempting to load class '" + className + "' from path '" +
-                     filePath + "': " + errorMessage
+                msg: errorMessage
             });
         },
 
@@ -7399,6 +7459,10 @@ This process will be automated with Sencha Command, to be released and documente
                 while (readyListeners.length) {
                     listener = readyListeners.shift();
                     listener.fn.call(listener.scope);
+
+                    if (this.isLoading) {
+                        return this;
+                    }
                 }
             }
 
@@ -7478,7 +7542,7 @@ This process will be automated with Sencha Command, to be released and documente
         Loader.onReady(fn, scope, true, options);
     };
 
-    Class.registerPreprocessor('loader', function(cls, data, fn) {
+    Class.registerPreprocessor('loader', function(cls, data, continueFn) {
         var me = this,
             dependencies = [],
             className = Manager.getName(cls),
@@ -7537,8 +7601,7 @@ This process will be automated with Sencha Command, to be released and documente
         }
 
         if (dependencies.length === 0) {
-            Loader.historyPush(className);
-            fn.apply(this, arguments);
+//            Loader.historyPush(className);
             return;
         }
 
@@ -7584,8 +7647,6 @@ This process will be automated with Sencha Command, to be released and documente
 
 
         Loader.require(dependencies, function() {
-            Loader.historyPush(className);
-
             for (i = 0, ln = dependencyProperties.length; i < ln; i++) {
                 propertyName = dependencyProperties[i];
 
@@ -7618,23 +7679,28 @@ This process will be automated with Sencha Command, to be released and documente
                 }
             }
 
-            fn.call(me, cls, data);
+            continueFn.call(me, cls, data);
         });
 
+        return false;
     }, true);
 
     Class.setDefaultPreprocessorPosition('loader', 'after', 'className');
 
-    Manager.registerPostprocessor('uses', function(name, cls, data, fn) {
-        var uses = Ext.Array.from(data.uses);
+    Manager.registerPostprocessor('uses', function(name, cls, data) {
+        var uses = Ext.Array.from(data.uses),
+            items = [],
+            i, ln, item;
 
-        uses = Ext.Array.filter(uses, function(use) {
-            return Ext.isString(use);
-        });
+        for (i = 0, ln = uses.length; i < ln; i++) {
+            item = uses[i];
 
-        Loader.addOptionalRequires(uses);
+            if (typeof item === 'string') {
+                items.push(item);
+            }
+        }
 
-        fn.call(this, name, cls, data);
+        Loader.addOptionalRequires(items);
     });
 
     Manager.setDefaultPostprocessorPosition('uses', 'last');
@@ -7874,6 +7940,13 @@ a particular error instance, if you want to provide a custom description that wi
     }
 });
 
+
+/*
+Ext JS - JavaScript Library
+Copyright (c) 2006-2011, Sencha Inc.
+All rights reserved.
+licensing@sencha.com
+*/
 /**
  * @class Ext.JSON
  * Modified version of Douglas Crockford"s json.js that doesn"t
@@ -8290,6 +8363,9 @@ window.undefined = window.undefined;
         isGecko = !isWebKit && check(/gecko/),
         isGecko3 = isGecko && check(/rv:1\.9/),
         isGecko4 = isGecko && check(/rv:2\.0/),
+        isFF3_0 = isGecko3 && check(/rv:1\.9\.0/),
+        isFF3_5 = isGecko3 && check(/rv:1\.9\.1/),
+        isFF3_6 = isGecko3 && check(/rv:1\.9\.2/),
         isWindows = check(/windows|win32/),
         isMac = check(/macintosh|mac os x/),
         isLinux = check(/linux/),
@@ -8300,7 +8376,7 @@ window.undefined = window.undefined;
         document.execCommand("BackgroundImageCache", false, true);
     } catch(e) {}
 
-    Ext.setVersion('extjs', '4.0.0rc');
+    Ext.setVersion('extjs', '4.0.0');
     Ext.apply(Ext, {
         /**
          * URL to a blank file used by Ext when in secure mode for iframe src and onReady src to prevent
@@ -8509,6 +8585,24 @@ function(el){
          * @type Boolean
          */
         isGecko4 : isGecko4,
+
+        /**
+         * True if the detected browser uses FireFox 3.0
+         * @type Boolean
+         */
+
+        isFF3_0 : isFF3_0,
+        /**
+         * True if the detected browser uses FireFox 3.5
+         * @type Boolean
+         */
+
+        isFF3_5 : isFF3_5,
+        /**
+         * True if the detected browser uses FireFox 3.6
+         * @type Boolean
+         */
+        isFF3_6 : isFF3_6,
 
         /**
          * True if the detected platform is Linux.
@@ -8803,7 +8897,7 @@ Ext.zip(
          * you may want to set this to true.
          * @type Boolean
          */
-        useShims: Ext.isIE6
+        useShims: isIE6
     });
 })();
 
@@ -8822,7 +8916,51 @@ Ext.application = function(config) {
 
 /**
  * @class Ext.util.Format
- * Reusable data formatting functions
+
+This class is a centralized place for formatting functions inside the library. It includes
+functions to format various different types of data, such as text, dates and numeric values.
+
+__Localization__
+This class contains several options for localization. These can be set once the library has loaded,
+all calls to the functions from that point will use the locale settings that were specified.
+Options include:
+- thousandSeparator
+- decimalSeparator
+- currenyPrecision
+- currencySign
+- currencyAtEnd
+This class also uses the default date format defined here: {@link Ext.date#defaultFormat}.
+
+__Using with renderers__
+There are two helper functions that return a new function that can be used in conjunction with 
+grid renderers:
+
+    columns: [{
+        dataIndex: 'date',
+        renderer: Ext.util.Format.dateRenderer('Y-m-d')
+    }, {
+        dataIndex: 'time',
+        renderer: Ext.util.Format.numberRenderer('0.000')
+    }]
+    
+Functions that only take a single argument can also be passed directly:
+    columns: [{
+        dataIndex: 'cost',
+        renderer: Ext.util.Format.usMoney
+    }, {
+        dataIndex: 'productCode',
+        renderer: Ext.util.Format.uppercase
+    }]
+    
+__Using with XTemplates__
+XTemplates can also directly use Ext.util.Format functions:
+
+    new Ext.XTemplate([
+        'Date: {startDate:date("Y-m-d")}',
+        'Cost: {cost:usMoney}'
+    ]);
+
+ * @markdown
  * @singleton
  */
 (function() {
@@ -8830,7 +8968,6 @@ Ext.application = function(config) {
 
     Ext.util.Format = {};
     var UtilFormat     = Ext.util.Format,
-        trimRe         = /^\s+|\s+$/g,
         stripTagsRE    = /<\/?[^>]+>/gi,
         stripScriptsRe = /(?:<script.*?>)((\n|\r|.)*?)(?:<\/script>)/ig,
         nl2brRe        = /\r?\n/g,
@@ -8904,15 +9041,6 @@ Ext.application = function(config) {
         },
 
         /**
-         * Trims any whitespace from either side of a string
-         * @param {String} value The text to trim
-         * @return {String} The trimmed text
-         */
-        trim : function(value) {
-            return String(value).replace(trimRe, "");
-        },
-
-        /**
          * Returns a substring from within an original string
          * @param {String} value The original text
          * @param {Number} start The start index of the substring
@@ -8939,17 +9067,6 @@ Ext.application = function(config) {
          */
         uppercase : function(value) {
             return String(value).toUpperCase();
-        },
-
-        // private
-        call : function(value, fn) {
-            if (arguments.length > 2) {
-                var args = Array.prototype.slice.call(arguments, 2);
-                args.unshift(value);
-                return eval(fn).apply(window, args);
-            } else {
-                return eval(fn).call(window, value);
-            }
         },
 
         /**
@@ -9227,9 +9344,43 @@ Ext.application = function(config) {
             return Ext.isEmpty(v) ? '' : v.replace(nl2brRe, '<br/>');
         },
 
+        /**
+         * Capitalize the given string. See {@link Ext.String#capitalize}.
+         */
+        capitalize: Ext.String.capitalize,
+
+        /**
+         * Truncate a string and add an ellipsis ('...') to the end if it exceeds the specified length.
+         * See {@link Ext.String#ellipsis}.
+         */
+        ellipsis: Ext.String.ellipsis,
+
+        /**
+         * Formats to a string. See {@link Ext.String#format}
+         */
+        format: Ext.String.format,
+
+        /**
+         * Convert certain characters (&, <, >, and ') from their HTML character equivalents.
+         * See {@link Ext.string#htmlDecode}.
+         */
+        htmlDecode: Ext.String.htmlDecode,
+
+        /**
+         * Convert certain characters (&, <, >, and ') to their HTML character equivalents for literal display in web pages.
+         * See {@link Ext.String#htmlEncode}.
+         */
+        htmlEncode: Ext.String.htmlEncode,
+
+        /**
+         * Adds left padding to a string. See {@link Ext.String#leftPad}
+         */
         leftPad: Ext.String.leftPad,
 
-        format: Ext.String.format,
+        /**
+         * Trims any whitespace from either side of a string. See {@link Ext.String#trim}.
+         */
+        trim : Ext.String.trim,
 
         /**
          * Parses a number or string representing margin sizes into an object. Supports CSS-style margin declarations
@@ -9269,7 +9420,7 @@ Ext.application = function(config) {
          * @return {String}
          */
         escapeRegex : function(s) {
-            return s.replace(/([-.*+?^${}()|[\]\/\\])/g, "\\$1");
+            return s.replace(/([\-.*+?\^${}()|\[\]\/\\])/g, "\\$1");
         }
     });
 })();
@@ -9734,7 +9885,7 @@ Ext.supports = {
          * @type {Boolean}
          */
         {
-            identity: 'SVG',
+            identity: 'Svg',
             fn: function(doc) {
                 return !!doc.createElementNS && !!doc.createElementNS( "http:/" + "/www.w3.org/2000/svg", "svg").createSVGRect;
             }
@@ -9756,7 +9907,7 @@ Ext.supports = {
          * @type {Boolean}
          */
         {
-            identity: 'VML',
+            identity: 'Vml',
             fn: function(doc) {
                 var d = doc.createElement("div");
                 d.innerHTML = "<!--[if vml]><br><br><![endif]-->";
@@ -9930,6 +10081,13 @@ Ext.supports = {
                 return el.getWidth() == 210;
             }
         },
+        {
+            identity: 'IncludePaddingInHeightCalculation',
+            fn: function(doc, div){
+                var el = Ext.get(div.childNodes[1].firstChild);
+                return el.getHeight() == 210;
+            }
+        },
         
         /**
          * @property ArraySort True if the Array sort native method isn't bugged.
@@ -9969,6 +10127,13 @@ Ext.supports = {
 };
 
 
+
+/*
+Ext JS - JavaScript Library
+Copyright (c) 2006-2011, Sencha Inc.
+All rights reserved.
+licensing@sencha.com
+*/
 /**
  * @class Ext.core.DomHelper
  * <p>The DomHelper class provides a layer of abstraction from DOM and transparently supports creating
@@ -11522,7 +11687,7 @@ if(opt.anim.isAnimated()){
     var DOC = document,
         EC = Ext.cache;
 
-    Ext.core.Element = function(element, forceNew) {
+    Ext.Element = Ext.core.Element = function(element, forceNew) {
         var dom = typeof element == "string" ? DOC.getElementById(element) : element,
         id;
 
@@ -12208,7 +12373,7 @@ el.un('click', this.handlerFn);
      * @method clearListeners
      */
     ep.clearListeners = ep.removeAllListeners;
-    
+
     /**
      * Removes this element's dom reference.  Note that event and cache removal is handled at {@link Ext#removeNode Ext.removeNode}.
      * Alias to {@link #remove}.
@@ -12464,6 +12629,7 @@ el.un('click', this.handlerFn);
         noBoxAdjust['button'] = 1;
     }
 })();
+
 /**
  * @class Ext.core.Element
  */
@@ -13310,7 +13476,7 @@ Ext.core.Element.addMethods({
                     width = dom.offsetWidth;
                     dom.parentNode.style.position = parentPosition;
                 }
-                width = Math.max(width || 0, dom.offsetWidth)
+                width = Math.max(width || 0, dom.offsetWidth);
             
             // Gecko will in some cases report an offsetWidth that is actually less than the width of the
             // text contents, because it measures fonts with sub-pixel precision but rounds the calculated
@@ -13836,10 +14002,14 @@ Ext.fly('elId').setHeight(150, {
          * @return {Ext.core.Element} this
          */
         unselectable : function(){
-            this.dom.unselectable = "on";
-            return this.swallowEvent("selectstart", true).
-                        applyStyles("-moz-user-select:none;-khtml-user-select:none;").
-                        addCls(Ext.baseCSSPrefix + 'unselectable');
+            var me = this;
+            me.dom.unselectable = "on";
+
+            me.swallowEvent("selectstart", true);
+            me.applyStyles("-moz-user-select:none;-khtml-user-select:none;");
+            me.addCls(Ext.baseCSSPrefix + 'unselectable');
+            
+            return me;
         },
 
         /**
@@ -14014,11 +14184,14 @@ Ext.core.Element.addMethods(function(){
                 } else if (visMode == El.OFFSETS){
 
                     if (!visible){
-                        me.hideModeStyles = {
-                            position: me.getStyle('position'),
-                            top: me.getStyle('top'),
-                            left: me.getStyle('left')
-                        };
+                        // Remember position for restoring, if we are not already hidden by offsets.
+                        if (!me.hideModeStyles) {
+                            me.hideModeStyles = {
+                                position: me.getStyle('position'),
+                                top: me.getStyle('top'),
+                                left: me.getStyle('left')
+                            };
+                        }
                         me.applyStyles({position: 'absolute', top: '-10000px', left: '-10000px'});
                     }
 
@@ -14257,6 +14430,13 @@ el.slideIn('t', {
             }
 
             box = me.getBox();
+            if ((anchor == 't' || anchor == 'b') && box.height == 0) {
+                box.height = me.dom.scrollHeight;
+            }
+            else if ((anchor == 'l' || anchor == 'r') && box.width == 0) {
+                box.width = me.dom.scrollWidth;
+            }
+            
             position = me.getPositioning();
             me.setSize(box.width, box.height);
 
@@ -14448,7 +14628,7 @@ el.slideIn('t', {
                 },
                 afteranimate: {
                     fn: function() {
-                        if (wrapAnim.running) {
+                        if (wrapAnim && wrapAnim.running) {
                             wrapAnim.end();
                         }
                     }
@@ -15556,42 +15736,40 @@ Ext.select = Ext.core.Element.select;
 
 /**
  * @class Ext.util.DelayedTask
-
-The DelayedTask class provides a convenient way to "buffer" the execution of a method,
-performing setTimeout where a new timeout cancels the old timeout. When called, the
-task will wait the specified time period before executing. If durng that time period,
-the task is called again, the original call will be cancelled. This continues so that
-the function is only called a single time for each iteration.
-
-This method is especially useful for things like detecting whether a user has finished
-typing in a text field. An example would be performing validation on a keypress. You can
-use this class to buffer the keypress events for a certain number of milliseconds, and
-perform only if they stop for that amount of time.  
-
-**Usage:**
-
-    var task = new Ext.util.DelayedTask(function(){
-        alert(Ext.getDom('myInputField').value.length);
-    });
-    
-    // Wait 500ms before calling our function. If the user presses another key
-    // during that 500ms, it will be cancelled and we'll wait another 500ms.
-    Ext.get('myInputField').on('keypress', function(){
-        task.{@link #delay}(500);
-    });
-
-Note that we are using a DelayedTask here to illustrate a point. The configuration
-option `buffer` for {@link Ext.util.Observable#addListener addListener/on} will
-also setup a delayed task for you to buffer events.
-
+ * 
+ * The DelayedTask class provides a convenient way to "buffer" the execution of a method,
+ * performing setTimeout where a new timeout cancels the old timeout. When called, the
+ * task will wait the specified time period before executing. If durng that time period,
+ * the task is called again, the original call will be cancelled. This continues so that
+ * the function is only called a single time for each iteration.
+ * 
+ * This method is especially useful for things like detecting whether a user has finished
+ * typing in a text field. An example would be performing validation on a keypress. You can
+ * use this class to buffer the keypress events for a certain number of milliseconds, and
+ * perform only if they stop for that amount of time.  
+ * 
+ * ## Usage
+ * 
+ *     var task = new Ext.util.DelayedTask(function(){
+ *         alert(Ext.getDom('myInputField').value.length);
+ *     });
+ *     
+ *     // Wait 500ms before calling our function. If the user presses another key
+ *     // during that 500ms, it will be cancelled and we'll wait another 500ms.
+ *     Ext.get('myInputField').on('keypress', function(){
+ *         task.{@link #delay}(500);
+ *     });
+ * 
+ * Note that we are using a DelayedTask here to illustrate a point. The configuration
+ * option `buffer` for {@link Ext.util.Observable#addListener addListener/on} will
+ * also setup a delayed task for you to buffer events.
+ * 
  * @constructor The parameters to this constructor serve as defaults and are not required.
  * @param {Function} fn (optional) The default function to call.
  * @param {Object} scope The default scope (The <code><b>this</b></code> reference) in which the
  * function is called. If not specified, <code>this</code> will refer to the browser window.
  * @param {Array} args (optional) The default Array of arguments.
- * @markdown
  */
-
 Ext.util.DelayedTask = function(fn, scope, args) {
     var me = this,
         id,
@@ -15897,15 +16075,11 @@ Ext.EventManager = {
             // fallback, load will ~always~ fire
             window.addEventListener('load', me.fireDocReady, false);
         } else {
-            // Important: commented out since this hack causes issues with our new framing
-            // There's no need to apply hacks anyway, the native window onload event on IEs works
-            // just fine for us since we don't care about initial DOM
-
             // check if the document is ready, this will also kick off the scroll checking timer
-            //if (!me.checkReadyState()) {
-            //    document.attachEvent('onreadystatechange', me.checkReadyState);
-            //    me.hasOnReadyStateChange = true;
-            //}
+            if (!me.checkReadyState()) {
+                document.attachEvent('onreadystatechange', me.checkReadyState);
+                me.hasOnReadyStateChange = true;
+            }
             // fallback, onload will ~always~ fire
             window.attachEvent('onload', me.fireDocReady, false);
         }
@@ -15991,21 +16165,25 @@ Ext.EventManager = {
      * @return {String} id
      */
     getId : function(element) {
-        var skip = false,
+        var skipGarbageCollection = false,
             id;
-
+    
         element = Ext.getDom(element);
-
+    
         if (element === document || element === window) {
             id = element === document ? Ext.documentId : Ext.windowId;
-            skip = true;
-        } else {
+        }
+        else {
             id = Ext.id(element);
         }
-
+        // skip garbage collection for special elements (window, document, iframes)
+        if (element && (element.getElementById || element.navigator)) {
+            skipGarbageCollection = true;
+        }
+    
         if (!Ext.cache[id]){
             Ext.core.Element.addToCache(new Ext.core.Element(element), id);
-            if (skip) {
+            if (skipGarbageCollection) {
                 Ext.cache[id].skipGarbageCollection = true;
             }
         }
@@ -16039,7 +16217,7 @@ Ext.EventManager = {
                         // if its not a function, it must be an object like click: {fn: function(){}, scope: this}
                         args = [element, key, value.fn, value.scope, value];
                     }
-                    
+
                     if (isRemove === true) {
                         me.removeListener.apply(this, args);
                     } else {
@@ -17287,8 +17465,255 @@ Ext.getBody().on('click', function(e,t){
     * @return {Boolean}
     */
     hasModifier : function(){
-        return ((this.ctrlKey || this.altKey) || this.shiftKey);
-    }
+        return this.ctrlKey || this.altKey || this.shiftKey || this.metaKey;
+    },
+
+    /**
+     * Injects a DOM event using the data in this object and (optionally) a new target.
+     * This is a low-level technique and not likely to be used by application code. The
+     * currently supported event types are:
+     * <p><b>HTMLEvents</b></p>
+     * <ul>
+     * <li>load</li>
+     * <li>unload</li>
+     * <li>select</li>
+     * <li>change</li>
+     * <li>submit</li>
+     * <li>reset</li>
+     * <li>resize</li>
+     * <li>scroll</li>
+     * </ul>
+     * <p><b>MouseEvents</b></p>
+     * <ul>
+     * <li>click</li>
+     * <li>dblclick</li>
+     * <li>mousedown</li>
+     * <li>mouseup</li>
+     * <li>mouseover</li>
+     * <li>mousemove</li>
+     * <li>mouseout</li>
+     * </ul>
+     * <p><b>UIEvents</b></p>
+     * <ul>
+     * <li>focusin</li>
+     * <li>focusout</li>
+     * <li>activate</li>
+     * <li>focus</li>
+     * <li>blur</li>
+     * </ul>
+     * @param {Element/HTMLElement} target If specified, the target for the event. This
+     * is likely to be used when relaying a DOM event. If not specified, {@link #getTarget}
+     * is used to determine the target.
+     */
+    injectEvent: function () {
+        var API,
+            dispatchers = {}; // keyed by event type (e.g., 'mousedown')
+
+        // Good reference: http://developer.yahoo.com/yui/docs/UserAction.js.html
+
+        // IE9 has createEvent, but this code causes major problems with htmleditor (it
+        // blocks all mouse events and maybe more). TODO
+
+        if (!Ext.isIE && document.createEvent) { // if (DOM compliant)
+            API = {
+                createHtmlEvent: function (doc, type, bubbles, cancelable) {
+                    var event = doc.createEvent('HTMLEvents');
+
+                    event.initEvent(type, bubbles, cancelable);
+                    return event;
+                },
+
+                createMouseEvent: function (doc, type, bubbles, cancelable, detail,
+                                            clientX, clientY, ctrlKey, altKey, shiftKey, metaKey,
+                                            button, relatedTarget) {
+                    var event = doc.createEvent('MouseEvents'),
+                        view = doc.defaultView || window;
+
+                    if (event.initMouseEvent) {
+                        event.initMouseEvent(type, bubbles, cancelable, view, detail,
+                                    clientX, clientY, clientX, clientY, ctrlKey, altKey,
+                                    shiftKey, metaKey, button, relatedTarget);
+                    } else { // old Safari
+                        event = doc.createEvent('UIEvents');
+                        event.initEvent(type, bubbles, cancelable);
+                        event.view = view;
+                        event.detail = detail;
+                        event.screenX = clientX;
+                        event.screenY = clientY;
+                        event.clientX = clientX;
+                        event.clientY = clientY;
+                        event.ctrlKey = ctrlKey;
+                        event.altKey = altKey;
+                        event.metaKey = metaKey;
+                        event.shiftKey = shiftKey;
+                        event.button = button;
+                        event.relatedTarget = relatedTarget;
+                    }
+
+                    return event;
+                },
+
+                createUIEvent: function (doc, type, bubbles, cancelable, detail) {
+                    var event = doc.createEvent('UIEvents'),
+                        view = doc.defaultView || window;
+
+                    event.initUIEvent(type, bubbles, cancelable, view, detail);
+                    return event;
+                },
+
+                fireEvent: function (target, type, event) {
+                    target.dispatchEvent(event);
+                },
+
+                fixTarget: function (target) {
+                    // Safari3 doesn't have window.dispatchEvent()
+                    if (target == window && !target.dispatchEvent) {
+                        return document;
+                    }
+
+                    return target;
+                }
+            }
+        } else if (document.createEventObject) { // else if (IE)
+            var crazyIEButtons = { 0: 1, 1: 4, 2: 2 };
+
+            API = {
+                createHtmlEvent: function (doc, type, bubbles, cancelable) {
+                    var event = doc.createEventObject();
+                    event.bubbles = bubbles;
+                    event.cancelable = cancelable;
+                    return event;
+                },
+
+                createMouseEvent: function (doc, type, bubbles, cancelable, detail,
+                                            clientX, clientY, ctrlKey, altKey, shiftKey, metaKey,
+                                            button, relatedTarget) {
+                    var event = doc.createEventObject();
+                    event.bubbles = bubbles;
+                    event.cancelable = cancelable;
+                    event.detail = detail;
+                    event.screenX = clientX;
+                    event.screenY = clientY;
+                    event.clientX = clientX;
+                    event.clientY = clientY;
+                    event.ctrlKey = ctrlKey;
+                    event.altKey = altKey;
+                    event.shiftKey = shiftKey;
+                    event.metaKey = metaKey;
+                    event.button = crazyIEButtons[button] || button;
+                    event.relatedTarget = relatedTarget; // cannot assign to/fromElement
+                    return event;
+                },
+
+                createUIEvent: function (doc, type, bubbles, cancelable, detail) {
+                    var event = doc.createEventObject();
+                    event.bubbles = bubbles;
+                    event.cancelable = cancelable;
+                    return event;
+                },
+
+                fireEvent: function (target, type, event) {
+                    target.fireEvent('on' + type, event);
+                },
+
+                fixTarget: function (target) {
+                    if (target == document) {
+                        // IE6,IE7 thinks window==document and doesn't have window.fireEvent()
+                        // IE6,IE7 cannot properly call document.fireEvent()
+                        return document.documentElement;
+                    }
+
+                    return target;
+                }
+            };
+        }
+
+        //----------------
+        // HTMLEvents
+
+        Ext.Object.each({
+                load:   [false, false],
+                unload: [false, false],
+                select: [true, false],
+                change: [true, false],
+                submit: [true, true],
+                reset:  [true, false],
+                resize: [true, false],
+                scroll: [true, false]
+            },
+            function (name, value) {
+                var bubbles = value[0], cancelable = value[1];
+                dispatchers[name] = function (targetEl, srcEvent) {
+                    var e = API.createHtmlEvent(name, bubbles, cancelable);
+                    API.fireEvent(targetEl, name, e);
+                };
+            });
+
+        //----------------
+        // MouseEvents
+
+        function createMouseEventDispatcher (type, detail) {
+            var cancelable = (type != 'mousemove');
+            return function (targetEl, srcEvent) {
+                var xy = srcEvent.getXY(),
+                    e = API.createMouseEvent(targetEl.ownerDocument, type, true, cancelable,
+                                detail, xy[0], xy[1], srcEvent.ctrlKey, srcEvent.altKey,
+                                srcEvent.shiftKey, srcEvent.metaKey, srcEvent.button,
+                                srcEvent.relatedTarget);
+                API.fireEvent(targetEl, type, e);
+            };
+        }
+
+        Ext.each(['click', 'dblclick', 'mousedown', 'mouseup', 'mouseover', 'mousemove', 'mouseout'],
+            function (eventName) {
+                dispatchers[eventName] = createMouseEventDispatcher(eventName, 1);
+            });
+
+        //----------------
+        // UIEvents
+
+        Ext.Object.each({
+                focusin:  [true, false],
+                focusout: [true, false],
+                activate: [true, true],
+                focus:    [false, false],
+                blur:     [false, false]
+            },
+            function (name, value) {
+                var bubbles = value[0], cancelable = value[1];
+                dispatchers[name] = function (targetEl, srcEvent) {
+                    var e = API.createUIEvent(targetEl.ownerDocument, name, bubbles, cancelable, 1);
+                    API.fireEvent(targetEl, name, e);
+                };
+            });
+
+        //---------
+        if (!API) {
+            // not even sure what ancient browsers fall into this category...
+
+            dispatchers = {}; // never mind all those we just built :P
+
+            API = {
+                fixTarget: function (t) {
+                    return t;
+                }
+            };
+        }
+
+        function cannotInject (target, srcEvent) {
+            // TODO log something
+        }
+
+        return function (target) {
+            var me = this,
+                dispatcher = dispatchers[me.type] || cannotInject,
+                t = target ? (target.dom || target) : me.getTarget();
+
+            t = API.fixTarget(t);
+            dispatcher(t, me);
+        };
+    }() // call to produce method
+
 }, function() {
 
 Ext.EventObject = new Ext.EventObjectImpl();
@@ -18580,12 +19005,23 @@ Ext.override(Ext.core.Element, {
     getViewRegion: function() {
         var me = this,
             isBody = me.dom === document.body,
-            scroll = me.getScroll(),
-            pos = isBody ? [0, 0] : me.getXY(),
-            top = pos[1] + scroll.top + (isBody ?  0 : me.getBorderWidth('t') + me.getPadding('t')),
-            left = pos[0] + scroll.left + (isBody ? 0 : me.getBorderWidth('l') + me.getPadding('l')),
-            width = isBody ? Ext.core.Element.getViewportWidth() : me.getWidth(true),
-            height = isBody ? Ext.core.Element.getViewportHeight() : me.getHeight(true);
+            scroll, pos, top, left, width, height;
+            
+        // For the body we want to do some special logic
+        if (isBody) {
+            scroll = me.getScroll();
+            left = scroll.left;
+            top = scroll.top;
+            width = Ext.core.Element.getViewportWidth();
+            height = Ext.core.Element.getViewportHeight();
+        }
+        else {
+            pos = me.getXY();
+            left = pos[0] + me.getBorderWidth('l') + me.getPadding('l');
+            top = pos[1] + me.getBorderWidth('t') + me.getPadding('t');
+            width = me.getWidth(true);
+            height = me.getHeight(true);
+        }
 
         return Ext.create('Ext.util.Region', top, left + width, top + height, left);
     },
@@ -18866,11 +19302,11 @@ Ext.core.Element.addMethods(
             isVisible : function(deep) {
                 var vis = !this.isStyle(VISIBILITY, HIDDEN) && !this.isStyle(DISPLAY, NONE),
                     p   = this.dom.parentNode;
-                
+
                 if (deep !== true || !vis) {
                     return vis;
                 }
-                
+
                 while (p && !(/^body/i.test(p.tagName))) {
                     if (!Ext.fly(p, '_isVisible').isVisible()) {
                         return false;
@@ -18895,11 +19331,11 @@ Ext.core.Element.addMethods(
              */
             enableDisplayMode : function(display) {
                 this.setVisibilityMode(Ext.core.Element.DISPLAY);
-                
+
                 if (!Ext.isEmpty(display)) {
                     data(this.dom, 'originalDisplay', display);
                 }
-                
+
                 return this;
             },
 
@@ -18913,6 +19349,7 @@ Ext.core.Element.addMethods(
             mask : function(msg, msgCls) {
                 var me  = this,
                     dom = me.dom,
+                    setExpression = dom.style.setExpression,
                     dh  = Ext.core.DomHelper,
                     EXTELMASKMSG = Ext.baseCSSPrefix + "mask-msg",
                     el,
@@ -18921,10 +19358,12 @@ Ext.core.Element.addMethods(
                 if (!(/^body/i.test(dom.tagName) && me.getStyle('position') == 'static')) {
                     me.addCls(XMASKEDRELATIVE);
                 }
-                if (el = data(dom, 'maskMsg')) {
+                el = data(dom, 'maskMsg');
+                if (el) {
                     el.remove();
                 }
-                if (el = data(dom, 'mask')) {
+                el = data(dom, 'mask');
+                if (el) {
                     el.remove();
                 }
 
@@ -18933,7 +19372,7 @@ Ext.core.Element.addMethods(
 
                 me.addCls(XMASKED);
                 mask.setDisplayed(true);
-                
+
                 if (typeof msg == 'string') {
                     var mm = dh.append(dom, {cls : EXTELMASKMSG, cn:{tag:'div'}}, true);
                     data(dom, 'maskMsg', mm);
@@ -18942,16 +19381,24 @@ Ext.core.Element.addMethods(
                     mm.setDisplayed(true);
                     mm.center(me);
                 }
-                
-                if (!Ext.supports.IncludePaddingInWidthCalculation) {
-                    mask.setSize(me.getWidth(), me.getHeight());
+                // NOTE: CSS expressions are resource intensive and to be used only as a last resort
+                // These expressions are removed as soon as they are no longer necessary - in the unmask method.
+                // In normal use cases an element will be masked for a limited period of time.
+                // Fix for https://sencha.jira.com/browse/EXTJSIV-19.
+                // IE6 strict mode and IE6-9 quirks mode takes off left+right padding when calculating width!
+                if (!Ext.supports.IncludePaddingInWidthCalculation && setExpression) {
+                    mask.dom.style.setExpression('width', 'this.parentNode.offsetWidth + "px"');
                 }
-                
+
+                // Some versions and modes of IE subtract top+bottom padding when calculating height.
+                // Different versions from those which make the same error for width!
+                if (!Ext.supports.IncludePaddingInHeightCalculation && setExpression) {
+                    mask.dom.style.setExpression('height', 'this.parentNode.offsetHeight + "px"');
+                }
                 // ie will not expand full height automatically
-                if (Ext.isIE && !(Ext.isIE7 && Ext.isStrict) && me.getStyle('height') == 'auto') {
+                else if (Ext.isIE && !(Ext.isIE7 && Ext.isStrict) && me.getStyle('height') == 'auto') {
                     mask.setSize(undefined, me.getHeight());
                 }
-                
                 return mask;
             },
 
@@ -18965,11 +19412,16 @@ Ext.core.Element.addMethods(
                     maskMsg = data(dom, 'maskMsg');
 
                 if (mask) {
+                    // Remove resource-intensive CSS expressions as soon as they are not required.
+                    if (mask.dom.style.clearExpression) {
+                        mask.dom.style.clearExpression('width');
+                        mask.dom.style.clearExpression('height');
+                    }
                     if (maskMsg) {
                         maskMsg.remove();
                         data(dom, 'maskMsg', undefined);
                     }
-                    
+
                     mask.remove();
                     data(dom, 'mask', undefined);
                     me.removeCls([XMASKED, XMASKEDRELATIVE]);
@@ -19001,9 +19453,9 @@ Ext.core.Element.addMethods(
             createShim : function() {
                 var el = document.createElement('iframe'),
                     shim;
-                
+
                 el.frameBorder = '0';
-                el.className = 'ext-shim';
+                el.className = Ext.baseCSSPrefix + 'shim';
                 el.src = Ext.SSL_SECURE_URL;
                 shim = Ext.get(this.dom.parentNode.insertBefore(el, this.dom));
                 shim.autoBoxAdjust = false;
@@ -19247,5 +19699,6 @@ Ext.core.Element.select = function(selector, unique, root){
  * @method select
  */
 Ext.select = Ext.core.Element.select;
+
 
 

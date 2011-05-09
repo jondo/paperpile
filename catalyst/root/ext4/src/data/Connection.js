@@ -771,7 +771,7 @@ failure: function(response, opts) {
             headers = {},
             lines = xhr.getAllResponseHeaders().replace(/\r\n/g, '\n').split('\n'),
             count = lines.length,
-            line, index, key, value;
+            line, index, key, value, response;
 
         while (count--) {
             line = lines[count];
@@ -788,7 +788,7 @@ failure: function(response, opts) {
         request.xhr = null;
         delete request.xhr;
 
-        return {
+        response = {
             request: request,
             requestId : request.id,
             status : xhr.status,
@@ -798,6 +798,11 @@ failure: function(response, opts) {
             responseText : xhr.responseText,
             responseXML : xhr.responseXML
         };
+
+        // If we don't explicitly tear down the xhr reference, IE6/IE7 will hold this in the closure of the
+        // functions created with getResponseHeader/getAllResponseHeaders
+        xhr = null;
+        return response;
     },
 
     /**

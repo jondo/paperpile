@@ -60,7 +60,9 @@ Ext.define('Ext.grid.feature.AbstractSummary', {
         inner = inner.replace(this.nestedIdRe, '{id$1}');  
         inner = inner.replace('{[this.embedRowCls()]}', '{rowCls}');
         inner = inner.replace('{[this.embedRowAttr()]}', '{rowAttr}');
-        inner = Ext.create('Ext.XTemplate', inner);
+        inner = Ext.create('Ext.XTemplate', inner, {
+            firstOrLastCls: Ext.view.TableChunker.firstOrLastCls
+        });
         
         return inner.applyTemplate({
             columns: this.getPrintData(index)

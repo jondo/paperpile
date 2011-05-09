@@ -108,6 +108,3 @@ $include-default-uis: true !default;
     @include extjs-html;
 }
 
-@if $include-default-uis {
-    @include extjs-toolbar-ui('default', $background-color: $toolbar-background-color, $background-gradient: $toolbar-background-gradient, $border-color: $tabbar-border-color);
-}

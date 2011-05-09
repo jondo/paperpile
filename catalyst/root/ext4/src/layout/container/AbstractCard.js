@@ -148,46 +148,48 @@ Ext.define('Ext.layout.container.AbstractCard', {
     },
 
     /**
-     * Return the active (visible) component in the layout to the next card, optional wrap parameter to wrap to the first
-     * card when the end of the stack is reached.
-     * @param {boolean} wrap Wrap to the first card when the end of the stack is reached.
+     * Return the active (visible) component in the layout to the next card
      * @returns {Ext.Component}
      */
     getNext: function(wrap) {
+        //NOTE: Removed the JSDoc for this function's arguments because it is not actually supported in 4.0. This 
+        //should come back in 4.1
+        
         var items = this.getLayoutItems(),
             index = Ext.Array.indexOf(items, this.activeItem);
         return items[index + 1] || (wrap ? items[0] : false);
     },
 
     /**
-     * Sets the active (visible) component in the layout to the next card, optional wrap parameter to wrap to the first
-     * card when the end of the stack is reached.
-     * @param {Mixed} anim Animation to use for the card transition
-     * @param {boolean} wrap Wrap to the first card when the end of the stack is reached.
+     * Sets the active (visible) component in the layout to the next card
      */
     next: function(anim, wrap) {
+        //NOTE: Removed the JSDoc for this function's arguments because it is not actually supported in 4.0. This 
+        //should come back in 4.1
+        
         return this.setActiveItem(this.getNext(wrap), anim);
     },
 
     /**
-     * Return the active (visible) component in the layout to the previous card, optional wrap parameter to wrap to
-     * the last card when the beginning of the stack is reached.
-     * @param {boolean} wrap Wrap to the first card when the end of the stack is reached.
+     * Return the active (visible) component in the layout to the previous card
      * @returns {Ext.Component}
      */
     getPrev: function(wrap) {
+        //NOTE: Removed the JSDoc for this function's arguments because it is not actually supported in 4.0. This 
+        //should come back in 4.1
+        
         var items = this.getLayoutItems(),
             index = Ext.Array.indexOf(items, this.activeItem);
         return items[index - 1] || (wrap ? items[items.length - 1] : false);
     },
 
     /**
-     * Sets the active (visible) component in the layout to the previous card, optional wrap parameter to wrap to
-     * the last card when the beginning of the stack is reached.
-     * @param {Mixed} anim Animation to use for the card transition
-     * @param {boolean} wrap Wrap to the first card when the end of the stack is reached.
+     * Sets the active (visible) component in the layout to the previous card
      */
     prev: function(anim, wrap) {
+        //NOTE: Removed the JSDoc for this function's arguments because it is not actually supported in 4.0. This 
+        //should come back in 4.1
+        
         return this.setActiveItem(this.getPrev(wrap), anim);
     }
 });

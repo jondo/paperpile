@@ -12,9 +12,9 @@
  * searches locally so they can easily perform a saved search again later. We'd start by creating a Search model:</p>
  * 
 <pre><code>
-Ext.regModel('Search', {
+Ext.define('Search', {
     fields: ['id', 'query'],
-
+    extend: 'Ext.data.Model',
     proxy: {
         type: 'localstorage',
         id  : 'twitter-Searches'

@@ -24,5 +24,22 @@ Ext.define('Ext.grid.plugin.HeaderReorderer', {
     onHeaderCtRender: function() {
         this.dragZone = Ext.create('Ext.grid.header.DragZone', this.headerCt);
         this.dropZone = Ext.create('Ext.grid.header.DropZone', this.headerCt);
+        if (this.disabled) {
+            this.dragZone.disable();
+        }
+    },
+    
+    enable: function() {
+        this.disabled = false;
+        if (this.dragZone) {
+            this.dragZone.enable();
+        }
+    },
+    
+    disable: function() {
+        this.disabled = true;
+        if (this.dragZone) {
+            this.dragZone.disable();
+        }
     }
 });

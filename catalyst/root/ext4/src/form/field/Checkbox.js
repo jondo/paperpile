@@ -287,6 +287,10 @@ Ext.define('Ext.form.field.Checkbox', {
         return this.checked ? this.inputValue : (this.uncheckedValue || null);
     },
 
+    getModelData: function() {
+        return this.getSubmitData();
+    },
+
     /**
      * Sets the checked state of the checkbox.
      * @param {Boolean/String} value The following values will check the checkbox:
@@ -378,6 +382,22 @@ Ext.define('Ext.form.field.Checkbox', {
             inputEl.dom.disabled = readOnly || me.disabled;
         }
         me.readOnly = readOnly;
+    },
+
+    /**
+     * @protected Calculate and return the natural width of the bodyEl. It's possible that the initial
+     * rendering will cause the boxLabel to wrap and give us a bad width, so we must prevent wrapping
+     * while measuring.
+     */
+    getBodyNaturalWidth: function() {
+        var me = this,
+            bodyEl = me.bodyEl,
+            ws = 'white-space',
+            width;
+        bodyEl.setStyle(ws, 'nowrap');
+        width = bodyEl.getWidth();
+        bodyEl.setStyle(ws, '');
+        return width;
     }
 
 });

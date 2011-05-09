@@ -4,6 +4,30 @@
  * Series is the abstract class containing the common logic to all chart series. Series includes 
  * methods from Labels, Highlights, Tips and Callouts mixins. This class implements the logic of handling 
  * mouse events, animating, hiding, showing all elements and returning the color of the series to be used as a legend item.
+ *
+ * ## Listeners
+ *
+ * The series class supports listeners via the Observable syntax. Some of these listeners are:
+ *
+ *  - `itemmouseup` When the user interacts with a marker.
+ *  - `itemmousedown` When the user interacts with a marker.
+ *  - `itemmousemove` When the user iteracts with a marker.
+ *  - `afterrender` Will be triggered when the animation ends or when the series has been rendered completely.
+ *
+ * For example:
+ *
+ *     series: [{
+ *             type: 'column',
+ *             axis: 'left',
+ *             listeners: {
+ *                     'afterrender': function() {
+ *                             console('afterrender');
+ *                     }
+ *             },
+ *             xField: 'category',
+ *             yField: 'data1'
+ *     }]
+ *     
  */
 Ext.define('Ext.chart.series.Series', {
 
@@ -18,6 +42,29 @@ Ext.define('Ext.chart.series.Series', {
     },
 
     /* End Definitions */
+
+    /**
+     * @cfg {Boolean|Object} highlight
+     * If set to `true` it will highlight the markers or the series when hovering
+     * with the mouse. This parameter can also be an object with the same style
+     * properties you would apply to a {@link Ext.draw.Sprite} to apply custom
+     * styles to markers and series.
+     */
+
+    /**
+     * @cfg {Object} tips
+     * Add tooltips to the visualization's markers. The options for the tips are the
+     * same configuration used with {@link Ext.tip.ToolTip}. For example:
+     *
+     *     tips: {
+     *       trackMouse: true,
+     *       width: 140,
+     *       height: 28,
+     *       renderer: function(storeItem, item) {
+     *         this.setTitle(storeItem.get('name') + ': ' + storeItem.get('data1') + ' views');
+     *       }
+     *     },
+     */
 
     /**
      * @cfg {String} type
@@ -51,6 +98,9 @@ Ext.define('Ext.chart.series.Series', {
      * An array with shadow attributes
      */
     shadowAttributes: null,
+    
+    //@private triggerdrawlistener flag
+    triggerAfterDraw: false,
 
     /**
      * @cfg {Object} listeners  
@@ -84,6 +134,7 @@ Ext.define('Ext.chart.series.Series', {
             itemmousedown: true,
             itemmouseup: true,
             mouseleave: true,
+            afterdraw: true,
 
             /**
              * @event titlechange
@@ -132,10 +183,23 @@ Ext.define('Ext.chart.series.Series', {
 
     // @private set the animation for the sprite
     onAnimate: function(sprite, attr) {
+        var me = this;
         sprite.stopAnimation();
-        return sprite.animate(Ext.applyIf(attr, this.chart.animate));
+        if (me.triggerAfterDraw) {
+            return sprite.animate(Ext.applyIf(attr, me.chart.animate));
+        } else {
+            me.triggerAfterDraw = true;
+            return sprite.animate(Ext.apply(Ext.applyIf(attr, me.chart.animate), {
+                listeners: {
+                    'afteranimate': function() {
+                        me.triggerAfterDraw = false;
+                        me.fireEvent('afterrender');
+                    }    
+                }    
+            }));
+        }
     },
-
+    
     // @private return the gutter.
     getGutters: function() {
         return [0, 0];

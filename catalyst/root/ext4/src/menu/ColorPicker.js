@@ -10,33 +10,55 @@
  * Applying {@link Ext.picker.Color ColorPicker} configuration settings to
  * <b><tt>this</tt></b> will <b>not</b> affect the ColorPicker's configuration.</li>
  * </ul></div>
+ * {@img Ext.menu.ColorPicker/Ext.menu.ColorPicker.png Ext.menu.ColorPicker component}
+ * __Example Usage__
+     var colorPicker = Ext.create('Ext.menu.ColorPicker', {
+        value: '000000'
+    });
+
+    Ext.create('Ext.menu.Menu', {
+		width: 100,
+		height: 90,
+		floating: false,  // usually you want this set to True (default)
+		renderTo: Ext.getBody(),  // usually rendered by it's containing component
+		items: [{
+		    text: 'choose a color',
+		    menu: colorPicker
+		},{
+            iconCls: 'add16',
+		    text: 'icon item'
+		},{
+		    text: 'regular item'
+		}]
+	});
+
  * @xtype colormenu
  * @author Nicolas Ferrero
  */
  Ext.define('Ext.menu.ColorPicker', {
      extend: 'Ext.menu.Menu',
-     
+
      alias: 'widget.colormenu',
-     
+
      requires: [
         'Ext.picker.Color'
      ],
-      
-    /** 
+
+    /**
      * @cfg {Boolean} hideOnClick
      * False to continue showing the menu after a date is selected, defaults to true.
      */
     hideOnClick : true,
-    
-    /** 
+
+    /**
      * @cfg {String} pickerId
      * An id to assign to the underlying color picker. Defaults to <tt>null</tt>.
      */
     pickerId : null,
 
-    /** 
+    /**
      * @cfg {Number} maxHeight
-     * @hide 
+     * @hide
      */
 
     /**
@@ -44,12 +66,12 @@
      * @property picker
      * @type ColorPicker
      */
-    
+
     /**
      * @event click
      * @hide
      */
-    
+
     /**
      * @event itemclick
      * @hide
@@ -57,7 +79,7 @@
 
     initComponent : function(){
         var me = this;
-        
+
         Ext.apply(me, {
             plain: true,
             showSeparator: false,
@@ -69,9 +91,9 @@
         });
 
         me.callParent(arguments);
-        
+
         me.picker = me.down('colorpicker');
-        
+
         /**
          * @event select
          * Fires when a date is selected from the {@link #picker Ext.picker.Color}
@@ -79,19 +101,17 @@
          * @param {String} color The 6-digit color hex code (without the # symbol)
          */
         me.relayEvents(me.picker, ['select']);
-        
+
         if (me.hideOnClick) {
             me.on('select', me.hidePickerOnSelect, me);
         }
     },
-    
+
     /**
      * Hides picker on select if hideOnClick is true
      * @private
      */
     hidePickerOnSelect: function() {
-        if (this.hideOnClick) {
-            this.hide();
-        }
+        Ext.menu.Manager.hideAll();
     }
  });

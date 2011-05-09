@@ -41,7 +41,8 @@ someCallback({
  * Here's how we might set that up:</p>
  *
 <pre><code>
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: ['id', 'name', 'email']
 });
 

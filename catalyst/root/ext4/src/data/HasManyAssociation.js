@@ -6,7 +6,8 @@
  * <p>Represents a one-to-many relationship between two models. Usually created indirectly via a model definition:</p>
  * 
 <pre><code>
-Ext.regModel('Product', {
+Ext.define('Product', {
+    extend: 'Ext.data.Model',
     fields: [
         {name: 'id',      type: 'int'},
         {name: 'user_id', type: 'int'},
@@ -14,12 +15,13 @@ Ext.regModel('Product', {
     ]
 });
 
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: [
         {name: 'id',   type: 'int'},
         {name: 'name', type: 'string'}
     ],
-    
+    // we can use the hasMany shortcut on the model to create a hasMany association
     hasMany: {model: 'Product', name: 'products'}
 });
 </pre></code>
@@ -61,7 +63,8 @@ products.sync();
  * have models for Search and Tweet:</p>
  * 
 <pre><code>
-var Search = Ext.regModel('Search', {
+Ext.define('Search', {
+    extend: 'Ext.data.Model',
     fields: [
         'id', 'query'
     ],
@@ -73,7 +76,8 @@ var Search = Ext.regModel('Search', {
     }
 });
 
-Ext.regModel('Tweet', {
+Ext.define('Tweet', {
+    extend: 'Ext.data.Model',
     fields: [
         'id', 'text', 'from_user'
     ]
@@ -101,15 +105,52 @@ var store = new Ext.data.Store({
 Ext.define('Ext.data.HasManyAssociation', {
     extend: 'Ext.data.Association',
     requires: ['Ext.util.Inflector'],
-    
+
+    alias: 'association.hasmany',
+
     /**
      * @cfg {String} foreignKey The name of the foreign key on the associated model that links it to the owner
      * model. Defaults to the lowercased name of the owner model plus "_id", e.g. an association with a where a
-     * model called Group hasMany Users would create 'group_id' as the foreign key.
+     * model called Group hasMany Users would create 'group_id' as the foreign key. When the remote store is loaded,
+     * the store is automatically filtered so that only records with a matching foreign key are included in the 
+     * resulting child store. This can be overridden by specifying the {@link #filterProperty}.
+     * <pre><code>
+Ext.define('Group', {
+    extend: 'Ext.data.Model',
+    fields: ['id', 'name'],
+    hasMany: 'User'
+});
+
+Ext.define('User', {
+    extend: 'Ext.data.Model',
+    fields: ['id', 'name', 'group_id'], // refers to the id of the group that this user belongs to
+    belongsTo: 'Group'
+});
+     * </code></pre>
      */
     
     /**
-     * @cfg {String} name The name of the function to create on the owner model. Required
+     * @cfg {String} name The name of the function to create on the owner model to retrieve the child store.
+     * If not specified, the pluralized name of the child model is used.
+     * <pre><code>
+// This will create a users() method on any Group model instance
+Ext.define('Group', {
+    extend: 'Ext.data.Model',
+    fields: ['id', 'name'],
+    hasMany: 'User'
+});
+var group = new Group();
+console.log(group.users());
+
+// The method to retrieve the users will now be getUserList
+Ext.define('Group', {
+    extend: 'Ext.data.Model',
+    fields: ['id', 'name'],
+    hasMany: {model: 'User', name: 'getUserList'}
+});
+var group = new Group();
+console.log(group.getUserList());
+     * </code></pre>
      */
     
     /**
@@ -126,6 +167,17 @@ Ext.define('Ext.data.HasManyAssociation', {
     /**
      * @cfg {Boolean} autoLoad True to automatically load the related store from a remote source when instantiated.
      * Defaults to <tt>false</tt>.
+     */
+    
+    /**
+     * @cfg {String} type The type configuration can be used when creating associations using a configuration object.
+     * Use 'hasMany' to create a HasManyAssocation
+     * <pre><code>
+associations: [{
+    type: 'hasMany',
+    model: 'User'
+}]
+     * </code></pre>
      */
     
     constructor: function(config) {

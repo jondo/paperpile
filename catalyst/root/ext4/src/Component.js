@@ -22,7 +22,7 @@ colorpalette     {@link Ext.picker.Color}
 component        {@link Ext.Component}
 container        {@link Ext.container.Container}
 cycle            {@link Ext.button.Cycle}
-dataview         {@link Ext.DataView}
+dataview         {@link Ext.view.View}
 datepicker       {@link Ext.picker.Date}
 editor           {@link Ext.Editor}
 editorgrid       {@link Ext.grid.plugin.Editing}
@@ -33,7 +33,7 @@ progress         {@link Ext.ProgressBar}
 slider           {@link Ext.slider.Single}
 spacer           {@link Ext.toolbar.Spacer}
 splitbutton      {@link Ext.button.Split}
-tabpanel         {@link Ext.tab.TabPanel}
+tabpanel         {@link Ext.tab.Panel}
 treepanel        {@link Ext.tree.Panel}
 viewport         {@link Ext.container.Viewport}
 window           {@link Ext.window.Window}
@@ -60,7 +60,6 @@ Form components
 ---------------------------------------
 form             {@link Ext.form.Panel}
 checkbox         {@link Ext.form.field.Checkbox}
-checkboxgroup    {@link Ext.form.field.CheckboxGroup}
 combo            {@link Ext.form.field.ComboBox}
 datefield        {@link Ext.form.field.Date}
 displayfield     {@link Ext.form.field.Display}
@@ -88,11 +87,20 @@ piechart         {@link Ext.chart.series.Pie}
 </pre><p>
  * It should not usually be necessary to instantiate a Component because there are provided subclasses which implement specialized Component
  * use cases which over most application needs. However it is possible to instantiate a base Component, and it will be renderable,
- * or will particpate in layouts as the child item of a Container:<pre><code>
-myDivComponent = new Ext.Component({
-    html: 'Hello world!',
-    renderTo: document.body
-});
+ * or will particpate in layouts as the child item of a Container:
+{@img Ext.Component/Ext.Component.png Ext.Component component}
+<pre><code>
+    Ext.create('Ext.Component', {
+        html: 'Hello world!',
+        width: 300,
+        height: 200,
+        padding: 20,
+        style: {
+            color: '#FFFFFF',
+            backgroundColor:'#000000'
+        },
+        renderTo: Ext.getBody()
+    });
 </code></pre>
  *</p>
  *<p>The Component above creates its encapsulating <code>div</code> upon render, and use the configured HTML as content. More complex
@@ -144,13 +152,6 @@ Ext.define('Ext.Component', {
     /* End Definitions */
 
     /**
-     * @cfg {String} ui
-     * <p>(Optional) The UI specified for the button.</p>
-     * <p>Defaults to <b><tt>'default'</tt></b>.</p>
-     */
-    ui: 'default',
-
-    /**
      * @cfg {Mixed} resizable
      * <p>Specify as <code>true</code> to apply a {@link Ext.resizer.Resizer Resizer} to this Component
      * after rendering.</p>
@@ -194,6 +195,13 @@ Ext.define('Ext.Component', {
      * If no floating ancestor Container was found the {@link #floatParent} property will not be set.</p>
      */
     floating: false,
+
+    /**
+     * @cfg {Boolean} toFrontOnShow
+     * <p>True to automatically call {@link #toFront} when the {@link #show} method is called
+     * on an already visible, floating component (default is <code>true</code>).</p>
+     */
+    toFrontOnShow: true,
 
     /**
      * <p>Optional. Only present for {@link #floating} Components after they have been rendered.</p>
@@ -352,12 +360,20 @@ new Ext.Component({
      * @return {Ext.Component} this
      */
     setAutoScroll : function(scroll){
+        var me = this,
+            targetEl;
         scroll = !!scroll;
-        if (this.rendered) {
-            this.getTargetEl().setStyle('overflow', scroll ? 'auto' : '');
+        if (me.rendered) {
+            targetEl = me.getTargetEl();
+            targetEl.setStyle('overflow', scroll ? 'auto' : '');
+            if (scroll && (Ext.isIE6 || Ext.isIE7)) {
+                // The scrollable container element must be non-statically positioned or IE6/7 will make
+                // positioned children stay in place rather than scrolling with the rest of the content
+                targetEl.position();
+            }
         }
-        this.autoScroll = scroll;
-        return this;
+        me.autoScroll = scroll;
+        return me;
     },
 
     // private
@@ -394,7 +410,7 @@ new Ext.Component({
         }
 
         this.dd = Ext.create('Ext.util.ComponentDragger', this, ddConfig);
-},
+    },
 
     /**
      * Sets the left and top of the component.  To set the page XY position instead, use {@link #setPagePosition}.
@@ -637,7 +653,11 @@ new Ext.Component({
      * @return {Component} this
      */
     show: function(animateTarget, cb, scope) {
-        if (!(this.rendered && this.isVisible()) && this.fireEvent('beforeshow', this) !== false) {
+        if (this.rendered && this.isVisible()) {
+            if (this.toFrontOnShow && this.floating) {
+                this.toFront();
+            }
+        } else if (this.fireEvent('beforeshow', this) !== false) {
             this.hidden = false;
 
             // Render on first show if there is an autoRender config, or if this is a floater (Window, Menu, BoundList etc).
@@ -696,6 +716,7 @@ new Ext.Component({
             toBox.height += 'px';
             me.el.addCls(Ext.baseCSSPrefix + 'hide-offsets');
             ghostPanel = me.ghost();
+            ghostPanel.el.stopAnimation();
 
             ghostPanel.el.animate({
                 from: fromBox,
@@ -708,9 +729,7 @@ new Ext.Component({
                         if (me.floating) {
                             me.toFront();
                         }
-                        if (cb && cb.call) {
-                            cb.call(scope||me);
-                        }
+                        Ext.callback(cb, scope || me);
                     }
                 }
             });
@@ -719,9 +738,7 @@ new Ext.Component({
             if (me.floating) {
                 me.toFront();
             }
-            if (cb && cb.call) {
-                cb.call(scope||me);
-            }
+            Ext.callback(cb, scope || me);
         }
         me.fireEvent('show', me);
     },
@@ -737,6 +754,11 @@ new Ext.Component({
      * @return {Ext.Component} this
      */
     hide: function() {
+
+        // Clear the flag which is set if a floatParent was hidden while this is visible.
+        // If a hide operation was subsequently called, that pending show must be hidden.
+        this.showOnParentShow = false;
+
         if (!(this.rendered && !this.isVisible()) && this.fireEvent('beforehide', this) !== false) {
             this.hidden = true;
             if (this.rendered) {
@@ -765,10 +787,11 @@ new Ext.Component({
         if (!me.ghost) {
             animateTarget = null;
         }
-        // If we're animating, kick of an animation of the ghost down to the target
+        // If we're animating, kick off an animation of the ghost down to the target
         if (animateTarget) {
             animateTarget = animateTarget.el ? animateTarget.el : Ext.get(animateTarget);
             ghostPanel = me.ghost();
+            ghostPanel.el.stopAnimation();
             toBox = animateTarget.getBox();
             toBox.width += 'px';
             toBox.height += 'px';
@@ -991,10 +1014,6 @@ alert(t.getXType());  // alerts 'textfield'
             p = p.ownerCt;
         }
         return this;
-    },
-
-    alignTo: function(el, position, offsets) {
-        this.el.alignTo.apply(this.el, arguments);
     },
 
     getProxy: function() {

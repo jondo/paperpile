@@ -13,7 +13,8 @@
  *
 <pre><code>
 //this is the model we will be using in the store
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: [
         {name: 'id',    type: 'int'},
         {name: 'name',  type: 'string'},

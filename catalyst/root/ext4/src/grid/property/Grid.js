@@ -102,8 +102,23 @@ var grid = Ext.create('Ext.grid.property.Grid', {
 </code></pre>
     */
 
+    /**
+     * @cfg {String} valueField
+     * Optional. The name of the field from the property store to use as the value field name. Defaults to <code>'value'</code>
+     * This may be useful if you do not configure the property Grid from an object, but use your own store configuration.
+     */
+    valueField: 'value',
+
+    /**
+     * @cfg {String} nameField
+     * Optional. The name of the field from the property store to use as the property field name. Defaults to <code>'name'</code>
+     * This may be useful if you do not configure the property Grid from an object, but use your own store configuration.
+     */
+    nameField: 'name',
+
     // private config overrides
     enableColumnMove: false,
+    columnLines: true,
     stripeRows: false,
     trackMouseOver: false,
     clicksToEdit: 1,
@@ -113,6 +128,7 @@ var grid = Ext.create('Ext.grid.property.Grid', {
     initComponent : function(){
         var me = this;
 
+        me.addCls(Ext.baseCSSPrefix + 'property-grid');
         me.plugins = me.plugins || [];
 
         // Enable cell editing. Inject a custom startEdit which always edits column 1 regardless of which column was clicked.
@@ -121,16 +137,28 @@ var grid = Ext.create('Ext.grid.property.Grid', {
 
             // Inject a startEdit which always edits the value column
             startEdit: function(record, column) {
-                Ext.grid.plugin.CellEditing.prototype.startEdit.call(this, record, me.headerCt.child('#value')); // Maintainer: Do not change this 'this' to 'me'! It is the CellEditing object's own scope.
+                // Maintainer: Do not change this 'this' to 'me'! It is the CellEditing object's own scope.
+                Ext.grid.plugin.CellEditing.prototype.startEdit.call(this, record, me.headerCt.child('#' + me.valueField));
             }
         }));
 
         me.selModel = {
-            selType: 'cellmodel'
+            selType: 'cellmodel',
+            onCellSelect: function(position) {
+                if (position.column != 1) {
+                    position.column = 1;
+                    Ext.selection.CellModel.prototype.onCellSelect.call(this, position);
+                }
+            }
         };
         me.customRenderers = me.customRenderers || {};
         me.customEditors = me.customEditors || {};
-        me.propStore = me.store = Ext.create('Ext.grid.property.Store', me, me.source);
+
+        // Create a property.Store from the source object unless configured with a store
+        if (!me.store) {
+            me.propStore = me.store = Ext.create('Ext.grid.property.Store', me, me.source);
+        }
+
         me.store.sort('name', 'ASC');
         me.columns = Ext.create('Ext.grid.property.HeaderContainer', me, me.store);
 
@@ -163,15 +191,38 @@ var grid = Ext.create('Ext.grid.property.Grid', {
         me.getView().walkCells = this.walkCells;
 
         // Set up our default editor set for the 4 atomic data types
-        this.editors = {
+        me.editors = {
             'date'    : Ext.create('Ext.grid.CellEditor', { field: Ext.create('Ext.form.field.Date',   {selectOnFocus: true})}),
             'string'  : Ext.create('Ext.grid.CellEditor', { field: Ext.create('Ext.form.field.Text',   {selectOnFocus: true})}),
             'number'  : Ext.create('Ext.grid.CellEditor', { field: Ext.create('Ext.form.field.Number', {selectOnFocus: true})}),
             'boolean' : Ext.create('Ext.grid.CellEditor', { field: Ext.create('Ext.form.field.ComboBox', {
                 editable: false,
-                store: [[ true, this.headerCt.trueText ], [false, this.headerCt.falseText ]]
+                store: [[ true, me.headerCt.trueText ], [false, me.headerCt.falseText ]]
             })})
         };
+
+        // Track changes to the data so we can fire our events.
+        this.store.on('update', me.onUpdate, me);
+    },
+
+    // private
+    onUpdate : function(store, record, operation) {
+        var me = this,
+            v, oldValue;
+
+        if (operation == Ext.data.Model.EDIT) {
+            v = record.get(me.valueField);
+            oldValue = record.modified.value;
+            if (me.fireEvent('beforepropertychange', me.source, record.id, v, oldValue) !== false) {
+                if (me.source) {
+                    me.source[record.id] = v;
+                }
+                record.commit();
+                me.fireEvent('propertychange', me.source, record.id, v, oldValue);
+            } else {
+                record.reject();
+            }
+        }
     },
 
     // Custom implementation of walkCells which only goes up and down.
@@ -191,9 +242,10 @@ var grid = Ext.create('Ext.grid.property.Grid', {
     // private
     // returns the correct editor type for the property type, or a custom one keyed by the property name
     getCellEditor : function(record, column) {
-        var propName = record.data.name, 
-            val = record.data.value,
-            editor = this.customEditors[propName];
+        var me = this,
+            propName = record.get(me.nameField), 
+            val = record.get(me.valueField),
+            editor = me.customEditors[propName];
 
         // A custom editor was found. If not already wrapped with a CellEditor, wrap it, and stash it back
         // If it's not even a Field, just a config object, instantiate it before wrapping it.
@@ -202,16 +254,16 @@ var grid = Ext.create('Ext.grid.property.Grid', {
                 if (!(editor instanceof Ext.form.field.Base)) {
                     editor = Ext.ComponentManager.create(editor, 'textfield');
                 }
-                editor = this.customEditors[propName] = Ext.create('Ext.grid.CellEditor', { field: editor });
+                editor = me.customEditors[propName] = Ext.create('Ext.grid.CellEditor', { field: editor });
             }
         } else if (Ext.isDate(val)) {
-            editor = this.editors.date;
+            editor = me.editors.date;
         } else if (Ext.isNumber(val)) {
-            editor = this.editors.number;
+            editor = me.editors.number;
         } else if (Ext.isBoolean(val)) {
-            editor = this.editors['boolean'];
+            editor = me.editors['boolean'];
         } else {
-            editor = this.editors.string;
+            editor = me.editors.string;
         }
 
         // Give the editor a unique ID because the CellEditing plugin caches them
@@ -251,6 +303,7 @@ grid.setSource({
      * @param {Object} source The data object
      */
     setSource: function(source) {
+        this.source = source;
         this.propStore.setSource(source);
     },
 

@@ -84,10 +84,6 @@ Ext.define('Ext.layout.container.Column', {
 
     getRenderTarget : function() {
         if (!this.innerCt) {
-            this.quirksAdjustDone = 0;
-
-            // The column Container need not monitor the columns.
-            this.owner.componentLayout.monitorChildren = false;
 
             // the innerCt prevents wrapping and shuffling while
             // the container is resizing
@@ -185,15 +181,5 @@ Ext.define('Ext.layout.container.Column', {
             }
         }
         delete me.adjustmentPass;
-    },
-
-    // Workaround for quirky browsers. They relied upon previous version's multiple layouts to readjust the columns.
-    doOwnerCtLayouts: function() {
-        if (Ext.isIE6 || Ext.isIE7 || Ext.isIEQuirks) {
-            if ((this.quirksAdjustDone !== 2) && !this.owner.ownerCt) {
-                this.quirksAdjustDone++;
-                this.owner.doComponentLayout();
-            }
-        }
     }
 });

@@ -3,7 +3,27 @@
  * @extends Ext.menu.Item
 
 A menu item that contains a togglable checkbox by default, but that can also be a part of a radio group.
-
+{@img Ext.menu.CheckItem/Ext.menu.CheckItem.png Ext.menu.CheckItem component}
+__Example Usage__    
+    Ext.create('Ext.menu.Menu', {
+		width: 100,
+		height: 110,
+		floating: false,  // usually you want this set to True (default)
+		renderTo: Ext.getBody(),  // usually rendered by it's containing component
+		items: [{
+		    xtype: 'menucheckitem',
+		    text: 'select all'
+		},{
+		    xtype: 'menucheckitem',
+			text: 'select specific',
+		},{
+            iconCls: 'add16',
+		    text: 'icon item' 
+		},{
+		    text: 'regular item'
+		}]
+	}); 
+	
  * @xtype menucheckitem
  * @markdown
  * @constructor

@@ -493,7 +493,7 @@
                     width = dom.offsetWidth;
                     dom.parentNode.style.position = parentPosition;
                 }
-                width = Math.max(width || 0, dom.offsetWidth)
+                width = Math.max(width || 0, dom.offsetWidth);
             
             // Gecko will in some cases report an offsetWidth that is actually less than the width of the
             // text contents, because it measures fonts with sub-pixel precision but rounds the calculated
@@ -1019,10 +1019,14 @@ Ext.fly('elId').setHeight(150, {
          * @return {Ext.core.Element} this
          */
         unselectable : function(){
-            this.dom.unselectable = "on";
-            return this.swallowEvent("selectstart", true).
-                        applyStyles("-moz-user-select:none;-khtml-user-select:none;").
-                        addCls(Ext.baseCSSPrefix + 'unselectable');
+            var me = this;
+            me.dom.unselectable = "on";
+
+            me.swallowEvent("selectstart", true);
+            me.applyStyles("-moz-user-select:none;-khtml-user-select:none;");
+            me.addCls(Ext.baseCSSPrefix + 'unselectable');
+            
+            return me;
         },
 
         /**

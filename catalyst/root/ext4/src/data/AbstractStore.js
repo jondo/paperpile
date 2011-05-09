@@ -122,6 +122,15 @@ Ext.define('Ext.data.AbstractStore', {
      * @cfg {String} storeId Optional unique identifier for this store. If present, this Store will be registered with 
      * the {@link Ext.data.StoreManager}, making it easy to reuse elsewhere. Defaults to undefined.
      */
+    
+    /**
+     * @cfg {Array} fields
+     * This may be used in place of specifying a {@link #model} configuration. The fields should be a 
+     * set of {@link Ext.data.Field} configuration objects. The store will automatically create a {@link Ext.data.Model}
+     * with these fields. In general this configuration option should be avoided, it exists for the purposes of
+     * backwards compatibility. For anything more complicated, such as specifying a particular id property or
+     * assocations, a {@link Ext.data.Model} should be defined and specified for the {@link #model} config.
+     */
 
     sortRoot: 'data',
     
@@ -181,7 +190,7 @@ Ext.define('Ext.data.AbstractStore', {
             /**
              * @event load
              * Fires whenever the store reads data from a remote data source.
-             * @param {Ext.data.store} this
+             * @param {Ext.data.Store} this
              * @param {Array} records An array of records
              * @param {Boolean} successful True if the operation was successful.
              */
@@ -192,7 +201,13 @@ Ext.define('Ext.data.AbstractStore', {
              * Called before a call to {@link #sync} is executed. Return false from any listener to cancel the synv
              * @param {Object} options Hash of all records to be synchronized, broken down into create, update and destroy
              */
-            'beforesync'
+            'beforesync',
+            /**
+             * @event clear
+             * Fired after the {@link #removeAll} method is called.
+             * @param {Ext.data.Store} this
+             */
+            'clear'
         );
         
         Ext.apply(me, config);
@@ -335,7 +350,35 @@ Ext.define('Ext.data.AbstractStore', {
         return me.proxy.update(operation, me.onProxyWrite, me);
     },
 
-    onProxyWrite: Ext.emptyFn,
+    /**
+     * @private
+     * Callback for any write Operation over the Proxy. Updates the Store's MixedCollection to reflect
+     * the updates provided by the Proxy
+     */
+    onProxyWrite: function(operation) {
+        var me = this,
+            success = operation.wasSuccessful(),
+            records = operation.getRecords();
+
+        switch (operation.action) {
+            case 'create':
+                me.onCreateRecords(records, operation, success);
+                break;
+            case 'update':
+                me.onUpdateRecords(records, operation, success);
+                break;
+            case 'destroy':
+                me.onDestroyRecords(records, operation, success);
+                break;
+        }
+
+        if (success) {
+            me.fireEvent('write', me, operation);
+            me.fireEvent('datachanged', me);
+        }
+        //this is a callback that would have been passed to the 'create', 'update' or 'destroy' function and is optional
+        Ext.callback(operation.callback, operation.scope || me, [records, operation, success]);
+    },
 
 
     //tells the attached proxy to destroy the given records
@@ -651,20 +694,18 @@ Ext.define('Ext.data.AbstractStore', {
         }
     },
 
-    getCount: function() {
+    getCount: Ext.emptyFn,
 
-    },
-
-    getById: function(id) {
-
-    },
-
+    getById: Ext.emptyFn,
+    
+    /**
+     * Removes all records from the store. This method does a "fast remove",
+     * individual remove events are not called. The {@link #clear} event is
+     * fired upon completion.
+     */
+    removeAll: Ext.emptyFn,
     // individual substores should implement a "fast" remove
     // and fire a clear event afterwards
-    removeAll: function() {
-
-
-    },
 
     /**
      * Returns true if the Store is currently performing a load operation

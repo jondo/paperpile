@@ -15,7 +15,7 @@
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
 Ext.define('Paperpile.Tabs', {
-  extend: 'Ext.tab.TabPanel',
+  extend: 'Ext.tab.Panel',
   alias: 'widget.pp-tabs',
   initComponent: function() {
 

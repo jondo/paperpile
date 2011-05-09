@@ -127,6 +127,12 @@ Ext.define("Ext.form.field.File", {
 
         me.createButton();
         me.createFileInput();
+        
+        // we don't create the file/button til after onRender, the initial disable() is
+        // called in the onRender of the component.
+        if (me.disabled) {
+            me.disableItems();
+        }
 
         inputEl = me.inputEl;
         inputEl.dom.removeAttribute('name'); //name goes on the fileInput, not the text input
@@ -189,10 +195,20 @@ Ext.define("Ext.form.field.File", {
     },
 
     onDisable: function(){
-        var me = this;
-        me.callParent();
-        me.fileInputEl.dom.disabled = true;
-        me.button.disable();
+        this.callParent();
+        this.disableItems();
+    },
+    
+    disableItems: function(){
+        var file = this.fileInputEl,
+            button = this.button;
+             
+        if (file) {
+            file.dom.disabled = true;
+        }
+        if (button) {
+            button.disable();
+        }    
     },
 
     onEnable: function(){

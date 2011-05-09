@@ -6,23 +6,23 @@
  * manages and holds a `Surface` instance: an interface that has
  * an SVG or VML implementation depending on the browser capabilities and where
  * Sprites can be appended.
- *
+ * {@img Ext.draw.Component/Ext.draw.Component.png Ext.draw.Component component}
  * One way to create a draw component is:
  * 
  *     var drawComponent = Ext.create('Ext.draw.Component', {
  *         viewBox: false,
  *         items: [{
  *             type: 'circle',
- *             fill: '#ffc',
+ *             fill: '#79BB3F',
  *             radius: 100,
  *             x: 100,
  *             y: 100
  *         }]
  *     });
- *     
+ *   
  *     Ext.create('Ext.Window', {
- *         width: 230,
- *         height: 230,
+ *         width: 215,
+ *         height: 235,
  *         layout: 'fit',
  *         items: [drawComponent]
  *     }).show();
@@ -36,7 +36,7 @@
  *    
  *     drawComponent.surface.add({
  *         type: 'circle',
- *         fill: '#ffc',
+ *         fill: '#79BB3F',
  *         radius: 100,
  *         x: 100,
  *         y: 100
@@ -65,7 +65,7 @@ Ext.define('Ext.draw.Component', {
      * Defines the priority order for which Surface implementation to use. The first
      * one supported by the current environment will be used.
      */
-    enginePriority: ['SVG', 'VML'],
+    enginePriority: ['Svg', 'Vml'],
 
     baseCls: Ext.baseCSSPrefix + 'surface',
 

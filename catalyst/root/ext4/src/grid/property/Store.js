@@ -22,12 +22,7 @@ Ext.define('Ext.grid.property.Store', {
         this.callParent([{
             data: source,
             model: Ext.grid.property.Property,
-            proxy: this.getProxy(),
-            autoLoad: Ext.isDefined(source),
-            listeners: {
-                update: this.onUpdate,
-                scope: this
-            }
+            proxy: this.getProxy()
         }]);
     },
 
@@ -85,25 +80,15 @@ Ext.define('Ext.grid.property.Store', {
 
     // protected - should only be called by the grid.  Use grid.setSource instead.
     setSource : function(dataObject) {
-        this.source = dataObject;
-        store.removeAll();
-        this.load({data: dataObject});
-    },
+        var me = this;
 
-    // private
-    onUpdate : function(ds, record, type) {
-        if (type == Ext.data.Record.EDIT) {
-            var v = record.data.value,
-                oldValue = record.modified.value;
-
-            if (this.grid.fireEvent('beforepropertychange', this.source, record.id, v, oldValue) !== false) {
-                 this.source[record.id] = v;
-                record.commit();
-                this.grid.fireEvent('propertychange', this.source, record.id, v, oldValue);
-            } else {
-                record.reject();
-            }
-        }
+        me.source = dataObject;
+        me.suspendEvents();
+        me.removeAll();
+        me.proxy.data = dataObject;
+        me.load();
+        me.resumeEvents();
+        me.fireEvent('datachanged', me);
     },
 
     // private

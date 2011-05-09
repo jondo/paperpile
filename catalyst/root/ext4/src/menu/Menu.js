@@ -1,20 +1,50 @@
 /**
  * @class Ext.menu.Menu
  * @extends Ext.panel.Panel
+ *
+ * A menu object. This is the container to which you may add {@link Ext.menu.Item menu items}.
+ *
+ * Menus may contain either {@link Ext.menu.Item menu items}, or general {@link Ext.Component Components}.
+ * Menus may also contain {@link Ext.panel.AbstractPanel#dockedItems docked items} because it extends {@link Ext.panel.Panel}.
+ *
+ * To make a contained general {@link Ext.Component Component} line up with other {@link Ext.menu.Item menu items},
+ * specify `{@link Ext.menu.Item#iconCls iconCls}: 'no-icon'` _or_ `{@link Ext.menu.Item#indent indent}: true`.
+ * This reserves a space for an icon, and indents the Component in line with the other menu items.
+ * See {@link Ext.form.field.ComboBox}.{@link Ext.form.field.ComboBox#getListParent getListParent} for an example.
 
-A menu object. This is the container to which you may add {@link Ext.menu.Item menu items}.
-
-Menus may contain either {@link Ext.menu.Item menu items}, or general {@link Ext.Component Components}.
-Menus may also contain {@link Ext.AbstractPanel#dockedItems docked items} because it extends {@link Ext.panel.Panel}.
-
-To make a contained general {@link Ext.Component Component} line up with other {@link Ext.menu.Item menu items},
-specify `{@link Ext.menu.Item#iconCls iconCls}: 'no-icon'` _or_ `{@link Ext.menu.Item#indent indent}: true`.
-This reserves a space for an icon, and indents the Component in line with the other menu items.
-See {@link Ext.form.field.ComboBox}.{@link Ext.form.field.ComboBox#getListParent getListParent} for an example.
-
-By default, Menus are absolutely positioned, floating Components. By configuring a Menu with `{@link #floating}:false`,
-a Menu may be used as a child of a {@link Ext.container.Container Container}.
-
+ * By default, Menus are absolutely positioned, floating Components. By configuring a Menu with `{@link #floating}:false`,
+ * a Menu may be used as a child of a {@link Ext.container.Container Container}.
+ * {@img Ext.menu.Item/Ext.menu.Item.png Ext.menu.Item component}
+__Example Usage__
+        Ext.create('Ext.menu.Menu', {
+                width: 100,
+                height: 100,
+                margin: '0 0 10 0',
+                floating: false,  // usually you want this set to True (default)
+                renderTo: Ext.getBody(),  // usually rendered by it's containing component
+                items: [{                        
+                        text: 'regular item 1'        
+                },{
+                    text: 'regular item 2'
+                },{
+                        text: 'regular item 3'  
+                }]
+        }); 
+        
+        Ext.create('Ext.menu.Menu', {
+                width: 100,
+                height: 100,
+                plain: true,
+                floating: false,  // usually you want this set to True (default)
+                renderTo: Ext.getBody(),  // usually rendered by it's containing component
+                items: [{                        
+                        text: 'plain item 1'    
+                },{
+                    text: 'plain item 2'
+                },{
+                        text: 'plain item 3'
+                }]
+        }); 
  * @xtype menu
  * @markdown
  * @constructor
@@ -32,7 +62,7 @@ Ext.define('Ext.menu.Menu', {
         'Ext.menu.Manager',
         'Ext.menu.Separator'
     ],
-    
+
     /**
      * @cfg {Boolean} allowOtherMenus
      * True to allow multiple menus to be displayed at the same time. Defaults to `false`.
@@ -99,14 +129,14 @@ Ext.define('Ext.menu.Menu', {
      * @cfg {Boolean} showSeparator True to show the icon separator. (defaults to true).
      */
     showSeparator : true,
-     
+
     /**
      * @cfg {Number} minWidth
      * The minimum width of the Menu. Defaults to `120`.
      * @markdown
      */
     minWidth: 120,
-    
+
     /**
      * @cfg {Boolean} plain
      * True to remove the incised line down the left side of the menu and to not
@@ -128,6 +158,15 @@ Ext.define('Ext.menu.Menu', {
              * @markdown
              */
             'click',
+
+            /**
+             * @event mouseenter
+             * Fires when the mouse enters this menu
+             * @param {Ext.menu.Menu} menu The menu
+             * @param {Ext.EventObject} e The underlying {@link Ext.EventObject}
+             * @markdown
+             */
+            'mouseenter',
 
             /**
              * @event mouseleave
@@ -180,7 +219,7 @@ Ext.define('Ext.menu.Menu', {
         }
 
         me.callParent(arguments);
-        
+
         me.on('beforeshow', function() {
             var hasItems = !!me.items.length;
             // FIXME: When a menu has its show cancelled because of no items, it
@@ -207,7 +246,7 @@ Ext.define('Ext.menu.Menu', {
                 html: space
             });
         }
-        
+
         me.focusEl = me.el.createChild({
             cls: prefix + 'menu-focus',
             tabIndex: '-1',
@@ -243,9 +282,9 @@ Ext.define('Ext.menu.Menu', {
                 l = dis.length,
                 i = 0,
                 di, clone, newWidth;
-            
+
             innerCtWidth = innerCt.getWidth();
-  
+
             newWidth = innerCtWidth + me.body.getBorderWidth('lr') + me.body.getPadding('lr');
 
             // First set the body to the new width
@@ -260,7 +299,7 @@ Ext.define('Ext.menu.Menu', {
             me.el.setWidth(newWidth);
         }
     },
-    
+
     /**
      * Returns whether a menu item can be activated or not.
      * @return {Boolean}
@@ -268,7 +307,7 @@ Ext.define('Ext.menu.Menu', {
     canActivateItem: function(item) {
         return item && !item.isDisabled() && item.isVisible() && (item.canActivate || item.getXTypes().indexOf('menuitem') < 0);
     },
-    
+
     /**
      * Deactivates the current active item on the menu, if one exists.
      */
@@ -288,7 +327,7 @@ Ext.define('Ext.menu.Menu', {
             }
         }
     },
-    
+
     // inherit docs
     getFocusEl: function() {
         return this.focusEl;
@@ -299,7 +338,7 @@ Ext.define('Ext.menu.Menu', {
         this.deactivateActiveItem();
         this.callParent(arguments);
     },
-    
+
     // private
     getItemFromEvent: function(e) {
         return this.getChildByElement(e.getTarget());
@@ -307,20 +346,20 @@ Ext.define('Ext.menu.Menu', {
 
     lookupComponent: function(cmp) {
         var me = this;
-        
+
         if (Ext.isString(cmp)) {
             cmp = me.lookupItemFromString(cmp);
         } else if (Ext.isObject(cmp)) {
             cmp = me.lookupItemFromObject(cmp);
         }
-        
+
         // Apply our minWidth to all of our child components so it's accounted
         // for in our VBox layout
         cmp.minWidth = cmp.minWidth || me.minWidth;
-        
+
         return cmp;
     },
-    
+
     // private
     lookupItemFromObject: function(cmp) {
         var me = this,
@@ -366,7 +405,7 @@ Ext.define('Ext.menu.Menu', {
         }
         return cmp;
     },
-    
+
     // private
     lookupItemFromString: function(cmp) {
         return (cmp == 'separator' || cmp == '-') ?
@@ -382,7 +421,7 @@ Ext.define('Ext.menu.Menu', {
     onClick: function(e) {
         var me = this,
             item;
-        
+
         if (me.disabled) {
             e.stopEvent();
             return;
@@ -390,7 +429,7 @@ Ext.define('Ext.menu.Menu', {
 
         if ((e.getTarget() == me.focusEl.dom) || e.within(me.layout.getRenderTarget())) {
             item = me.getItemFromEvent(e) || me.activeItem;
-            
+
             if (item) {
                 if (item.getXTypes().indexOf('menuitem') >= 0) {
                     if (!item.menu || !me.ignoreParentClicks) {
@@ -420,32 +459,37 @@ Ext.define('Ext.menu.Menu', {
         var me = this;
 
         me.deactivateActiveItem();
-        
+
         if (me.disabled) {
             return;
         }
-        
+
         me.fireEvent('mouseleave', me, e);
     },
 
     onMouseOver: function(e) {
         var me = this,
+            fromEl = e.getRelatedTarget(),
+            mouseEnter = !me.el.contains(fromEl),
             item = me.getItemFromEvent(e);
 
-        if (me.parentMenu) {
+        if (mouseEnter && me.parentMenu) {
             me.parentMenu.setActiveItem(me.parentItem);
             me.parentMenu.mouseMonitor.mouseenter();
         }
-        
+
         if (me.disabled) {
             return;
         }
-        
+
         if (item) {
             me.setActiveItem(item);
             if (item.activated && item.expandMenu) {
                 item.expandMenu();
             }
+        }
+        if (mouseEnter) {
+            me.fireEvent('mouseenter', me, e);
         }
         me.fireEvent('mouseover', me, item, e);
     },
@@ -531,7 +575,7 @@ Ext.define('Ext.menu.Menu', {
         }else{
             max = me.getHeight();
         }
-        // Always respect maxHeight 
+        // Always respect maxHeight
         if (me.maxHeight){
             max = Math.min(me.maxHeight, max);
         }

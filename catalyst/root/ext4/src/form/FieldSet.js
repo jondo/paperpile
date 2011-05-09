@@ -1,83 +1,84 @@
 /**
  * @class Ext.form.FieldSet
  * @extends Ext.container.Container
-
-A container for grouping sets of fields, rendered as a HTML `fieldset` element. The {@link #title}
-config will be rendered as the fieldset's `legend`.
-
-While FieldSets commonly contain simple groups of fields, they are general {@link Ext.container.Container Containers}
-and may therefore contain any type of components in their {@link #items}, including other nested containers.
-The default {@link #layout} for the FieldSet's items is `'anchor'`, but it can be configured to use any other
-layout type.
-
-FieldSets may also be collapsed if configured to do so; this can be done in two ways:
-
-1. Set the {@link #collapsible} config to true; this will result in a collapse button being rendered next to
-   the {@link #title legend title}, or:
-1. Set the {@link #checkboxToggle} config to true; this is similar to using {@link #collapsible} but renders
-   a {@link Ext.form.field.Checkbox checkbox} in place of the toggle button. The fieldset will be expanded when the
-   checkbox is checked and collapsed when it is unchecked. The checkbox will also be included in the
-   {@link Ext.form.Basic#submit form submit parameters} using the {@link #checkboxName} as its parameter name.
-{@img Ext.form.FieldSet/Ext.form.FieldSet.png Ext.form.FieldSet component}
-Example usage:
-
-    Ext.create('Ext.form.Panel', {
-        title: 'Simple Form with FieldSets',
-        labelWidth: 75, // label settings here cascade unless overridden
-        url: 'save-form.php',
-        frame: true,
-        bodyStyle: 'padding:5px 5px 0',
-        width: 550,
-        renderTo: Ext.getBody(),
-        layout: 'column', // arrange fieldsets side by side
-        defaults: {
-            bodyPadding: 4
-        },
-        items: [{
-            // Fieldset in Column 1 - collapsible via toggle button
-            xtype:'fieldset',
-            columnWidth: 0.5,
-            title: 'Fieldset 1',
-            collapsible: true,
-            defaultType: 'textfield',
-            defaults: {anchor: '100%'},
-            layout: 'anchor',
-            items :[{
-                fieldLabel: 'Field 1',
-                name: 'field1'
-            }, {
-                fieldLabel: 'Field 2',
-                name: 'field2'
-            }]
-        }, {
-            // Fieldset in Column 2 - collapsible via checkbox, collapsed by default, contains a panel
-            xtype:'fieldset',
-            title: 'Show Panel', // title or checkboxToggle creates fieldset header
-            columnWidth: 0.5,
-            checkboxToggle: true,
-            collapsed: true, // fieldset initially collapsed
-            layout:'anchor',
-            items :[{
-                xtype: 'panel',
-                anchor: '100%',
-                title: 'Panel inside a fieldset',
-                frame: true,
-                height: 52
-            }]
-        }]
-    });
-
+ * 
+ * A container for grouping sets of fields, rendered as a HTML `fieldset` element. The {@link #title}
+ * config will be rendered as the fieldset's `legend`.
+ * 
+ * While FieldSets commonly contain simple groups of fields, they are general {@link Ext.container.Container Containers}
+ * and may therefore contain any type of components in their {@link #items}, including other nested containers.
+ * The default {@link #layout} for the FieldSet's items is `'anchor'`, but it can be configured to use any other
+ * layout type.
+ * 
+ * FieldSets may also be collapsed if configured to do so; this can be done in two ways:
+ * 
+ * 1. Set the {@link #collapsible} config to true; this will result in a collapse button being rendered next to
+ *    the {@link #title legend title}, or:
+ * 2. Set the {@link #checkboxToggle} config to true; this is similar to using {@link #collapsible} but renders
+ *    a {@link Ext.form.field.Checkbox checkbox} in place of the toggle button. The fieldset will be expanded when the
+ *    checkbox is checked and collapsed when it is unchecked. The checkbox will also be included in the
+ *    {@link Ext.form.Basic#submit form submit parameters} using the {@link #checkboxName} as its parameter name.
+ *
+ * {@img Ext.form.FieldSet/Ext.form.FieldSet.png Ext.form.FieldSet component}
+ *
+ * ## Example usage
+ * 
+ *     Ext.create('Ext.form.Panel', {
+ *         title: 'Simple Form with FieldSets',
+ *         labelWidth: 75, // label settings here cascade unless overridden
+ *         url: 'save-form.php',
+ *         frame: true,
+ *         bodyStyle: 'padding:5px 5px 0',
+ *         width: 550,
+ *         renderTo: Ext.getBody(),
+ *         layout: 'column', // arrange fieldsets side by side
+ *         defaults: {
+ *             bodyPadding: 4
+ *         },
+ *         items: [{
+ *             // Fieldset in Column 1 - collapsible via toggle button
+ *             xtype:'fieldset',
+ *             columnWidth: 0.5,
+ *             title: 'Fieldset 1',
+ *             collapsible: true,
+ *             defaultType: 'textfield',
+ *             defaults: {anchor: '100%'},
+ *             layout: 'anchor',
+ *             items :[{
+ *                 fieldLabel: 'Field 1',
+ *                 name: 'field1'
+ *             }, {
+ *                 fieldLabel: 'Field 2',
+ *                 name: 'field2'
+ *             }]
+ *         }, {
+ *             // Fieldset in Column 2 - collapsible via checkbox, collapsed by default, contains a panel
+ *             xtype:'fieldset',
+ *             title: 'Show Panel', // title or checkboxToggle creates fieldset header
+ *             columnWidth: 0.5,
+ *             checkboxToggle: true,
+ *             collapsed: true, // fieldset initially collapsed
+ *             layout:'anchor',
+ *             items :[{
+ *                 xtype: 'panel',
+ *                 anchor: '100%',
+ *                 title: 'Panel inside a fieldset',
+ *                 frame: true,
+ *                 height: 52
+ *             }]
+ *         }]
+ *     });
+ * 
  * @constructor
  * Create a new FieldSet
  * @param {Object} config Configuration options
  * @xtype fieldset
- * @markdown
  * @docauthor Jason Johnston <jason@sencha.com>
  */
 Ext.define('Ext.form.FieldSet', {
     extend: 'Ext.container.Container',
     alias: 'widget.fieldset',
-    uses: ['Ext.form.field.Checkbox', 'Ext.panel.Tool', 'Ext.layout.container.Anchor', 'Ext.layout.component.Body'],
+    uses: ['Ext.form.field.Checkbox', 'Ext.panel.Tool', 'Ext.layout.container.Anchor', 'Ext.layout.component.FieldSet'],
 
     /**
      * @cfg {String} title
@@ -130,12 +131,14 @@ Ext.define('Ext.form.FieldSet', {
      */
     layout: 'anchor',
 
-    componentLayout: 'body',
+    componentLayout: 'fieldset',
 
     // No aria role necessary as fieldset has its own recognized semantics
     ariaRole: '',
 
     renderTpl: ['<div class="{baseCls}-body"></div>'],
+    
+    maskOnDisable: false,
 
     getElConfig: function(){
         return {tag: 'fieldset', id: this.id};
@@ -270,7 +273,7 @@ Ext.define('Ext.form.FieldSet', {
     createToggleCmp: function() {
         var me = this;
         me.toggleCmp = Ext.create('Ext.panel.Tool', {
-            type: me.collapsed ? 'down' : 'up',
+            type: 'toggle',
             handler: me.toggle,
             scope: me
         });
@@ -344,10 +347,6 @@ Ext.define('Ext.form.FieldSet', {
         
         if (checkboxCmp) {
             checkboxCmp.setValue(expanded);
-        }
-        
-        if (toggleCmp) {
-            toggleCmp.setType(expanded ? 'up' : 'down');
         }
         
         if (expanded) {

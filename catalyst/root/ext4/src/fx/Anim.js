@@ -1,8 +1,46 @@
 /**
  * @class Ext.fx.Anim
- * Animation instance...
+ * 
+ * This class manages animation for a specific {@link #target}. The animation allows
+ * animation of various properties on the target, such as size, position, color and others.
+ * 
+ * ## Starting Conditions
+ * The starting conditions for the animation are provided by the {@link #from} configuration.
+ * Any/all of the properties in the {@link #from} configuration can be specified. If a particular
+ * property is not defined, the starting value for that property will be read directly from the target.
+ * 
+ * ## End Conditions
+ * The ending conditions for the animation are provided by the {@link #to} configuration. These mark
+ * the final values once the animations has finished. The values in the {@link #from} can mirror
+ * those in the {@link #to} configuration to provide a starting point.
+ * 
+ * ## Other Options
+ *  - {@link #duration}: Specifies the time period of the animation.
+ *  - {@link #easing}: Specifies the easing of the animation.
+ *  - {@link #iterations}: Allows the animation to repeat a number of times.
+ *  - {@link #alternate}: Used in conjunction with {@link #iterations}, reverses the direction every second iteration.
+ * 
+ * ## Example Code
+ * 
+ *     var myComponent = Ext.create('Ext.Component', {
+ *         renderTo: document.body,
+ *         width: 200,
+ *         height: 200,
+ *         style: 'border: 1px solid red;'
+ *     });
+ *     
+ *     new Ext.fx.Anim({
+ *         target: myComponent,
+ *         duration: 1000,
+ *         from: {
+ *             width: 400 //starting width 400
+ *         },
+ *         to: {
+ *             width: 300, //end width 300
+ *             height: 300 // end width 300
+ *         }
+ *     });
  */
-
 Ext.define('Ext.fx.Anim', {
 
     /* Begin Definitions */
@@ -18,7 +56,8 @@ Ext.define('Ext.fx.Anim', {
     isAnimation: true,
     /**
      * @cfg {Number} duration
-     * Time in milliseconds for the animation to last. Defaults to 250.
+     * Time in milliseconds for a single animation to last. Defaults to 250. If the {@link #iterations} property is
+     * specified, then each animate will take the same duration for each iteration.
      */
     duration: 250,
 
@@ -152,8 +191,11 @@ keyframes : {
      */
 
     /**
-     * @cfg {string/object} target
-     * The Ext.fx.target to apply the animation to.  This should only be specified when creating an Ext.fx.Anim directly.
+     * @cfg {String/Object} target
+     * The {@link Ext.fx.target.Target} to apply the animation to.  This should only be specified when creating an Ext.fx.Anim directly.
+     * The target does not need to be a {@link Ext.fx.target.Target} instance, it can be the underlying object. For example, you can
+     * pass a Component, Element or Sprite as the target and the Anim will create the appropriate {@link Ext.fx.target.Target} object
+     * automatically.
      */
 
     /**
@@ -190,7 +232,7 @@ from : {
             return Ext.create('Ext.fx.Animator', config);
         }
         config = Ext.apply(me, config);
-        if (me.from == undefined) {
+        if (me.from === undefined) {
             me.from = {};
         }
         me.propHandlers = {};

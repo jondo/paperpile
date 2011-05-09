@@ -83,15 +83,11 @@ Ext.EventManager = {
             // fallback, load will ~always~ fire
             window.addEventListener('load', me.fireDocReady, false);
         } else {
-            // Important: commented out since this hack causes issues with our new framing
-            // There's no need to apply hacks anyway, the native window onload event on IEs works
-            // just fine for us since we don't care about initial DOM
-
             // check if the document is ready, this will also kick off the scroll checking timer
-            //if (!me.checkReadyState()) {
-            //    document.attachEvent('onreadystatechange', me.checkReadyState);
-            //    me.hasOnReadyStateChange = true;
-            //}
+            if (!me.checkReadyState()) {
+                document.attachEvent('onreadystatechange', me.checkReadyState);
+                me.hasOnReadyStateChange = true;
+            }
             // fallback, onload will ~always~ fire
             window.attachEvent('onload', me.fireDocReady, false);
         }
@@ -177,21 +173,25 @@ Ext.EventManager = {
      * @return {String} id
      */
     getId : function(element) {
-        var skip = false,
+        var skipGarbageCollection = false,
             id;
-
+    
         element = Ext.getDom(element);
-
+    
         if (element === document || element === window) {
             id = element === document ? Ext.documentId : Ext.windowId;
-            skip = true;
-        } else {
+        }
+        else {
             id = Ext.id(element);
         }
-
+        // skip garbage collection for special elements (window, document, iframes)
+        if (element && (element.getElementById || element.navigator)) {
+            skipGarbageCollection = true;
+        }
+    
         if (!Ext.cache[id]){
             Ext.core.Element.addToCache(new Ext.core.Element(element), id);
-            if (skip) {
+            if (skipGarbageCollection) {
                 Ext.cache[id].skipGarbageCollection = true;
             }
         }
@@ -225,7 +225,7 @@ Ext.EventManager = {
                         // if its not a function, it must be an object like click: {fn: function(){}, scope: this}
                         args = [element, key, value.fn, value.scope, value];
                     }
-                    
+
                     if (isRemove === true) {
                         me.removeListener.apply(this, args);
                     } else {

@@ -1,7 +1,11 @@
 /**
- * A base provider for communicating using JSON.
  * @class Ext.direct.JsonProvider
  * @extends Ext.direct.Provider
+
+A base provider for communicating using JSON. This is an abstract class
+and should not be instanced directly.
+
+ * @markdown
  * @abstract
  */
 

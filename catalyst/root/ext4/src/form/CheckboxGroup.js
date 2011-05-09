@@ -357,6 +357,13 @@ myCheckboxGroup.setValue({
         return null;
     },
 
+    /*
+     * Don't return any data for the model; the form will get the info from the individual checkboxes themselves.
+     */
+    getModelData: function() {
+        return null;
+    },
+
     validate: function() {
         var me = this,
             errors = me.getErrors(),

@@ -4,10 +4,11 @@ var sqlFields = [
   'guid', 'sha1', 'pdf', 'pdf_name', 'attachments', 'trashed', 'created', 'last_read', 'times_read', 'annote', 'labels', 'labels_tmp', 'folders'];
 
 var displayFields = [
-		     '_attachments_list', '_authors_display', '_citation_display', '_snippets', '_pubtype_name', 'howpublished', '_imported', '_createdPretty', '_search_job'];
+  '_attachments_list', '_authors_display', '_citation_display', '_snippets', '_pubtype_name', 'howpublished', '_imported', '_createdPretty', '_search_job'];
 
 var allFields = [].concat(libraryFields, sqlFields, displayFields);
-Ext.regModel('Publication', {
+Ext.define('Publication', {
+  extend: "Ext.data.Model",
   fields: allFields,
-	    idProperty: 'guid',
+  idProperty: 'guid',
 });

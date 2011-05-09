@@ -1,36 +1,81 @@
 /**
- * <p>This feature is used to place a summary row at the bottom
- * of the grid. If using a grouping, see {@link Ext.grid.GroupingSummaryFeature}.
- * There are 2 aspects to calculating the summaries, calculation and rendering.</p>
- * <br />
- * <b>Calculation</b>
- * <p>The summary value needs to be calculated for each header in the grid. This is controlled
- * by the summaryType option specified on the column. There are several built in summary types,
- * which can be specified as a string on the header configuration. These call underlying methods
- * on the store.
- * <ul>
- *     <li>{@link Ext.data.Store#count count}</li>
- *     <li>{@link Ext.data.Store#sum sum}</li>
- *     <li>{@link Ext.data.Store#min min}</li>
- *     <li>{@link Ext.data.Store#max max}</li>
- *     <li>{@link Ext.data.Store#average average}</li>
- * </ul>
- * Alternatively, the summaryType can be a function definition. If this is the case,
- * the function is called with an array of records to calculate the summary value.</p>
- * 
- * <b>Rendering</b>
- * <p>Similar to a header, the summary also supports a summaryRenderer function. This
- * summaryRenderer is called before displaying a value. The function is optional, if
- * not specified the default calculated value is shown. The summaryRenderer is called with:
- * <ul class="mdetail-params">
- *     <li><code>value</code> : Object<div class="sub-desc">The calculated value.</div></li>
- *     <li><code>data</code> : Object<div class="sub-desc">Contains all raw summary values for the row.</div></li>
- *     <li><code>field</code> : String<div class="sub-desc">The name of the field we are calculating.</div></li>
- * </ul>
- * </p>
- * 
  * @class Ext.grid.feature.Summary
  * @extends Ext.grid.feature.AbstractSummary
+ * 
+ * This feature is used to place a summary row at the bottom of the grid. If using a grouping, 
+ * see {@link Ext.grid.feature.GroupingSummary}. There are 2 aspects to calculating the summaries, 
+ * calculation and rendering.
+ * 
+ * ## Calculation
+ * The summary value needs to be calculated for each column in the grid. This is controlled
+ * by the summaryType option specified on the column. There are several built in summary types,
+ * which can be specified as a string on the column configuration. These call underlying methods
+ * on the store:
+ *
+ *  - {@link Ext.data.Store#count count}
+ *  - {@link Ext.data.Store#sum sum}
+ *  - {@link Ext.data.Store#min min}
+ *  - {@link Ext.data.Store#max max}
+ *  - {@link Ext.data.Store#average average}
+ *
+ * Alternatively, the summaryType can be a function definition. If this is the case,
+ * the function is called with an array of records to calculate the summary value.
+ * 
+ * ## Rendering
+ * Similar to a column, the summary also supports a summaryRenderer function. This
+ * summaryRenderer is called before displaying a value. The function is optional, if
+ * not specified the default calculated value is shown. The summaryRenderer is called with:
+ *
+ *  - value {Object} - The calculated value.
+ *  - data {Object} - Contains all raw summary values for the row.
+ *  - field {String} - The name of the field we are calculating
+ * 
+ * ## Example Usage
+ *
+ *     Ext.define('TestResult', {
+ *         extend: 'Ext.data.Model',
+ *         fields: ['student', {
+ *             name: 'mark',
+ *             type: 'int'
+ *         }]
+ *     });
+ *     
+ *     Ext.create('Ext.grid.Panel', {
+ *         width: 200,
+ *         height: 140,
+ *         renderTo: document.body,
+ *         features: [{
+ *             ftype: 'summary'
+ *         }],
+ *         store: {
+ *             model: 'TestResult',
+ *             data: [{
+ *                 student: 'Student 1',
+ *                 mark: 84
+ *             },{
+ *                 student: 'Student 2',
+ *                 mark: 72
+ *             },{
+ *                 student: 'Student 3',
+ *                 mark: 96
+ *             },{
+ *                 student: 'Student 4',
+ *                 mark: 68
+ *             }]
+ *         },
+ *         columns: [{
+ *             dataIndex: 'student',
+ *             text: 'Name',
+ *             summaryType: 'count',
+ *             summaryRenderer: function(value){
+ *                 return Ext.String.format('{0} student{1}', value, value !== 1 ? 's' : ''); 
+ *             }
+ *         }, {
+ *             dataIndex: 'mark',
+ *             text: 'Mark',
+ *             summaryType: 'average'
+ *         }]
+ *     });
  */
 Ext.define('Ext.grid.feature.Summary', {
     

@@ -285,23 +285,19 @@ and a property `descEl` referencing the `div` Element which contains the descrip
     disabledCls: Ext.baseCSSPrefix + 'item-disabled',
 
     /**
-     * @cfg {String} ui
-     * A set of predefined ui styles for individual components.
-     *
-     * Most components support 'light' and 'dark'.
-     *
-     * Extra string added to the baseCls with an extra '-'.
-     * <pre><code>
-      new Ext.panel.Panel({
-          title: 'Some Title',
-          baseCls: 'x-component'
-          ui: 'green'
-      });
-       </code></pre>
-     * <p>The ui configuration in this example would add 'x-component-green' as an additional class.</p>
+     * @cfg {String/Array} ui
+     * A set style for a component. Can be a string or an Array of multiple strings (UIs)
      */
-
-   /**
+    ui: 'default',
+    
+    /**
+     * @cfg {Array} uiCls
+     * An array of of classNames which are currently applied to this component
+     * @private
+     */
+    uiCls: [],
+    
+    /**
      * @cfg {String} style
      * A custom style specification to be applied to this component's Element.  Should be a valid argument to
      * {@link Ext.core.Element#applyStyles}.
@@ -512,6 +508,17 @@ and a property `descEl` referencing the `div` Element which contains the descrip
 
     trimRe: /^\s+|\s+$/g,
     spacesRe: /\s+/,
+    
+    
+    /**
+     * This is an internal flag that you use when creating custom components.
+     * By default this is set to true which means that every component gets a mask when its disabled.
+     * Components like FieldContainer, FieldSet, Field, Button, Tab override this property to false
+     * since they want to implement custom disable logic.
+     * @property maskOnDisable
+     * @type {Boolean}
+     */     
+    maskOnDisable: true,
 
     constructor : function(config) {
         var me = this,
@@ -668,7 +675,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
                 me.plugins[i] = me.constructPlugin(me.plugins[i]);
             }
         }
-
+        
         me.initComponent();
 
         // ititComponent gets a chance to change the id property before registering
@@ -695,7 +702,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
         if (me.autoShow) {
             me.show();
         }
-
+        
         //<debug>
         if (Ext.isDefined(me.disabledClass)) {
             if (Ext.isDefined(Ext.global.console)) {
@@ -818,28 +825,6 @@ and a property `descEl` referencing the `div` Element which contains the descrip
         }
     },
 
-    /**
-     * @private
-     * <p>Finds the ancestor Container responsible for allocating zIndexes for the passed Component.</p>
-     * <p>That will be the outermost floating Container (a Container which has no ownerCt and has floating:true).</p>
-     * <p>If we have no ancestors, or we walk all the way up to the document body, there's no zIndexParent,
-     * and the global Ext.WindowManager will be used.</p>
-     */
-    getZIndexParent: function() {
-        var p = this.ownerCt,
-            c;
-
-        if (p) {
-            while (p) {
-                c = p;
-                p = p.ownerCt;
-            }
-            if (c.floating) {
-                return c;
-            }
-        }
-    },
-
     // @private
     render : function(container, position) {
         var me = this;
@@ -851,22 +836,9 @@ and a property `descEl` referencing the `div` Element which contains the descrip
                 me.el = Ext.get(me.el);
             }
 
-            // Floaters must register with a ZIndexManager at render time when the ownerCt chain is complete
+            // Perform render-time processing for floating Components
             if (me.floating) {
-                me.zIndexParent = me.getZIndexParent();
-                me.floatParent = me.ownerCt;
-                delete me.ownerCt;
-
-                // If a floating Component is configured to be constrained, but has no configured
-                // constrainTo setting, set its constrainTo to be it's ownerCt before rendering.
-                if ((me.constrain || me.constrainHeader) && !me.constrainTo) {
-                    me.constrainTo = me.floatParent ? me.floatParent.getTargetEl() : me.container;
-                }
-                if (me.zIndexParent) {
-                    me.zIndexParent.registerFloatingItem(me);
-                } else {
-                    Ext.WindowManager.register(me);
-                }
+                me.onFloatRender();
             }
 
             container = me.initContainer(container);
@@ -911,8 +883,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
             el = me.el,
             cls = me.initCls(),
             styles = me.initStyles(),
-            renderTpl,
-            renderData;
+            renderTpl, renderData, i;
 
         position = me.getInsertPosition(position);
 
@@ -960,10 +931,15 @@ and a property `descEl` referencing the `div` Element which contains the descrip
         // }
 
         me.el = el;
-
-        if (!Ext.supports.CSS3BorderRadius) {
-            me.initFrame(cls, styles);
+        
+        me.rendered = true;
+        me.addUIToElement(true);
+        //loop through all exisiting uiCls and update the ui in them
+        for (i = 0; i < me.uiCls.length; i++) {
+            me.addUIClsToElement(me.uiCls[i], true);
         }
+        me.rendered = false;
+        me.initFrame();
 
         renderTpl = me.initRenderTpl();
         if (renderTpl) {
@@ -972,7 +948,10 @@ and a property `descEl` referencing the `div` Element which contains the descrip
         }
 
         me.applyRenderSelectors();
+        
         me.rendered = true;
+        
+        me.setUI(me.ui);
     },
 
     // @private
@@ -1015,21 +994,21 @@ and a property `descEl` referencing the `div` Element which contains the descrip
 
     frameTpl: [
         '<tpl if="top">',
-            '<tpl if="left"><div class="{frameCls}-tl {baseCls}-tl<tpl for="ui"> {parent.baseCls}-{.}-tl</tpl>" style="background-position: {tl}; padding-left: {frameWidth}px" role="presentation"></tpl>',
-                '<tpl if="right"><div class="{frameCls}-tr {baseCls}-tr<tpl for="ui"> {parent.baseCls}-{.}-tr</tpl>" style="background-position: {tr}; padding-right: {frameWidth}px" role="presentation"></tpl>',
-                    '<div class="{frameCls}-tc {baseCls}-tc<tpl for="ui"> {parent.baseCls}-{.}-tc</tpl>" style="background-position: {tc}; height: {frameWidth}px" role="presentation"></div>',
+            '<tpl if="left"><div class="{frameCls}-tl {baseCls}-tl {baseCls}-{ui}-tl<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-tl</tpl></tpl>" style="background-position: {tl}; padding-left: {frameWidth}px" role="presentation"></tpl>',
+                '<tpl if="right"><div class="{frameCls}-tr {baseCls}-tr {baseCls}-{ui}-tr<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-tr</tpl></tpl>" style="background-position: {tr}; padding-right: {frameWidth}px" role="presentation"></tpl>',
+                    '<div class="{frameCls}-tc {baseCls}-tc {baseCls}-{ui}-tc<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-tc</tpl></tpl>" style="background-position: {tc}; height: {frameWidth}px" role="presentation"></div>',
                 '<tpl if="right"></div></tpl>',
             '<tpl if="left"></div></tpl>',
         '</tpl>',
-        '<tpl if="left"><div class="{frameCls}-ml {baseCls}-ml<tpl for="ui"> {parent.baseCls}-{.}-ml</tpl>" style="background-position: {ml}; padding-left: {frameWidth}px" role="presentation"></tpl>',
-            '<tpl if="right"><div class="{frameCls}-mr {baseCls}-mr<tpl for="ui"> {parent.baseCls}-{.}-mr</tpl>" style="background-position: {mr}; padding-right: {frameWidth}px" role="presentation"></tpl>',
-                '<div class="{frameCls}-mc {baseCls}-mc<tpl for="ui"> {parent.baseCls}-{.}-mc</tpl>" role="presentation"></div>',
+        '<tpl if="left"><div class="{frameCls}-ml {baseCls}-ml {baseCls}-{ui}-ml<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-ml</tpl></tpl>" style="background-position: {ml}; padding-left: {frameWidth}px" role="presentation"></tpl>',
+            '<tpl if="right"><div class="{frameCls}-mr {baseCls}-mr {baseCls}-{ui}-mr<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-mr</tpl></tpl>" style="background-position: {mr}; padding-right: {frameWidth}px" role="presentation"></tpl>',
+                '<div class="{frameCls}-mc {baseCls}-mc {baseCls}-{ui}-mc<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-mc</tpl></tpl>" role="presentation"></div>',
             '<tpl if="right"></div></tpl>',
         '<tpl if="left"></div></tpl>',
         '<tpl if="bottom">',
-            '<tpl if="left"><div class="{frameCls}-bl {baseCls}-bl<tpl for="ui"> {parent.baseCls}-{.}-bl</tpl>" style="background-position: {bl}; padding-left: {frameWidth}px" role="presentation"></tpl>',
-                '<tpl if="right"><div class="{frameCls}-br {baseCls}-br<tpl for="ui"> {parent.baseCls}-{.}-br</tpl>" style="background-position: {br}; padding-right: {frameWidth}px" role="presentation"></tpl>',
-                    '<div class="{frameCls}-bc {baseCls}-bc<tpl for="ui"> {parent.baseCls}-{.}-bc</tpl>" style="background-position: {bc}; height: {frameWidth}px" role="presentation"></div>',
+            '<tpl if="left"><div class="{frameCls}-bl {baseCls}-bl {baseCls}-{ui}-bl<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-bl</tpl></tpl>" style="background-position: {bl}; padding-left: {frameWidth}px" role="presentation"></tpl>',
+                '<tpl if="right"><div class="{frameCls}-br {baseCls}-br {baseCls}-{ui}-br<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-br</tpl></tpl>" style="background-position: {br}; padding-right: {frameWidth}px" role="presentation"></tpl>',
+                    '<div class="{frameCls}-bc {baseCls}-bc {baseCls}-{ui}-bc<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-bc</tpl></tpl>" style="background-position: {bc}; height: {frameWidth}px" role="presentation"></div>',
                 '<tpl if="right"></div></tpl>',
             '<tpl if="left"></div></tpl>',
         '</tpl>'
@@ -1039,32 +1018,146 @@ and a property `descEl` referencing the `div` Element which contains the descrip
         '<table><tbody>',
             '<tpl if="top">',
                 '<tr>',
-                    '<tpl if="left"><td class="{frameCls}-tl {baseCls}-tl<tpl for="ui"> {parent.baseCls}-{.}-tl</tpl>" style="background-position: {tl}; padding-left:{frameWidth}px" role="presentation"></td></tpl>',
-                    '<td class="{frameCls}-tc {baseCls}-tc<tpl for="ui"> {parent.baseCls}-{.}-tc</tpl>" style="background-position: {tc}; height: {frameWidth}px" role="presentation"></td>',
-                    '<tpl if="right"><td class="{frameCls}-tr {baseCls}-tr<tpl for="ui"> {parent.baseCls}-{.}-tr</tpl>" style="background-position: {tr}; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
+                    '<tpl if="left"><td class="{frameCls}-tl {baseCls}-tl {baseCls}-{ui}-tl<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-tl</tpl></tpl>" style="background-position: {tl}; padding-left:{frameWidth}px" role="presentation"></td></tpl>',
+                    '<td class="{frameCls}-tc {baseCls}-tc {baseCls}-{ui}-tc<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-tc</tpl></tpl>" style="background-position: {tc}; height: {frameWidth}px" role="presentation"></td>',
+                    '<tpl if="right"><td class="{frameCls}-tr {baseCls}-tr {baseCls}-{ui}-tr<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-tr</tpl></tpl>" style="background-position: {tr}; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
                 '</tr>',
             '</tpl>',
             '<tr>',
-                '<tpl if="left"><td class="{frameCls}-ml {baseCls}-ml<tpl for="ui"> {parent.baseCls}-{.}-ml</tpl>" style="background-position: {ml}; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
-                '<td class="{frameCls}-mc {baseCls}-mc<tpl for="ui"> {parent.baseCls}-{.}-mc</tpl>" style="background-position: 0 0;" role="presentation"></td>',
-                '<tpl if="right"><td class="{frameCls}-mr {baseCls}-mr<tpl for="ui"> {parent.baseCls}-{.}-mr</tpl>" style="background-position: {mr}; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
+                '<tpl if="left"><td class="{frameCls}-ml {baseCls}-ml {baseCls}-{ui}-ml<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-ml</tpl></tpl>" style="background-position: {ml}; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
+                '<td class="{frameCls}-mc {baseCls}-mc {baseCls}-{ui}-mc<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-mc</tpl></tpl>" style="background-position: 0 0;" role="presentation"></td>',
+                '<tpl if="right"><td class="{frameCls}-mr {baseCls}-mr {baseCls}-{ui}-mr<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-mr</tpl></tpl>" style="background-position: {mr}; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
             '</tr>',
             '<tpl if="bottom">',
                 '<tr>',
-                    '<tpl if="left"><td class="{frameCls}-bl {baseCls}-bl<tpl for="ui"> {parent.baseCls}-{.}-bl</tpl>" style="background-position: {bl}; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
-                    '<td class="{frameCls}-bc {baseCls}-bc<tpl for="ui"> {parent.baseCls}-{.}-bc</tpl>" style="background-position: {bc}; height: {frameWidth}px" role="presentation"></td>',
-                    '<tpl if="right"><td class="{frameCls}-br {baseCls}-br<tpl for="ui"> {parent.baseCls}-{.}-br</tpl>" style="background-position: {br}; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
+                    '<tpl if="left"><td class="{frameCls}-bl {baseCls}-bl {baseCls}-{ui}-bl<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-bl</tpl></tpl>" style="background-position: {bl}; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
+                    '<td class="{frameCls}-bc {baseCls}-bc {baseCls}-{ui}-bc<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-bc</tpl></tpl>" style="background-position: {bc}; height: {frameWidth}px" role="presentation"></td>',
+                    '<tpl if="right"><td class="{frameCls}-br {baseCls}-br {baseCls}-{ui}-br<tpl if="uiCls"><tpl for="uiCls"> {parent.baseCls}-{parent.ui}-{.}-br</tpl></tpl>" style="background-position: {br}; padding-left: {frameWidth}px" role="presentation"></td></tpl>',
                 '</tr>',
             '</tpl>',
         '</tbody></table>'
     ],
+    
+    /**
+     * @private
+     */
+    initFrame : function() {
+        if (Ext.supports.CSS3BorderRadius) {
+            return false;
+        }
+        
+        var me = this,
+            frameInfo = me.getFrameInfo(),
+            frameWidth = frameInfo.width,
+            frameTpl = me.getFrameTpl(frameInfo.table);
+                        
+        if (me.frame) {
+            // Here we render the frameTpl to this component. This inserts the 9point div or the table framing.
+            frameTpl.insertFirst(me.el, Ext.apply({}, {
+                ui:         me.ui,
+                uiCls:      me.uiCls,
+                frameCls:   me.frameCls,
+                baseCls:    me.baseCls,
+                frameWidth: frameWidth,
+                top:        !!frameInfo.top,
+                left:       !!frameInfo.left,
+                right:      !!frameInfo.right,
+                bottom:     !!frameInfo.bottom
+            }, me.getFramePositions(frameInfo)));
 
-    initFrame : function(cls, styles) {
+            // The frameBody is returned in getTargetEl, so that layouts render items to the correct target.=
+            me.frameBody = me.el.down('.' + me.frameCls + '-mc');
+            
+            // Add the render selectors for each of the frame elements
+            Ext.apply(me.renderSelectors, {
+                frameTL: '.' + me.baseCls + '-tl',
+                frameTC: '.' + me.baseCls + '-tc',
+                frameTR: '.' + me.baseCls + '-tr',
+                frameML: '.' + me.baseCls + '-ml',
+                frameMC: '.' + me.baseCls + '-mc',
+                frameMR: '.' + me.baseCls + '-mr',
+                frameBL: '.' + me.baseCls + '-bl',
+                frameBC: '.' + me.baseCls + '-bc',
+                frameBR: '.' + me.baseCls + '-br'
+            });
+        }
+    },
+    
+    updateFrame: function() {
+        if (Ext.supports.CSS3BorderRadius) {
+            return false;
+        }
+        
+        var me = this,
+            wasTable = this.frameSize && this.frameSize.table,
+            oldFrameTL = this.frameTL,
+            oldFrameBL = this.frameBL,
+            oldFrameML = this.frameML,
+            oldFrameMC = this.frameMC,
+            newMCClassName;
+        
+        this.initFrame();
+        
+        if (oldFrameMC) {
+            if (me.frame) {                
+                // Reapply render selectors
+                delete me.frameTL;
+                delete me.frameTC;
+                delete me.frameTR;
+                delete me.frameML;
+                delete me.frameMC;
+                delete me.frameMR;
+                delete me.frameBL;
+                delete me.frameBC;
+                delete me.frameBR;    
+                this.applyRenderSelectors();
+                
+                // Store the class names set on the new mc
+                newMCClassName = this.frameMC.dom.className;
+                
+                // Replace the new mc with the old mc
+                oldFrameMC.insertAfter(this.frameMC);
+                this.frameMC.remove();
+                
+                // Restore the reference to the old frame mc as the framebody
+                this.frameBody = this.frameMC = oldFrameMC;
+                
+                // Apply the new mc classes to the old mc element
+                oldFrameMC.dom.className = newMCClassName;
+                
+                // Remove the old framing
+                if (wasTable) {
+                    me.el.query('> table')[1].remove();
+                }                                
+                else {
+                    if (oldFrameTL) {
+                        oldFrameTL.remove();
+                    }
+                    if (oldFrameBL) {
+                        oldFrameBL.remove();
+                    }
+                    oldFrameML.remove();
+                }
+            }
+            else {
+                // We were framed but not anymore. Move all content from the old frame to the body
+                
+            }
+        }
+        else if (me.frame) {
+            this.applyRenderSelectors();
+        }
+    },
+    
+    getFrameInfo: function() {
+        if (Ext.supports.CSS3BorderRadius) {
+            return false;
+        }
+        
         var me = this,
             left = me.el.getStyle('background-position-x'),
             top = me.el.getStyle('background-position-y'),
-            frameWidth = 0, frameSize,
-            frameTpl, info, max, vertical;
+            info, frameInfo = false, max;
 
         // Some browsers dont support background-position-x and y, so for those
         // browsers let's split background-position into two parts.
@@ -1073,98 +1166,105 @@ and a property `descEl` referencing the `div` Element which contains the descrip
             left = info[0];
             top = info[1];
         }
-
+        
         // We actually pass a string in the form of '[type][tl][tr]px [type][br][bl]px' as
         // the background position of this.el from the css to indicate to IE that this component needs
         // framing. We parse it here and change the markup accordingly.
         if (parseInt(left, 10) >= 1000000 && parseInt(top, 10) >= 1000000) {
-            // Table markup starts with 110, div markup with 100.
-            frameTpl = me.getFrameTpl(left.substr(0, 3) == '110');
-
-            // Determine if we are dealing with a horizontal or vertical component
-            vertical = top.substr(0, 3) == '110';
-
-            // Get and parse the different border radius sizes
             max = Math.max;
-            frameSize  = {
+            
+            frameInfo = {
+                // Table markup starts with 110, div markup with 100.
+                table: left.substr(0, 3) == '110',
+                
+                // Determine if we are dealing with a horizontal or vertical component
+                vertical: top.substr(0, 3) == '110',
+                
+                // Get and parse the different border radius sizes
                 top:    max(left.substr(3, 2), left.substr(5, 2)),
                 right:  max(left.substr(5, 2), top.substr(3, 2)),
                 bottom: max(top.substr(3, 2), top.substr(5, 2)),
                 left:   max(top.substr(5, 2), left.substr(3, 2))
             };
-            frameWidth = max(frameSize.top, frameSize.right, frameSize.bottom, frameSize.left);
+            
+            frameInfo.width = max(frameInfo.top, frameInfo.right, frameInfo.bottom, frameInfo.left);
 
             // Just to be sure we set the background image of the el to none.
             me.el.setStyle('background-image', 'none');
-        }
-
+        }        
+        
         // This happens when you set frame: true explicitly without using the x-frame mixin in sass.
         // This way IE can't figure out what sizes to use and thus framing can't work.
-        if (me.frame === true && !frameSize) {
+        if (me.frame === true && !frameInfo) {
             //<debug error>
             Ext.Error.raise("You have set frame: true explicity on this component while it doesn't have any " +
                             "framing defined in the CSS template. In this case IE can't figure out what sizes " +
                             "to use and thus framing on this component will be disabled.");
             //</debug>
         }
-
-        me.frame = me.frame || !!frameWidth;
-        me.frameSize = frameSize || false;
-
-        if (me.frame) {
-            //<debug error>
-            if (!frameSize) {
-                Ext.Error.raise("Unable to read background-image style (got '" + info +
-                                "') of element: " + me.el.dom.outerHTML + " to handle framing.");
-            }
-            //</debug>
-
-            var positions;
-            if (vertical) {
-                positions = {
-                    tl: '0 -' + (frameWidth * 0) + 'px',
-                    tr: '0 -' + (frameWidth * 1) + 'px',
-                    bl: '0 -' + (frameWidth * 2) + 'px',
-                    br: '0 -' + (frameWidth * 3) + 'px',
-
-                    ml: '-' + (frameWidth * 1) + 'px 0',
-                    mr: 'right 0',
-
-                    tc: '0 -' + (frameWidth * 0) + 'px',
-                    bc: '0 -' + (frameWidth * 1) + 'px'
-                };
-            } else {
-                positions = {
-                    tl: '0 -' + (frameWidth * 2) + 'px',
-                    tr: 'right -' + (frameWidth * 3) + 'px',
-                    bl: '0 -' + (frameWidth * 4) + 'px',
-                    br: 'right -' + (frameWidth * 5) + 'px',
-
-                    ml: '-' + (frameWidth * 0) + 'px 0',
-                    mr: 'right 0',
-
-                    tc: '0 -' + (frameWidth * 0) + 'px',
-                    bc: '0 -' + (frameWidth * 1) + 'px'
-                };
-            }
-
-            // Here we render the frameTpl to this component. This inserts the 9point div or the table framing.
-            frameTpl.append(me.el, Ext.apply({}, {
-                frameCls:   me.frameCls,
-                baseCls:    me.baseCls,
-                ui:         me.ui,
-                frameWidth: frameWidth,
-                top:        !!frameSize.top,
-                left:       !!frameSize.left,
-                right:      !!frameSize.right,
-                bottom:     !!frameSize.bottom
-            }, positions));
-
-            // The frameBody is returned in getTargetEl, so that layouts render items to the correct target.=
-            me.frameBody = me.el.down('.' + me.frameCls + '-mc');
-        }
+        
+        me.frame = me.frame || !!frameInfo;
+        me.frameSize = frameInfo || false;
+        
+        return frameInfo;
     },
+    
+    getFramePositions: function(frameInfo) {
+        var me = this,
+            frameWidth = frameInfo.width,
+            dock = me.dock,
+            positions, tc, bc, ml, mr;
+            
+        if (frameInfo.vertical) {
+            tc = '0 -' + (frameWidth * 0) + 'px';
+            bc = '0 -' + (frameWidth * 1) + 'px';
+            
+            if (dock && dock == "right") {
+                tc = 'right -' + (frameWidth * 0) + 'px';
+                bc = 'right -' + (frameWidth * 1) + 'px';
+            }
+            
+            positions = {
+                tl: '0 -' + (frameWidth * 0) + 'px',
+                tr: '0 -' + (frameWidth * 1) + 'px',
+                bl: '0 -' + (frameWidth * 2) + 'px',
+                br: '0 -' + (frameWidth * 3) + 'px',
 
+                ml: '-' + (frameWidth * 1) + 'px 0',
+                mr: 'right 0',
+
+                tc: tc,
+                bc: bc
+            };
+        } else {
+            ml = '-' + (frameWidth * 0) + 'px 0';
+            mr = 'right 0';
+            
+            if (dock && dock == "bottom") {
+                ml = 'left bottom';
+                mr = 'right bottom';
+            }
+            
+            positions = {
+                tl: '0 -' + (frameWidth * 2) + 'px',
+                tr: 'right -' + (frameWidth * 3) + 'px',
+                bl: '0 -' + (frameWidth * 4) + 'px',
+                br: 'right -' + (frameWidth * 5) + 'px',
+
+                ml: ml,
+                mr: mr,
+
+                tc: '0 -' + (frameWidth * 0) + 'px',
+                bc: '0 -' + (frameWidth * 1) + 'px'
+            };
+        }
+        
+        return positions;
+    },
+    
+    /**
+     * @private
+     */
     getFrameTpl : function(table) {
         return table ? this.getTpl('frameTableTpl') : this.getTpl('frameTpl');
     },
@@ -1200,49 +1300,208 @@ and a property `descEl` referencing the `div` Element which contains the descrip
             cls.push(me.cls);
             delete me.cls;
         }
-        if (me.ui) {
-            if (Ext.isArray(me.ui)) {
-                for (var i = 0; i < me.ui.length; i++) {
-                    cls.push(me.componentCls + '-' + me.ui[i]);
-                }
-            } else {
-                cls.push(me.componentCls + '-' + me.ui);
-            }
-        }
 
         return cls.concat(me.additionalCls);
     },
-
+    
     /**
-     * Returns a string for specified className which includes the baseCls and each UI, as well as the baseCls + cls
-     * If you do not pass a cls, it will only add the UIs to the baseCls
-     * So if you pass: 'pressed' and you have an array of UIs: ['default', 'large'], it will return the following:
-     *   x-btn-default-pressed x-btn-large-pressed x-btn-pressed
-     * @param {String} cls The class to convert
+     * Sets the UI for the component. This will remove any existing UIs on the component. It will also
+     * loop through any uiCls set on the component and rename them so they include the new UI
+     * @param {String} ui The new UI for the component
+     */
+    setUI: function(ui) {
+        var me = this,
+            oldUICls = Ext.Array.clone(me.uiCls),
+            newUICls = [],
+            cls,
+            i;
+        
+        //loop through all exisiting uiCls and update the ui in them
+        for (i = 0; i < oldUICls.length; i++) {
+            cls = oldUICls[i];
+            
+            me.removeClsWithUI(cls);
+            newUICls.push(cls);
+        }
+        
+        //remove the UI from the element
+        me.removeUIFromElement();
+        
+        //set the UI
+        me.ui = ui;
+        
+        //add the new UI to the elemend
+        me.addUIToElement();
+        
+        //loop through all exisiting uiCls and update the ui in them
+        for (i = 0; i < newUICls.length; i++) {
+            cls = newUICls[i];
+            
+            me.addClsWithUI(cls);
+        }
+    },
+    
+    /**
+     * Adds a cls to the uiCls array, which will also call {@link #addUIClsToElement} and adds
+     * to all elements of this component.
+     * @param {String/Array} cls A string or an array of strings to add to the uiCls
+     */
+    addClsWithUI: function(cls) {
+        var me = this,
+            i;
+        
+        if (!Ext.isArray(cls)) {
+            cls = [cls];
+        }
+        
+        for (i = 0; i < cls.length; i++) {
+            if (cls[i] && !me.hasUICls(cls[i])) {
+                me.uiCls = Ext.Array.clone(me.uiCls);
+                me.uiCls.push(cls[i]);
+                me.addUIClsToElement(cls[i]);
+            }
+        }
+    },
+    
+    /**
+     * Removes a cls to the uiCls array, which will also call {@link #removeUIClsToElement} and removes
+     * it from all elements of this component.
+     * @param {String/Array} cls A string or an array of strings to remove to the uiCls
+     */
+    removeClsWithUI: function(cls) {
+        var me = this,
+            i;
+        
+        if (!Ext.isArray(cls)) {
+            cls = [cls];
+        }
+        
+        for (i = 0; i < cls.length; i++) {
+            if (cls[i] && me.hasUICls(cls[i])) {
+                me.uiCls = Ext.Array.remove(me.uiCls, cls[i]);
+                me.removeUIClsFromElement(cls[i]);
+            }
+        }
+    },
+    
+    /**
+     * Checks if there is currently a specified uiCls
+     * @param {String} cls The cls to check
+     */
+    hasUICls: function(cls) {
+        var me = this,
+            uiCls = me.uiCls || [];
+        
+        return Ext.Array.contains(uiCls, cls);
+    },
+    
+    /**
+     * Method which adds a specified UI + uiCls to the components element.
+     * Can be overridden to remove the UI from more than just the components element.
+     * @param {String} ui The UI to remove from the element
      * @private
      */
-    getClsWithUIs: function(cls) {
-        var me = this,
-            result = "",
-            i;
-
-        // Now lets loop through the UIs (if it is an array), and set the iconCls for each UI
-        if (Ext.isArray(me.ui)) {
-            for (i = 0; i < me.ui.length; i++) {
-                result += me.baseCls + '-' + me.ui[i] + ((cls) ? '-' + cls : '') + ' ';
+    addUIClsToElement: function(cls, force) {
+        var me = this;
+        
+        me.addCls(Ext.baseCSSPrefix + cls);
+        me.addCls(me.baseCls + '-' + cls);
+        me.addCls(me.baseCls + '-' + me.ui + '-' + cls);
+        
+        if (!force && me.rendered && me.frame && !Ext.supports.CSS3BorderRadius) {
+            // define each element of the frame
+            var els = ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br'],
+                i, el;
+            
+            // loop through each of them, and if they are defined add the ui
+            for (i = 0; i < els.length; i++) {
+                el = me['frame' + els[i].toUpperCase()];
+                
+                if (el && el.dom) {
+                    el.addCls(me.baseCls + '-' + me.ui + '-' + els[i]);
+                    el.addCls(me.baseCls + '-' + me.ui + '-' + cls + '-' + els[i]);
+                }
             }
-        } else {
-            result += me.baseCls + '-' + me.ui + ((cls) ? '-' + cls : '') + ' ';
         }
-
-        //add it without UI
-        if (cls) {
-            result += me.baseCls + '-' + cls + ' ';
-        }
-
-        return result;
     },
-
+    
+    /**
+     * Method which removes a specified UI + uiCls from the components element.
+     * The cls which is added to the element will be: `this.baseCls + '-' + ui`
+     * @param {String} ui The UI to add to the element
+     * @private
+     */
+    removeUIClsFromElement: function(cls, force) {
+        var me = this;
+        
+        me.removeCls(Ext.baseCSSPrefix + cls);
+        me.removeCls(me.baseCls + '-' + cls);
+        me.removeCls(me.baseCls + '-' + me.ui + '-' + cls);
+        
+        if (!force &&me.rendered && me.frame && !Ext.supports.CSS3BorderRadius) {
+            // define each element of the frame
+            var els = ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br'],
+                i, el;
+            
+            // loop through each of them, and if they are defined add the ui
+            for (i = 0; i < els.length; i++) {
+                el = me['frame' + els[i].toUpperCase()];
+                if (el && el.dom) {
+                    el.removeCls(me.baseCls + '-' + me.ui + '-' + cls + '-' + els[i]);
+                }
+            }
+        }
+    },
+    
+    /**
+     * Method which adds a specified UI to the components element.
+     * @private
+     */
+    addUIToElement: function(force) {
+        var me = this;
+        
+        me.addCls(me.baseCls + '-' + me.ui);
+        
+        if (me.rendered && me.frame && !Ext.supports.CSS3BorderRadius) {
+            // define each element of the frame
+            var els = ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br'],
+                i, el;
+            
+            // loop through each of them, and if they are defined add the ui
+            for (i = 0; i < els.length; i++) {
+                el = me['frame' + els[i].toUpperCase()];
+                
+                if (el) {
+                    el.addCls(me.baseCls + '-' + me.ui + '-' + els[i]);
+                }
+            }
+        }
+    },
+    
+    /**
+     * Method which removes a specified UI from the components element.
+     * @private
+     */
+    removeUIFromElement: function() {
+        var me = this;
+        
+        me.removeCls(me.baseCls + '-' + me.ui);
+        
+        if (me.rendered && me.frame && !Ext.supports.CSS3BorderRadius) {
+            // define each element of the frame
+            var els = ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br'],
+                i, el;
+            
+            // loop through each of them, and if they are defined add the ui
+            for (i = 0; i < els.length; i++) {
+                el = me['frame' + els[i].toUpperCase()];
+                if (el) {
+                    el.removeCls(me.baseCls + '-' + me.ui + '-' + els[i]);
+                }
+            }
+        }
+    },
+    
     getElConfig : function() {
         var result = this.autoEl || {tag: 'div'};
         result.id = this.id;
@@ -1305,6 +1564,7 @@ and a property `descEl` referencing the `div` Element which contains the descrip
 
         return Ext.applyIf(me.renderData, {
             ui: me.ui,
+            uiCls: me.uiCls,
             baseCls: me.baseCls,
             componentCls: me.componentCls,
             frame: me.frame
@@ -1375,13 +1635,6 @@ and a property `descEl` referencing the `div` Element which contains the descrip
 
         if (me.margin !== undefined) {
             style.margin = Element.unitizeBox((me.margin === true) ? 5 : me.margin);
-        }
-
-        // Border styles on a Panel are different. Panel (and subclass) borders are handled by the theming.
-        // Ext.grid.column.Column inherits a border configuration from HeaderContainer and should NOT inject a borderWidth (this will
-        // cause misalignment)
-        if (me.border !== undefined && me.border !== false && !(me instanceof Ext.panel.Panel || me instanceof Ext.grid.column.Column)) {
-            style.borderWidth = Element.unitizeBox((me.border === true) ? 1 : me.border);
         }
 
         delete me.style;
@@ -1798,7 +2051,7 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
      * @param {Boolean} silent
      * Passing false will supress the 'enable' event from being fired.
      */
-    enable : function(silent) {
+    enable: function(silent) {
         var me = this;
 
         if (me.rendered) {
@@ -1821,7 +2074,7 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
      * @param {Boolean} silent
      * Passing true, will supress the 'disable' event from being fired.
      */
-    disable : function(silent) {
+    disable: function(silent) {
         var me = this;
 
         if (me.rendered) {
@@ -1838,7 +2091,21 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
 
         return me;
     },
+    
+    // @private
+    onEnable: function() {
+        if (this.maskOnDisable) {
+            this.el.unmask();
+        }        
+    },
 
+    // @private
+    onDisable : function() {
+        if (this.maskOnDisable) {
+            this.el.mask();
+        }
+    },
+    
     /**
      * Method to determine whether this Component is currently disabled.
      * @return {Boolean} the disabled state of this Component.
@@ -2035,16 +2302,6 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
 
         me.fireEvent('removed', me, me.ownerCt);
         delete me.ownerCt;
-    },
-
-    // @private
-    onEnable : function() {
-        delete this.resetDisable;
-    },
-
-    // @private
-    onDisable : function() {
-        this.resetDisable = false;
     },
 
     // @private
@@ -2338,7 +2595,7 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
             config;
 
         if (me.rendered) {
-            if (load !== false) {
+            if (load !== false && !me.collapsed) {
                 if (Ext.isObject(load)) {
                     config = load;
                 }
@@ -2350,7 +2607,7 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
                 }
                 me.loadMask = me.loadMask || Ext.create('Ext.LoadMask', targetEl ? me.getTargetEl() : me.el, config);
                 me.loadMask.show();
-            } else {
+            } else if (me.loadMask) {
                 Ext.destroy(me.loadMask);
                 me.loadMask = null;
             }
@@ -2442,6 +2699,17 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
                 return plugins[i];
             }
         }
+    },
+    
+    /**
+     * Determines whether this component is the descendant of a particular container.
+     * @param {Ext.Container} container
+     * @returns {Boolean} isDescendant
+     */
+    isDescendantOf: function(container) {
+        return !!this.findParentBy(function(p){
+            return p === container;
+        });
     }
 }, function() {
     this.createAlias({

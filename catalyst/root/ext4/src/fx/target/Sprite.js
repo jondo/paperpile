@@ -1,28 +1,23 @@
 /**
  * @class Ext.fx.target.Sprite
- * @private
- * @extends Object
+ * @extends Ext.fx.target.Target
+
+This class represents a animation target for a {@link Ext.draw.Sprite}. In general this class will not be
+created directly, the {@link Ext.draw.Sprite} will be passed to the animation and
+and the appropriate target will be created.
+
+ * @markdown
  */
 
 Ext.define('Ext.fx.target.Sprite', {
 
     /* Begin Definitions */
 
+    extend: 'Ext.fx.target.Target',
+
     /* End Definitions */
 
-    isAnimTarget: true,
-
-    constructor: function(target) {
-        this.target = target;
-        this.id = this.getId();
-        this.callParent([target]);
-    },
-
     type: 'draw',
-
-    getId: function() {
-        return this.target.id;
-    },
 
     getFromPrim: function(sprite, attr) {
         var o;

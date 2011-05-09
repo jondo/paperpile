@@ -1,160 +1,73 @@
 
 /**
  * @class Ext.grid.plugin.Editing
- * <p>This class provides cell editing on selected {@link Ext.grid.column.Column columns}.
- * The editable columns are specified by providing an {@link Ext.grid.column.Column#editor editor}
- * in the {@link Ext.grid.column.Column column configuration}.</p>
- * <p>Editability of columns may be controlled programatically by inserting an implementation
- * of {@link Ext.grid.column.Column#isCellEditable isCellEditable} into the {@link Ext.grid.column.Column Header}.</p>
- * <p>Editing is performed on the value of the <i>field</i> specified by the column's
- * <tt>{@link Ext.grid.column.Column#dataIndex dataIndex}</tt> in the backing {@link Ext.data.Store Store}
- * (so if you are using a {@link Ext.grid.column.Column#setRenderer renderer} in order to display
- * transformed data, this must be accounted for).</p>
- * <p>If a value-to-description mapping is used to render a column, then a {@link Ext.form.field.Field#ComboBox ComboBox}
- * which uses the same {@link Ext.form.field.Field#valueField value}-to-{@link Ext.form.field.Field#displayFieldField description}
- * mapping would be an appropriate editor.</p>
- * If there is a more complex mismatch between the visible data in the grid, and the editable data in
- * the {@link Ext.data.Store Store}, then code to transform the data both before and after editing can be
- * injected using the {@link #beforeedit} and {@link #afteredit} events.
- * @constructor
- * @param {Object} config The config object
- * @xtype editorgrid
+
+This class provides an abstract grid editing plugin on selected {@link Ext.grid.column.Column columns}.
+The editable columns are specified by providing an {@link Ext.grid.column.Column#editor editor}
+in the {@link Ext.grid.column.Column column configuration}.
+
+*Note:* This class should not be used directly. See {@link Ext.grid.plugin.CellEditing} and
+{@link Ext.grid.plugin.RowEditing}.
+
+ * @markdown
  */
 Ext.define('Ext.grid.plugin.Editing', {
     alias: 'editing.editing',
-    
+
+    requires: [
+        'Ext.grid.column.Column',
+        'Ext.util.KeyNav'
+    ],
+
     mixins: {
         observable: 'Ext.util.Observable'
     },
-    
+
     /**
      * @cfg {Number} clicksToEdit
-     * <p>The number of clicks on a cell required to display the cell's editor (defaults to 2).</p>
-     * <p>Setting this option to 'auto' means that mousedown <i>on the selected cell</i> starts
-     * editing that cell.</p>
+     * The number of clicks on a grid required to display the editor (defaults to 2).
      */
     clicksToEdit: 2,
 
-    /**
-    * @cfg {Boolean} forceValidation
-    * True to force validation even if the value is unmodified (defaults to false)
-    */
-    forceValidation: false,
-
-    // private - replaced by  isEditable on Grid.
-    //isEditor : true,
     // private
-    //detectEdit: false,
-
-    /**
-     * @cfg {Boolean} autoEncode
-     * True to automatically HTML encode and decode values pre and post edit (defaults to false)
-     */
-    autoEncode : false,
+    defaultFieldXType: 'textfield',
 
     // cell, row, form
     editStyle: '',
 
-    /**
-     * @cfg {Boolean} trackMouseOver @hide
-     * Not implemented.
-     */
-    // private
-
-    // Not implemented atm.
-    //trackMouseOver: false, // causes very odd FF errors
-    activeEditor: false,
-
     constructor: function(config) {
-        this.mixins.observable.constructor.call(this, config);
+        var me = this;
+        Ext.apply(me, config);
+
+        me.addEvents(
+            // Doc'ed in separate editing plugins
+            'beforeedit',
+
+            // Doc'ed in separate editing plugins
+            'edit',
+
+            // Doc'ed in separate editing plugins
+            'validateedit'
+        );
+        me.mixins.observable.constructor.call(me);
+        // TODO: Deprecated, remove in 5.0
+        me.relayEvents(me, ['afteredit'], 'after');
     },
 
     // private
-    init: function(grid){
-        this.grid = grid;
+    init: function(grid) {
+        var me = this;
+
+        me.grid = grid;
+        me.view = grid.view;
+        me.initEvents();
+        me.initFieldAccessors(me.view.getGridColumns());
+
+        grid.relayEvents(me, ['beforeedit', 'edit', 'validateedit']);
         // Marks the grid as editable, so that the SelectionModel
         // can make appropriate decisions during navigation
         grid.isEditable = true;
-        grid.editingPlugin = grid.view.editingPlugin = this;
-
-        grid.on('render', this.afterRender, this, {buffer: 50, single: true});
-        this.mon(grid, 'resize', this.onGridResize, this);
-
-        this.activeEditor = null;
-
-        grid.addEvents(
-            /**
-             * @event beforeedit
-             * Fires before cell editing is triggered. The edit event object has the following properties <br />
-             * <ul style="padding:5px;padding-left:16px;">
-             * <li>grid - This grid</li>
-             * <li>record - The record being edited</li>
-             * <li>field - The field name being edited</li>
-             * <li>value - The value for the field being edited.</li>
-             * <li>row - The grid row index</li>
-             * <li>column - The grid column index</li>
-             * <li>cancel - Set this to true to cancel the edit or return false from your handler.</li>
-             * </ul>
-             * @param {Object} e An edit event (see above for description)
-             */
-            "beforeedit",
-            /**
-             * @event afteredit
-             * Fires after a cell is edited. The edit event object has the following properties <br />
-             * <ul style="padding:5px;padding-left:16px;">
-             * <li>grid - This grid</li>
-             * <li>record - The record being edited</li>
-             * <li>field - The field name being edited</li>
-             * <li>value - The value being set</li>
-             * <li>originalValue - The original value for the field, before the edit.</li>
-             * <li>row - The grid row index</li>
-             * <li>column - The grid column index</li>
-             * </ul>
-             *
-             * <pre><code>
-grid.on('afteredit', afterEdit, this );
-
-function afterEdit(e) {
-    // execute an XHR to send/commit data to the server, in callback do (if successful):
-    e.record.commit();
-};
-             * </code></pre>
-             * @param {{@link Ext.grid.plugin.Editing}} editor
-             * @param {Object} e An edit event (see above for description)
-             */
-            "afteredit",
-            /**
-             * @event validateedit
-             * Fires after a cell is edited, but before the value is set in the record. Return false
-             * to cancel the change. The edit event object has the following properties <br />
-             * <ul style="padding:5px;padding-left:16px;">
-             * <li>grid - This grid</li>
-             * <li>record - The record being edited</li>
-             * <li>field - The field name being edited</li>
-             * <li>value - The value being set</li>
-             * <li>originalValue - The original value for the field, before the edit.</li>
-             * <li>row - The grid row index</li>
-             * <li>column - The grid column index</li>
-             * <li>cancel - Set this to true to cancel the edit or return false from your handler.</li>
-             * </ul>
-             * Usage example showing how to remove the red triangle (dirty record indicator) from some
-             * records (not all).  By observing the grid's validateedit event, it can be cancelled if
-             * the edit occurs on a targeted row (for example) and then setting the field's new value
-             * in the Record directly:
-             * <pre><code>
-grid.on('validateedit', function(e) {
-  var myTargetRow = 6;
-
-  if (e.row == myTargetRow) {
-    e.cancel = true;
-    e.record.data[e.field] = e.value;
-  }
-});
-             * </code></pre>
-             * @param {Object} e An edit event (see above for description)
-             */
-            "validateedit"
-        );
+        grid.editingPlugin = grid.view.editingPlugin = me;
     },
 
     /**
@@ -162,164 +75,257 @@ grid.on('validateedit', function(e) {
      * AbstractComponent calls destroy on all its plugins at destroy time.
      */
     destroy: function() {
+        var me = this,
+            grid = me.grid,
+            headerCt = grid.headerCt,
+            events = grid.events;
 
-        // Free all interlinked references
-        delete this.grid.editingPlugin;
-        delete this.grid.view.editingPlugin;
-        delete this.grid;
+        Ext.destroy(me.keyNav);
+        me.removeFieldAccessors(grid.getView().getGridColumns());
 
-        this.editors.each(Ext.destroy, Ext);
-        this.editors.clear();
-    },
+        // Clear all listeners from all our events, clear all managed listeners we added to other Observables
+        me.clearListeners();
 
-    // key getter for this.editors MixedCollection
-    getKey: function(obj) {
-        return obj.name;
-    },
-
-    // Retrieve an individual editor and create it
-    // if it doesn't already exist.
-    getEditor: function(name, dontCreate) {
-        var ed = this.editors.get(name);
-        if (!ed) {
-            return false;
-        }
-        if (ed.events || dontCreate) {
-            return ed;
-        } else {
-            ed = Ext.ComponentManager.create(ed, 'textfield');
-            this.editors.add(ed);
-            return ed;
-        }
-    },
-
-    setEditor: function(name, ed) {
-        // destroy the existing editor if its already been created
-        // 2nd arg indicates not to wrap the configuration so that
-        // we don't create and then immediately destroy.
-        var oldEd = this.getEditor(name, true);
-        if (oldEd.destroy) {
-            oldEd.destroy();
-        }
-
-        this.editors.add(ed);
-    },
-    
-    afterRender: function() {
-        this.initCancelTrigger();
-        this.initEditTrigger();
+        delete me.grid.editingPlugin;
+        delete me.grid.view.editingPlugin;
+        delete me.grid;
+        delete me.view;
+        delete me.editor;
+        delete me.keyNav;
     },
 
     // private
-    preEditValue : function(record, field){
-        var value = record.data[field];
-        return this.autoEncode && Ext.isString(value) ? Ext.util.Format.htmlDecode(value) : value;
+    getEditStyle: function() {
+        return this.editStyle;
     },
 
     // private
-    postEditValue : function(value, originalValue, r, field){
-        return this.autoEncode && Ext.isString(value) ? Ext.util.Format.htmlEncode(value) : value;
-    },
+    initFieldAccessors: function(column) {
+        var me = this;
 
-    /**
-     * User overrideable to provide custom editing available logic.
-     */
-    isFieldEditable: function(record, field) {
-        return true;
-    },
-    
-    beforeEdit: function() {
-        
-    },
-
-    /**
-     * Starts editing the specified for the specified row/column
-     * @param {Number} rowIndex
-     * @param {Number} colIndex
-     */
-    startEditing : function(record, dataIndex, location){
-        if (this.beforeEdit(record) === false) {
+        if (Ext.isArray(column)) {
+            Ext.Array.forEach(column, me.initFieldAccessors, me);
             return;
         }
-        this.stopEditing(true);
 
-        if (!location) {
-            location = this.calculateLocation(record, dataIndex);
-        }
+        // Augment the Header class to have a getEditor and setEditor method
+        // Important: Only if the header does not have its own implementation.
+        Ext.applyIf(column, {
+            getEditor: function(record, defaultField) {
+                return me.getColumnField(this, defaultField);
+            },
 
-        var grid = this.grid,
-            view = grid.view,
-            e = {
-                grid: grid,
-                record: record,
-                field: dataIndex,
-                value: record.data[dataIndex],
-                //row: row,
-                //column: col,
-                cancel:false
-            };
-
-
-        if (this.isFieldEditable(record, dataIndex)) {
-            //this.ensureVisible(record, dataIndex);
-
-            if (grid.fireEvent("beforeedit", e) !== false && !e.cancel) {
-                this.editing = true;
-                this.currRecord = record;
-                // this could become out of sync
-                // if add/removing records!
-                this.currDataIndex = dataIndex;
-                this.performEdit(record, dataIndex, location, e);
+            setEditor: function(field) {
+                me.setColumnField(this, field);
             }
+        });
+    },
+
+    // private
+    removeFieldAccessors: function(column) {
+        var me = this;
+
+        if (Ext.isArray(column)) {
+            Ext.Array.forEach(column, me.removeFieldAccessors, me);
+            return;
+        }
+
+        delete column.getEditor;
+        delete column.setEditor;
+    },
+
+    // private
+    // remaps to the public API of Ext.grid.column.Column.getEditor
+    getColumnField: function(columnHeader, defaultField) {
+        var field = columnHeader.field;
+
+        if (!field && columnHeader.editor) {
+            field = columnHeader.editor;
+            delete columnHeader.editor;
+        }
+
+        if (!field && defaultField) {
+            field = defaultField;
+        }
+
+        if (field) {
+            if (Ext.isString(field)) {
+                field = { xtype: field };
+            }
+            if (Ext.isObject(field) && !field.isFormField) {
+                field = Ext.ComponentManager.create(field, this.defaultFieldXType);
+                columnHeader.field = field;
+            }
+
+            Ext.apply(field, {
+                name: columnHeader.dataIndex
+            });
+
+            return field;
         }
     },
 
-    // Sets up event handlers to cancel the editing on scrolling/columnresize
-    initCancelTrigger: function() {
-        var me   = this,
+    // private
+    // remaps to the public API of Ext.grid.column.Column.setEditor
+    setColumnField: function(column, field) {
+        if (Ext.isObject(field) && !field.isFormField) {
+            field = Ext.ComponentManager.create(field, this.defaultFieldXType);
+        }
+        column.field = field;
+    },
+
+    // private
+    initEvents: function() {
+        var me = this;
+        me.initEditTriggers();
+        me.initCancelTriggers();
+    },
+
+    // @abstract
+    initCancelTriggers: Ext.emptyFn,
+
+    // private
+    initEditTriggers: function() {
+        var me = this,
+            view = me.view,
+            clickEvent = me.clicksToEdit === 1 ? 'click' : 'dblclick';
+
+        // Start editing
+        me.mon(view, 'cell' + clickEvent, me.startEditByClick, me);
+        view.on('render', function() {
+            me.keyNav = Ext.create('Ext.util.KeyNav', view.el, {
+                enter: me.onEnterKey,
+                esc: me.onEscKey,
+                scope: me
+            });
+        }, me, { single: true });
+    },
+
+    // private
+    onEnterKey: function(e) {
+        var me = this,
             grid = me.grid,
-            el   = grid.getEditorParent();
-            
-        el.on('mousewheel', me.cancelEdit, me);
-        grid.on('columnresize', me.cancelEdit, me);
-        grid.on('headermove', me.cancelEdit, me);
+            selModel = grid.getSelectionModel(),
+            record,
+            columnHeader = grid.headerCt.getHeaderAtIndex(0);
+
+        // Calculate editing start position from SelectionModel
+        // CellSelectionModel
+        if (selModel.getCurrentPosition) {
+            pos = selModel.getCurrentPosition();
+            record = grid.store.getAt(pos.row);
+            columnHeader = grid.headerCt.getHeaderAtIndex(pos.column);
+        }
+        // RowSelectionModel
+        else {
+            record = selModel.getLastSelected();
+        }
+        me.startEdit(record, columnHeader);
     },
 
+    // private
+    onEscKey: function(e) {
+        this.cancelEdit();
+    },
 
-    // @abstract
-    // Individual subclasses should provide event binding here to trigger
-    // editing; the bound method should invoke startEditing(record, dataIdx, location)
-    initEditTrigger: function() {
+    // private
+    startEditByClick: function(view, cell, colIdx, record, row, rowIdx, e) {
+        this.startEdit(record, view.getHeaderAtIndex(colIdx));
+    },
 
+    /**
+     * @private
+     * @abstract. Template method called before editing begins.
+     * @param {Object} context The current editing context
+     * @return {Boolean} Return false to cancel the editing process
+     */
+    beforeEdit: Ext.emptyFn,
+
+    /**
+     * Start editing the specified record, using the specified Column definition to define which field is being edited.
+     * @param {Model} record The Store data record which backs the row to be edited.
+     * @param {Model} columnHeader The Column object defining the column to be edited.
+     */
+    startEdit: function(record, columnHeader) {
+        var me = this,
+            context = me.getEditingContext(record, columnHeader);
+
+        if (me.beforeEdit(context) === false || me.fireEvent('beforeedit', context) === false || context.cancel) {
+            return false;
+        }
+
+        me.context = context;
+        me.editing = true;
+    },
+
+    /**
+     * @private Collects all information necessary for any subclasses to perform their editing functions.
+     * @param record
+     * @param columnHeader
+     * @returns {Object} The editing context based upon the passed record and column
+     */
+    getEditingContext: function(record, columnHeader) {
+        var me = this,
+            grid = me.grid,
+            store = grid.store,
+            rowIdx,
+            colIdx,
+            view = grid.getView(),
+            value;
+
+        // If they'd passed numeric row, column indices, look them up.
+        if (Ext.isNumber(record)) {
+            rowIdx = record;
+            record = store.getAt(rowIdx);
+        } else {
+            rowIdx = store.indexOf(record);
+        }
+        if (Ext.isNumber(columnHeader)) {
+            colIdx = columnHeader;
+            columnHeader = grid.headerCt.getHeaderAtIndex(colIdx);
+        } else {
+            colIdx = columnHeader.getIndex();
+        }
+
+        value = record.get(columnHeader.dataIndex);
+        return {
+            grid: grid,
+            record: record,
+            field: columnHeader.dataIndex,
+            value: value,
+            row: view.getNode(rowIdx),
+            column: columnHeader,
+            rowIdx: rowIdx,
+            colIdx: colIdx
+        };
+    },
+
+    /**
+     * Cancel any active edit that is in progress.
+     */
+    cancelEdit: function() {
+        this.editing = false;
+    },
+
+    /**
+     * Complete the edit if there is an active edit in progress.
+     */
+    completeEdit: function() {
+        var me = this;
+
+        if (me.editing && me.validateEdit()) {
+            me.fireEvent('edit', me.context);
+        }
+
+        delete me.context;
+        me.editing = false;
     },
 
     // @abstract
-    // Hand control over to the user and allow them to begin the editing process
-    performEdit: function(record, dataIndex, location, e) {
+    validateEdit: function() {
+        var me = this,
+            context = me.context;
 
-    },
-
-    // @abstract
-    // calculate the location if its not provided that the
-    // editor should overlay on top of
-    calculateLocation: function(record, dataIndex) {
-
-    },
-
-    // @abstract
-    // stop the Editing process, passing a cancel arg of true
-    // will cancel any pending changes.
-    stopEditing: function(cancel) {
-
-    },
-
-    // @abstract
-    onGridResize : function(){
-
-    },
-
-    // @abstract
-    onEditComplete: function(ed, value, startValue) {
-
+        return me.fireEvent('validateedit', me, context) !== false && !context.cancel;
     }
 });

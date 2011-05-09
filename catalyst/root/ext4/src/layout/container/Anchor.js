@@ -11,10 +11,29 @@
  * container using the AnchorLayout can supply an anchoring-specific config property of <b>anchorSize</b>.
  * If anchorSize is specifed, the layout will use it as a virtual container for the purposes of calculating
  * anchor measurements based on it instead, allowing the container to be sized independently of the anchoring
- * logic if necessary.  For example:</p>
- * <pre><code>
- * TODO: Make a real world example.
- * </code></pre>
+ * logic if necessary.  
+ * {@img Ext.layout.container.Anchor/Ext.layout.container.Anchor.png Ext.layout.container.Anchor container layout}
+ * For example:
+	Ext.create('Ext.Panel', {
+		width: 500,
+		height: 400,
+		title: "AnchorLayout Panel",
+		layout: 'anchor',
+		renderTo: Ext.getBody(),
+		items: [{
+			xtype: 'panel',
+			title: '75% Width and 20% Height',
+			anchor: '75% 20%'
+		},{
+			xtype: 'panel',
+			title: 'Offset -300 Width & -200 Height',
+			anchor: '-300 -200'		
+		},{
+			xtype: 'panel',
+			title: 'Mixed Offset and Percent',
+			anchor: '-250 20%'
+		}]
+	});
  */
 
 Ext.define('Ext.layout.container.Anchor', {

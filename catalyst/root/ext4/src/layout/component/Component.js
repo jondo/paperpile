@@ -57,7 +57,7 @@ Ext.define('Ext.layout.component.Component', {
         * The reason for not allowing component layouts is to stop component layouts from things such as Updater and
         * form Validation.
         */
-        if (!isSetSize && ownerCt && ownerCt.layout && ownerCt.layout.fixedLayout && ownerCt != layoutOwner) {
+        if (!isSetSize && !(Ext.isNumber(width) && Ext.isNumber(height)) && ownerCt && ownerCt.layout && ownerCt.layout.fixedLayout && ownerCt != layoutOwner) {
             me.doContainerLayout();
             return false;
         }
@@ -98,11 +98,7 @@ Ext.define('Ext.layout.component.Component', {
             width: -Infinity,
             height: -Infinity
         };
-
-        var childrenChanged = this.childrenChanged;
-        this.childrenChanged = false;
-
-        return (childrenChanged || this.lastComponentSize.width !== width || this.lastComponentSize.height !== height);
+        return (this.childrenChanged || this.lastComponentSize.width !== width || this.lastComponentSize.height !== height);
     },
 
     /**

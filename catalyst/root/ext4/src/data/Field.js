@@ -3,12 +3,13 @@
  * @class Ext.data.Field
  * @extends Object
  * 
- * <p>Fields are used to define what a Model is. They aren't instantiated directly - instead, {@link Ext#regModel Ext.regModel} 
- * creates a Field instance for each field configured in a {@link Ext.data.Model Model}. For example, we might set up a
- * model like this:</p>
+ * <p>Fields are used to define what a Model is. They aren't instantiated directly - instead, when we create a class 
+ * that extends {@link Ext.data.Model}, it will automatically create a Field instance for each field configured in a 
+ * {@link Ext.data.Model Model}. For example, we might set up a model like this:</p>
  * 
 <pre><code>
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: [
         'name', 'email',
         {name: 'age', type: 'int'},
@@ -22,7 +23,8 @@ Ext.regModel('User', {
  * field is set up with the 'auto' type. It's as if we'd done this instead:</p>
  * 
 <pre><code>
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: [
         {name: 'name', type: 'auto'},
         {name: 'email', type: 'auto'},
@@ -42,7 +44,8 @@ Ext.regModel('User', {
  * do this using a {@link #convert} function. Here, we're going to create a new field based on another:</p>
  * 
 <code><pre>
-Ext.regModel('User', {
+Ext.define('User', {
+    extend: 'Ext.data.Model',
     fields: [
         'name', 'email',
         {name: 'age', type: 'int'},
@@ -135,7 +138,7 @@ Ext.define('Ext.data.Field', {
     /**
      * @cfg {String} name
      * The name by which the field is referenced within the Model. This is referenced by, for example,
-     * the <code>dataIndex</code> property in column definition objects passed to {@link Ext.grid.header.Container}.
+     * the <code>dataIndex</code> property in column definition objects passed to {@link Ext.grid.property.HeaderContainer}.
      * <p>Note: In the simplest case, if no properties other than <code>name</code> are required, a field
      * definition may consist of just a String for the field name.</p>
      */
@@ -176,7 +179,8 @@ function location(v, record){
     return !record.city ? '' : (record.city + ', ' + record.state);
 }
 
-var Dude = Ext.regModel({
+Ext.define('Dude', {
+    extend: 'Ext.data.Model',
     fields: [
         {name: 'fullname',  convert: fullName},
         {name: 'firstname', mapping: 'name.first'},
@@ -292,5 +296,14 @@ sortType: function(value) {
      * An empty value here will cause {@link Ext.data.Model}.{@link Ext.data.Model#isValid isValid}
      * to evaluate to <code>false</code>.
      */
-    allowBlank : true
+    allowBlank : true,
+    
+    /**
+     * @cfg {Boolean} persist
+     * False to exclude this field from the {@link Ext.data.Model#modified} fields in a model. This 
+     * will also exclude the field from being written using a {@link Ext.data.writer.Writer}. This option
+     * is useful when model fields are used to keep state on the client but do not need to be persisted
+     * to the server. Defaults to <tt>true</tt>.
+     */
+    persist: true
 });

@@ -3,42 +3,43 @@
  * @extends Ext.panel.Panel
  * <p>Provides a container for arranging a group of related Buttons in a tabular manner.</p>
  * Example usage:
+ * {@img Ext.container.ButtonGroup/Ext.container.ButtonGroup.png Ext.container.ButtonGroup component}
  * <pre><code>
-var p = new Ext.panel.Panel({
-    title: 'Panel with Button Group',
-    width: 300,
-    height:200,
-    renderTo: document.body,
-    html: 'whatever',
-    tbar: [{
-        xtype: 'buttongroup',
-        {@link #columns}: 3,
-        title: 'Clipboard',
-        items: [{
-            text: 'Paste',
-            scale: 'large',
-            rowspan: 3,
-            iconCls: 'add',
-            iconAlign: 'top',
-            cls: 'x-btn-as-arrow'
-        },{
-            xtype:'splitbutton',
-            text: 'Menu Button',
-            scale: 'large',
-            rowspan: 3,
-            iconCls: 'add',
-            iconAlign: 'top',
-            arrowAlign:'bottom',
-            menu: [{text: 'Menu Item 1'}]
-        },{
-            xtype:'splitbutton', text: 'Cut', iconCls: 'add16', menu: [{text: 'Cut Menu Item'}]
-        },{
-            text: 'Copy', iconCls: 'add16'
-        },{
-            text: 'Format', iconCls: 'add16'
+    Ext.create('Ext.panel.Panel', {
+        title: 'Panel with ButtonGroup',
+        width: 300,
+        height:200,
+        renderTo: document.body,
+        html: 'HTML Panel Content',
+        tbar: [{
+            xtype: 'buttongroup',
+            columns: 3,
+            title: 'Clipboard',
+            items: [{
+                text: 'Paste',
+                scale: 'large',
+                rowspan: 3,
+                iconCls: 'add',
+                iconAlign: 'top',
+                cls: 'x-btn-as-arrow'
+            },{
+                xtype:'splitbutton',
+                text: 'Menu Button',
+                scale: 'large',
+                rowspan: 3,
+                iconCls: 'add',
+                iconAlign: 'top',
+                arrowAlign:'bottom',
+                menu: [{text: 'Menu Item 1'}]
+            },{
+                xtype:'splitbutton', text: 'Cut', iconCls: 'add16', menu: [{text: 'Cut Menu Item'}]
+            },{
+                text: 'Copy', iconCls: 'add16'
+            },{
+                text: 'Format', iconCls: 'add16'
+            }]
         }]
-    }]
-});
+    });
  * </code></pre>
  * @constructor
  * Create a new ButtonGroup.
@@ -95,27 +96,32 @@ Ext.define('Ext.container.ButtonGroup', {
     },
 
     afterLayout: function() {
-        this.callParent(arguments);
+        var me = this;
+        
+        me.callParent(arguments);
 
         // Pugly hack for a pugly browser:
         // If not an explicitly set width, then size the width to match the inner table
-        if (this.layout.table && (Ext.isIEQuirks || Ext.isIE6) && !this.width) {
-            var t = this.getTargetEl();
-            t.setWidth(this.layout.table.offsetWidth + t.getPadding('lr'));
+        if (me.layout.table && (Ext.isIEQuirks || Ext.isIE6) && !me.width) {
+            var t = me.getTargetEl();
+            t.setWidth(me.layout.table.offsetWidth + t.getPadding('lr'));
         }
     },
 
     afterRender: function() {
+        var me = this;
+        
         //we need to add an addition item in here so the ButtonGroup title is centered
-        if (this.header) {
-            this.header.insert(0, {
+        if (me.header) {
+            me.header.insert(0, {
                 xtype: 'component',
+                ui   : me.ui,
                 html : '&nbsp;',
                 flex : 1
             });
         }
         
-        this.callParent(arguments);
+        me.callParent(arguments);
     },
     
     // private

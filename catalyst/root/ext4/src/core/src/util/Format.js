@@ -1,6 +1,50 @@
 /**
  * @class Ext.util.Format
- * Reusable data formatting functions
+
+This class is a centralized place for formatting functions inside the library. It includes
+functions to format various different types of data, such as text, dates and numeric values.
+
+__Localization__
+This class contains several options for localization. These can be set once the library has loaded,
+all calls to the functions from that point will use the locale settings that were specified.
+Options include:
+- thousandSeparator
+- decimalSeparator
+- currenyPrecision
+- currencySign
+- currencyAtEnd
+This class also uses the default date format defined here: {@link Ext.date#defaultFormat}.
+
+__Using with renderers__
+There are two helper functions that return a new function that can be used in conjunction with 
+grid renderers:
+
+    columns: [{
+        dataIndex: 'date',
+        renderer: Ext.util.Format.dateRenderer('Y-m-d')
+    }, {
+        dataIndex: 'time',
+        renderer: Ext.util.Format.numberRenderer('0.000')
+    }]
+    
+Functions that only take a single argument can also be passed directly:
+    columns: [{
+        dataIndex: 'cost',
+        renderer: Ext.util.Format.usMoney
+    }, {
+        dataIndex: 'productCode',
+        renderer: Ext.util.Format.uppercase
+    }]
+    
+__Using with XTemplates__
+XTemplates can also directly use Ext.util.Format functions:
+
+    new Ext.XTemplate([
+        'Date: {startDate:date("Y-m-d")}',
+        'Cost: {cost:usMoney}'
+    ]);
+
+ * @markdown
  * @singleton
  */
 (function() {
@@ -8,7 +52,6 @@
 
     Ext.util.Format = {};
     var UtilFormat     = Ext.util.Format,
-        trimRe         = /^\s+|\s+$/g,
         stripTagsRE    = /<\/?[^>]+>/gi,
         stripScriptsRe = /(?:<script.*?>)((\n|\r|.)*?)(?:<\/script>)/ig,
         nl2brRe        = /\r?\n/g,
@@ -82,15 +125,6 @@
         },
 
         /**
-         * Trims any whitespace from either side of a string
-         * @param {String} value The text to trim
-         * @return {String} The trimmed text
-         */
-        trim : function(value) {
-            return String(value).replace(trimRe, "");
-        },
-
-        /**
          * Returns a substring from within an original string
          * @param {String} value The original text
          * @param {Number} start The start index of the substring
@@ -117,17 +151,6 @@
          */
         uppercase : function(value) {
             return String(value).toUpperCase();
-        },
-
-        // private
-        call : function(value, fn) {
-            if (arguments.length > 2) {
-                var args = Array.prototype.slice.call(arguments, 2);
-                args.unshift(value);
-                return eval(fn).apply(window, args);
-            } else {
-                return eval(fn).call(window, value);
-            }
         },
 
         /**
@@ -407,9 +430,43 @@
             return Ext.isEmpty(v) ? '' : v.replace(nl2brRe, '<br/>');
         },
 
+        /**
+         * Capitalize the given string. See {@link Ext.String#capitalize}.
+         */
+        capitalize: Ext.String.capitalize,
+
+        /**
+         * Truncate a string and add an ellipsis ('...') to the end if it exceeds the specified length.
+         * See {@link Ext.String#ellipsis}.
+         */
+        ellipsis: Ext.String.ellipsis,
+
+        /**
+         * Formats to a string. See {@link Ext.String#format}
+         */
+        format: Ext.String.format,
+
+        /**
+         * Convert certain characters (&, <, >, and ') from their HTML character equivalents.
+         * See {@link Ext.string#htmlDecode}.
+         */
+        htmlDecode: Ext.String.htmlDecode,
+
+        /**
+         * Convert certain characters (&, <, >, and ') to their HTML character equivalents for literal display in web pages.
+         * See {@link Ext.String#htmlEncode}.
+         */
+        htmlEncode: Ext.String.htmlEncode,
+
+        /**
+         * Adds left padding to a string. See {@link Ext.String#leftPad}
+         */
         leftPad: Ext.String.leftPad,
 
-        format: Ext.String.format,
+        /**
+         * Trims any whitespace from either side of a string. See {@link Ext.String#trim}.
+         */
+        trim : Ext.String.trim,
 
         /**
          * Parses a number or string representing margin sizes into an object. Supports CSS-style margin declarations
@@ -449,7 +506,7 @@
          * @return {String}
          */
         escapeRegex : function(s) {
-            return s.replace(/([-.*+?^${}()|[\]\/\\])/g, "\\$1");
+            return s.replace(/([\-.*+?\^${}()|\[\]\/\\])/g, "\\$1");
         }
     });
 })();

@@ -1,10 +1,10 @@
 /**
  * @class Ext.view.BoundList
- * @extends Ext.DataView
+ * @extends Ext.view.View
  * An internal used DataView for ComboBox, MultiSelect and ItemSelector.
  */
 Ext.define('Ext.view.BoundList', {
-    extend: 'Ext.DataView',
+    extend: 'Ext.view.View',
     alias: 'widget.boundlist',
     alternateClassName: 'Ext.BoundList',
     requires: ['Ext.layout.component.BoundList', 'Ext.toolbar.Paging'],

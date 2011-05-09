@@ -1,22 +1,25 @@
 /**
  * @class Ext.container.Container
- * @extends Ext.AbstractContainer
+ * @extends Ext.container.AbstractContainer
  * <p>Base class for any {@link Ext.Component} that may contain other Components. Containers handle the
  * basic behavior of containing items, namely adding, inserting and removing items.</p>
  *
- * <p>The most commonly used Container classes are {@link Ext.panel.Panel}, {@link Ext.window.Window} and {@link Ext.tab.TabPanel}.
+ * <p>The most commonly used Container classes are {@link Ext.panel.Panel}, {@link Ext.window.Window} and {@link Ext.tab.Panel}.
  * If you do not need the capabilities offered by the aforementioned classes you can create a lightweight
  * Container to be encapsulated by an HTML element to your specifications by using the
  * <code><b>{@link Ext.Component#autoEl autoEl}</b></code> config option.</p>
  *
+ * {@img Ext.Container/Ext.Container.png Ext.Container component} 
  * <p>The code below illustrates how to explicitly create a Container:<pre><code>
 // explicitly create a Container
-var embeddedColumns = new Ext.container.Container({
-    autoEl: {tag: 'div'},
+Ext.create('Ext.container.Container', {
     layout: {
         type: 'hbox'
     },
     width: 400,
+    renderTo: Ext.getBody(),
+    border: 1,
+    style: {borderColor:'#000000', borderStyle:'solid', borderWidth:'1px'},
     defaults: {
         labelWidth: 80,
         // implicitly create Container by specifying xtype
@@ -26,16 +29,17 @@ var embeddedColumns = new Ext.container.Container({
             padding: '10px'
         }
     },
-        items: [{
+    items: [{
         xtype: 'datefield',
         name: 'startDate',
         fieldLabel: 'Start date'
-    }, {
+    },{
         xtype: 'datefield',
         name: 'endDate',
         fieldLabel: 'End date'
     }]
-});</code></pre></p>
+});
+</code></pre></p>
  *
  * <p><u><b>Layout</b></u></p>
  * <p>Container classes delegate the rendering of child Components to a layout
@@ -67,8 +71,8 @@ var myNewGrid = new Ext.grid.Panel({
     title: 'Results', // the title becomes the title of the tab
 });
 
-myTabPanel.add(myNewGrid); // {@link Ext.tab.TabPanel} implicitly uses {@link Ext.layout.container.Card Card}
-myTabPanel.{@link Ext.tab.TabPanel#setActiveTab setActiveTab}(myNewGrid);
+myTabPanel.add(myNewGrid); // {@link Ext.tab.Panel} implicitly uses {@link Ext.layout.container.Card Card}
+myTabPanel.{@link Ext.tab.Panel#setActiveTab setActiveTab}(myNewGrid);
  * </code></pre></p>
  * <p>The example above adds a newly created GridPanel to a TabPanel. Note that
  * a TabPanel uses {@link Ext.layout.container.Card} as its layout manager which
@@ -151,7 +155,7 @@ Ext.Ajax.request({
  * @xtype container
  */
 Ext.define('Ext.container.Container', {
-    extend: 'Ext.AbstractContainer',
+    extend: 'Ext.container.AbstractContainer',
     alias: 'widget.container',
     alternateClassName: 'Ext.Container',
 

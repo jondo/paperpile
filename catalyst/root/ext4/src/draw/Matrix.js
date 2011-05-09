@@ -126,7 +126,7 @@ Ext.define('Ext.draw.Matrix', {
         return [me.get(0, 0), me.get(0, 1), me.get(1, 0), me.get(1, 1), 0, 0].join();
     },
 
-    toSVG: function() {
+    toSvg: function() {
         var me = this;
         return "matrix(" + [me.get(0, 0), me.get(1, 0), me.get(0, 1), me.get(1, 1), me.get(0, 2), me.get(1, 2)].join() + ")";
     },
@@ -141,5 +141,42 @@ Ext.define('Ext.draw.Matrix', {
     offset: function() {
         var matrix = this.matrix;
         return [matrix[0][2].toFixed(4), matrix[1][2].toFixed(4)];
+    },
+
+    // Split matrix into Translate Scale, Shear, and Rotate
+    split: function () {
+        function norm(a) {
+            return a[0] * a[0] + a[1] * a[1];
+        }
+        function normalize(a) {
+            var mag = Math.sqrt(norm(a));
+            a[0] /= mag;
+            a[1] /= mag;
+        }
+        var matrix = this.matrix,
+            out = {
+                translateX: matrix[0][2],
+                translateY: matrix[1][2]
+            },
+            row;
+
+        // scale and shear
+        row = [[matrix[0][0], matrix[0][1]], [matrix[1][1], matrix[1][1]]];
+        out.scaleX = Math.sqrt(norm(row[0]));
+        normalize(row[0]);
+
+        out.shear = row[0][0] * row[1][0] + row[0][1] * row[1][1];
+        row[1] = [row[1][0] - row[0][0] * out.shear, row[1][1] - row[0][1] * out.shear];
+
+        out.scaleY = Math.sqrt(norm(row[1]));
+        normalize(row[1]);
+        out.shear /= out.scaleY;
+
+        // rotation
+        out.rotate = Math.asin(-row[0][1]);
+
+        out.isSimple = !+out.shear.toFixed(9) && (out.scaleX.toFixed(9) == out.scaleY.toFixed(9) || !out.rotate);
+
+        return out;
     }
 });

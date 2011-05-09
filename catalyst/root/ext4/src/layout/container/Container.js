@@ -42,6 +42,20 @@ Ext.define('Ext.layout.container.Container', {
         return ret;
     },
 
+    beforeLayout: function() {
+        if (this.owner.beforeLayout(arguments) !== false) {
+            return this.callParent(arguments);
+        }
+        else {
+            return false;
+        }
+    },
+
+    afterLayout: function() {
+        this.owner.afterLayout(arguments);
+        this.callParent(arguments);
+    },
+
     /**
      * @protected
      * Returns all items that are rendered

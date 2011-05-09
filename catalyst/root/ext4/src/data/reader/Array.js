@@ -11,7 +11,8 @@
  * <p><u>Example code:</u></p>
  * 
 <pre><code>
-var Employee = Ext.regModel('Employee', {
+Employee = Ext.define('Employee', {
+    extend: 'Ext.data.Model',
     fields: [
         'id',
         {name: 'name', mapping: 1},         // "mapping" only needed if an "id" field is present which

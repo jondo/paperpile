@@ -29,7 +29,7 @@ that should only run *after* some user feedback from the MessageBox, you must us
          msg: 'You are closing a tab that has unsaved changes. Would you like to save your changes?',
          buttons: Ext.Msg.YESNOCANCEL,
          fn: processResult,
-         animEl: 'elId',
+         animateTarget: 'elId',
          icon: Ext.window.MessageBox.QUESTION
     });
 
@@ -171,6 +171,8 @@ Ext.define('Ext.window.MessageBox', {
         wait: 'Loading...',
         alert: 'Attention'
     },
+    
+    iconHeight: 35,
 
     makeButton: function(btnIdx) {
         var btnId = this.buttonIds[btnIdx];
@@ -228,7 +230,7 @@ Ext.define('Ext.window.MessageBox', {
                 me.iconComponent = Ext.create('Ext.Component', {
                     cls: 'ext-mb-icon',
                     width: 50,
-                    height: 35,
+                    height: me.iconHeight,
                     style: {
                         'float': 'left'
                     }
@@ -275,13 +277,14 @@ Ext.define('Ext.window.MessageBox', {
         me.bottomTb = Ext.create('Ext.toolbar.Toolbar', {
             ui: 'footer',
             dock: 'bottom',
+            layout: {
+                pack: 'center'
+            },
             items: [
-                {xtype: 'component', flex: 1},
                 me.msgButtons[0],
                 me.msgButtons[1],
                 me.msgButtons[2],
-                me.msgButtons[3],
-                {xtype: 'component', flex: 1}
+                me.msgButtons[3]
             ]
         });
         me.dockedItems = [me.bottomTb];
@@ -290,13 +293,20 @@ Ext.define('Ext.window.MessageBox', {
     },
 
     onPromptKey: function(textField, e) {
-        var me = this;
+        var me = this,
+            blur;
+            
         if (e.keyCode === Ext.EventObject.RETURN || e.keyCode === 10) {
             if (me.msgButtons.ok.isVisible()) {
+                blur = true;
                 me.msgButtons.ok.handler.call(me, me.msgButtons.ok);
-            }
-            else if (me.msgButtons.yes.isVisible()) {
+            } else if (me.msgButtons.yes.isVisible()) {
                 me.msgButtons.yes.handler.call(me, me.msgButtons.yes);
+                blur = true;
+            }
+            
+            if (blur) {
+                me.textField.blur();
             }
         }
     },
@@ -316,6 +326,9 @@ Ext.define('Ext.window.MessageBox', {
 
         // Default to allowing the Window to take focus.
         delete me.defaultFocus;
+        
+        // clear any old animateTarget
+        me.animateTarget = cfg.animateTarget || undefined;
 
         // Defaults to modal
         me.modal = cfg.modal !== false;
@@ -425,7 +438,7 @@ Ext.define('Ext.window.MessageBox', {
      * passed in. All display functions (e.g. prompt, alert, etc.) on MessageBox call this function internally,
      * although those calls are basic shortcuts and do not support all of the config options allowed here.
      * @param {Object} config The following config options are supported: <ul>
-     * <li><b>animEl</b> : String/Element<div class="sub-desc">An id or Element from which the message box should animate as it
+     * <li><b>animateTarget</b> : String/Element<div class="sub-desc">An id or Element from which the message box should animate as it
      * opens and closes (defaults to undefined)</div></li>
      * <li><b>buttons</b> : Number<div class="sub-desc">A bitwise button specifier consisting of the sum of any of the following constants:<ul>
      * <li>Ext.window.MessageBox.OK</li>
@@ -487,7 +500,7 @@ width: 300,
 buttons: Ext.window.MessageBox.OKCANCEL,
 multiline: true,
 fn: saveAddress,
-animEl: 'addAddressBtn',
+animateTarget: 'addAddressBtn',
 icon: Ext.window.MessageBox.INFO
 });
 </code></pre>
@@ -495,18 +508,37 @@ icon: Ext.window.MessageBox.INFO
      */
     show: function(cfg) {
         var me = this;
+            
         me.reconfigure(cfg);
-        me.callParent();
         me.addCls(cfg.cls);
-        return me.doAutoSize();
+        if (cfg.animateTarget) {
+            me.doAutoSize(false);
+            me.callParent();
+        } else {
+            me.callParent();
+            me.doAutoSize(true);
+        }
+        return me;
+    },
+    
+    afterShow: function(){
+        if (this.animateTarget) {
+            this.center();
+        }    
+        this.callParent(arguments);
     },
 
-    doAutoSize: function() {
-        var me = this;
+    doAutoSize: function(center) {
+        var me = this,
+            icon = me.iconComponent,
+            iconHeight = me.iconHeight;
 
         if (!Ext.isDefined(me.frameWidth)) {
             me.frameWidth = me.el.getWidth() - me.body.getWidth();
         }
+        
+        // reset to the original dimensions
+        icon.setHeight(iconHeight);
 
         // Allow per-invocation override of minWidth
         me.minWidth = me.cfg.minWidth || Ext.getClass(this).prototype.minWidth;
@@ -514,19 +546,31 @@ icon: Ext.window.MessageBox.INFO
         // Set best possible size based upon allowing the text to wrap in the maximized Window, and
         // then constraining it to within the max with. Then adding up constituent element heights.
         me.topContainer.doLayout();
-        var width = me.cfg.width || me.msg.getWidth() + me.iconComponent.getWidth() + 25, /* topContainer's layout padding */
+        if (Ext.isIE6 || Ext.isIEQuirks) {
+            // In IE quirks, the initial full width of the prompt fields will prevent the container element
+            // from collapsing once sized down, so temporarily force them to a small width. They'll get
+            // layed out to their final width later when setting the final window size.
+            me.textField.setCalculatedSize(9);
+            me.textArea.setCalculatedSize(9);
+        }
+        var width = me.cfg.width || me.msg.getWidth() + icon.getWidth() + 25, /* topContainer's layout padding */
             height = (me.header.rendered ? me.header.getHeight() : 0) +
-            Math.max(me.promptContainer.getHeight(), me.iconComponent.getHeight()) +
+            Math.max(me.promptContainer.getHeight(), icon.getHeight()) +
             me.progressBar.getHeight() +
             (me.bottomTb.rendered ? me.bottomTb.getHeight() : 0) + 20 ;/* topContainer's layout padding */
+
+        // Update to the size of the content, this way the text won't wrap under the icon.
+        icon.setHeight(Math.max(iconHeight, me.msg.getHeight()));
         me.setSize(width + me.frameWidth, height + me.frameWidth);
-        me.center();
+        if (center) {
+            me.center();
+        }
         return me;
     },
 
     updateText: function(text) {
         this.msg.update(text);
-        return this.doAutoSize();
+        return this.doAutoSize(true);
     },
 
     /**

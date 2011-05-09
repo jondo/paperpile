@@ -1,7 +1,9 @@
 /**
  * @class Ext.slider.Tip
  * @extends Ext.tip.Tip
- * Simple plugin for using an Ext.tip.Tip with a slider to show the slider value. 
+ * Simple plugin for using an Ext.tip.Tip with a slider to show the slider value. In general this
+ * class is not created directly, instead pass the {@link Ext.slider.Multi#useTips} and 
+ * {@link Ext.slider.Multi#tipText} configuration options to the slider directly.
  * {@img Ext.slider.Tip/Ext.slider.Tip1.png Ext.slider.Tip component}
  * Example usage:
 <pre>
@@ -9,21 +11,20 @@
         width: 214,
         minValue: 0,
         maxValue: 100,
-        plugins: new Ext.slider.Tip(),
+        useTips: true,
         renderTo: Ext.getBody()
     });   
 </pre>
- * Optionally provide your own tip text by overriding getText:
+ * Optionally provide your own tip text by passing tipText:
  <pre>
- new Ext.slider.Slider({
+ new Ext.slider.Single({
      width: 214,
      minValue: 0,
      maxValue: 100,
-     plugins: new Ext.slider.Tip({
-         getText: function(thumb){
-             return Ext.String.format('<b>{0}% complete</b>', thumb.value);
-         }
-     })
+     useTips: true,
+     tipText: function(thumb){
+         return Ext.String.format('<b>{0}% complete</b>', thumb.value);
+     }
  });
  </pre>
  * @xtype slidertip
@@ -33,14 +34,18 @@ Ext.define('Ext.slider.Tip', {
     minWidth: 10,
     alias: 'widget.slidertip',
     offsets : [0, -10],
+    
+    isSliderTip: true,
 
     init: function(slider) {
+        var me = this;
+        
         slider.on({
-            scope    : this,
-            dragstart: this.onSlide,
-            drag     : this.onSlide,
-            dragend  : this.hide,
-            destroy  : this.destroy
+            scope    : me,
+            dragstart: me.onSlide,
+            drag     : me.onSlide,
+            dragend  : me.hide,
+            destroy  : me.destroy
         });
     },
     /**
@@ -56,7 +61,7 @@ Ext.define('Ext.slider.Tip', {
         me.show();
         me.update(me.getText(thumb));
         me.doComponentLayout();
-        me.el.alignTo(thumb.el, 'b-t?', this.offsets);
+        me.el.alignTo(thumb.el, 'b-t?', me.offsets);
     },
 
     /**

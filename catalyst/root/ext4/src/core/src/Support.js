@@ -276,7 +276,7 @@ Ext.supports = {
          * @type {Boolean}
          */
         {
-            identity: 'SVG',
+            identity: 'Svg',
             fn: function(doc) {
                 return !!doc.createElementNS && !!doc.createElementNS( "http:/" + "/www.w3.org/2000/svg", "svg").createSVGRect;
             }
@@ -298,7 +298,7 @@ Ext.supports = {
          * @type {Boolean}
          */
         {
-            identity: 'VML',
+            identity: 'Vml',
             fn: function(doc) {
                 var d = doc.createElement("div");
                 d.innerHTML = "<!--[if vml]><br><br><![endif]-->";
@@ -470,6 +470,13 @@ Ext.supports = {
             fn: function(doc, div){
                 var el = Ext.get(div.childNodes[1].firstChild);
                 return el.getWidth() == 210;
+            }
+        },
+        {
+            identity: 'IncludePaddingInHeightCalculation',
+            fn: function(doc, div){
+                var el = Ext.get(div.childNodes[1].firstChild);
+                return el.getHeight() == 210;
             }
         },
         

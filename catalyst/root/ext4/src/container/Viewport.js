@@ -24,14 +24,15 @@ method of any of its child Panels may themselves have a layout.
 
 The Viewport does not provide scrolling, so child Panels within the Viewport should provide
 for scrolling if needed using the {@link #autoScroll} config.
-
+{@img Ext.container.Viewport/Ext.container.Viewport.png Ext.container.Viewport component}
 An example showing a classic application border layout:
 
-    new Ext.container.Viewport({
+    Ext.create('Ext.container.Viewport', {
         layout: 'border',
+        renderTo: Ext.getBody(),
         items: [{
             region: 'north',
-            html: '&lt;h1 class="x-panel-header">Page Title&lt;/h1>',
+            html: '<h1 class="x-panel-header">Page Title</h1>',
             autoHeight: true,
             border: false,
             margins: '0 0 5 0'
@@ -39,11 +40,11 @@ An example showing a classic application border layout:
             region: 'west',
             collapsible: true,
             title: 'Navigation',
-            width: 200
-            // the west region might typically utilize a {@link Ext.tree.Panel TreePanel} or a Panel with {@link Ext.layout.container.Accordion Accordion layout}
+            width: 150
+            // could use a TreePanel or AccordionLayout for navigational items
         }, {
             region: 'south',
-            title: 'Title for Panel',
+            title: 'South Panel',
             collapsible: true,
             html: 'Information goes here',
             split: true,
@@ -51,14 +52,10 @@ An example showing a classic application border layout:
             minHeight: 100
         }, {
             region: 'east',
-            title: 'Title for the Grid Panel',
+            title: 'East Panel',
             collapsible: true,
             split: true,
-            width: 200,
-            xtype: 'grid',
-            // remaining grid configuration not shown ...
-            // notice that the GridPanel is added directly as the region
-            // it is not "overnested" inside another Panel
+            width: 150
         }, {
             region: 'center',
             xtype: 'tabpanel', // TabPanel itself has no title
@@ -81,7 +78,7 @@ Ext.define('Ext.container.Viewport', {
     alias: 'widget.viewport',
     requires: ['Ext.EventManager'],
     alternateClassName: 'Ext.Viewport',
-    
+
     /*
      * Privatize config options which, if used, would interfere with the
      * correct operation of the Viewport as the sole manager of the
@@ -121,14 +118,18 @@ Ext.define('Ext.container.Viewport', {
      * @cfg {Boolean} monitorResize @hide
      */
 
-    isViewPort: true,
+    isViewport: true,
 
     ariaRole: 'application',
     initComponent : function() {
         var me = this,
+            html = Ext.fly(document.body.parentNode),
             el;
         me.callParent(arguments);
-        Ext.fly(document.getElementsByTagName('html')[0]).addCls(Ext.baseCSSPrefix + 'viewport');
+        html.addCls(Ext.baseCSSPrefix + 'viewport');
+        if (me.autoScroll) {
+            html.setStyle('overflow', 'auto');
+        }
         me.el = el = Ext.getBody();
         el.setHeight = Ext.emptyFn;
         el.setWidth = Ext.emptyFn;

@@ -483,6 +483,8 @@ these convenient shorthands:
                     if (!postprocessor) {
                         manager.set(className, cls);
 
+                        Ext.Loader.historyPush(className);
+
                         if (createdFn) {
                             createdFn.call(cls, cls);
                         }
@@ -490,7 +492,9 @@ these convenient shorthands:
                         return;
                     }
 
-                    postprocessor.call(this, clsName, cls, clsData, process);
+                    if (postprocessor.call(this, clsName, cls, clsData, process) !== false) {
+                        process.apply(this, arguments);
+                    }
                 };
 
                 process.call(manager, className, this, data);
@@ -529,7 +533,7 @@ these convenient shorthands:
                 //</debug>
 
                 //<debug warn>
-                if (Ext.isDefined(Ext.global.console)) {
+                if (Ext.global.console) {
                     Ext.global.console.warn("[Ext.Loader] Synchronously loading '" + className + "'; consider adding " +
                          "Ext.require('" + alias + "') above Ext.onReady");
                 }
@@ -614,7 +618,7 @@ these convenient shorthands:
             // Still not existing at this point, try to load it via synchronous mode as the last resort
             if (!cls) {
                 //<debug warn>
-                if (Ext.isDefined(Ext.global.console)) {
+                if (Ext.global.console) {
                     Ext.global.console.warn("[Ext.Loader] Synchronously loading '" + name + "'; consider adding " +
                          "Ext.require('" + ((possibleName) ? alias : name) + "') above Ext.onReady");
                 }
@@ -838,7 +842,7 @@ these convenient shorthands:
         }
     };
 
-    Manager.registerPostprocessor('alias', function(name, cls, data, fn) {
+    Manager.registerPostprocessor('alias', function(name, cls, data) {
         var aliases = data.alias,
             widgetPrefix = 'widget.',
             i, ln, alias;
@@ -873,15 +877,14 @@ these convenient shorthands:
                 break;
             }
         }
-
-        fn.call(this, name, cls, data);
     });
 
     Manager.registerPostprocessor('singleton', function(name, cls, data, fn) {
         fn.call(this, name, new cls(), data);
+        return false;
     });
 
-    Manager.registerPostprocessor('alternateClassName', function(name, cls, data, fn) {
+    Manager.registerPostprocessor('alternateClassName', function(name, cls, data) {
         var alternates = data.alternateClassName,
             i, ln, alternate;
 
@@ -904,8 +907,6 @@ these convenient shorthands:
 
             this.set(alternate, cls);
         }
-
-        fn.call(this, name, cls, data);
     });
 
     Manager.setDefaultPostprocessors(['alias', 'singleton', 'alternateClassName']);
@@ -1063,16 +1064,13 @@ these convenient shorthands:
      */
     Ext.ns = Ext.namespace;
 
-    Class.registerPreprocessor('className', function(cls, data, fn) {
+    Class.registerPreprocessor('className', function(cls, data) {
         if (data.$className) {
             cls.$className = data.$className;
             //<debug>
             cls.displayName = cls.$className;
             //</debug>
         }
-
-        fn.apply(this, arguments);
-
     }, true);
 
     Class.setDefaultPreprocessorPosition('className', 'first');

@@ -1,6 +1,8 @@
 /**
  * Small utility class used internally to represent a Direct method.
+ * Thi class is used internally.
  * @class Ext.direct.RemotingMethod
+ * @ignore
  */
 Ext.define('Ext.direct.RemotingMethod', {
     

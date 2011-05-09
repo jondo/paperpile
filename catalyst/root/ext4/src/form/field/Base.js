@@ -223,6 +223,10 @@ Ext.define('Ext.form.field.Base', {
 
     // private
     hasFocus : false,
+    
+    baseCls: Ext.baseCSSPrefix + 'field',
+    
+    maskOnDisable: false,
 
     // private
     initComponent : function() {
@@ -427,7 +431,7 @@ var form = new Ext.form.Panel({
             val = me.getSubmitValue();
             if (val !== null) {
                 data = {};
-                data[me.getName()] = me.getSubmitValue();
+                data[me.getName()] = val;
             }
         }
         return data;

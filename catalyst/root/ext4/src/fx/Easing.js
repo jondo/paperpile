@@ -1,24 +1,27 @@
 /**
  * @class Ext.fx.Easing
- * @singleton
-This describes how the intermediate values used during a transition will be calculated. It allows for a transition to change
-speed over its duration. 
+ * 
+This class contains a series of function definitions used to modify values during an animation.
+They describe how the intermediate values used during a transition will be calculated. It allows for a transition to change
+speed over its duration. The following options are available: 
 
-         -backIn
-         -backOut
-         -bounceIn
-         -bounceOut
-         -ease
-         -easeIn
-         -easeOut
-         -easeInOut
-         -elasticIn
-         -elasticOut
-         -cubic-bezier(x1, y1, x2, y2)
+- linear The default easing type
+- backIn
+- backOut
+- bounceIn
+- bounceOut
+- ease
+- easeIn
+- easeOut
+- easeInOut
+- elasticIn
+- elasticOut
+- cubic-bezier(x1, y1, x2, y2)
 
 Note that cubic-bezier will create a custom easing curve following the CSS3 transition-timing-function specification `{@link http://www.w3.org/TR/css3-transitions/#transition-timing-function_tag}`. The four values specify points P1 and P2 of the curve
 as (x1, y1, x2, y2). All values must be in the range [0, 1] or the definition is invalid.
  * @markdown
+ * @singleton
  */
 Ext.ns('Ext.fx');
 
@@ -80,7 +83,7 @@ Ext.require('Ext.fx.CubicBezier', function() {
             return n * n * ((backInSeed + 1) * n + backInSeed) + 1;
         },
         elasticIn: function (n) {
-            if (n == 0 || n == 1) {
+            if (n === 0 || n === 1) {
                 return n;
             }
             var p = 0.3,

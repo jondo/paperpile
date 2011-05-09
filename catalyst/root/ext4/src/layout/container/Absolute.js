@@ -68,9 +68,13 @@ Ext.define('Ext.layout.container.Absolute', {
 
     onLayout: function() {
         var me = this,
-            target = me.getTarget();
-            
-        target.position();
+            target = me.getTarget(),
+            targetIsBody = target.dom === document.body;
+
+        // Do not set position: relative; when the absolute layout target is the body
+        if (!targetIsBody) {
+            target.position();
+        }
         me.paddingLeft = target.getPadding('l');
         me.paddingTop = target.getPadding('t');
         me.callParent(arguments);
