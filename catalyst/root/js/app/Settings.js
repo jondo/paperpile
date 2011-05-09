@@ -11,17 +11,21 @@ Ext.define('Paperpile.Settings', {
       if (commitToBackend === undefined) {
         commitToBackend = true;
       }
-      this.globalSettings[key] = value;
+      this._settings[key] = value;
 
       var s = {};
       s[key] = Ext.JSON.encode(value);
 
       if (commitToBackend) {
-        this.storeSettings(s);
+        this.store(s);
       }
     },
 
-    get: function(key) {
+    get: function(key, defaultValue) {
+      if (this._settings[key] === undefined && defaultValue !== undefined) {
+	  Paperpile.log("Setting ["+key+"] undefined, and has default value -- storing default!");
+	  this.set(key, defaultValue, true);
+      }
       return this._settings[key];
     },
 
@@ -55,6 +59,6 @@ Ext.define('Paperpile.Settings', {
         },
         scope: this
       });
-	    }
+    }
   }
-    });
+});

@@ -41,6 +41,9 @@ user_settings:
   font_size: Normal
   split_fraction_tree: 0.2
   split_fraction_grid: 0.67
+  tree_Library_expanded: true
+  tree_Search_expanded: true
+  tree_Tools_expanded: true
 
 library_settings:
   db_version: 3

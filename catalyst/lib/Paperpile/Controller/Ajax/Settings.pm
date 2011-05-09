@@ -200,14 +200,21 @@ sub set_settings : Local {
 
   # Decode JSON data
   for my $field ( keys %{ $c->request->params } ) {
-    $c->request->params->{$field} = $json->decode($c->request->params->{$field});
+#      print STDERR "  REQUEST FIELD: $field\n";
+      my $value = $c->request->params->{$field};
+      if ($value eq 'true' || $value eq 'false') {
+	next;
+      }
+    $c->request->params->{$field} = $json->decode($value);
   }
 
   # Set user user_settings
   for my $field ( keys %{$c->config->{'user_settings'}}){
+#    print STDERR "  USER FIELD:  $field\n";
 
     # Only store settings that are defined in the parameters.
     if ( defined $c->request->params->{$field} ) {
+#	print STDERR "  NOW STORING FELD: $field\n";
       $c->model('User')->set_setting( $field, $c->request->params->{$field} );
     }
   }
