@@ -1,4 +1,4 @@
 Ext.define('TreeNode', {
   extend: "Ext.data.Model",
-	    fields: ['text', 'icon']
+	    fields: ['text', 'icon', 'widget', 'type', 'storeId', 'parentStore', 'cls']
 });

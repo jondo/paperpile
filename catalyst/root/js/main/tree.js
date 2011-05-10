@@ -22,17 +22,59 @@ Ext.define('Paperpile.Tree', {
 
     this.store = this.createStore();
 
-    this.setChildrenAsLeaves(this.store.getNodeById('OnlineSearch'));
-    this.setChildrenAsLeaves(this.store.getNodeById('ToolsResources'));
+    this.setChildrenAsLeaves(this.get('OnlineSearch'));
+    this.setChildrenAsLeaves(this.get('ToolsResources'));
+
+    this.setType(this.get('Labels'), 'collection');
+    this.setType(this.get('Folders'), 'collection');
+    this.setType(this.get('OnlineSearch'), 'tab', false, true);
+    this.setType(this.get('ToolsResources'), 'tab', false, true);
+    this.setType(this.get('Trash'), 'tab');
+
+    // Go through the tree and bind any nodes with a 'storeId' property to the
+    // store with the given ID.
+    this.bindNodesToStores(this.store);
+
+    var renderer = function(value, metaData, record, rowIdx, colIdx, store, view) {
+      if (record.get('parentStore') === 'labels') {
+        return['<span class="',
+        'pp-label-tree-style-' + record.get('style'),
+        '">',
+        value,
+        '</span>'].join('');
+      } else {
+        return value;
+      }
+    };
 
     Ext.apply(this, {
       enableDD: true,
       animate: false,
       autoScroll: true,
       rootVisible: false,
-      store: this.store
+      lines: false,
+      useArrows: true,
+      store: this.store,
+      columns: [{
+        xtype: 'treecolumn',
+        text: 'Name',
+        flex: 1,
+        dataIndex: 'text',
+        renderer: renderer
+      }],
+      hideHeaders: true
     });
     this.callParent(arguments);
+
+    this.on('beforeitemmousedown', function(view, record, item, index, e) {
+      Paperpile.log(record.get('type') + " " + record.getId());
+    },
+    this);
+
+  },
+
+  get: function(id) {
+    return this.store.getNodeById(id);
   },
 
   createStore: function() {
@@ -51,32 +93,44 @@ Ext.define('Paperpile.Tree', {
     return[{
       text: 'Library',
       id: 'Library',
+      type: 'root',
       expanded: Paperpile.Settings.get('tree_Library_expanded', true),
       children: [{
-        text: 'Folders'
+        text: 'Folders',
+        id: 'Folders',
+        expanded: Paperpile.Settings.get('tree_Folders_expanded', true),
+        children: [],
+        storeId: 'folders',
       },
       {
-        text: 'Labels'
+        text: 'Labels',
+        id: 'Labels',
+        expanded: Paperpile.Settings.get('tree_Labels_expanded', true),
+        children: [],
+        storeId: 'labels'
       },
       {
-	  text: 'Trash',
-	      leaf: true
+        text: 'Trash',
+        id: 'Trash',
+        widget: 'pp-trash',
+        leaf: true
       }]
     },
     {
       text: 'Online Search',
       id: 'OnlineSearch',
+      type: 'root',
       expanded: Paperpile.Settings.get('tree_Search_expanded', true),
       children: [{
         text: 'PubMed',
         id: 'PubMed',
-        plugin: 'PubMed',
+        widget: 'pp-pubmed',
         icon: '/images/icons/pubmed.png'
       },
       {
         text: 'Google Scholar',
         id: 'GoogleScholar',
-        plugin: 'GoogleScholar',
+        widget: 'pp-googlescholar',
         icon: '/images/icons/google.png'
       },
       /*
@@ -93,17 +147,18 @@ Ext.define('Paperpile.Tree', {
     {
       text: 'Tools & Resources',
       id: 'ToolsResources',
+      type: 'root',
       expanded: Paperpile.Settings.get('tree_Tools_expanded', true),
       children: [{
         text: 'Cloud View',
         id: 'CloudView',
-        plugin: 'CloudView',
+        widget: 'pp-clouds',
         icon: '/images/icons/weather_clouds.png',
       },
       {
         text: 'Duplicate Removal',
         id: 'DuplicateRemoval',
-        plugin: 'DuplicateRemoval',
+        widget: 'pp-duplicates',
         icon: '/images/icons/duplicates.png',
       }]
     }];
@@ -115,6 +170,82 @@ Ext.define('Paperpile.Tree', {
       var child = children[i];
       child.set('leaf', true);
     }
+  },
+
+  setType: function(node, type, setMyself, setChildren) {
+    if (setMyself === undefined) {
+      setMyself = true;
+    }
+    if (setChildren === undefined) {
+      setChildren = true;
+    }
+    if (setMyself) {
+      node.set('type', type);
+    }
+    if (setChildren) {
+      var children = node.childNodes;
+      for (var i = 0; i < children.length; i++) {
+        var child = children[i];
+        this.setType(child, type);
+      }
+    }
+  },
+
+  bindNodesToStores: function(treeStore) {
+    treeStore.getRootNode().cascadeBy(function(node) {
+      if (node.get('storeId')) {
+        this.bindNodeToStore(node, node.get('storeId'));
+      }
+    },
+    this);
+  },
+
+  bindNodeToStore: function(node, storeId) {
+    var me = this;
+    var store = Ext.getStore(storeId);
+    var sortChildrenFn = function(a, b) {
+      return b.get('sort_order') - a.get('sort_order');
+    };
+
+    var addChildrenFn = function(store, records) {
+      var idToNode = {};
+      for (var i = 0; i < records.length; i++) {
+        var record = records[i];
+        Ext.data.NodeInterface.decorate(record);
+        var child = node.appendChild(record);
+        idToNode[child.getId()] = child;
+        child.set('parentStore', storeId);
+        child.set('text', record.get('name'));
+        child.set('leaf', true);
+        if (storeId == 'folders') {
+          child.set('icon', '/images/icons/folder.png');
+        } else if (storeId == 'labels') {
+          child.set('icon', Ext.BLANK_IMAGE_URL);
+        }
+      }
+      for (var i = 0; i < records.length; i++) {
+        var record = records[i];
+        var parentId = record.get('parent');
+        if (idToNode[parentId] !== undefined) {
+          var parent = idToNode[parentId];
+          record.remove();
+          parent.set('leaf', false);
+          parent.set('expanded', true);
+          parent.appendChild(record);
+        }
+      }
+      node.sort(sortChildrenFn, true);
+    };
+
+    store.on('add', addChildrenFn);
+    store.on('remove', function(store, record, index) {
+      node.removeChild(record, true);
+    });
+    store.on('load', addChildrenFn);
+  },
+
+  unbindNodeFromStore: function(node, storeId) {
+    // TODO
   }
 
 });
