@@ -19,9 +19,7 @@ package Paperpile::Model::Library;
 use strict;
 use base 'Paperpile::Model::SQLite';
 use Data::Dumper;
-use Tree::Simple;
 use XML::Simple;
-use FreezeThaw qw/freeze thaw/;
 use File::Path;
 use File::Spec::Functions qw(catfile splitpath canonpath abs2rel);
 use File::Copy;
@@ -37,17 +35,6 @@ use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
 use Paperpile::Model::App;
 
-
-
-has 'light_objects' => ( is => 'rw', isa => 'Int', default => 0 );
-
-#sub build_per_context_instance {
-#  my ( $self, $c ) = @_;
-#  my $file = Paperpile::Utils->session($c)->{library_db};
-#  my $model = Paperpile::Model::Library->new( { file => $file } );
-
-#  return $model;
-#}
 
 
 # Inserts a list $pubs of publication objects into the database. If
@@ -95,7 +82,7 @@ sub insert_pubs {
 
     if ( $pub->_imported ) {
       $pub->_insert_skipped(1);
-      print STDERR $pub->sha1, " already exists. Skipped.\n";
+      Paperpile->log("Entry with sha1 ". $pub->sha1. " already exists. Skipped.");
       next;
     } elsif ($user_library) {
       # If it is the user library we mark all as imported
@@ -207,7 +194,6 @@ sub delete_pubs {
       my $guid = $pub->guid;
       $delete_collections->execute($guid);
     }
-
   }
 
   $self->commit_or_continue_tx($in_prev_tx);
@@ -1266,7 +1252,7 @@ sub all {
   my @page = ();
 
   while ( my $row = $sth->fetchrow_hashref() ) {
-    my $pub = Paperpile::Library::Publication->new( { _light => $self->light_objects } );
+    my $pub = Paperpile::Library::Publication->new();
     $pub->_db_connection( $self->file );
     foreach my $field ( keys %$row ) {
       my $value = $row->{$field};
@@ -2196,6 +2182,7 @@ sub _update_fulltext_table {
     $pub->_authors_display( join( ", ", @display ) );
   }
 
+  # Does not consider editors/book title at the moment
   my $hash = {
     rowid    => $pub->_rowid,
     guid     => $pub->guid,

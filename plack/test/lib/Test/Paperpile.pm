@@ -11,6 +11,7 @@ use File::Path;
 use File::Copy::Recursive;
 use Plack::Test;
 use HTTP::Request::Common;
+use Encode qw(encode decode);
 
 use Paperpile::App;
 
@@ -91,12 +92,43 @@ sub row_ok {
 
   my $results = $dbh->selectrow_hashref("SELECT * FROM $table WHERE $where;");
 
-  foreach my $field (keys %$test){
+  foreach my $key (keys %$test){
+
+    my $expected = $test->{$key};
+
+    my $action = 'IS';
+    if ($key=~s/_(IS|LIKE|DEFINED|UNDEFINED)$//){
+      $action = $1;
+    }
+
+    my $observed = $results->{$key};
+
     my $string = '';
     $string = "$comment: " if $comment;
 
-    is($results->{$field}, $test->{$field}, "$string$field=".$results->{$field});
+    ## encode utf8 output because Test::More output cannot easily be
+    ## set to utf-8.
+    my $forprint = $expected;
+    utf8::encode($forprint);
+
+    if ($action eq 'IS'){
+      is($observed, $expected, "$string$key = ".$forprint);
+    }
+
+    if ($action eq 'LIKE'){
+      like($observed, qr{$expected}, "$string$key matches pattern");
+    }
+
+    if ($action eq 'DEFINED'){
+      ok($observed, "$string$key: is defined");
+    }
+
+    if ($action eq 'UNDEFINED'){
+      ok(!$observed, "$string$key: is not defined");
+    }
   }
+
+  return $results;
 
 }
 
@@ -169,10 +201,11 @@ sub test_fields {
 
     $key =~s/_(IS|LIKE|DEFINED|UNDEFINED)$//;
 
+    if ($key=~s/_(IS|LIKE|DEFINED|UNDEFINED)$//){
+      $action = $1;
+    }
+
     my $observed = $pub->$key;
-
-    $action = $1 if $1;
-
 
     if ($key eq 'abstract'){
       $observed =~s/\s+/ /smg;

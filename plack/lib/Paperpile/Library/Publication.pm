@@ -713,6 +713,7 @@ sub create_guid {
   $_guid =~ s/^0x//;
   $self->guid($_guid);
 
+  return $_guid;
 }
 
 sub add_label {

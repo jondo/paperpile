@@ -44,16 +44,13 @@ sub connect {
   my $dbh;
   my $dsn = "dbi:SQLite:" . $self->{file};
 
-  eval { $dbh = DBI->connect( $dsn, undef, undef, { AutoCommit => 1, RaiseError => 1 } ); };
+  eval { $dbh = DBI->connect( $dsn, undef, undef, { AutoCommit => 1, RaiseError => 1,  sqlite_unicode => 1 } ); };
 
   if ($@) {
     die( "Couldn't connect to " . $self->file . "(" . $@ . ")" );
   } else {
     Paperpile->log( "Connected to: " . $self->{file} );
   }
-
-  # Turn on unicode support explicitely
-  $dbh->{sqlite_unicode} = 1;
 
   $self->_dbh($dbh);
 

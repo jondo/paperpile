@@ -5,6 +5,7 @@ use TAP::Harness;
 use Getopt::Long;
 use File::Basename;
 use File::Path;
+use Test::More;
 
 ## Define available testsuites here
 
@@ -14,7 +15,7 @@ my %suites = (
   basic => {
     name  => 'Basic backend unit and regression tests',
     files => [
-      "t/basic.t",            "t/utils.t",          "t/model/sqlite.t", "t/job.t",
+      "t/basic.t",            "t/utils.t",          "t/model/sqlite.t", "t/model/library.t", "t/job.t",
       "t/queue.t",            "t/formats/bibtex.t", "t/formats/ris.t",  "t/formats/zotero.t",
       "t/formats/mendeley.t", "t/binaries.t",       "t/ajax/app.t",
     ]
