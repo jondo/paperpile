@@ -66,11 +66,70 @@ Ext.define('Paperpile.Tree', {
     });
     this.callParent(arguments);
 
-    this.on('beforeitemmousedown', function(view, record, item, index, e) {
-      Paperpile.log(record.get('type') + " " + record.getId());
-    },
-    this);
+    this.on('beforeitemmousedown', this.itemMouseDown, this);
+  },
 
+  itemMouseDown: function(view, record, item, index, event) {
+
+    var type = record.get('type');
+    switch (type) {
+    case 'collection':
+      Paperpile.log("Collection!");
+      break;
+    case 'more':
+      var node = this.store.getNodeById(record.get('nodeId'));
+      var storeId = record.get('storeId');
+      var panelId = storeId + '-tree-picker';
+      var lp = Ext.getCmp(panelId);
+      if (!lp) {
+        var el = Ext.get(item);
+        var options = {
+          id: panelId,
+          collectionType: storeId,
+          height: 80,
+          width: 130,
+          dontHideOnClickNodes: function() {
+            return['.x-tree-checkbox', '.x-tree-node'];
+          },
+          enableCreateNew: false,
+          enableManageCollection: true,
+          baseFilters: [{
+            property: 'hidden',
+            value: 1
+          }]
+        };
+        lp = Ext.createByAlias('widget.collectionpicker', options);
+        lp.on('hide', function() {
+          this.setChildrenChecked(node, null);
+        },
+        this);
+        lp.on('itemcheck', function(view, r) {
+          r.set('hidden', 0);
+        },
+        this);
+      }
+      Ext.defer(function() {
+        if (lp.isHidden()) {
+          lp.show();
+          lp.alignTo(item, 'tl-bl');
+          // Sets all children of the tree node to have a checkbox.
+          this.setChildrenChecked(node, true);
+          // Sets the 'more' node to *not* have a checkbox.
+          record.set('checked', null);
+        } else {
+          lp.hide();
+          this.setChildrenChecked(node, null);
+        }
+      },
+      10, this);
+      break;
+    case 'tab':
+      Paperpile.log("Tab!");
+      Paperpile.main.tabs.newTrashTab();
+      break;
+    default:
+      break;
+    }
   },
 
   get: function(id) {
@@ -84,7 +143,7 @@ Ext.define('Paperpile.Tree', {
         expanded: true,
         text: "",
         children: this.createRootNodes()
-      }
+	    }
     });
     return store;
   },
@@ -172,6 +231,13 @@ Ext.define('Paperpile.Tree', {
     }
   },
 
+  setChildrenChecked: function(node, value) {
+    node.cascadeBy(function(child) {
+      child.set('checked', value);
+    },
+    true);
+  },
+
   setType: function(node, type, setMyself, setChildren) {
     if (setMyself === undefined) {
       setMyself = true;
@@ -207,10 +273,54 @@ Ext.define('Paperpile.Tree', {
       return b.get('sort_order') - a.get('sort_order');
     };
 
+    var updateChildFn = function(store, record, operation) {
+	/*
+      if (record.get('hidden') !== undefined) {
+        if (record.get('hidden')) {
+	    // Remove from tree and add to label-panel
+          record.remove();
+          record.isNode = false;
+        } else if (!record.get('hidden')) {
+          Paperpile.log("Un hide " + record.get('name'));
+          addChildrenFn(store, [record]);
+        }
+      }
+	*/
+      updateMoreFn(store);
+    };
+
+    var updateMoreFn = function(store) {
+      var records = store.getRange();
+      var hiddenCount = 0;
+      for (var i = 0; i < records.length; i++) {
+        var record = records[i];
+        if (record.get('hidden')) {
+          hiddenCount++;
+        }
+      }
+
+      var moreNode = node.findChild('type', 'more', true);
+      if (hiddenCount > 0 && !moreNode) {
+        moreNode = node.appendChild({
+          text: hiddenCount + ' More...',
+          type: 'more',
+          icon: Ext.BLANK_IMAGE_URL,
+          storeId: node.get('storeId'),
+          nodeId: node.getId()
+        });
+
+      } else if (moreNode && hiddenCount == 0) {
+        moreNode.remove(true);
+      }
+    };
+
     var addChildrenFn = function(store, records) {
       var idToNode = {};
       for (var i = 0; i < records.length; i++) {
         var record = records[i];
+	//        if (record.get('hidden')) {
+	//          continue;
+	//        }
         Ext.data.NodeInterface.decorate(record);
         var child = node.appendChild(record);
         idToNode[child.getId()] = child;
@@ -235,13 +345,17 @@ Ext.define('Paperpile.Tree', {
         }
       }
       node.sort(sortChildrenFn, true);
+      this.view.store.filter([{
+		  property: 'hidden',
+		      value: 0}]);
     };
 
-    store.on('add', addChildrenFn);
+    store.on('add', addChildrenFn, this);
     store.on('remove', function(store, record, index) {
       node.removeChild(record, true);
-    });
-    store.on('load', addChildrenFn);
+	}, this);
+    store.on('load', addChildrenFn, this);
+    store.on('update', updateChildFn, this);
   },
 
   unbindNodeFromStore: function(node, storeId) {

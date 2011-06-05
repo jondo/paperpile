@@ -5,13 +5,17 @@ Ext.define('Paperpile.Collectionpicker', {
   // Configurable options start here.	    
   addCheckBoxes: true,
   filterBar: true,
-	    alignString: 'tr-br',
+  alignString: 'tr-br',
   width: 175,
   height: 200,
   maxViewHeight: 200,
   layoutPadding: 4,
   sortBy: 'sort_order',
   sortDirection: 'DESC',
+  enableCreateNew: true,
+  enableManageCollection: true,
+  dontHideOnClickNodes: Ext.emptyFn,
+  baseFilters: [],
   // End configurable options.
   constructor: function(cfg) {
     cfg = cfg || {};
@@ -93,6 +97,10 @@ Ext.define('Paperpile.Collectionpicker', {
         me.getSelectionModel().deselectRow(index);
       },
       listeners: {
+        itemmousedown: {
+          fn: this.itemMouseDown,
+          scope: this
+        },
         mousedown: {
           fn: this.handleMouseEvent,
           scope: this
@@ -242,19 +250,19 @@ Ext.define('Paperpile.Collectionpicker', {
           }
           return value;
         },
-	getDepthSpacing: function(values) {
-	      var depth = values.treeDepth || 0;
-	      var str = '<span style="margin-left:'+depth*5+'px;"></span>';
-	      return str;
-	  },
+        getDepthSpacing: function(values) {
+          var depth = values.treeDepth || 0;
+          var str = '<span style="margin-left:' + depth * 5 + 'px;"></span>';
+          return str;
+        },
         getItemNode: function(values) {
           if (values.type == 'LABEL' || values.type == 'FOLDER') {
             return[
-		   '<div class="pp-collection-item-count">',
+            '<div class="pp-collection-item-count">',
             values.count,
             '</div>',
             '<div class="pp-ellipsis pp-collection-item-name">',
-		   this.getDepthSpacing(values),
+            this.getDepthSpacing(values),
             this.highlightSearchSubset(values.name),
             '</div>', ].join('');
             /*
@@ -369,17 +377,15 @@ Ext.define('Paperpile.Collectionpicker', {
     Ext.get(dom).scrollIntoView(this.viewport.body);
   },
 
-  getBaseFilters: function() {
-    // To be overridden as needed for special cases.
-  },
-
   updateFilter: function() {
     this.store.clearFilter();
     var text = this.filterField.getValue();
     var filters = [];
-    var defaultFilters = this.getBaseFilters();
-    if (defaultFilters) {
-      filters.push(defaultFilters);
+    var defaultFilters = this.baseFilters;
+    if (defaultFilters && defaultFilters.length > 0) {
+      for (var i = 0; i < defaultFilters.length; i++) {
+        filters.push(defaultFilters[i]);
+      }
     }
     if (text != '') {
       filters.push({
@@ -395,6 +401,21 @@ Ext.define('Paperpile.Collectionpicker', {
       this.view.getSelectionModel().select(0, false);
     } else {
       this.view.getSelectionModel().clearSelections();
+    }
+  },
+
+  itemMouseDown: function(view, record, item, index, event) {
+    var cb = event.getTarget('input[type=checkbox]');
+    
+    if (cb) {
+      this.fireEvent('itemcheck', this, record);
+      if (!cb.checked) {
+	  record.set('checked', true);
+      } else {
+	  record.set('checked', false);
+      }
+    } else {
+      this.fireTrigger();
     }
   },
 
@@ -441,13 +462,17 @@ Ext.define('Paperpile.Collectionpicker', {
     if (hasChanges) {
       this.apply.show();
     } else if (filter != '') {
-      this.newCollection.update(['<a class="pp-textlink">',
-        '<span style="float:right;">(Create new)</span>',
-        '<div class="pp-ellipsis"><b>' + filter + '</b></div>',
-        '</a>'].join(''));
-      this.newCollection.show();
+      if (this.enableCreateNew) {
+        this.newCollection.update(['<a class="pp-textlink">',
+          '<span style="float:right;">(Create new)</span>',
+          '<div class="pp-ellipsis"><b>' + filter + '</b></div>',
+          '</a>'].join(''));
+        this.newCollection.show();
+      }
     } else {
-      this.manageCollection.show();
+      if (this.enableManageCollection) {
+        this.manageCollection.show();
+      }
     }
   },
 
@@ -504,8 +529,6 @@ Ext.define('Paperpile.Collectionpicker', {
     this.callParent(arguments);
   },
 
-  dontHideOnClickNodes: Ext.emptyFn,
-
   onMouseDown: function(e) {
     var dontHideOnClickNodes = ['.pp-collection-panel',
       'input[type=checkbox]'];
@@ -515,6 +538,8 @@ Ext.define('Paperpile.Collectionpicker', {
       dontHideOnClickNodes.push(extras[i]);
     }
 
+    var targetEl = Ext.get(e.getTarget());
+    Paperpile.log(targetEl.dom.text);
     for (var i = 0; i < dontHideOnClickNodes.length; i++) {
       if (e.getTarget(dontHideOnClickNodes[i])) {
         return;
