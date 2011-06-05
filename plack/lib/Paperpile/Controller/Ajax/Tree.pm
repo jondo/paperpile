@@ -24,6 +24,7 @@ use Paperpile::Library::Publication;
 use Paperpile::Plugins::Import::Feed;
 use Data::Dumper;
 use URI::Escape;
+use Tree::Simple;
 use 5.010;
 
 

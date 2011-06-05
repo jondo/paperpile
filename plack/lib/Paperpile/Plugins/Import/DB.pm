@@ -43,8 +43,6 @@ sub get_model {
   my $self = shift;
   my $model = Paperpile::Model::Library->new( { file => $self->_db_file } );
 
-  $model->light_objects( $self->light_objects );
-
   return $model;
 
 }
