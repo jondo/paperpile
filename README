@@ -20,6 +20,7 @@ linux32, linux64, or osx depending on your architecture):
 2. Download QWebkit runtime
 
 # cd build
+# wget http://cpansearch.perl.org/src/GFUJI/Mouse-0.93/lib/Mouse.pm
 # ./perl.pl build.pl get_qruntime
 
 3. Run Paperpile
